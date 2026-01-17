@@ -1,0 +1,60 @@
+{
+  "name": "decentralized-digital-will-protocol",
+  "version": "1.0.0",
+  "description": "A decentralized, non-custodial system that encrypts your digital life and automatically releases only what you choose, only to whom you choose, only when you are no longer active.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:core": "cd core && tsc",
+    "dev": "ts-node demo.ts",
+    "demo": "ts-node demo.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint **/*.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "rm -rf dist node_modules",
+    "setup": "npm install"
+  },
+  "keywords": [
+    "blockchain",
+    "digital-will",
+    "inheritance",
+    "smart-contracts",
+    "cryptography",
+    "decentralized",
+    "dead-man-switch",
+    "shamir-secret-sharing",
+    "ipfs",
+    "arweave",
+    "ethereum",
+    "polygon"
+  ],
+  "author": "Digital Will Protocol Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
+    "@nomicfoundation/hardhat-ethers": "^4.0.4",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "chai": "^6.2.2",
+    "eslint": "^8.52.0",
+    "ethers": "^6.16.0",
+    "hardhat": "^3.1.4",
+    "jest": "^29.7.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.2.0"
+  },
+  "dependencies": {
+    "fast-check": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
