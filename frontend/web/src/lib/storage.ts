@@ -78,6 +78,10 @@ class WebStorageService {
    * Initialize IndexedDB for large data storage
    */
   private async initIndexedDB(): Promise<void> {
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      return Promise.resolve(); // Bypass during SSR
+    }
+
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
@@ -89,7 +93,7 @@ class WebStorageService {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         // Create object stores
         if (!db.objectStoreNames.contains('assets')) {
           db.createObjectStore('assets', { keyPath: 'id' });
@@ -119,7 +123,7 @@ class WebStorageService {
     ]);
 
     const settings = this.getSettings();
-    const lastHeartbeat = heartbeats.length > 0 
+    const lastHeartbeat = heartbeats.length > 0
       ? Math.max(...heartbeats.map(h => h.timestamp))
       : Date.now();
 
@@ -305,17 +309,17 @@ class WebStorageService {
   }
 
   private calculateSystemStatus(
-    assets: StoredAsset[], 
-    beneficiaries: StoredBeneficiary[], 
+    assets: StoredAsset[],
+    beneficiaries: StoredBeneficiary[],
     lastHeartbeat: number
   ): 'secure' | 'warning' | 'error' {
     const now = Date.now();
     const daysSinceHeartbeat = (now - lastHeartbeat) / (1000 * 60 * 60 * 24);
-    
+
     if (daysSinceHeartbeat > 45) return 'error';
     if (daysSinceHeartbeat > 30) return 'warning';
     if (assets.length === 0 && beneficiaries.length === 0) return 'warning';
-    
+
     return 'secure';
   }
 
@@ -331,17 +335,17 @@ class WebStorageService {
    */
   async clearAllData(): Promise<void> {
     await this.ensureDB();
-    
+
     const stores = ['assets', 'beneficiaries', 'heartbeats', 'keyDistributions'];
-    
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(stores, 'readwrite');
       let completed = 0;
-      
+
       stores.forEach(storeName => {
         const store = transaction.objectStore(storeName);
         const request = store.clear();
-        
+
         request.onerror = () => reject(request.error);
         request.onsuccess = () => {
           completed++;
@@ -368,10 +372,10 @@ class WebStorageService {
   async importData(jsonData: string): Promise<void> {
     try {
       const state: AppState = JSON.parse(jsonData);
-      
+
       // Clear existing data
       await this.clearAllData();
-      
+
       // Import new data
       await Promise.all([
         ...state.assets.map(asset => this.saveAsset(asset)),
@@ -379,10 +383,10 @@ class WebStorageService {
         ...state.heartbeats.map(heartbeat => this.saveHeartbeat(heartbeat)),
         ...state.keyDistributions.map(keyDist => this.saveKeyDistribution(keyDist))
       ]);
-      
+
       // Import settings
       this.saveSettings(state.settings);
-      
+
     } catch (error) {
       throw new Error(`Import failed: ${error}`);
     }

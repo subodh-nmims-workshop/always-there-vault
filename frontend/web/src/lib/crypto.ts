@@ -3,7 +3,36 @@
  * Integrates with Web Crypto API and actual Shamir Secret Sharing
  */
 
-import secrets from 'secrets.js-grempe';
+// Fix Next.js Webpack polyfill issue where require('crypto') is an empty object,
+// causing secrets.js-grempe to throw "Initialization failed." upon import.
+let secrets: any;
+try {
+  const cryptoModule = require('crypto');
+  const patchRandomBytes = (size: number) => {
+    const arr = new Uint8Array(size);
+    if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.getRandomValues === 'function') {
+      window.crypto.getRandomValues(arr);
+    } else if (typeof global !== 'undefined' && global.crypto && typeof (global.crypto as any).getRandomValues === 'function') {
+      (global.crypto as any).getRandomValues(arr);
+    } else {
+      for (let i = 0; i < size; i++) arr[i] = Math.floor(Math.random() * 256);
+    }
+    return {
+      toString: (enc: string) => {
+        if (enc === 'hex') return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+        return arr.toString();
+      }
+    };
+  };
+
+  if (!cryptoModule.randomBytes) {
+    cryptoModule.randomBytes = patchRandomBytes;
+  }
+
+  secrets = require('secrets.js-grempe');
+} catch (e) {
+  console.error("Failed to inject crypto shim for secrets.js", e);
+}
 // @ts-expect-error Missing types for web3.storage
 import { Web3Storage } from 'web3.storage';
 
