@@ -1,70 +1,102 @@
 'use client';
 
-import { Shield, Lock, FileSearch } from 'lucide-react';
+import { Shield, Bug, Search, Lock, ShieldCheck, Mail } from 'lucide-react';
 
 export default function SecurityPolicyPage() {
     return (
         <div className="min-h-screen bg-slate-950 pt-24 pb-16">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div className="mb-12 border-b border-slate-800 pb-8 slide-up text-center">
-                    <Shield className="h-12 w-12 text-blue-500 mx-auto mb-6" />
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
-                        Vulnerability <span className="text-blue-500">Disclosure Policy</span>
+                <div className="text-center mb-16 slide-up">
+                    <div className="inline-flex items-center justify-center p-4 bg-red-500/10 rounded-full mb-6 border border-red-500/20">
+                        <Shield className="h-10 w-10 text-red-400" />
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-white tracking-tight">
+                        Vulnerability <span className="text-red-500">Disclosure Policy</span>
                     </h1>
-                    <p className="text-slate-400 text-lg">We welcome rigorous testing of the Digital Will Protocol.</p>
+                    <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                        Security is not a feature; it is the entire product. We welcome white-hat hackers and cryptographic researchers to dismantle our architecture.
+                    </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 mb-16">
-                    <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl">
-                        <Lock className="h-8 w-8 text-emerald-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">In Scope</h3>
-                        <ul className="space-y-2 text-slate-400 text-sm mt-4">
-                            <li>&bull; Smart Contract Re-Entrancy / Frontrunning</li>
-                            <li>&bull; Cracking AES-256-GCM via padding or timing</li>
-                            <li>&bull; Bypassing Shamir Secret Share thresholds</li>
-                            <li>&bull; Wallet verification identity spoofing (EIP-4361)</li>
+                <div className="prose prose-invert prose-red max-w-none space-y-12">
+
+                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full filter blur-[80px] pointer-events-none"></div>
+
+                        <div className="flex items-center mb-6 relative z-10">
+                            <Bug className="h-8 w-8 text-red-400 mr-4" />
+                            <h2 className="text-2xl font-bold text-white m-0">The $100,000 Bug Bounty Program</h2>
+                        </div>
+                        <p className="text-slate-300 leading-relaxed mb-6 relative z-10">
+                            We operate a continuous, tiered bug bounty program to incentivize the responsible disclosure of critical vulnerabilities. As a protocol managing high-net-worth lineages, our threat model assumes state-level adversaries.
+                        </p>
+
+                        <div className="grid md:grid-cols-2 gap-6 relative z-10">
+                            <div className="bg-slate-950 border border-red-900/50 p-6 rounded-2xl relative shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                                <div className="absolute top-0 right-0 bg-red-900/50 text-red-200 text-xs font-bold px-3 py-1 rounded-bl-lg">CRITICAL</div>
+                                <h3 className="text-2xl font-extrabold text-white mb-2">Up to $100,000</h3>
+                                <p className="text-sm text-slate-400">Paid in USDC/ETH</p>
+                                <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                                    <li className="flex items-start"><span className="text-red-500 mr-2">•</span> Remote Code Execution (RCE) on our Node.js routing layer.</li>
+                                    <li className="flex items-start"><span className="text-red-500 mr-2">•</span> Complete bypass of the EIP-4361 authentication schema.</li>
+                                    <li className="flex items-start"><span className="text-red-500 mr-2">•</span> Mathematical flaws resulting in the deterministic extraction of the AES-256 master key.</li>
+                                    <li className="flex items-start"><span className="text-red-500 mr-2">•</span> Unauthorized state mutation in the Polygon Smart Contracts (e.g., bypassing the heartbeat temporal lock).</li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-slate-950 border border-orange-900/50 p-6 rounded-2xl relative">
+                                <div className="absolute top-0 right-0 bg-orange-900/50 text-orange-200 text-xs font-bold px-3 py-1 rounded-bl-lg">HIGH</div>
+                                <h3 className="text-2xl font-extrabold text-white mb-2">Up to $25,000</h3>
+                                <p className="text-sm text-slate-400">Paid in USDC/ETH</p>
+                                <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                                    <li className="flex items-start"><span className="text-orange-500 mr-2">•</span> Logic errors in Shamir Secret Sharing reconstruction allowing threshold bypass.</li>
+                                    <li className="flex items-start"><span className="text-orange-500 mr-2">•</span> Database injection (NoSQL) leaking encrypted metadata or partial CIDs.</li>
+                                    <li className="flex items-start"><span className="text-orange-500 mr-2">•</span> Sub-domain takeover of production routing endpoints.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
+                        <div className="flex items-center mb-6">
+                            <Lock className="h-8 w-8 text-blue-400 mr-4" />
+                            <h2 className="text-2xl font-bold text-white m-0">Safe Harbor Protocol</h2>
+                        </div>
+                        <p className="text-slate-300 leading-relaxed mb-4">
+                            We consider security research to be a public good. If you conduct your research and disclosure in accordance with this policy, we consider your conduct to be authorized.
+                        </p>
+                        <h4 className="font-bold text-white mb-2 mt-6">You must strictly adhere to the following:</h4>
+                        <ul className="list-disc pl-6 space-y-3 text-slate-300 mb-6">
+                            <li><strong>Do not</strong> attempt to access, modify, or destroy data belonging to other actual users. Create your own test wallets for research.</li>
+                            <li><strong>Do not</strong> execute Denial of Service (DoS) attacks on our routing layer.</li>
+                            <li><strong>Do not</strong> utilize social engineering, phishing, or physical attacks against our team members or hosting providers.</li>
+                            <li>Provide us a reasonable amount of time (minimum 30 days) to patch the vulnerability before disclosing it publicly (0-day drops invalidate the bounty).</li>
                         </ul>
-                    </div>
-                    <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl">
-                        <FileSearch className="h-8 w-8 text-rose-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Out of Scope</h3>
-                        <ul className="space-y-2 text-slate-400 text-sm mt-4">
-                            <li>&bull; Volumetric DDoS attacks against Node API</li>
-                            <li>&bull; Spamming the Web3.Storage PIN limits</li>
-                            <li>&bull; Clickjacking on Marketing/Informational Pages</li>
-                            <li>&bull; Exploits requiring physical access to target machine</li>
-                        </ul>
-                    </div>
-                </div>
+                    </section>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10">
-                    <h2 className="text-2xl font-bold text-white mb-6">Bounty Tiers (USDC/ETH)</h2>
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center bg-slate-950 p-4 border border-slate-800 rounded-xl">
-                            <div>
-                                <span className="text-rose-500 font-bold block mb-1">Critical</span>
-                                <span className="text-sm text-slate-400">Complete protocol destruction, bypassing SSS math, unauthenticated decryption of payloads.</span>
-                            </div>
-                            <span className="text-white font-mono font-bold">$100,000+</span>
-                        </div>
-                        <div className="flex justify-between items-center bg-slate-950 p-4 border border-slate-800 rounded-xl">
-                            <div>
-                                <span className="text-orange-500 font-bold block mb-1">High</span>
-                                <span className="text-sm text-slate-400">Halting smart contract execution, impersonating Nominee wallet signatures.</span>
-                            </div>
-                            <span className="text-white font-mono font-bold">$25,000+</span>
-                        </div>
-                        <div className="flex justify-between items-center bg-slate-950 p-4 border border-slate-800 rounded-xl">
-                            <div>
-                                <span className="text-yellow-500 font-bold block mb-1">Medium</span>
-                                <span className="text-sm text-slate-400">Server misconfigurations exposing plaintext metadata, persistent XSS in the Vault Client.</span>
-                            </div>
-                            <span className="text-white font-mono font-bold">$5,000+</span>
-                        </div>
-                    </div>
-                </div>
+                    <section className="bg-slate-950 border-2 border-slate-800 rounded-3xl p-8 md:p-12 text-center">
+                        <Mail className="h-12 w-12 text-slate-400 mx-auto mb-6" />
+                        <h2 className="text-2xl font-bold text-white mb-4">How to Submit a Report</h2>
+                        <p className="text-slate-300 leading-relaxed mb-8 max-w-xl mx-auto">
+                            Submit your detailed findings, including reproducible Proof of Concept (PoC) scripts, via encrypted email.
+                        </p>
 
+                        <div className="bg-slate-900 p-6 rounded-xl inline-block text-left border border-slate-800 max-w-md w-full mb-8">
+                            <p className="text-sm text-slate-400 mb-1">Send to:</p>
+                            <p className="text-lg font-mono text-white mb-4">security@digitalwill.protocol</p>
+
+                            <p className="text-sm text-slate-400 mb-1">PGP Fingerprint (Required for Critical):</p>
+                            <p className="text-xs font-mono text-blue-400 select-all break-all">
+                                4F92 B7A1 08DE 3C44 291A 6BB2 D4F1 88E9 C12A 99F3
+                            </p>
+                        </div>
+                        <p className="text-sm text-slate-500">
+                            We typically respond to critical PGP-encrypted reports within 12 hours.
+                        </p>
+                    </section>
+
+                </div>
             </div>
         </div>
     );
