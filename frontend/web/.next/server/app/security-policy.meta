@@ -1,5 +1,5 @@
 {
   "headers": {
-    "x-next-cache-tags": "_N_T_/layout,_N_T_/security-policy/layout,_N_T_/security-policy/page,_N_T_/security-policy"
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(marketing)/layout,_N_T_/(marketing)/security-policy/layout,_N_T_/(marketing)/security-policy/page,_N_T_/security-policy"
   }
 }

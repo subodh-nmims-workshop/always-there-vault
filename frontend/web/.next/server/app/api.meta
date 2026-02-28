@@ -1,5 +1,5 @@
 {
   "headers": {
-    "x-next-cache-tags": "_N_T_/layout,_N_T_/api/layout,_N_T_/api/page,_N_T_/api"
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(marketing)/layout,_N_T_/(marketing)/api/layout,_N_T_/(marketing)/api/page,_N_T_/api"
   }
 }

@@ -569,30 +569,30 @@ export default function HomePage() {
                 <div>
                   <h4 className="font-bold mb-4 text-slate-200">Product</h4>
                   <ul className="space-y-3 text-sm text-slate-400">
-                    <li><a href="#features" className="hover:text-blue-400 transition-colors">Features</a></li>
-                    <li><a href="#security" className="hover:text-blue-400 transition-colors">Security</a></li>
-                    <li><a href="#pricing" className="hover:text-blue-400 transition-colors">Pricing</a></li>
-                    <li><a href="#roadmap" className="hover:text-blue-400 transition-colors">Roadmap</a></li>
+                    <li><a href="/features" className="hover:text-blue-400 transition-colors">Features</a></li>
+                    <li><a href="/security" className="hover:text-blue-400 transition-colors">Security</a></li>
+                    <li><a href="/pricing" className="hover:text-blue-400 transition-colors">Pricing</a></li>
+                    <li><a href="/roadmap" className="hover:text-blue-400 transition-colors">Roadmap</a></li>
                   </ul>
                 </div>
 
                 <div>
                   <h4 className="font-bold mb-4 text-slate-200">Resources</h4>
                   <ul className="space-y-3 text-sm text-slate-400">
-                    <li><a href="#docs" className="hover:text-blue-400 transition-colors">Documentation</a></li>
-                    <li><a href="#api" className="hover:text-blue-400 transition-colors">API Reference</a></li>
-                    <li><a href="#guides" className="hover:text-blue-400 transition-colors">Guides</a></li>
-                    <li><a href="#support" className="hover:text-blue-400 transition-colors">Support</a></li>
+                    <li><a href="/docs" className="hover:text-blue-400 transition-colors">Documentation</a></li>
+                    <li><a href="/api" className="hover:text-blue-400 transition-colors">API Reference</a></li>
+                    <li><a href="/guides" className="hover:text-blue-400 transition-colors">Guides</a></li>
+                    <li><a href="/support" className="hover:text-blue-400 transition-colors">Support</a></li>
                   </ul>
                 </div>
 
                 <div>
                   <h4 className="font-bold mb-4 text-slate-200">Company</h4>
                   <ul className="space-y-3 text-sm text-slate-400">
-                    <li><a href="#about" className="hover:text-blue-400 transition-colors">About</a></li>
-                    <li><a href="#blog" className="hover:text-blue-400 transition-colors">Blog</a></li>
-                    <li><a href="#careers" className="hover:text-blue-400 transition-colors">Careers</a></li>
-                    <li><a href="#contact" className="hover:text-blue-400 transition-colors">Contact</a></li>
+                    <li><a href="/about" className="hover:text-blue-400 transition-colors">About</a></li>
+                    <li><a href="/blog" className="hover:text-blue-400 transition-colors">Blog</a></li>
+                    <li><a href="/careers" className="hover:text-blue-400 transition-colors">Careers</a></li>
+                    <li><a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a></li>
                   </ul>
                 </div>
               </div>
@@ -602,9 +602,9 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row justify-between items-center text-sm text-slate-400">
                 <p>© 2024 Digital Will Protocol. All rights reserved.</p>
                 <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 md:mt-0">
-                  <a href="#privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
-                  <a href="#terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
-                  <a href="#security-policy" className="hover:text-blue-400 transition-colors">Security</a>
+                  <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
+                  <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
+                  <a href="/security-policy" className="hover:text-blue-400 transition-colors">Security</a>
                 </div>
               </div>
             </footer>
