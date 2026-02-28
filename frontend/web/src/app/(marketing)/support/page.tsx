@@ -1,99 +1,93 @@
 'use client';
 
-import { LifeBuoy, FileQuestion, BookOpen, MessageCircle, AlertTriangle } from 'lucide-react';
-import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { LifeBuoy, AlertTriangle, MessageCircle, FileQuestion, ArrowRight } from 'lucide-react';
 
 export default function SupportPage() {
+    const defaultTransition = { duration: 0.8, ease: "easeOut" as any };
+
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#050a1a] pt-32 pb-24 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
 
-                <div className="text-center mb-16 slide-up">
-                    <div className="inline-flex items-center justify-center p-4 bg-blue-500/10 rounded-full mb-6 border border-blue-500/20">
-                        <LifeBuoy className="h-10 w-10 text-blue-400" />
+            <div className="absolute top-[0%] left-[20%] w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen"></div>
+
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+                {/* Header Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={defaultTransition}
+                    className="mb-20 text-center mt-12"
+                >
+                    <div className="inline-flex items-center gap-3 mb-8 border border-[#2b52ff]/20 bg-[#2b52ff]/10 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest text-[#2b52ff] text-xs font-bold shadow-lg shadow-[#2b52ff]/5">
+                        <LifeBuoy className="h-4 w-4" />
+                        <span>System Recovery</span>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-white tracking-tight">
-                        Protocol <span className="text-blue-500">Support</span>
+
+                    <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-[1.05]">
+                        Technical <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-[#2b52ff]">Support.</span>
                     </h1>
-                    <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
-                        We provide architectural guidance and UI troubleshooting. Please note: due to our Zero-Knowledge constraint, we cannot reset passwords or recover lost cryptographic keys.
-                    </p>
-                </div>
+                </motion.div>
 
-                {/* The "Cannot Recover" Warning */}
-                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 mb-12 flex items-start shadow-[0_0_20px_rgba(239,68,68,0.1)]">
-                    <AlertTriangle className="h-8 w-8 text-red-500 mr-4 shrink-0 mt-1" />
-                    <div>
-                        <h3 className="font-bold text-red-400 text-lg mb-2">Notice Regarding Account Recovery</h3>
-                        <p className="text-red-200/80 text-sm leading-relaxed">
-                            If you have lost your master AES decryption key or cannot access your threshold of Shamir Shares, your data is mathematically unrecoverable. Our support engineers have absolutely no backdoor access. Submitting a ticket requesting a password reset or data recovery will result in an automated closure.
+                {/* Important Warning using Skai Bento Structure */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={defaultTransition}
+                    className="bg-white/[0.02] border-l-4 border-l-red-500 border-y border-r border-white/10 rounded-r-[2rem] p-8 lg:p-12 mb-16 shadow-2xl shadow-red-500/5 relative overflow-hidden group"
+                >
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-[50px] pointer-events-none"></div>
+                    <div className="flex items-start relative z-10">
+                        <AlertTriangle className="w-8 h-8 text-red-500 mr-5 shrink-0 mt-1" />
+                        <div>
+                            <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">Crucial: Data Recovery Limitation</h3>
+                            <p className="text-blue-100/70 font-medium leading-relaxed">
+                                Because we utilize strict end-to-end client-side AES encryption via Zero-Knowledge Architecture, <strong className="text-white font-bold">we cannot reset your password, nor can we decrypt your vault data if you lose your keys.</strong> We simply do not have them. Support is limited to protocol mechanics, integration troubleshooting, and contract queries.
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <div className="grid md:grid-cols-2 gap-8 lg:gap-10 mb-20">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ ...defaultTransition, delay: 0.1 }}
+                        className="p-10 bg-white/[0.02] border border-white/5 rounded-[2rem] flex flex-col hover:bg-white/[0.04] hover:border-white/20 transition-all shadow-xl shadow-black/20 group"
+                    >
+                        <div className="w-14 h-14 bg-[#2b52ff]/10 rounded-xl border border-[#2b52ff]/20 flex items-center justify-center mb-8 shadow-inner group-hover:bg-[#2b52ff]/20 transition-colors">
+                            <MessageCircle className="w-6 h-6 text-[#2b52ff]" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">Open a Ticket</h3>
+                        <p className="text-blue-100/60 font-medium mb-8 flex-grow">
+                            Submit a technical inquiry to our decentralized network of engineers. Expected response time is within 12 hours.
                         </p>
-                    </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8 mb-16">
-                    {/* FAQ Portal */}
-                    <Link href="/docs" className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition-colors group flex flex-col justify-between">
-                        <div>
-                            <div className="p-3 bg-slate-950 rounded-xl mb-6 border border-slate-800 inline-block">
-                                <FileQuestion className="h-6 w-6 text-emerald-400" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-white mb-3">Knowledge Base & FAQ</h3>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                                Browse our extensive repository solving 95% of common issues regarding IPFS pinning, Polygon gas estimation, and file extension handling.
-                            </p>
-                        </div>
-                        <span className="text-emerald-400 font-semibold text-sm group-hover:text-emerald-300 transition-colors flex items-center">
-                            Browse FAQs →
-                        </span>
-                    </Link>
-
-                    {/* Community */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition-colors group flex flex-col justify-between">
-                        <div>
-                            <div className="p-3 bg-slate-950 rounded-xl mb-6 border border-slate-800 inline-block">
-                                <MessageCircle className="h-6 w-6 text-blue-400" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-white mb-3">Community Discord</h3>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                                Connect with thousands of other users and distributed systems engineers. Real-time community debugging and protocol discussion.
-                            </p>
-                        </div>
-                        <span className="text-blue-400 font-semibold text-sm group-hover:text-blue-300 transition-colors flex items-center">
-                            Join Server →
-                        </span>
-                    </div>
-                </div>
-
-                {/* Ticket Submission */}
-                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 relative overflow-hidden">
-                    <h2 className="text-2xl font-bold text-white mb-6">Submit a Support Ticket</h2>
-                    <p className="text-slate-400 mb-8">For bug reports, API integration issues, or billing inquiries on the Lifetime Vault tier.</p>
-
-                    <form className="space-y-6 relative z-10">
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Category</label>
-                                <select className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer">
-                                    <option>Bug Report / Interface Glitch</option>
-                                    <option>Smart Contract Error</option>
-                                    <option>API & Integration</option>
-                                    <option>Lifetime Vault Billing</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Wallet Address (Optional)</label>
-                                <input type="text" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all" placeholder="0x..." />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-2">Description</label>
-                            <textarea className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-all min-h-[150px]" placeholder="Detailed description..."></textarea>
-                        </div>
-                        <button type="button" className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition-colors border border-slate-700 hover:border-slate-500">
-                            Create Ticket securely
+                        <button className="bg-white/5 hover:bg-[#2b52ff] text-white font-bold py-4 rounded-xl border border-white/10 hover:border-[#2b52ff] transition-all w-full shadow-md text-sm tracking-wide">
+                            Submit Inquiry
                         </button>
-                    </form>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ ...defaultTransition, delay: 0.2 }}
+                        className="p-10 bg-gradient-to-br from-[#101b3d] to-[#050a1a] border border-[#2b52ff]/20 rounded-[2rem] flex flex-col hover:border-[#2b52ff]/40 transition-all shadow-xl shadow-[#2b52ff]/10 group"
+                    >
+                        <div className="w-14 h-14 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center mb-8 shadow-inner shadow-black/50">
+                            <FileQuestion className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">FAQ Library</h3>
+                        <p className="text-blue-100/80 font-medium mb-8 flex-grow">
+                            Browse the most commonly asked questions regarding gas optimizations, heartbeat mechanisms, and Shamir setups.
+                        </p>
+                        <button className="bg-[#2b52ff] hover:bg-white text-white hover:text-[#2b52ff] font-bold py-4 rounded-xl transition-all w-full shadow-lg shadow-[#2b52ff]/20 text-sm tracking-wide flex items-center justify-center gap-2">
+                            Browse Library <ArrowRight className="w-4 h-4" />
+                        </button>
+                    </motion.div>
                 </div>
 
             </div>

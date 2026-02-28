@@ -5,23 +5,17 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 export default function BlogPage() {
-    const defaultTransition = { duration: 1.2, ease: [0.16, 1, 0.3, 1] }; // Slow lux ease
+    const defaultTransition: any = { duration: 0.8, ease: "easeOut" };
 
     const heroVariants = {
-        hidden: { opacity: 0, y: 50 },
-        visible: { opacity: 1, y: 0, transition: { ...defaultTransition, staggerChildren: 0.2 } }
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } }
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 30 },
+        hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: defaultTransition }
     };
-
-    const coverImages = [
-        "https://images.unsplash.com/photo-1639762681485-074b7f4d2315?q=80&w=2600&auto=format&fit=crop", // Abstract nodes
-        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2600&auto=format&fit=crop", // Abstract shapes/marble
-        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2600&auto=format&fit=crop"  // Deep tech abstract
-    ];
 
     const posts = [
         {
@@ -31,7 +25,7 @@ export default function BlogPage() {
             author: "Dr. Aris Thorne",
             category: "Core Architecture",
             readTime: "8 min read",
-            image: coverImages[0]
+            image: "https://images.unsplash.com/photo-1639762681485-074b7f4d2315?q=80&w=2600&auto=format&fit=crop"
         },
         {
             title: "Auditing the Immutable: Zero-Knowledge Switches",
@@ -40,7 +34,7 @@ export default function BlogPage() {
             author: "Protocol Engineering",
             category: "Smart Contracts",
             readTime: "12 min read",
-            image: coverImages[1]
+            image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2600&auto=format&fit=crop"
         },
         {
             title: "The Fallacy of Traditional Estate Planning",
@@ -49,7 +43,7 @@ export default function BlogPage() {
             author: "Governance DAO",
             category: "Philosophy",
             readTime: "6 min read",
-            image: coverImages[2]
+            image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2600&auto=format&fit=crop"
         },
         {
             title: "AES-256-GCM in the Browser: Overcoming SSR Bottlenecks",
@@ -63,11 +57,11 @@ export default function BlogPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#050505] pt-32 pb-24 font-sans selection:bg-purple-500/30 selection:text-purple-200">
-            {/* Ambient Background Glow */}
+        <div className="min-h-screen bg-[#050a1a] pt-32 pb-24 font-sans selection:bg-[#2b52ff]/30 selection:text-white">
+            {/* Skai-style Ambient Background Glow */}
             <div className="fixed top-0 inset-x-0 h-[800px] pointer-events-none overflow-hidden z-0">
-                <div className="absolute top-[-20%] left-[20%] w-[600px] h-[600px] bg-purple-900/10 blur-[130px] rounded-full mix-blend-screen"></div>
-                <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-blue-900/10 blur-[120px] rounded-full mix-blend-screen"></div>
+                <div className="absolute top-[-20%] left-[20%] w-[600px] h-[600px] bg-[#2b52ff]/10 blur-[130px] rounded-full mix-blend-screen"></div>
+                <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-purple-900/10 blur-[120px] rounded-full mix-blend-screen"></div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -77,70 +71,69 @@ export default function BlogPage() {
                     initial="hidden"
                     animate="visible"
                     variants={heroVariants}
-                    className="mb-32 max-w-4xl"
+                    className="mb-24 max-w-4xl pt-16"
                 >
-                    <motion.div variants={itemVariants} className="inline-flex items-center gap-3 mb-8 border border-white/5 bg-white/[0.02] backdrop-blur-md px-4 py-2 rounded-full uppercase tracking-[0.2em] text-[10px] text-slate-400 font-medium">
-                        <BookOpen className="h-3 w-3 text-purple-400" />
+                    <motion.div variants={itemVariants} className="inline-flex items-center gap-3 mb-8 border border-white/10 bg-white/[0.03] backdrop-blur-xl px-4 py-2 rounded-full uppercase tracking-[0.2em] text-[10px] text-slate-300 font-semibold shadow-xl shadow-[#2b52ff]/5">
+                        <BookOpen className="h-3 w-3 text-[#2b52ff]" />
                         <span>The DWP Engineering Journal</span>
                     </motion.div>
 
-                    <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-medium tracking-tighter text-white mb-8 leading-[1.05]">
-                        <span className="block text-slate-500 font-light">Protocol</span>
+                    <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white mb-8 leading-[1.05]">
+                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 font-extrabold pb-2">Protocol</span>
                         Research & Insights.
                     </motion.h1>
 
-                    <motion.p variants={itemVariants} className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-2xl">
+                    <motion.p variants={itemVariants} className="text-xl md:text-2xl text-slate-300 font-normal leading-relaxed max-w-2xl">
                         A rigorous exploration of the mathematics, distributed systems, and immutable architecture powering the world's most secure digital inheritance protocol.
                     </motion.p>
                 </motion.div>
 
                 {/* Featured Master Piece */}
                 <motion.div
-                    initial={{ opacity: 0, y: 50 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={defaultTransition}
-                    className="mb-24"
+                    className="mb-20"
                 >
-                    <Link href="#" className="group block relative w-full overflow-hidden rounded-[2.5rem] bg-[#111] border border-white/5 transition-colors hover:border-white/10">
-                        <div className="grid lg:grid-cols-2 min-h-[600px]">
+                    <Link href="#" className="group block relative w-full overflow-hidden rounded-[2rem] bg-white/[0.02] backdrop-blur-md shadow-2xl shadow-black/50 border border-white/5 transition-all duration-300 hover:border-white/20 hover:shadow-[#2b52ff]/10">
+                        <div className="grid lg:grid-cols-2 min-h-[500px]">
                             {/* Image Side with slow pan */}
-                            <div className="relative overflow-hidden h-full min-h-[400px]">
+                            <div className="relative overflow-hidden h-full min-h-[350px]">
                                 <motion.div
-                                    className="absolute inset-0 w-full h-full bg-cover bg-center origin-center transition-transform duration-[20s] ease-linear group-hover:scale-110"
-                                    style={{ backgroundImage: \`url('\${posts[0].image}')\` }}
+                                    className="absolute inset-0 w-full h-full bg-cover bg-center origin-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                    style={{ backgroundImage: `url('${posts[0].image}')` }}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent lg:hidden"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#050a1a]/90 via-[#050a1a]/40 to-transparent lg:hidden"></div>
                             </div>
 
                             {/* Content Side */}
-                            <div className="relative p-12 lg:p-20 flex flex-col justify-center bg-gradient-to-r from-[#050505] to-[#111] border-l border-white/5">
+                            <div className="relative p-10 lg:p-14 flex flex-col justify-center border-l-0 lg:border-l border-white/5">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <span className="text-purple-400 text-xs font-bold uppercase tracking-[0.15em]">{posts[0].category}</span>
-                                    <span className="text-slate-600 text-xs">|</span>
-                                    <span className="text-slate-400 text-xs tracking-wider flex items-center"><Clock className="w-3 h-3 mr-2" />{posts[0].readTime}</span>
+                                    <span className="bg-[#2b52ff]/10 text-[#2b52ff] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{posts[0].category}</span>
+                                    <span className="text-slate-400 text-xs tracking-wider flex items-center font-medium"><Clock className="w-3 h-3 mr-2" />{posts[0].readTime}</span>
                                 </div>
 
-                                <h2 className="text-4xl lg:text-5xl font-medium text-white mb-6 leading-[1.1] tracking-tight group-hover:text-purple-300 transition-colors duration-500">
+                                <h2 className="text-3xl lg:text-4xl font-bold text-white mb-5 leading-tight tracking-tight group-hover:text-[#2b52ff] transition-colors duration-300">
                                     {posts[0].title}
                                 </h2>
 
-                                <p className="text-lg text-slate-400 mb-12 font-light leading-relaxed">
+                                <p className="text-base text-slate-400 mb-10 font-normal leading-relaxed">
                                     {posts[0].excerpt}
                                 </p>
 
-                                <div className="flex items-center justify-between mt-auto pt-8 border-t border-white/5">
+                                <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-[#222] rounded-full flex items-center justify-center border border-white/10">
-                                            <User className="h-5 w-5 text-slate-400" />
+                                        <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                                            <User className="h-4 w-4 text-slate-300" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium text-white">{posts[0].author}</p>
-                                            <p className="text-xs text-slate-500 tracking-wider mt-1">{posts[0].date}</p>
+                                            <p className="text-sm font-semibold text-white">{posts[0].author}</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-0.5">{posts[0].date}</p>
                                         </div>
                                     </div>
-                                    <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 transform group-hover:-rotate-45">
-                                        <ArrowUpRight className="h-5 w-5" />
+                                    <div className="w-10 h-10 rounded-full bg-[#2b52ff] flex items-center justify-center shadow-lg shadow-[#2b52ff]/30 group-hover:bg-white group-hover:text-[#2b52ff] text-white transition-all duration-300 transform group-hover:scale-110">
+                                        <ArrowUpRight className="h-4 w-4" />
                                     </div>
                                 </div>
                             </div>
@@ -153,22 +146,22 @@ export default function BlogPage() {
                     {posts.slice(1).map((post, idx) => (
                         <motion.div
                             key={idx}
-                            initial={{ opacity: 0, y: 40 }}
+                            initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
-                            transition={{ ...defaultTransition, delay: idx * 0.15 }}
+                            transition={{ ...defaultTransition, delay: idx * 0.1 }}
                         >
-                            <Link href="#" className="group block bg-[#0a0a0a] border border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-colors h-full flex flex-col">
+                            <Link href="#" className="group block bg-white/[0.02] backdrop-blur-md shadow-xl shadow-black/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-white/20 hover:-translate-y-2 transition-all duration-300 h-full flex flex-col">
                                 {/* Image Container */}
-                                <div className="relative h-64 overflow-hidden bg-[#111]">
+                                <div className="relative h-56 overflow-hidden">
                                     <div
-                                        className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-[15s] ease-linear group-hover:scale-110"
-                                        style={{ backgroundImage: \`url('\${post.image}')\` }}
+                                        className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
+                                        style={{ backgroundImage: `url('${post.image}')` }}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#050a1a] via-transparent to-transparent opacity-80"></div>
 
-                                    <div className="absolute top-6 left-6">
-                                        <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-[0.15em]">
+                                    <div className="absolute top-5 left-5">
+                                        <span className="bg-[#2b52ff]/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
                                             {post.category}
                                         </span>
                                     </div>
@@ -176,23 +169,23 @@ export default function BlogPage() {
 
                                 {/* Content Container */}
                                 <div className="p-8 flex flex-col flex-grow">
-                                    <div className="flex items-center gap-4 text-xs text-slate-400 tracking-wider mb-5">
-                                        <span className="flex items-center"><Calendar className="w-3 h-3 mr-2" />{post.date}</span>
-                                        <span>•</span>
+                                    <div className="flex items-center gap-3 text-xs text-slate-400 font-semibold mb-4">
+                                        <span className="flex items-center"><Calendar className="w-3 h-3 mr-1.5" />{post.date}</span>
+                                        <span className="w-1 h-1 rounded-full bg-slate-600"></span>
                                         <span>{post.readTime}</span>
                                     </div>
 
-                                    <h3 className="text-2xl font-medium text-white mb-4 tracking-tight leading-snug group-hover:text-blue-300 transition-colors duration-500">
+                                    <h3 className="text-xl font-bold text-white mb-3 tracking-tight leading-snug group-hover:text-[#2b52ff] transition-colors duration-300">
                                         {post.title}
                                     </h3>
 
-                                    <p className="text-slate-400 font-light text-sm leading-relaxed mb-8 flex-grow">
+                                    <p className="text-slate-400 font-normal text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
                                         {post.excerpt}
                                     </p>
 
-                                    <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
-                                        <p className="text-sm font-medium text-slate-300">{post.author}</p>
-                                        <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                                    <div className="flex items-center justify-between pt-5 border-t border-white/10 mt-auto">
+                                        <p className="text-sm font-semibold text-slate-300">{post.author}</p>
+                                        <ArrowUpRight className="h-4 w-4 text-[#2b52ff] opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                                     </div>
                                 </div>
                             </Link>
@@ -200,27 +193,27 @@ export default function BlogPage() {
                     ))}
                 </div>
 
-                {/* Newsletter Sub */}
+                {/* Newsletter Sub - Bento Style */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={defaultTransition}
-                    className="rounded-[3rem] p-12 lg:p-24 relative overflow-hidden bg-[#0a0a0a] border border-white/10 text-center flex flex-col items-center"
+                    className="rounded-[2rem] p-10 lg:p-16 relative overflow-hidden bg-gradient-to-br from-[#2b52ff]/20 to-purple-900/20 border border-white/10 shadow-2xl backdrop-blur-xl flex flex-col items-center mb-32"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none"></div>
-                    <Tag className="w-12 h-12 text-slate-500 mb-8" />
-                    <h3 className="text-3xl md:text-5xl font-medium text-white tracking-tight mb-6">Stay ahead of the curve.</h3>
-                    <p className="text-slate-400 text-lg mb-12 max-w-2xl font-light">
-                        Subscribe to receive rare technical briefings on decentralized hardware, zero-knowledge proofs, and smart contract architecture. We don't spam.
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80')] opacity-5 mix-blend-overlay bg-cover bg-center pointer-events-none"></div>
+                    <Tag className="w-10 h-10 text-white mb-6" />
+                    <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4 text-center">Stay ahead of the curve.</h3>
+                    <p className="text-blue-100/70 text-base mb-10 max-w-xl text-center font-medium">
+                        Subscribe to receive rare technical briefings on decentralized hardware, zero-knowledge proofs, and smart contract architecture.
                     </p>
-                    <div className="relative w-full max-w-xl group">
+                    <div className="relative w-full max-w-lg group">
                         <input
                             type="text"
-                            className="w-full bg-[#111] border border-white/10 text-white rounded-full px-8 py-5 focus:outline-none focus:border-white/30 transition-colors placeholder:text-slate-600 tracking-wider text-sm"
+                            className="w-full bg-[#050a1a]/80 backdrop-blur-md border border-white/20 text-white rounded-xl px-6 py-4 focus:outline-none focus:border-[#2b52ff] focus:ring-1 focus:ring-[#2b52ff] transition-all placeholder:text-slate-500 font-medium text-sm shadow-inner"
                             placeholder="YOUR EMAIL OR ENS..."
                         />
-                        <button className="absolute right-2 top-2 bottom-2 bg-white text-black hover:bg-slate-200 uppercase tracking-widest text-xs font-bold px-8 rounded-full transition-colors flex items-center">
+                        <button className="absolute right-1.5 top-1.5 bottom-1.5 bg-[#2b52ff] text-white hover:bg-white hover:text-[#2b52ff] font-bold px-6 rounded-lg transition-all flex items-center text-sm shadow-md">
                             Subscribe
                         </button>
                     </div>

@@ -1,120 +1,122 @@
 'use client';
 
-import { PlayCircle, Target, Waypoints, KeySquare, ShieldAlert, Cpu } from 'lucide-react';
-import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Compass, Search, FileText, ArrowRight, BookOpen } from 'lucide-react';
 
 export default function GuidesPage() {
+    const defaultTransition = { duration: 0.8, ease: "easeOut" as any };
+
+    const categories = [
+        "Cryptographic Theory",
+        "Smart Contract Integration",
+        "Frontend Implementation",
+        "Node Architecture"
+    ];
+
     const guides = [
         {
-            title: "Zero-Knowledge Hardware Wallet Setup",
-            description: "How to bind your Ledger or Trezor to the protocol executing EIP-4361 auth without ever exposing your private key to the browser.",
-            category: "Security",
-            icon: <KeySquare className="h-6 w-6 text-orange-400" />,
-            level: "Advanced"
+            title: "Implementing Multi-Party Computation",
+            cat: "Cryptographic Theory",
+            desc: "A theoretical breakdown of distributing AES decryption keys across an N-of-M network.",
         },
         {
-            title: "Distributing Shamir Shares Securely",
-            description: "A step-by-step guide on generating a 3-of-5 Shamir Secret threshold and securely distributing the fragmented polynomial shards to diverse cold storage locations.",
-            category: "Cryptography",
-            icon: <Waypoints className="h-6 w-6 text-blue-400" />,
-            level: "Intermediate"
+            title: "Verifying the Smart Contract on Polygon",
+            cat: "Smart Contract Integration",
+            desc: "How to use hardhat and the Etherscan API to independently verify the contract bytecode.",
         },
         {
-            title: "Deploying the Vault Smart Contract",
-            description: "Visual walkthrough of interacting with the Polygon Mainnet to deploy your personalized immutable vault and funding it with MATIC for gas.",
-            category: "Smart Contracts",
-            icon: <Cpu className="h-6 w-6 text-purple-400" />,
-            level: "Beginner"
+            title: "Client-Side Zero-Knowledge Flow in React",
+            cat: "Frontend Implementation",
+            desc: "Overcoming SSR bottlenecks to ensure keys never leak during hydration.",
         },
         {
-            title: "Beneficiary Onboarding & Decryption",
-            description: "What a beneficiary sees when a vault unlocks. How they retrieve the CID, reassemble the Shards, and run AES decryption locally.",
-            category: "Onboarding",
-            icon: <Target className="h-6 w-6 text-emerald-400" />,
-            level: "Beginner"
+            title: "Setting up a Heartbeat Server",
+            cat: "Node Architecture",
+            desc: "Running an automated python script to maintain your alive status on-chain.",
         }
     ];
 
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#050a1a] pt-32 pb-24 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
 
-                <div className="text-center mb-16 slide-up max-w-4xl mx-auto pt-10">
-                    <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-white tracking-tight">
-                        Integration <span className="text-blue-500">Guides</span>
-                    </h1>
-                    <p className="text-xl text-slate-400 font-light leading-relaxed mb-10">
-                        Operational manuals for engineering extreme security within the protocol. Learn to establish unbreakable cryptographic inheritances.
-                    </p>
+            <div className="absolute top-[10%] left-[50%] -translate-x-1/2 w-[800px] h-[400px] bg-[#2b52ff]/10 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
 
-                    <div className="relative max-w-2xl mx-auto">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                            <Search className="w-5 h-5 text-slate-500" />
-                        </div>
-                        <input type="text" className="w-full bg-slate-900 border border-slate-800 text-white rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:border-blue-500 transition-colors shadow-inner" placeholder="Search guides, setups, or errors..." />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+                {/* Header Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={defaultTransition}
+                    className="mb-20 text-center max-w-4xl mx-auto"
+                >
+                    <div className="inline-flex items-center gap-3 mb-8 border border-[#2b52ff]/20 bg-[#2b52ff]/10 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest text-[#2b52ff] text-xs font-bold shadow-lg shadow-[#2b52ff]/5">
+                        <Compass className="h-4 w-4" />
+                        <span>Knowledge Base</span>
                     </div>
-                </div>
 
-                <div className="grid md:grid-cols-2 gap-8 mb-24 relative z-10 max-w-6xl mx-auto">
-                    {guides.map((guide, idx) => (
-                        <div key={idx} className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 hover:border-slate-600 transition-all duration-300 group cursor-pointer hover:shadow-lg hover:-translate-y-1">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 group-hover:border-slate-600 transition-colors">
-                                    {guide.icon}
-                                </div>
-                                <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${guide.level === 'Advanced' ? 'text-orange-400 border-orange-400/30 bg-orange-400/10' :
-                                        guide.level === 'Intermediate' ? 'text-blue-400 border-blue-400/30 bg-blue-400/10' :
-                                            'text-emerald-400 border-emerald-400/30 bg-emerald-400/10'
-                                    }`}>
-                                    {guide.level}
-                                </span>
-                            </div>
-                            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">
-                                {guide.title}
-                            </h3>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                                {guide.description}
-                            </p>
-                            <div className="flex items-center text-blue-400 font-semibold text-sm">
-                                <PlayCircle className="w-4 h-4 mr-2" /> Read Guide
-                            </div>
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-8 leading-[1.05]">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-[#2b52ff]">Guides</span> & Tutorials.
+                    </h1>
+
+                    {/* Search Bar Bento Style */}
+                    <div className="relative w-full max-w-2xl mx-auto mt-12 group">
+                        <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                            <Search className="h-6 w-6 text-slate-400 group-hover:text-[#2b52ff] transition-colors" />
                         </div>
-                    ))}
-                </div>
+                        <input
+                            type="text"
+                            className="block w-full pl-16 pr-6 py-6 bg-white/[0.02] border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#2b52ff] focus:border-[#2b52ff] transition-all font-medium text-lg leading-none shadow-xl shadow-black/30 backdrop-blur-md"
+                            placeholder="Search architecture..."
+                        />
+                    </div>
+                </motion.div>
 
-                <div className="bg-blue-600 rounded-3xl p-12 text-center max-w-4xl mx-auto shadow-[0_0_40px_rgba(59,130,246,0.3)] relative overflow-hidden flex flex-col items-center">
-                    <ShieldAlert className="w-16 h-16 text-blue-300 mb-6" />
-                    <h2 className="text-3xl font-extrabold text-white mb-4 relative z-10">OpSec Best Practices</h2>
-                    <p className="text-blue-100 text-lg mb-8 relative z-10 max-w-2xl">
-                        A chain is only as strong as its weakest link. Review our extreme operational security manifesto to ensure your local environment isn't compromised before encryption occurs.
-                    </p>
-                    <button className="bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 px-10 rounded-xl transition-colors relative z-10 border border-slate-800">
-                        View Threat Modeling Guide
-                    </button>
+                {/* Categories */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ ...defaultTransition, delay: 0.2 }}
+                    className="flex flex-wrap justify-center gap-4 mb-20"
+                >
+                    <button className="bg-[#2b52ff] text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-[#2b52ff]/30 border border-[#2b52ff]">All Guides</button>
+                    {categories.map((cat, i) => (
+                        <button key={i} className="bg-white/[0.03] text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold border border-white/10 hover:border-white/20 hover:bg-white/[0.05] transition-all tracking-wide">
+                            {cat}
+                        </button>
+                    ))}
+                </motion.div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto mb-24">
+                    {guides.map((guide, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ ...defaultTransition, delay: idx * 0.1 }}
+                        >
+                            <a href="#" className="block p-10 bg-white/[0.02] border border-white/5 rounded-[2rem] hover:bg-white/[0.04] hover:border-white/20 transition-all duration-300 group shadow-xl shadow-black/20 h-full flex flex-col relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#2b52ff]/5 rounded-full blur-[30px] -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700 pointer-events-none"></div>
+
+                                <span className="bg-[#2b52ff]/20 text-[#2b52ff] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest border border-[#2b52ff]/30 w-max mb-6">
+                                    {guide.cat}
+                                </span>
+                                <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-[#2b52ff] transition-colors leading-snug tracking-tight">
+                                    {guide.title}
+                                </h3>
+                                <p className="text-blue-100/60 font-medium mb-8 leading-relaxed flex-grow">
+                                    {guide.desc}
+                                </p>
+                                <div className="flex items-center text-sm font-bold text-slate-300 mt-auto pt-6 border-t border-white/5">
+                                    <BookOpen className="w-4 h-4 mr-2 text-[#2b52ff]" /> Read Documentation
+                                </div>
+                            </a>
+                        </motion.div>
+                    ))}
                 </div>
 
             </div>
         </div>
     );
-}
-
-// Quick inline icon since lucide-react Search wasn't imported at top
-function Search(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-        </svg>
-    )
 }
