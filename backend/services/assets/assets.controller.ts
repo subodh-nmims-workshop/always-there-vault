@@ -12,25 +12,26 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AssetsService } from './assets.service';
-import { CreateAssetDto, UpdateAssetDto, AssetMetadataDto } from './dto/asset.dto';
+import { CreateAssetDto, UpdateAssetDto } from './dto/asset.dto';
+import { Asset } from './schemas/asset.schema';
 
 @ApiTags('assets')
 @Controller('api/assets')
 export class AssetsController {
-  constructor(private readonly assetsService: AssetsService) {}
+  constructor(private readonly assetsService: AssetsService) { }
 
   @Post()
   @ApiOperation({ summary: 'Register asset metadata (encrypted data stored client-side)' })
   @ApiResponse({ status: 201, description: 'Asset metadata registered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  async createAsset(@Body() createAssetDto: CreateAssetDto): Promise<AssetMetadataDto> {
+  async createAsset(@Body() createAssetDto: CreateAssetDto): Promise<Asset> {
     return this.assetsService.createAsset(createAssetDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all asset metadata for a user' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
-  async getAllAssets(@Query('walletAddress') walletAddress: string): Promise<AssetMetadataDto[]> {
+  async getAllAssets(@Query('walletAddress') walletAddress: string): Promise<Asset[]> {
     return this.assetsService.getAllAssets(walletAddress);
   }
 
@@ -38,7 +39,7 @@ export class AssetsController {
   @ApiOperation({ summary: 'Get specific asset metadata' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
-  async getAsset(@Param('id') id: string): Promise<AssetMetadataDto> {
+  async getAsset(@Param('id') id: string): Promise<Asset> {
     return this.assetsService.getAsset(id);
   }
 
@@ -49,7 +50,7 @@ export class AssetsController {
   async updateAsset(
     @Param('id') id: string,
     @Body() updateAssetDto: UpdateAssetDto,
-  ): Promise<AssetMetadataDto> {
+  ): Promise<Asset> {
     return this.assetsService.updateAsset(id, updateAssetDto);
   }
 

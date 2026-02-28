@@ -1,51 +1,47 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateBeneficiaryDto, UpdateBeneficiaryDto, BeneficiaryDto } from './dto/beneficiary.dto';
+import { Beneficiary, BeneficiaryDocument } from './schemas/beneficiary.schema';
 
 @Injectable()
 export class BeneficiariesService {
-  private beneficiaries: Map<string, BeneficiaryDto> = new Map();
+  constructor(
+    @InjectModel(Beneficiary.name) private beneficiaryModel: Model<BeneficiaryDocument>,
+  ) { }
 
-  async createBeneficiary(createBeneficiaryDto: CreateBeneficiaryDto): Promise<BeneficiaryDto> {
-    const beneficiary: BeneficiaryDto = {
-      id: this.generateId(),
+  async createBeneficiary(createBeneficiaryDto: any): Promise<Beneficiary> {
+    const newBeneficiary = new this.beneficiaryModel({
+      nomineeId: this.generateId(),
       ...createBeneficiaryDto,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      enabled: true,
-    };
-
-    this.beneficiaries.set(beneficiary.id, beneficiary);
-    return beneficiary;
+    });
+    return newBeneficiary.save();
   }
 
-  async getAllBeneficiaries(ownerAddress: string): Promise<BeneficiaryDto[]> {
-    return Array.from(this.beneficiaries.values()).filter(
-      (beneficiary) => beneficiary.ownerAddress === ownerAddress,
-    );
+  async getAllBeneficiaries(ownerWallet: string): Promise<Beneficiary[]> {
+    return this.beneficiaryModel.find({ ownerWallet }).exec();
   }
 
-  async getBeneficiary(id: string): Promise<BeneficiaryDto> {
-    const beneficiary = this.beneficiaries.get(id);
+  async getBeneficiary(nomineeId: string): Promise<Beneficiary> {
+    const beneficiary = await this.beneficiaryModel.findOne({ nomineeId }).exec();
     if (!beneficiary) {
-      throw new NotFoundException(`Beneficiary with ID ${id} not found`);
+      throw new NotFoundException(`Beneficiary with ID ${nomineeId} not found`);
     }
     return beneficiary;
   }
 
-  async updateBeneficiary(id: string, updateBeneficiaryDto: UpdateBeneficiaryDto): Promise<BeneficiaryDto> {
-    const beneficiary = await this.getBeneficiary(id);
-    const updatedBeneficiary = {
-      ...beneficiary,
-      ...updateBeneficiaryDto,
-      updatedAt: new Date(),
-    };
-    this.beneficiaries.set(id, updatedBeneficiary);
-    return updatedBeneficiary;
+  async updateBeneficiary(nomineeId: string, updateData: any): Promise<Beneficiary> {
+    const updated = await this.beneficiaryModel.findOneAndUpdate(
+      { nomineeId },
+      { $set: updateData },
+      { new: true }
+    ).exec();
+    if (!updated) throw new NotFoundException('Beneficiary not found');
+    return updated;
   }
 
-  async deleteBeneficiary(id: string): Promise<void> {
-    const beneficiary = await this.getBeneficiary(id);
-    this.beneficiaries.delete(id);
+  async deleteBeneficiary(nomineeId: string): Promise<void> {
+    await this.beneficiaryModel.findOneAndDelete({ nomineeId }).exec();
   }
 
   private generateId(): string {

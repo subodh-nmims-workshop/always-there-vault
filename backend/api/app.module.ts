@@ -5,11 +5,16 @@
  */
 
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AuthModule } from '../services/auth/auth.module';
 import { AssetsModule } from '../services/assets/assets.module';
 import { BeneficiariesModule } from '../services/beneficiaries/beneficiaries.module';
 import { HeartbeatModule } from '../services/heartbeat/heartbeat.module';
 import { BlockchainModule } from '../services/blockchain/blockchain.module';
+import { UsersModule } from '../services/users/users.module';
+import { ReleaseModule } from '../services/release/release.module';
 
 @Module({
   imports: [
@@ -17,12 +22,23 @@ import { BlockchainModule } from '../services/blockchain/blockchain.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+      }),
+      inject: [ConfigService],
+    }),
+    ScheduleModule.forRoot(),
+    AuthModule,
+    UsersModule,
     AssetsModule,
     BeneficiariesModule,
     HeartbeatModule,
     BlockchainModule,
+    ReleaseModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

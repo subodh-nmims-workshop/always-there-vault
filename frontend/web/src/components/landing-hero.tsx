@@ -3,12 +3,12 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Shield, 
-  Lock, 
-  Key, 
-  Globe, 
-  Zap, 
+import {
+  Shield,
+  Lock,
+  Key,
+  Globe,
+  Zap,
   Heart,
   Users,
   FileText,
@@ -31,7 +31,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
       <div className="relative overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20" />
-        
+
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
@@ -55,22 +55,22 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              A decentralized, non-custodial system that encrypts your digital life and 
-              automatically releases only what you choose, only to whom you choose, 
+              A decentralized, non-custodial system that encrypts your digital life and
+              automatically releases only what you choose, only to whom you choose,
               only when you are no longer active.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="gradient-bg-blue text-white px-8 py-6 text-lg"
                 onClick={onGetStarted}
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 variant="outline"
                 className="px-8 py-6 text-lg"
               >
@@ -281,8 +281,8 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
             Join thousands of users protecting their digital assets with military-grade encryption
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="secondary"
               className="px-8 py-6 text-lg"
               onClick={onGetStarted}
@@ -290,8 +290,8 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="outline"
               className="px-8 py-6 text-lg border-white text-white hover:bg-white hover:text-blue-600"
             >
@@ -302,56 +302,77 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
       </div>
 
       {/* Footer */}
-      <div className="py-12 bg-gray-900 text-gray-400">
+      <footer className="py-12 bg-gray-900 text-gray-400 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Shield className="h-6 w-6 text-blue-500" />
-                <span className="text-white font-bold text-lg">Digital Will</span>
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                {/* Custom Original Logo SVG */}
+                <div className="w-8 h-8 flex-shrink-0">
+                  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 5L90 25V65L50 95L10 65V25L50 5Z" fill="url(#gradHero1)" />
+                    <path d="M50 15L80 30V60L50 85L20 60V30L50 15Z" fill="#111827" />
+                    <path d="M50 25L70 35V55L50 75L30 55V35L50 25Z" fill="url(#gradHero2)" />
+                    <defs>
+                      <linearGradient id="gradHero1" x1="10" y1="5" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#3b82f6" />
+                        <stop offset="1" stopColor="#8b5cf6" />
+                      </linearGradient>
+                      <linearGradient id="gradHero2" x1="30" y1="25" x2="70" y2="75" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#10b981" />
+                        <stop offset="1" stopColor="#3b82f6" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+                <span className="text-white font-bold text-lg">Digital Will Protocol</span>
               </div>
               <p className="text-sm">
-                Securing digital legacies for the decentralized future.
+                Securing digital legacies for the decentralized future. Your assets, your rules.
               </p>
             </div>
+
             <div>
-              <h4 className="text-white font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Features</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
-                <li><a href="#" className="hover:text-white">Security</a></li>
-                <li><a href="#" className="hover:text-white">Roadmap</a></li>
+              <h4 className="text-white font-bold mb-4">Product</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#features" className="hover:text-blue-400 transition-colors">Features</a></li>
+                <li><a href="#security" className="hover:text-blue-400 transition-colors">Security</a></li>
+                <li><a href="#pricing" className="hover:text-blue-400 transition-colors">Pricing</a></li>
+                <li><a href="#roadmap" className="hover:text-blue-400 transition-colors">Roadmap</a></li>
               </ul>
             </div>
+
             <div>
-              <h4 className="text-white font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Documentation</a></li>
-                <li><a href="#" className="hover:text-white">API Reference</a></li>
-                <li><a href="#" className="hover:text-white">Smart Contracts</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
+              <h4 className="text-white font-bold mb-4">Resources</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#docs" className="hover:text-blue-400 transition-colors">Documentation</a></li>
+                <li><a href="#api" className="hover:text-blue-400 transition-colors">API Reference</a></li>
+                <li><a href="#guides" className="hover:text-blue-400 transition-colors">Guides</a></li>
+                <li><a href="#support" className="hover:text-blue-400 transition-colors">Support</a></li>
               </ul>
             </div>
+
             <div>
-              <h4 className="text-white font-semibold mb-4">Community</h4>
-              <div className="flex space-x-4">
-                <a href="#" className="hover:text-white">
-                  <Github className="h-6 w-6" />
-                </a>
-                <a href="#" className="hover:text-white">
-                  <Twitter className="h-6 w-6" />
-                </a>
-                <a href="#" className="hover:text-white">
-                  <MessageCircle className="h-6 w-6" />
-                </a>
-              </div>
+              <h4 className="text-white font-bold mb-4">Company</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#about" className="hover:text-blue-400 transition-colors">About</a></li>
+                <li><a href="#blog" className="hover:text-blue-400 transition-colors">Blog</a></li>
+                <li><a href="#careers" className="hover:text-blue-400 transition-colors">Careers</a></li>
+                <li><a href="#contact" className="hover:text-blue-400 transition-colors">Contact</a></li>
+              </ul>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
-            <p>&copy; 2026 Digital Will Protocol. All rights reserved.</p>
+
+          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+            <p>© 2024 Digital Will Protocol. All rights reserved.</p>
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 md:mt-0">
+              <a href="#privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
+              <a href="#terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
+              <a href="#security-policy" className="hover:text-blue-400 transition-colors">Security</a>
+            </div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }

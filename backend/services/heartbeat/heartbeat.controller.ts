@@ -8,17 +8,18 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HeartbeatService } from './heartbeat.service';
-import { RecordHeartbeatDto, HeartbeatDto, HeartbeatStatusDto } from './dto/heartbeat.dto';
+import { RecordHeartbeatDto, HeartbeatStatusDto } from './dto/heartbeat.dto';
+import { HeartbeatLog } from './schemas/heartbeat.schema';
 
 @ApiTags('heartbeat')
 @Controller('api/heartbeat')
 export class HeartbeatController {
-  constructor(private readonly heartbeatService: HeartbeatService) {}
+  constructor(private readonly heartbeatService: HeartbeatService) { }
 
   @Post()
   @ApiOperation({ summary: 'Record a proof-of-life heartbeat' })
   @ApiResponse({ status: 201, description: 'Heartbeat recorded successfully' })
-  async recordHeartbeat(@Body() recordHeartbeatDto: RecordHeartbeatDto): Promise<HeartbeatDto> {
+  async recordHeartbeat(@Body() recordHeartbeatDto: RecordHeartbeatDto): Promise<HeartbeatLog> {
     return this.heartbeatService.recordHeartbeat(recordHeartbeatDto);
   }
 
@@ -32,7 +33,7 @@ export class HeartbeatController {
   @Get('history/:walletAddress')
   @ApiOperation({ summary: 'Get heartbeat history for a user' })
   @ApiResponse({ status: 200, description: 'Heartbeat history retrieved successfully' })
-  async getHeartbeatHistory(@Param('walletAddress') walletAddress: string): Promise<HeartbeatDto[]> {
+  async getHeartbeatHistory(@Param('walletAddress') walletAddress: string): Promise<HeartbeatLog[]> {
     return this.heartbeatService.getHeartbeatHistory(walletAddress);
   }
 

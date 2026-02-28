@@ -12,24 +12,25 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BeneficiariesService } from './beneficiaries.service';
-import { CreateBeneficiaryDto, UpdateBeneficiaryDto, BeneficiaryDto } from './dto/beneficiary.dto';
+import { CreateBeneficiaryDto, UpdateBeneficiaryDto } from './dto/beneficiary.dto';
+import { Beneficiary } from './schemas/beneficiary.schema';
 
 @ApiTags('beneficiaries')
 @Controller('api/beneficiaries')
 export class BeneficiariesController {
-  constructor(private readonly beneficiariesService: BeneficiariesService) {}
+  constructor(private readonly beneficiariesService: BeneficiariesService) { }
 
   @Post()
   @ApiOperation({ summary: 'Add a new beneficiary' })
   @ApiResponse({ status: 201, description: 'Beneficiary created successfully' })
-  async createBeneficiary(@Body() createBeneficiaryDto: CreateBeneficiaryDto): Promise<BeneficiaryDto> {
+  async createBeneficiary(@Body() createBeneficiaryDto: CreateBeneficiaryDto): Promise<Beneficiary> {
     return this.beneficiariesService.createBeneficiary(createBeneficiaryDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all beneficiaries for a user' })
   @ApiResponse({ status: 200, description: 'Beneficiaries retrieved successfully' })
-  async getAllBeneficiaries(@Query('ownerAddress') ownerAddress: string): Promise<BeneficiaryDto[]> {
+  async getAllBeneficiaries(@Query('ownerAddress') ownerAddress: string): Promise<Beneficiary[]> {
     return this.beneficiariesService.getAllBeneficiaries(ownerAddress);
   }
 
@@ -37,7 +38,7 @@ export class BeneficiariesController {
   @ApiOperation({ summary: 'Get specific beneficiary' })
   @ApiResponse({ status: 200, description: 'Beneficiary retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Beneficiary not found' })
-  async getBeneficiary(@Param('id') id: string): Promise<BeneficiaryDto> {
+  async getBeneficiary(@Param('id') id: string): Promise<Beneficiary> {
     return this.beneficiariesService.getBeneficiary(id);
   }
 
@@ -47,7 +48,7 @@ export class BeneficiariesController {
   async updateBeneficiary(
     @Param('id') id: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
-  ): Promise<BeneficiaryDto> {
+  ): Promise<Beneficiary> {
     return this.beneficiariesService.updateBeneficiary(id, updateBeneficiaryDto);
   }
 

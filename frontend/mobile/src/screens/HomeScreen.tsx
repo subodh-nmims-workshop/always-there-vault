@@ -50,7 +50,7 @@ const HomeScreen = ({ navigation }: any) => {
   );
 
   const QuickActionButton = ({ title, icon, color, onPress }: any) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.quickAction, { backgroundColor: color + '20' }]}
       onPress={onPress}
     >
@@ -164,8 +164,8 @@ const HomeScreen = ({ navigation }: any) => {
         <Text style={styles.sectionTitle}>How It Works</Text>
         <View style={styles.architectureCard}>
           <Text style={styles.architectureText}>
-            Your digital assets are encrypted client-side, keys are split using Shamir Secret Sharing, 
-            and stored across decentralized networks. Smart contracts automate the inheritance process 
+            Your digital assets are encrypted client-side, keys are split using Shamir Secret Sharing,
+            and stored across decentralized networks. Smart contracts automate the inheritance process
             when you're no longer active.
           </Text>
         </View>
@@ -177,24 +177,26 @@ const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#0f172a',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#f8fafc',
   },
   subtitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#94a3b8',
     marginTop: 4,
   },
   securityBadge: {
@@ -216,16 +218,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   statContent: {
     flexDirection: 'row',
@@ -238,17 +240,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#f8fafc',
   },
   statTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: '#e2e8f0',
     marginTop: 4,
   },
   statSubtitle: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#94a3b8',
     marginTop: 2,
   },
   section: {
@@ -258,7 +260,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#f8fafc',
     marginBottom: 12,
   },
   quickActionsGrid: {
@@ -272,6 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 12,
+    backgroundColor: '#1e293b',
   },
   quickActionText: {
     fontSize: 14,
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   securityCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderRadius: 12,
     padding: 16,
   },
@@ -291,17 +294,17 @@ const styles = StyleSheet.create({
   },
   securityItemText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#e2e8f0',
     marginLeft: 12,
   },
   architectureCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderRadius: 12,
     padding: 16,
   },
   architectureText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#e2e8f0',
     lineHeight: 20,
   },
 });

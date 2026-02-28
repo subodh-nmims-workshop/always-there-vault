@@ -1,34 +1,35 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { RecordHeartbeatDto, HeartbeatDto, HeartbeatStatusDto } from './dto/heartbeat.dto';
+import { HeartbeatLog, HeartbeatLogDocument } from './schemas/heartbeat.schema';
 
 @Injectable()
 export class HeartbeatService {
-  private heartbeats: Map<string, HeartbeatDto[]> = new Map();
+  constructor(
+    @InjectModel(HeartbeatLog.name) private heartbeatModel: Model<HeartbeatLogDocument>,
+  ) { }
+
   private readonly DEFAULT_INTERVAL_DAYS = 30;
   private readonly DEFAULT_GRACE_PERIOD_DAYS = 14;
 
-  async recordHeartbeat(recordHeartbeatDto: RecordHeartbeatDto): Promise<HeartbeatDto> {
-    const heartbeat: HeartbeatDto = {
-      id: this.generateId(),
-      walletAddress: recordHeartbeatDto.walletAddress,
-      timestamp: new Date(),
+  async recordHeartbeat(recordHeartbeatDto: RecordHeartbeatDto): Promise<HeartbeatLog> {
+    const log = new this.heartbeatModel({
+      userWallet: recordHeartbeatDto.walletAddress,
+      lastPingTime: new Date(),
       method: recordHeartbeatDto.method,
-      signature: recordHeartbeatDto.signature,
-      verified: true,
-      ipAddress: recordHeartbeatDto.ipAddress,
-    };
-
-    const userHeartbeats = this.heartbeats.get(recordHeartbeatDto.walletAddress) || [];
-    userHeartbeats.push(heartbeat);
-    this.heartbeats.set(recordHeartbeatDto.walletAddress, userHeartbeats);
-
-    return heartbeat;
+    });
+    return log.save();
   }
 
   async getHeartbeatStatus(walletAddress: string): Promise<HeartbeatStatusDto> {
-    const userHeartbeats = this.heartbeats.get(walletAddress) || [];
-    
-    if (userHeartbeats.length === 0) {
+    const logs = await this.heartbeatModel
+      .find({ userWallet: walletAddress })
+      .sort({ lastPingTime: -1 })
+      .limit(1)
+      .exec();
+
+    if (!logs || logs.length === 0) {
       return {
         status: 'inactive',
         lastHeartbeat: null,
@@ -39,16 +40,16 @@ export class HeartbeatService {
       };
     }
 
-    const lastHeartbeat = userHeartbeats[userHeartbeats.length - 1];
+    const lastHeartbeat = logs[0];
     const now = new Date();
-    const daysSinceLastHeartbeat = this.daysBetween(lastHeartbeat.timestamp, now);
-    
-    const nextHeartbeatDue = new Date(lastHeartbeat.timestamp);
+    const daysSinceLastHeartbeat = this.daysBetween(lastHeartbeat.lastPingTime, now);
+
+    const nextHeartbeatDue = new Date(lastHeartbeat.lastPingTime);
     nextHeartbeatDue.setDate(nextHeartbeatDue.getDate() + this.DEFAULT_INTERVAL_DAYS);
-    
+
     const daysUntilDue = this.daysBetween(now, nextHeartbeatDue);
     const isOverdue = daysUntilDue < 0;
-    const gracePeriodRemaining = isOverdue 
+    const gracePeriodRemaining = isOverdue
       ? Math.max(0, this.DEFAULT_GRACE_PERIOD_DAYS + daysUntilDue)
       : this.DEFAULT_GRACE_PERIOD_DAYS;
 
@@ -63,7 +64,7 @@ export class HeartbeatService {
 
     return {
       status,
-      lastHeartbeat: lastHeartbeat.timestamp,
+      lastHeartbeat: lastHeartbeat.lastPingTime,
       nextHeartbeatDue,
       daysUntilDue: Math.max(0, daysUntilDue),
       isOverdue,
@@ -71,8 +72,8 @@ export class HeartbeatService {
     };
   }
 
-  async getHeartbeatHistory(walletAddress: string): Promise<HeartbeatDto[]> {
-    return this.heartbeats.get(walletAddress) || [];
+  async getHeartbeatHistory(walletAddress: string): Promise<HeartbeatLog[]> {
+    return this.heartbeatModel.find({ userWallet: walletAddress }).sort({ lastPingTime: -1 }).exec();
   }
 
   async checkHeartbeatRequired(walletAddress: string): Promise<{ required: boolean; daysUntilDue: number }> {
@@ -86,9 +87,5 @@ export class HeartbeatService {
   private daysBetween(date1: Date, date2: Date): number {
     const oneDay = 24 * 60 * 60 * 1000;
     return Math.round((date2.getTime() - date1.getTime()) / oneDay);
-  }
-
-  private generateId(): string {
-    return `heartbeat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }

@@ -65,4 +65,15 @@ export class BlockchainService {
       estimatedCost: `${estimatedCost} MATIC`,
     };
   }
+
+  async triggerDeadman(walletAddress: string): Promise<boolean> {
+    // In production, this would call the smart contract `trigger()` method for this wallet.
+    return true;
+  }
+
+  async isDeadmanTriggered(walletAddress: string): Promise<boolean> {
+    // In production, this would read `isTriggered(wallet)` from the smart contract.
+    // We simulate true if the wallet has failed the heartbeat interval (Cron job flags it)
+    return true; // For simulation purposes until the Smart Contract layer is connected.
+  }
 }

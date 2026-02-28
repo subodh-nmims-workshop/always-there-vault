@@ -112,7 +112,7 @@ const App = (): JSX.Element => {
     try {
       const biometricService = BiometricService.getInstance();
       const result = await biometricService.createBiometricKeys();
-      
+
       if (result.success) {
         Alert.alert('Success', 'Biometric authentication has been enabled.');
       } else {
@@ -130,9 +130,9 @@ const App = (): JSX.Element => {
 
   return (
     <NavigationContainer>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#f8f9fa" 
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#0f172a"
         translucent={false}
       />
       <Tab.Navigator
@@ -163,10 +163,10 @@ const App = (): JSX.Element => {
             return <Icon name={iconName} size={size} color={color} />;
           },
           tabBarActiveTintColor: '#3b82f6',
-          tabBarInactiveTintColor: '#6b7280',
+          tabBarInactiveTintColor: '#64748b',
           tabBarStyle: {
-            backgroundColor: '#ffffff',
-            borderTopColor: '#e5e7eb',
+            backgroundColor: '#0f172a',
+            borderTopColor: '#1e293b',
             borderTopWidth: 1,
             paddingBottom: Platform.OS === 'ios' ? 20 : 5,
             paddingTop: 5,
@@ -177,13 +177,13 @@ const App = (): JSX.Element => {
             fontWeight: '600',
           },
           headerStyle: {
-            backgroundColor: '#ffffff',
-            borderBottomColor: '#e5e7eb',
+            backgroundColor: '#0f172a',
+            borderBottomColor: '#1e293b',
             borderBottomWidth: 1,
             elevation: 0,
             shadowOpacity: 0,
           },
-          headerTintColor: '#1f2937',
+          headerTintColor: '#f8fafc',
           headerTitleStyle: {
             fontWeight: 'bold',
             fontSize: 18,
@@ -191,42 +191,42 @@ const App = (): JSX.Element => {
           headerTitleAlign: 'center',
         })}
       >
-        <Tab.Screen 
-          name="Home" 
+        <Tab.Screen
+          name="Home"
           component={HomeScreen}
-          options={{ 
+          options={{
             title: 'Digital Will',
             headerTitle: 'Digital Will Protocol'
           }}
         />
-        <Tab.Screen 
-          name="Assets" 
+        <Tab.Screen
+          name="Assets"
           component={AssetsScreen}
-          options={{ 
+          options={{
             title: 'Assets',
             headerTitle: 'My Digital Assets'
           }}
         />
-        <Tab.Screen 
-          name="Beneficiaries" 
+        <Tab.Screen
+          name="Beneficiaries"
           component={BeneficiariesScreen}
-          options={{ 
+          options={{
             title: 'Beneficiaries',
             headerTitle: 'Beneficiaries'
           }}
         />
-        <Tab.Screen 
-          name="Heartbeat" 
+        <Tab.Screen
+          name="Heartbeat"
           component={HeartbeatScreen}
-          options={{ 
+          options={{
             title: 'Heartbeat',
             headerTitle: 'Proof of Life'
           }}
         />
-        <Tab.Screen 
-          name="Settings" 
+        <Tab.Screen
+          name="Settings"
           component={SettingsScreen}
-          options={{ 
+          options={{
             title: 'Settings',
             headerTitle: 'Settings'
           }}

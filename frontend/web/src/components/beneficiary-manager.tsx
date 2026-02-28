@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Users, Plus, Mail, Wallet, Edit, Trash2, Check, X } from 'lucide-react'
+import { Users, Plus, Mail, Wallet, Edit, Trash2, Check, X, Shield, CheckCircle } from 'lucide-react'
 import WebStorageService, { StoredBeneficiary } from '@/lib/storage'
 
 export function BeneficiaryManager() {
@@ -109,165 +107,206 @@ export function BeneficiaryManager() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Users className="h-5 w-5" />
-              <span>Beneficiary Management ({beneficiaries.length})</span>
+      {/* Beneficiaries List */}
+      <div className="premium-card p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="icon-container bg-gradient-to-br from-green-600 to-emerald-600">
+              <Users className="h-5 w-5 text-white" />
             </div>
-            <Button onClick={() => setShowAddForm(true)} disabled={showAddForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Beneficiary
-            </Button>
-          </CardTitle>
-          <CardDescription>
-            Manage who will receive your digital assets
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {beneficiaries.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No beneficiaries added yet</p>
-              <p className="text-sm">Add your first beneficiary to get started</p>
+            <div>
+              <h2 className="text-2xl font-bold gradient-text-premium">Beneficiary Management</h2>
+              <p className="text-sm text-slate-400">Manage who will receive your digital assets</p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {beneficiaries.map((beneficiary) => (
-                <div key={beneficiary.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium">{beneficiary.name}</h3>
-                      <div className="mt-2 space-y-1">
-                        <p className="text-sm text-muted-foreground flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {beneficiary.email}
-                        </p>
-                        <p className="text-sm text-muted-foreground flex items-center">
-                          <Wallet className="h-3 w-3 mr-1" />
-                          {beneficiary.walletAddress}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Added: {new Date(beneficiary.createdAt).toLocaleDateString()}
-                        </p>
+          </div>
+          <button 
+            onClick={() => setShowAddForm(true)} 
+            disabled={showAddForm}
+            className="btn-premium px-6 py-3 disabled:opacity-50"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Beneficiary
+          </button>
+        </div>
+
+        {beneficiaries.length === 0 ? (
+          <div className="text-center py-12 bg-slate-900/30 rounded-xl border border-slate-800">
+            <Users className="h-16 w-16 mx-auto mb-4 text-slate-600" />
+            <p className="text-slate-300 font-medium">No beneficiaries added yet</p>
+            <p className="text-sm text-slate-500 mt-2">Add your first beneficiary to get started</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {beneficiaries.map((beneficiary) => (
+              <div key={beneficiary.id} className="premium-card p-6 hover:scale-[1.02] transition-transform">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          {beneficiary.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-slate-200">{beneficiary.name}</h3>
+                        {beneficiary.enabled && (
+                          <span className="badge-premium badge-success-premium text-xs">Active</span>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEdit(beneficiary)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDelete(beneficiary.id)}
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
-                      </Button>
+                    
+                    <div className="space-y-2 mt-4">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Mail className="h-4 w-4 text-slate-500" />
+                        <span className="text-slate-400">{beneficiary.email}</span>
+                      </div>
+                      <div className="flex items-start space-x-2 text-sm">
+                        <Wallet className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-400 font-mono text-xs break-all">
+                          {beneficiary.walletAddress}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-2">
+                        Added: {new Date(beneficiary.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
+                  
+                  <div className="flex flex-col space-y-2 ml-4">
+                    <button 
+                      onClick={() => handleEdit(beneficiary)}
+                      className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium transition-colors border border-slate-700 hover:border-blue-500/50"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(beneficiary.id)}
+                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium transition-colors border border-red-500/20 hover:border-red-500/50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
+      {/* Add/Edit Form */}
       {showAddForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {editingId ? 'Edit Beneficiary' : 'Add New Beneficiary'}
-            </CardTitle>
-            <CardDescription>
-              Enter beneficiary details and wallet address
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name *</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border rounded-md"
-                  placeholder="Beneficiary name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Email *</label>
-                <input 
-                  type="email" 
-                  className={`w-full p-2 border rounded-md ${
-                    formData.email && !validateEmail(formData.email) ? 'border-red-500' : ''
-                  }`}
-                  placeholder="email@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  required
-                />
-                {formData.email && !validateEmail(formData.email) && (
-                  <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Wallet Address *</label>
-                <input 
-                  type="text" 
-                  className={`w-full p-2 border rounded-md font-mono text-sm ${
-                    formData.walletAddress && !validateWalletAddress(formData.walletAddress) ? 'border-red-500' : ''
-                  }`}
-                  placeholder="0x..."
-                  value={formData.walletAddress}
-                  onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
-                  required
-                />
-                {formData.walletAddress && !validateWalletAddress(formData.walletAddress) && (
-                  <p className="text-xs text-red-500 mt-1">Please enter a valid Ethereum address (0x...)</p>
-                )}
-              </div>
+        <div className="premium-card p-8">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="icon-container bg-gradient-to-br from-blue-600 to-cyan-600">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold gradient-text-premium">
+                {editingId ? 'Edit Beneficiary' : 'Add New Beneficiary'}
+              </h2>
+              <p className="text-sm text-slate-400">Enter beneficiary details and wallet address</p>
+            </div>
+          </div>
 
-              <div className="flex space-x-3">
-                <Button 
-                  type="submit"
-                  className="flex-1"
-                  disabled={!isFormValid() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2 animate-spin" />
-                      {editingId ? 'Updating...' : 'Adding...'}
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4 mr-2" />
-                      {editingId ? 'Update Beneficiary' : 'Add Beneficiary'}
-                    </>
-                  )}
-                </Button>
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  onClick={handleCancel}
-                  disabled={isSubmitting}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Name *</label>
+              <input 
+                type="text" 
+                className="input-premium w-full"
+                placeholder="Beneficiary name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Email *</label>
+              <input 
+                type="email" 
+                className={`input-premium w-full ${
+                  formData.email && !validateEmail(formData.email) ? 'border-red-500' : ''
+                }`}
+                placeholder="email@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                required
+              />
+              {formData.email && !validateEmail(formData.email) && (
+                <p className="text-xs text-red-400 mt-1 flex items-center">
+                  <X className="h-3 w-3 mr-1" />
+                  Please enter a valid email address
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Wallet Address *</label>
+              <input 
+                type="text" 
+                className={`input-premium w-full font-mono text-sm ${
+                  formData.walletAddress && !validateWalletAddress(formData.walletAddress) ? 'border-red-500' : ''
+                }`}
+                placeholder="0x..."
+                value={formData.walletAddress}
+                onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
+                required
+              />
+              {formData.walletAddress && !validateWalletAddress(formData.walletAddress) && (
+                <p className="text-xs text-red-400 mt-1 flex items-center">
+                  <X className="h-3 w-3 mr-1" />
+                  Please enter a valid Ethereum address (0x...)
+                </p>
+              )}
+              {formData.walletAddress && validateWalletAddress(formData.walletAddress) && (
+                <p className="text-xs text-green-400 mt-1 flex items-center">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Valid Ethereum address
+                </p>
+              )}
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <Shield className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-slate-300">
+                  <p className="font-medium text-blue-300 mb-1">Beneficiary Verification</p>
+                  <p>The beneficiary will receive email notifications and can access assets using their wallet address after the release conditions are met.</p>
+                </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+
+            <div className="flex space-x-3">
+              <button 
+                type="submit"
+                className="btn-premium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!isFormValid() || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Check className="h-5 w-5 mr-2 animate-spin" />
+                    {editingId ? 'Updating...' : 'Adding...'}
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-5 w-5 mr-2" />
+                    {editingId ? 'Update Beneficiary' : 'Add Beneficiary'}
+                  </>
+                )}
+              </button>
+              <button 
+                type="button"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+                className="px-8 py-4 rounded-xl border-2 border-slate-700 text-slate-200 font-semibold hover:bg-slate-800/50 hover:border-blue-500/50 transition-all duration-300"
+              >
+                <X className="h-5 w-5 mr-2 inline" />
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   )
