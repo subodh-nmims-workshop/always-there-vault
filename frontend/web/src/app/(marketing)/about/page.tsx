@@ -1,133 +1,181 @@
 'use client';
 
-import { Shield, Globe, Users, Target, Lock, Activity, Link2, Hexagon } from 'lucide-react';
-import Link from 'next/link';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Shield, Fingerprint, EyeOff, Diamond, Scale, Link2 } from 'lucide-react';
+import { useRef } from 'react';
 
 export default function AboutPage() {
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start start", "end end"]
+    });
+
+    // Parallax effects
+    const yParallax = useTransform(scrollYProgress, [0, 1], [0, -200]);
+    const opacityFade = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+
+    const defaultTransition = { duration: 1.5, ease: [0.16, 1, 0.3, 1] };
+
+    const ethos = [
+        {
+            icon: <Diamond className="w-6 h-6 text-white" />,
+            title: "Absolute Immutability",
+            desc: "Once deployed to the Polygon blockchain, your will becomes a literal force of nature. It cannot be altered by states, attorneys, or even our own engineers. The mathematics define the exact conditions of asset release."
+        },
+        {
+            icon: <EyeOff className="w-6 h-6 text-white" />,
+            title: "Total Zero-Knowledge",
+            desc: "Your data is encrypted via AES-256-GCM locally on your hardware. We store ciphertexts via IPFS. At no point in time does any centralized server possess the capability to decrypt the names of your beneficiaries or the keys to your wallets."
+        },
+        {
+            icon: <Scale className="w-6 h-6 text-white" />,
+            title: "Post-State Legal Resolution",
+            desc: "The probate court system is a legacy API that extractionary actors navigate for profit. By converting legal intent into deterministic code, we skip the court entirely. Time and cryptography are the only arbitrators."
+        }
+    ];
+
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div ref={containerRef} className="min-h-screen bg-[#020202] pt-0 pb-0 font-sans selection:bg-white/20 selection:text-white">
 
-                <div className="text-center max-w-4xl mx-auto mb-24 slide-up pt-10">
-                    <span className="text-blue-500 font-bold tracking-widest text-sm uppercase mb-6 block">Our Genesis</span>
-                    <h1 className="text-5xl md:text-6xl font-extrabold mb-8 text-white tracking-tight">
-                        Securing the Future of <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500">Digital Wealth</span>
-                    </h1>
-                    <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-light mb-12">
-                        The Digital Will Protocol was engineered to solve a critical vulnerability in the web3 era: the permanent loss of cryptographic assets and digital legacies due to unforeseen tragedy or loss of physical access. We are eliminating the single point of failure inherent in human mortality.
-                    </p>
+            {/* Massive Hero Section */}
+            <div className="relative h-screen flex items-center justify-center overflow-hidden">
+                <motion.div style={{ y: yParallax }} className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2600&auto=format&fit=crop"
+                        alt="Abstract Network"
+                        className="w-full h-full object-cover opacity-20 sepia-[.3] hue-rotate-[-30deg] saturate-50"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/50 to-transparent"></div>
+                </motion.div>
 
-                    <div className="flex justify-center gap-6">
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-extrabold text-blue-400 mb-2">$0</span>
-                            <span className="text-sm text-slate-500 uppercase tracking-wider font-semibold">User Funds Stored</span>
-                        </div>
-                        <div className="w-px bg-slate-800"></div>
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-extrabold text-indigo-400 mb-2">100%</span>
-                            <span className="text-sm text-slate-500 uppercase tracking-wider font-semibold">Zero-Knowledge</span>
-                        </div>
-                        <div className="w-px bg-slate-800"></div>
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-extrabold text-purple-400 mb-2">&infin;</span>
-                            <span className="text-sm text-slate-500 uppercase tracking-wider font-semibold">Immutable Storage</span>
-                        </div>
+                <motion.div
+                    style={{ opacity: opacityFade }}
+                    className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center h-full pt-32"
+                >
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ ...defaultTransition, delay: 0.2 }}
+                        className="border border-white/10 bg-white/5 backdrop-blur-md px-6 py-2 rounded-full uppercase tracking-[0.3em] text-[10px] text-slate-300 font-medium mb-10"
+                    >
+                        THE PROTOCOL GENESIS
+                    </motion.div>
+
+                    <motion.h1
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ ...defaultTransition, delay: 0.4 }}
+                        className="text-6xl md:text-8xl lg:text-[7rem] font-light tracking-tighter text-white mb-8 leading-[0.95] max-w-5xl"
+                    >
+                        <span className="font-medium">Algorithm</span> Over Authority.
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ ...defaultTransition, delay: 0.6 }}
+                        className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-3xl mx-auto"
+                    >
+                        We are a collective of cryptographers who realized that trusting humans with sensitive seed phrases guarantees ultimate failure.
+                    </motion.p>
+                </motion.div>
+            </div>
+
+            {/* Content Deep Dive */}
+            <div className="relative z-10 bg-[#020202] pt-32 pb-40 border-t border-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                    {/* Founder Manifesto Section */}
+                    <div className="grid lg:grid-cols-12 gap-16 lg:gap-24 items-center mb-40">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={defaultTransition}
+                            className="lg:col-span-5"
+                        >
+                            <div className="text-white/40 uppercase tracking-[0.2em] text-xs font-bold mb-6">Chapter I: The Flaw</div>
+                            <h2 className="text-5xl font-medium text-white tracking-tight leading-[1.1] mb-8">
+                                Why we built this.
+                            </h2>
+                            <p className="text-lg text-slate-400 font-light leading-relaxed mb-6">
+                                The year is 2026. Institutional capital has flooded the decentralized web. Billions of dollars in value are secured behind 24-word seed phrases written on steel plates, locked in geographically distributed safety deposit boxes.
+                            </p>
+                            <p className="text-lg text-slate-400 font-light leading-relaxed">
+                                Yet, what happens when the owner of those keys dies? They hire lawyers. They draft wills. They trust a third party to execute their final wishes. This introduces the very vulnerability the blockchain was designed to eliminate: <strong>Human Trust.</strong>
+                            </p>
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ ...defaultTransition, delay: 0.2 }}
+                            className="lg:col-span-7"
+                        >
+                            <div className="aspect-[4/3] rounded-[3rem] overflow-hidden bg-[#111] border border-white/10 relative">
+                                <img src="https://images.unsplash.com/photo-1639322537231-2f206e06af84?q=80&w=2600&auto=format&fit=crop" alt="Server Crypto" className="w-full h-full object-cover mix-blend-luminosity opacity-40 hover:scale-105 transition-transform duration-[15s] ease-linear" />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-[#020202] via-transparent to-transparent"></div>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
 
-                {/* The Paradigm Shift Section */}
-                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-10 md:p-16 mb-24 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full filter blur-[100px] pointer-events-none"></div>
+                    {/* Architectural Ethos */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={defaultTransition}
+                        className="mt-32 mb-16 text-center"
+                    >
+                        <div className="text-white/40 uppercase tracking-[0.2em] text-xs font-bold mb-6">Chapter II: The Pillars</div>
+                        <h2 className="text-5xl lg:text-6xl font-medium text-white tracking-tight leading-[1.1] max-w-4xl mx-auto">
+                            The trifecta of digital sovereignty.
+                        </h2>
+                    </motion.div>
 
-                    <div className="grid md:grid-cols-2 gap-16 items-center">
-                        <div className="relative z-10">
-                            <div className="inline-flex items-center justify-center p-3 bg-indigo-500/10 rounded-xl mb-6">
-                                <Target className="h-8 w-8 text-indigo-400" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-white mb-6">The Paradigm Shift</h2>
-                            <p className="text-slate-400 mb-6 leading-relaxed">
-                                Traditional estate planning relies on high-friction legal intermediaries, paper trails, and immense human trust. Lawyers must hold physical documents, keys, or passwords—creating massive security vectors and single points of failure. Furthermore, these archaic systems are fundamentally incompatible with the decentralized nature of cryptocurrency, seed phrases, and programmatic assets.
-                            </p>
-                            <p className="text-slate-400 leading-relaxed">
-                                We constructed the Digital Will Protocol as a direct rebuttal to this legacy system. By fusing AES-256-GCM encryption, Shamir Secret Sharing, EVM-compatible smart contracts, and IPFS distributed storage, we have created the world's first mathematically enforced, completely trustless inheritance vehicle.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6 relative z-10">
-                            <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
-                                <Lock className="h-8 w-8 text-blue-400 mb-4" />
-                                <h4 className="font-bold text-white mb-2">Trustless</h4>
-                                <p className="text-sm text-slate-500">We cannot read your files. We cannot access your keys.</p>
-                            </div>
-                            <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl transform translate-y-8">
-                                <Link2 className="h-8 w-8 text-purple-400 mb-4" />
-                                <h4 className="font-bold text-white mb-2">Immutable</h4>
-                                <p className="text-sm text-slate-500">Your legacy logic is hardcoded into the Polygon blockchain.</p>
-                            </div>
-                            <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
-                                <Activity className="h-8 w-8 text-green-400 mb-4" />
-                                <h4 className="font-bold text-white mb-2">Autonomous</h4>
-                                <p className="text-sm text-slate-500">Execution relies solely on programmatic dead-man switches.</p>
-                            </div>
-                            <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl transform translate-y-8">
-                                <Hexagon className="h-8 w-8 text-orange-400 mb-4" />
-                                <h4 className="font-bold text-white mb-2">Decentralized</h4>
-                                <p className="text-sm text-slate-500">Storage spans thousands of nodes worldwide via IPFS.</p>
-                            </div>
-                        </div>
+                    <div className="grid md:grid-cols-3 gap-8 lg:gap-12 pb-32">
+                        {ethos.map((item, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 40 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                transition={{ ...defaultTransition, delay: idx * 0.2 }}
+                                className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12 lg:p-16 flex flex-col items-center text-center group hover:border-white/20 transition-colors duration-500"
+                            >
+                                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500">
+                                    {item.icon}
+                                </div>
+                                <h3 className="text-3xl font-medium text-white mb-6 tracking-tight">
+                                    {item.title}
+                                </h3>
+                                <p className="text-slate-400 font-light leading-relaxed text-lg">
+                                    {item.desc}
+                                </p>
+                            </motion.div>
+                        ))}
                     </div>
-                </div>
 
-                {/* Team & Governance */}
-                <div className="max-w-5xl mx-auto text-center mb-24">
-                    <h2 className="text-3xl font-bold text-white mb-6">Organizational Structure</h2>
-                    <p className="text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-                        The protocol is maintained by a distributed assembly of cryptographers, distributed systems engineers, and smart contract auditors.
-                    </p>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 shadow-lg">
-                            <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <Users className="h-8 w-8 text-blue-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Pseudonymous by Design</h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">
-                                To ensure the protocol remains neutrally resilient to state-level coercion, core contributors operate pseudonymously, verifiable only via their PGP keys and Git signatures.
-                            </p>
+                    {/* Massive Typography CTA */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 2 }}
+                        className="py-32 border-t border-white/10 text-center"
+                    >
+                        <h2 className="text-[10vw] font-bold text-white leading-none tracking-tighter mix-blend-exclusion opacity-5">
+                            DECENTRALIZED
+                        </h2>
+                        <div className="relative -mt-16 lg:-mt-24 w-full flex justify-center z-10">
+                            <button className="bg-white text-black hover:bg-slate-200 px-12 py-6 rounded-full font-medium tracking-wide transition-all transform hover:scale-105 duration-500 text-lg shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                                Institutional Consultation
+                            </button>
                         </div>
-                        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 shadow-lg">
-                            <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <Globe className="h-8 w-8 text-indigo-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Swiss Jurisdiction Headquartered</h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">
-                                Our foundational legal entity is registered in Zug, Switzerland (the Crypto Valley), ensuring maximum regulatory clarity and strict privacy protections for the protocol's infrastructure.
-                            </p>
-                        </div>
-                        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 shadow-lg">
-                            <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <Shield className="h-8 w-8 text-purple-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Transitioning to DAO</h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">
-                                By Q4 2026, the administrative keys to the smart contracts and treasury will be formally handed over to a decentralized autonomous organization (DAO) governed by the community.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                    </motion.div>
 
-                {/* Final CTA */}
-                <div className="bg-blue-600 rounded-3xl p-12 text-center max-w-3xl mx-auto shadow-[0_0_40px_rgba(59,130,246,0.3)] relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
-                    <h2 className="text-3xl font-extrabold text-white mb-6 relative z-10">Don't Leave Your Legacy to Chance</h2>
-                    <p className="text-blue-100 text-lg mb-8 relative z-10">
-                        Join the hundreds of institutional holders and crypto natives who trust the Digital Will Protocol to secure their post-mortem asset distribution.
-                    </p>
-                    <Link href="/" className="inline-block bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 px-10 rounded-xl transition-colors relative z-10 shadow-xl">
-                        Deploy Your Vault
-                    </Link>
                 </div>
-
             </div>
         </div>
     );

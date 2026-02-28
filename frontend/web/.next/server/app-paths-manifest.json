@@ -1,1 +1,7 @@
-{}
+{
+  "/(marketing)/terms/page": "app/(marketing)/terms/page.js",
+  "/(marketing)/about/page": "app/(marketing)/about/page.js",
+  "/(marketing)/security-policy/page": "app/(marketing)/security-policy/page.js",
+  "/(marketing)/api/page": "app/(marketing)/api/page.js",
+  "/(marketing)/roadmap/page": "app/(marketing)/roadmap/page.js"
+}

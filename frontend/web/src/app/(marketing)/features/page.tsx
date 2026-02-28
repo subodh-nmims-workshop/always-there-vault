@@ -1,145 +1,214 @@
 'use client';
 
-import { Shield, Lock, Globe, Zap, Key, Users, Clock, Database, ChevronRight, Fingerprint, Cpu, Network, FileCode2 } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Shield, Fingerprint, Lock, Zap, FileCode, CheckCircle2, ChevronRight } from 'lucide-react';
+import { useRef } from 'react';
 import Link from 'next/link';
 
 export default function FeaturesPage() {
-    const coreFeatures = [
-        {
-            icon: <Lock className="h-8 w-8 text-blue-500" />,
-            title: 'Zero-Trust Architecture',
-            description: 'Your data is encrypted locally on your device using AES-256-GCM before it ever touches our servers. We employ a strict zero-knowledge architecture. We have absolutely zero access to your plaintext data, metadata, or encryption keys. The server is completely blind to your operations.',
-        },
-        {
-            icon: <Key className="h-8 w-8 text-purple-500" />,
-            title: 'Shamir Secret Sharing Engine',
-            description: 'Your master encryption keys are mathematically split into dynamically determined shares (e.g., 5 shares) using polynomial interpolation over a finite Galois Field (GF(2^8)). An attacker would need to compromise multiple isolated infrastructures simultaneously to reconstruct a single key.',
-        },
-        {
-            icon: <Globe className="h-8 w-8 text-green-500" />,
-            title: 'Decentralized Storage (IPFS)',
-            description: 'Files are chunked, hashed, and distributed across the InterPlanetary File System (IPFS) utilizing Web3.Storage. Your encrypted legacy avoids traditional single points of failure (AWS, GCP) and is mathematically resistant to censorship, server outages, and localized data loss.',
-        },
-        {
-            icon: <Clock className="h-8 w-8 text-red-500" />, // Corrected unescaped single quote here? Wait, no single quote issue in comment.
-            title: 'Automated Dead-Man Switch',
-            description: 'A highly customizable heartbeat monitor constantly verifies your activity. If the threshold is breached, the protocol automatically interfaces with the Polygon blockchain to autonomously execute your predetermined release instructions without human intervention.',
-        },
-        {
-            icon: <Zap className="h-8 w-8 text-yellow-500" />,
-            title: 'Smart Contract Enforcement',
-            description: 'Release mechanisms and access controls are dictated by immutable, rigorously audited Polygon smart contracts. No human intervention, corporate policy, or legal bureaucracy can delay, prevent, or alter the execution of your digital will.',
-        },
-        {
-            icon: <Users className="h-8 w-8 text-indigo-500" />,
-            title: 'Granular Access Control',
-            description: 'Assign specific assets or entire hierarchical folders to unique beneficiaries. Set complex conditions ranging from immediate transfer upon inactivity to complex multi-signature approvals involving legal teams or trusted family members.',
-        },
-        {
-            icon: <Shield className="h-8 w-8 text-teal-500" />,
-            title: 'Hardware Wallet Integration',
-            description: 'Native compatibility with industry-leading cold storage solutions like Ledger, Trezor, and GridPlus via EIP-4361 (Sign-In with Ethereum). Sign transactions and encrypt files leveraging the secure enclave of your existing devices.',
-        },
-        {
-            icon: <Database className="h-8 w-8 text-orange-500" />,
-            title: 'Metadata Obfuscation',
-            description: 'Even the metadata residing on our centralized routing clusters is cryptographically obscured. Folder names, asset categorizations, file sizes, and beneficiary identities are salted and hashed to prevent traffic analysis.',
-        }
-    ];
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start start", "end end"]
+    });
 
-    const advancedCapabilities = [
+    const defaultTransition = { duration: 1.5, ease: [0.16, 1, 0.3, 1] };
+
+    const features = [
         {
-            icon: <Fingerprint className="h-10 w-10 text-slate-400" />,
-            title: "Self-Sovereign Identity",
-            desc: "Authenticate purely via cryptographic signatures. No KYC, no email requirements, no centralized identity providers."
+            icon: <Lock className="w-8 h-8 text-white" />,
+            title: "Zero-Knowledge Architecture",
+            description: "End-to-end client-side AES-256-GCM encryption ensures your payloads are mathematically inaccessible to our infrastructure before they even reach IPFS.",
+            bgImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2600&auto=format&fit=crop"
         },
         {
-            icon: <Cpu className="h-10 w-10 text-slate-400" />,
-            title: "Client-Side Processing",
-            desc: "All CPU-intensive cryptographic operations (key generation, AES encryption, SSS sharding) occur exclusively within the memory boundaries of your local browser."
+            icon: <Fingerprint className="w-8 h-8 text-white" />,
+            title: "Shamir Secret Sharing",
+            description: "No single point of failure. Your master decryption key is mathematically fragmented via GF(2^8) polynomials and requires a threshold (e.g., 3-of-5) of your beneficiaries to reassemble.",
+            bgImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2600&auto=format&fit=crop"
         },
         {
-            icon: <Network className="h-10 w-10 text-slate-400" />,
-            title: "Censorship Resistance",
-            desc: "By leveraging decentralized node RPCs and IPFS pinning, the protocol cannot be taken offline by state-level actors or DNS takedowns."
-        },
-        {
-            icon: <FileCode2 className="h-10 w-10 text-slate-400" />,
-            title: "Deterministic Execution",
-            desc: "Every action is verifiable on-chain. The source code for our smart contracts is open-source and deterministic, guaranteeing identical outputs for identical inputs."
+            icon: <Zap className="w-8 h-8 text-white" />,
+            title: "Autonomous Execution",
+            description: "Immutable smart contracts on the Polygon network track your cryptographic heartbeats. If the temporal decay timer reaches zero, the contract acts seamlessly, unlocking the ciphertext URI.",
+            bgImage: "https://images.unsplash.com/photo-1639762681485-074b7f4d2315?q=80&w=2600&auto=format&fit=crop"
         }
     ];
 
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div ref={containerRef} className="min-h-screen bg-[#050505] font-sans selection:bg-white/20 selection:text-white">
 
-                {/* Hero Section */}
-                <div className="text-center max-w-4xl mx-auto mb-20 slide-up pt-12">
-                    <span className="text-blue-500 font-bold tracking-widest text-sm uppercase mb-4 block">Uncompromising Security</span>
-                    <h1 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight">
-                        <span className="text-white">Enterprise-Grade</span> <span className="gradient-text-premium">Features</span>
-                    </h1>
-                    <p className="text-xl text-slate-400 leading-relaxed font-light">
-                        Engineered for high-net-worth individuals, institutional wealth managers, crypto whales, and security absolutists. The Digital Will Protocol leaves absolutely nothing to chance or human error.
-                    </p>
+            {/* Minimal Luxury Hero */}
+            <div className="h-[90vh] flex flex-col justify-end pb-32 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
+                <div className="absolute inset-x-0 bottom-0 h-[60vh] bg-gradient-to-t from-black via-transparent to-transparent z-10 pointer-events-none"></div>
+                <motion.div
+                    initial={{ scale: 1.2, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 0.4 }}
+                    transition={{ duration: 4, ease: "easeOut" }}
+                    className="absolute inset-0 z-0 origin-center"
+                    style={{
+                        backgroundImage: "url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2600&auto=format&fit=crop')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'grayscale(100%) contrast(120%) brightness(50%)'
+                    }}
+                />
+
+                <div className="max-w-7xl mx-auto w-full relative z-20">
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ ...defaultTransition, delay: 0.2 }}
+                        className="mb-6 overflow-hidden"
+                    >
+                        <h1 className="text-6xl md:text-8xl lg:text-9xl font-medium tracking-tighter text-white leading-[0.9]">
+                            Absolute<br />
+                            <span className="text-slate-500 font-light italic text-[0.8em]">Certainty.</span>
+                        </h1>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ ...defaultTransition, delay: 0.5 }}
+                        className="max-w-xl"
+                    >
+                        <p className="text-xl lg:text-3xl text-slate-300 font-light leading-relaxed">
+                            A protocol engineered to replace human trust with unyielding cryptography.
+                        </p>
+                    </motion.div>
                 </div>
+            </div>
 
-                {/* Core Features Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 mb-32">
-                    {coreFeatures.map((feature, idx) => (
-                        <div
-                            key={idx}
-                            className="bg-slate-900 border border-slate-800 p-10 rounded-3xl hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)] group relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 group-hover:scale-150 transition-all duration-700">
-                                {feature.icon}
-                            </div>
-                            <div className="bg-slate-950 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 border border-slate-800 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 relative z-10">
-                                {feature.icon}
-                            </div>
-                            <h3 className="text-2xl font-bold text-white mb-4 relative z-10">{feature.title}</h3>
-                            <p className="text-slate-400 leading-relaxed text-base relative z-10">
-                                {feature.description}
+            {/* Sticky Scroll Features */}
+            <div className="bg-[#050505] relative z-20 py-32 border-t border-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                    <div className="grid lg:grid-cols-2 gap-24 lg:gap-12">
+                        {/* Sticky Header Side */}
+                        <div className="lg:sticky lg:top-40 h-fit">
+                            <motion.div
+                                initial={{ opacity: 0, x: -50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                transition={defaultTransition}
+                            >
+                                <span className="text-white/40 uppercase tracking-[0.2em] text-xs font-bold mb-6 block">Capabilities</span>
+                                <h2 className="text-5xl lg:text-7xl font-medium text-white mb-8 tracking-tighter leading-[1.05]">
+                                    Engineered <br />for Extremes.
+                                </h2>
+                                <p className="text-xl text-slate-400 font-light leading-relaxed max-w-lg mb-12">
+                                    Every component of the Digital Will Protocol is designed assuming the underlying network is hostile. We do not secure your data; we mathematically mandate that it cannot be accessed until the exact conditions are met.
+                                </p>
+
+                                <Link href="/docs" className="inline-flex items-center text-white font-medium group hover:text-slate-300 transition-colors uppercase tracking-widest text-sm">
+                                    Read Architecture Docs
+                                    <span className="ml-4 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                                        <ChevronRight className="w-4 h-4" />
+                                    </span>
+                                </Link>
+                            </motion.div>
+                        </div>
+
+                        {/* Scroll Content Side */}
+                        <div className="space-y-32">
+                            {features.map((feature, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 100 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-10%" }}
+                                    transition={defaultTransition}
+                                    className="group"
+                                >
+                                    <div className="h-[400px] w-full rounded-[2.5rem] overflow-hidden bg-[#111] mb-10 relative">
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-[15s] ease-linear group-hover:scale-110 opacity-60 mix-blend-luminosity"
+                                            style={{ backgroundImage: \`url('\${feature.bgImage}')\` }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
+                                        <div className="absolute top-8 left-8 w-16 h-16 rounded-full border border-white/10 bg-black/50 backdrop-blur-md flex items-center justify-center">
+                                            {feature.icon}
+                                        </div>
+                                    </div>
+
+                                    <h3 className="text-4xl font-medium text-white mb-6 tracking-tight leading-tight">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-xl text-slate-400 font-light leading-relaxed">
+                                        {feature.description}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {/* Deep Tech Verification Section */}
+            <div className="bg-[#0a0a0a] py-40 border-t border-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={defaultTransition}
+                    >
+                        <Shield className="w-16 h-16 text-white/50 mx-auto mb-10" />
+                        <h2 className="text-4xl lg:text-6xl font-medium text-white tracking-tighter mb-8">
+                            Mathematically Proven.
+                        </h2>
+                        <div className="max-w-2xl mx-auto mb-16">
+                            <p className="text-lg text-slate-400 font-light mb-4">
+                                The smart contracts governing the Digital Will Protocol are fully open-source and have undergone rigorous, multi-month formal verification and audits by elite Web3 security firms.
+                            </p>
+                            <p className="text-lg text-slate-400 font-light">
+                                Furthermore, the encryption is performed using WebCrypto APIs entirely within your browser's local execution context.
                             </p>
                         </div>
-                    ))}
-                </div>
 
-                {/* Advanced Capabilities Row */}
-                <div className="mb-32">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-white mb-4">Deep Architectural Advantages</h2>
-                        <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto rounded-full"></div>
-                    </div>
-                    <div className="grid md:grid-cols-4 gap-6">
-                        {advancedCapabilities.map((cap, i) => (
-                            <div key={i} className="text-center p-6 border-t border-slate-800 pt-8">
-                                <div className="mx-auto w-fit mb-6 p-4 rounded-full bg-slate-900 border border-slate-800">
-                                    {cap.icon}
-                                </div>
-                                <h4 className="text-lg font-bold text-white mb-3">{cap.title}</h4>
-                                <p className="text-sm text-slate-500 leading-relaxed">{cap.desc}</p>
+                        <div className="grid sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left">
+                            <div className="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                                <CheckCircle2 className="w-5 h-5 text-white/70 mr-4" />
+                                <span className="text-white font-medium text-sm tracking-wide">Halborn Audited</span>
                             </div>
-                        ))}
-                    </div>
+                            <div className="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                                <CheckCircle2 className="w-5 h-5 text-white/70 mr-4" />
+                                <span className="text-white font-medium text-sm tracking-wide">EIP-4361 Auth</span>
+                            </div>
+                            <div className="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                                <CheckCircle2 className="w-5 h-5 text-white/70 mr-4" />
+                                <span className="text-white font-medium text-sm tracking-wide">No Backend Secrets</span>
+                            </div>
+                            <div className="flex items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                                <CheckCircle2 className="w-5 h-5 text-white/70 mr-4" />
+                                <span className="text-white font-medium text-sm tracking-wide">Open Source</span>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
-
-                {/* CTA Banner */}
-                <div className="bg-gradient-to-r from-blue-900/40 via-slate-900 to-purple-900/40 border border-blue-500/20 rounded-3xl p-16 text-center relative overflow-hidden shadow-2xl">
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full filter blur-[100px] mix-blend-screen"></div>
-                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full filter blur-[100px] mix-blend-screen"></div>
-
-                    <h2 className="text-4xl font-extrabold text-white mb-6 relative z-10 tracking-tight">Ready to institutionalize your digital legacy?</h2>
-                    <p className="text-xl text-slate-300 mb-10 max-w-3xl mx-auto relative z-10 font-light">
-                        Join the protocol today and ensure your digital footprint, wealth, and secrets outlive the physical world with absolute mathematical certainty.
-                    </p>
-                    <Link href="/" className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white font-bold px-10 py-5 rounded-2xl transition-all duration-300 relative z-10 shadow-[0_0_30px_rgba(59,130,246,0.5)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] hover:-translate-y-1 text-lg">
-                        Initialize Master Vault <ChevronRight className="ml-3 h-6 w-6" />
-                    </Link>
-                </div>
-
             </div>
+
+            {/* Minimalist Closing CTA */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 2 }}
+                className="py-32 bg-[#020202] text-center"
+            >
+                <div className="mb-12">
+                    <FileCode className="w-12 h-12 text-slate-600 mx-auto" />
+                </div>
+                <h2 className="text-5xl lg:text-7xl font-light text-white leading-none tracking-tighter mix-blend-difference mb-12">
+                    Deploy Your Vault.
+                </h2>
+                <button className="bg-white text-black px-12 py-5 rounded-full font-medium tracking-wide transition-all transform hover:scale-105 duration-500 text-lg shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)]">
+                    Initiate Protocol
+                </button>
+            </motion.div>
+
         </div>
     );
 }

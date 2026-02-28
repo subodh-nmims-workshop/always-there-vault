@@ -1,162 +1,179 @@
 'use client';
 
-import { Check, Info, Shield, Key, FileText, Blocks, Infinity, ShieldAlert } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Network, Check, ArrowRight, Fingerprint, Lock, Banknote } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PricingPage() {
+    const defaultTransition = { duration: 1.5, ease: [0.16, 1, 0.3, 1] };
+
+    const plans = [
+        {
+            name: "Protocol Standard",
+            price: "Free",
+            period: "Forever",
+            description: "Interact directly with the smart contracts on Polygon via your own infrastructure. You only pay network gas fees.",
+            features: [
+                "Full Client-Side AES-256-GCM SDK",
+                "Deploy immutable Vault Smart Contracts",
+                "Self-hosted Heartbeat trigger scripts",
+                "Direct API / ABI interface",
+                "Open-source local storage fallback"
+            ],
+            cta: "Connect Wallet",
+            primary: false
+        },
+        {
+            name: "Lifetime Vault",
+            price: "$999",
+            period: "One-Time",
+            description: "Institutional-grade infrastructure orchestration. We handle the heavy lifting, pinning, and heartbeat monitoring via our edge nodes.",
+            features: [
+                "Guaranteed IPFS Pinning via Web3.Storage",
+                "Automated Multi-Node Heartbeat Monitoring",
+                "Priority Email & SMS Trigger Alerts",
+                "Dedicated Node Allocation",
+                "VIP Bug Bounty / Incident Support"
+            ],
+            cta: "Consult an Engineer",
+            primary: true,
+            highlight: "RECOMMENDED FOR HIGH NET-WORTH"
+        }
+    ];
+
+    const comparisons = [
+        { feature: "Upfront Cost", traditional: "$5,000 - $15,000+", protocol: "Gas Fees (~$2.00)" },
+        { feature: "Retainer Fees", traditional: "$500 - $2,000 / year", protocol: "$0 (Immutable on-chain)" },
+        { feature: "Execution Speed", traditional: "6 - 18 months (Probate)", protocol: "Under 2 minutes" },
+        { feature: "Privacy Guarantee", traditional: "Atty-Client Privilege (Revocable)", protocol: "Zero-Knowledge (Mathematics)" },
+        { feature: "Asset Limits", traditional: "Complex tax audits", protocol: "Unlimited Cryptographic Keys" }
+    ];
+
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
+        <div className="min-h-screen bg-[#020202] pt-32 pb-24 font-sans selection:bg-white/20 selection:text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div className="text-center max-w-4xl mx-auto mb-20 slide-up pt-10">
-                    <span className="text-blue-500 font-bold tracking-widest text-sm uppercase mb-4 block">No Subscriptions. No Hidden Fees.</span>
-                    <h1 className="text-5xl md:text-6xl font-extrabold mb-8 text-white">
-                        Pricing Engineered for <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Eternity</span>
+                {/* Hero Section */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={defaultTransition}
+                    className="mb-32 text-center"
+                >
+                    <div className="inline-flex items-center gap-3 mb-8 border border-white/5 bg-white/[0.02] backdrop-blur-md px-6 py-2 rounded-full uppercase tracking-[0.2em] text-[10px] text-slate-400 font-medium hover:bg-white/10 transition-colors cursor-pointer">
+                        <Banknote className="h-3 w-3 text-slate-300" />
+                        <span>The Cost of Sovereignty</span>
+                    </div>
+
+                    <h1 className="text-6xl md:text-8xl lg:text-[7.5rem] font-light tracking-tighter text-white mb-8 leading-[0.9]">
+                        Valuation <br />
+                        <span className="font-medium text-slate-500 italic">Redefined.</span>
                     </h1>
-                    <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-light">
-                        Traditional estate planning costs thousands of dollars in legal fees, recurring retainer costs, and manual intervention. We offer mathematical certainty for a single, transparent, one-time protocol fee.
+                    <p className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-4xl mx-auto">
+                        Traditional estate planning is an extractionary industry dependent on state violence and paperwork. We replaced it with a smart contract. The mathematics are free.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="grid lg:grid-cols-2 gap-12 max-w-5xl mx-auto mb-24 relative z-10">
+                {/* Pricing Cards */}
+                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto mb-40">
+                    {plans.map((plan, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ ...defaultTransition, delay: idx * 0.2 }}
+                            className={\`relative overflow-hidden rounded-[3rem] p-12 lg:p-16 border \${plan.primary ? 'bg-gradient-to-b from-[#111] to-[#050505] border-white/20' : 'bg-[#0a0a0a] border-white/5 hover:border-white/10'} transition-all duration-500 flex flex-col h-full\`}
+                        >
+                    {plan.primary && (
+                        <div className="absolute top-0 right-0 p-8">
+                            <span className="bg-white text-black text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-[0.2em]">
+                                {plan.highlight}
+                            </span>
+                        </div>
+                    )}
 
-                    {/* Basic Tier */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 flex flex-col relative overflow-hidden group hover:border-blue-500/50 transition-all duration-300">
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Shield className="w-32 h-32" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white mb-2 relative z-10">Basic Protocol</h3>
-                        <p className="text-slate-400 mb-8 h-12 relative z-10">Essential cryptographic inheritance for individuals.</p>
-                        <div className="mb-8 relative z-10">
-                            <span className="text-5xl font-extrabold text-white">Free</span>
-                            <span className="text-slate-500 ml-2">forever</span>
-                        </div>
-                        <ul className="space-y-5 mb-10 flex-grow relative z-10">
-                            <li className="flex items-start text-slate-300">
-                                <Check className="h-6 w-6 text-blue-500 mr-3 shrink-0" />
-                                <span>Up to <strong>3</strong> Beneficiaries</span>
-                            </li>
-                            <li className="flex items-start text-slate-300">
-                                <Check className="h-6 w-6 text-blue-500 mr-3 shrink-0" />
-                                <span><strong>500 MB</strong> Decentralized IPFS Storage</span>
-                            </li>
-                            <li className="flex items-start text-slate-300">
-                                <Check className="h-6 w-6 text-blue-500 mr-3 shrink-0" />
-                                <span>Standard Dead-Man Switch (Monthly Check-ins)</span>
-                            </li>
-                            <li className="flex items-start text-slate-300">
-                                <Check className="h-6 w-6 text-blue-500 mr-3 shrink-0" />
-                                <span>AES-256-GCM Local Encryption</span>
-                            </li>
-                            <li className="flex items-start text-slate-300">
-                                <Check className="h-6 w-6 text-blue-500 mr-3 shrink-0" />
-                                <span>Community Protocol Support</span>
-                            </li>
-                        </ul>
-                        <Link href="/" className="w-full text-center py-4 px-6 rounded-xl border-2 border-slate-700 text-white font-bold hover:bg-slate-800 transition-colors relative z-10 block">
-                            Initialize Free Vault
-                        </Link>
+                    <h3 className="text-3xl font-medium text-white mb-4 tracking-tight">{plan.name}</h3>
+                    <div className="flex items-baseline gap-2 mb-6">
+                        <span className="text-5xl lg:text-7xl font-light text-white tracking-tighter">{plan.price}</span>
+                        <span className="text-slate-500 font-mono text-sm tracking-widest uppercase">/ {plan.period}</span>
                     </div>
 
-                    {/* Pro Tier */}
-                    <div className="bg-gradient-to-b from-blue-900/40 to-slate-900 border border-blue-500/50 rounded-3xl p-10 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.15)] transform hover:-translate-y-2 transition-transform duration-300">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full text-center">
-                            <div className="inline-block bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-b-lg uppercase tracking-wider">
-                                Institutional Grade
-                            </div>
-                        </div>
-                        <div className="absolute bottom-0 right-0 p-8 opacity-10">
-                            <Infinity className="w-40 h-40 text-blue-400" />
-                        </div>
+                    <p className="text-lg text-slate-400 font-light leading-relaxed mb-12">
+                        {plan.description}
+                    </p>
 
-                        <h3 className="text-3xl font-bold text-white mt-4 mb-2 relative z-10">Lifetime Secure Vault</h3>
-                        <p className="text-blue-300 mb-8 h-12 relative z-10">Unrestricted protocol access tailored for high-net-worth individuals and corporate entities.</p>
-                        <div className="mb-8 flex items-baseline relative z-10">
-                            <span className="text-5xl font-extrabold text-white">$499</span>
-                            <span className="text-slate-400 ml-2">/ one-time protocol fee</span>
-                        </div>
-
-                        <ul className="space-y-5 mb-10 flex-grow relative z-10">
-                            <li className="flex items-start text-white">
-                                <Check className="h-6 w-6 text-blue-400 mr-3 shrink-0" />
-                                <span><strong>Unlimited</strong> Beneficiaries & Multi-Sig Wallets</span>
+                    <ul className="space-y-6 mb-16 flex-grow">
+                        {plan.features.map((feat, i) => (
+                            <li key={i} className="flex items-start">
+                                <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mr-4 shrink-0 mt-0.5">
+                                    <Check className="w-3 h-3 text-white" />
+                                </div>
+                                <span className="text-slate-300 font-light text-lg">{feat}</span>
                             </li>
-                            <li className="flex items-start text-white">
-                                <Check className="h-6 w-6 text-blue-400 mr-3 shrink-0" />
-                                <span><strong>10 GB</strong> Dedicated Filecoin/IPFS Pinning</span>
-                            </li>
-                            <li className="flex items-start text-white">
-                                <Check className="h-6 w-6 text-blue-400 mr-3 shrink-0" />
-                                <span>Customizable Heartbeat (Daily, Weekly, Block-Height based)</span>
-                            </li>
-                            <li className="flex items-start text-white">
-                                <Check className="h-6 w-6 text-blue-400 mr-3 shrink-0" />
-                                <span>Hardware Wallet Native Integrations (Ledger, Trezor)</span>
-                            </li>
-                            <li className="flex items-start text-white">
-                                <Check className="h-6 w-6 text-blue-400 mr-3 shrink-0" />
-                                <span>Shamir Secret Sharing (Custom Thresholds up to 10 shares)</span>
-                            </li>
-                            <li className="flex items-start text-white">
-                                <Check className="h-6 w-6 text-blue-400 mr-3 shrink-0" />
-                                <span>Priority 24/7 Encrypted Support Channel</span>
-                            </li>
-                        </ul>
-                        <Link href="/" className="text-center relative z-10 w-full py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/50 text-lg block">
-                            Deploy Smart Contract
-                        </Link>
-                    </div>
+                        ))}
+                    </ul>
 
-                </div>
-
-                {/* ROI / Comparison Section */}
-                <div className="max-w-4xl mx-auto bg-slate-900/50 border border-slate-800 rounded-3xl p-10 md:p-16 mb-16 relative overflow-hidden">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-
-                    <h2 className="text-3xl font-bold text-white mb-10 text-center relative z-10">Cost Analysis: Protocol vs. Traditional Law</h2>
-
-                    <div className="space-y-6 relative z-10">
-                        <div className="flex border-b border-slate-800 pb-4">
-                            <div className="w-1/3 text-slate-400 font-semibold">Aspect</div>
-                            <div className="w-1/3 text-white font-bold px-4 border-l border-slate-800">Digital Will Protocol</div>
-                            <div className="w-1/3 text-slate-500 px-4 border-l border-slate-800">Traditional Law Firm</div>
-                        </div>
-                        <div className="flex border-b border-slate-800 pb-4 pt-2">
-                            <div className="w-1/3 text-slate-400">Setup Cost</div>
-                            <div className="w-1/3 text-blue-400 font-semibold px-4 border-l border-slate-800">One-time $499</div>
-                            <div className="w-1/3 text-slate-500 px-4 border-l border-slate-800">$2,500 - $10,000+</div>
-                        </div>
-                        <div className="flex border-b border-slate-800 pb-4 pt-2">
-                            <div className="w-1/3 text-slate-400">Maintenance & Retainer</div>
-                            <div className="w-1/3 text-blue-400 font-semibold px-4 border-l border-slate-800">$0 (Immutable)</div>
-                            <div className="w-1/3 text-slate-500 px-4 border-l border-slate-800">$500+ / year</div>
-                        </div>
-                        <div className="flex border-b border-slate-800 pb-4 pt-2">
-                            <div className="w-1/3 text-slate-400">Execution Speed</div>
-                            <div className="w-1/3 text-blue-400 font-semibold px-4 border-l border-slate-800">Instant (Block Time)</div>
-                            <div className="w-1/3 text-slate-500 px-4 border-l border-slate-800">Months (Probate Court)</div>
-                        </div>
-                        <div className="flex pt-2">
-                            <div className="w-1/3 text-slate-400">Privacy & Confidentiality</div>
-                            <div className="w-1/3 text-blue-400 font-semibold px-4 border-l border-slate-800">AES-256 (Zero Knowledge)</div>
-                            <div className="w-1/3 text-slate-500 px-4 border-l border-slate-800">Public Record / Human Trust</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="max-w-4xl mx-auto flex items-start p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-200/90 text-sm">
-                    <ShieldAlert className="h-6 w-6 text-amber-500 mr-4 shrink-0 mt-0.5" />
-                    <div>
-                        <p className="font-bold mb-1">Network Gas Fees Note</p>
-                        <p>The Digital Will Protocol operates on the Polygon (MATIC) network. While our protocol fee is a one-time payment, users are responsible for the marginal gas fees (typically &lt; $0.05 per TX) required to deploy their individual smart contracts and submit heartbeat pings to the blockchain.</p>
-                    </div>
-                </div>
-
-                <div className="mt-12 text-center text-slate-500 text-sm flex items-center justify-center max-w-2xl mx-auto">
-                    <Info className="h-5 w-5 mr-2 shrink-0" />
-                    <span>We accept payments natively via Web3 wallets in USDC, USDT, ETH, and MATIC.</span>
-                </div>
-            </div>
+                    <button className={\`w-full py-5 rounded-full font-medium tracking-wide uppercase text-sm transition-all duration-500 \${plan.primary ? 'bg-white text-black hover:bg-slate-200 shadow-[0_0_40px_rgba(255,255,255,0.15)]' : 'bg-[#111] border border-white/10 text-white hover:bg-white/5'}\`}>
+                    {plan.cta}
+                </button>
+            </motion.div>
+                    ))}
         </div>
+
+                {/* The Comparison Data */ }
+    <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={defaultTransition}
+        className="max-w-5xl mx-auto bg-[#050505] border border-white/5 rounded-[3rem] overflow-hidden"
+    >
+        <div className="p-12 lg:p-16 border-b border-white/5">
+            <h2 className="text-4xl font-medium text-white tracking-tight mb-4">Legacy vs. Protocol</h2>
+            <p className="text-lg text-slate-400 font-light">An economical analysis of automated inheritance versus traditional legal retainers.</p>
+        </div>
+
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+                <thead>
+                    <tr className="border-b border-white/5 bg-[#0a0a0a]">
+                        <th className="py-6 px-8 text-slate-500 font-mono text-xs uppercase tracking-widest font-normal">Metric / Liability</th>
+                        <th className="py-6 px-8 text-slate-500 font-mono text-xs uppercase tracking-widest font-normal">Traditional Trust / Will</th>
+                        <th className="py-6 px-8 text-white font-mono text-xs uppercase tracking-widest font-normal">Digital Will Protocol</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                    {comparisons.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="py-6 px-8 font-medium text-white text-lg">{row.feature}</td>
+                            <td className="py-6 px-8 text-slate-400 font-light text-lg">{row.traditional}</td>
+                            <td className="py-6 px-8 text-white font-light text-lg border-l border-white/5 bg-white/[0.01]">{row.protocol}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </motion.div>
+
+    {/* Final Simple CTA */ }
+    <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 2 }}
+        className="py-40 text-center"
+    >
+        <h2 className="text-5xl lg:text-7xl font-light text-white leading-none tracking-tighter mb-12">
+            Stop paying for bureaucracy.
+        </h2>
+        <Link href="/docs" className="inline-flex items-center text-white font-medium group transition-colors uppercase tracking-widest text-sm border-b border-white/30 hover:border-white pb-2">
+            Read the Implementation Docs
+            <ArrowRight className="w-4 h-4 ml-4 transform group-hover:translate-x-2 transition-transform" />
+        </Link>
+    </motion.div>
+
+            </div >
+        </div >
     );
 }

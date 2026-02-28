@@ -1,9 +1,12 @@
 'use client';
 
-import { Terminal, Code2, Globe, Sparkles, Network, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Terminal, Code2, Globe, ArrowRight, Network, Fingerprint } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CareersPage() {
+    const defaultTransition = { duration: 1.5, ease: [0.16, 1, 0.3, 1] };
+
     const openings = [
         {
             role: "Principal Cryptography Engineer",
@@ -11,7 +14,7 @@ export default function CareersPage() {
             type: "Full-Time",
             location: "Remote (Global)",
             salary: "$180k - $250k USDC / yr",
-            icon: <Terminal className="h-6 w-6 text-purple-400" />
+            icon: <Fingerprint className="h-6 w-6 text-slate-300" />
         },
         {
             role: "Smart Contract Auditor (Solidity/Vyper)",
@@ -19,112 +22,153 @@ export default function CareersPage() {
             type: "Contract/Retainer",
             location: "Remote (Global)",
             salary: "$150k - $200k USDC / yr",
-            icon: <Code2 className="h-6 w-6 text-emerald-400" />
+            icon: <Code2 className="h-6 w-6 text-slate-300" />
         },
         {
-            role: "Distributed Systems Architect (IPFS/Filecoin)",
+            role: "Distributed Systems Architect (IPFS)",
             department: "Infrastructure",
             type: "Full-Time",
             location: "Remote (Global)",
             salary: "$160k - $220k USDC / yr",
-            icon: <Network className="h-6 w-6 text-blue-400" />
+            icon: <Network className="h-6 w-6 text-slate-300" />
         }
     ];
 
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
+        <div className="min-h-screen bg-[#020202] pt-40 pb-24 font-sans selection:bg-white/20 selection:text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div className="text-center mb-20 slide-up max-w-4xl mx-auto pt-10">
-                    <div className="inline-flex items-center justify-center p-4 bg-emerald-500/10 rounded-full mb-6 border border-emerald-500/20">
-                        <Globe className="h-10 w-10 text-emerald-400" />
+                {/* Hero Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={defaultTransition}
+                    className="mb-40"
+                >
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 bg-[#111] rounded-full flex items-center justify-center border border-white/10">
+                            <Globe className="h-5 w-5 text-white/70" />
+                        </div>
+                        <span className="text-white/40 uppercase tracking-[0.2em] text-xs font-bold">The Collective</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-white tracking-tight">
-                        Build the <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500">Immutable Future</span>
+
+                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-light tracking-tighter text-white mb-8 leading-[0.9]">
+                        Build the <br />
+                        <span className="font-medium text-slate-500">Immutable.</span>
                     </h1>
-                    <p className="text-xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
+                    <p className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-3xl">
                         We are a distributed, pseudonymous collective of engineers building the world's first mathematically infallible inheritance protocol. We operate asynchronously, transparently, and without borders.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="grid md:grid-cols-2 gap-12 mb-24 max-w-5xl mx-auto">
-                    <div className="bg-slate-900/50 border border-slate-800 p-10 rounded-3xl relative overflow-hidden group">
-                        <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Sparkles className="w-64 h-64 text-emerald-500" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white mb-6">Our Culture</h3>
-                        <ul className="space-y-4 text-slate-300">
+                {/* Cultural Principles block */}
+                <div className="grid md:grid-cols-2 gap-12 lg:gap-24 mb-40">
+                    <motion.div
+                        initial={{ opacity: 0, x: -50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={defaultTransition}
+                        className="p-12 lg:p-16 rounded-[3rem] bg-[#0a0a0a] border border-white/5 hover:border-white/10 transition-colors"
+                    >
+                        <h3 className="text-3xl font-medium text-white mb-10 tracking-tight">Radical Autonomy</h3>
+                        <ul className="space-y-8 text-slate-400 font-light text-lg">
                             <li className="flex items-start">
-                                <span className="text-emerald-500 mr-3 mt-1 font-bold">»</span>
-                                <span><strong>Radical Transparency:</strong> All code is open-source. All architectural decisions are documented.</span>
+                                <span className="text-white font-bold mr-4">—</span>
+                                <div>
+                                    <strong className="text-white font-normal block mb-1">Open Documentation</strong>
+                                    All architectural decisions, research, and technical debt are documented publicly.
+                                </div>
                             </li>
                             <li className="flex items-start">
-                                <span className="text-emerald-500 mr-3 mt-1 font-bold">»</span>
-                                <span><strong>Asynchronous by Default:</strong> No mandatory meetings. We measure output, not hours online.</span>
+                                <span className="text-white font-bold mr-4">—</span>
+                                <div>
+                                    <strong className="text-white font-normal block mb-1">Asynchronous by Default</strong>
+                                    No mandatory standups. No surveillance. We measure cryptographic output and code quality, not hours online.
+                                </div>
                             </li>
                             <li className="flex items-start">
-                                <span className="text-emerald-500 mr-3 mt-1 font-bold">»</span>
-                                <span><strong>Pseudonymity Accepted:</strong> You can apply and work under a pseudonym verified via PGP.</span>
+                                <span className="text-white font-bold mr-4">—</span>
+                                <div>
+                                    <strong className="text-white font-normal block mb-1">Pseudonymity Accepted</strong>
+                                    We do not require your real identity. You can apply, work, and be compensated under a verified PGP pseudonym.
+                                </div>
                             </li>
                         </ul>
-                    </div>
+                    </motion.div>
 
-                    <div className="bg-slate-900/50 border border-slate-800 p-10 rounded-3xl relative overflow-hidden group">
-                        <div className="absolute -left-10 -top-10 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Network className="w-64 h-64 text-blue-500" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white mb-6">Manifesto</h3>
-                        <p className="text-slate-300 leading-relaxed mb-6 font-mono text-sm max-w-md">
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={defaultTransition}
+                        className="p-12 lg:p-16 rounded-[3rem] bg-[#111] border border-white/5 relative overflow-hidden flex flex-col justify-center"
+                    >
+                        <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2600')] bg-cover mix-blend-luminosity grayscale"></div>
+                        <h3 className="text-3xl font-medium text-white mb-8 tracking-tight relative z-10">The Mandate</h3>
+                        <p className="text-2xl text-slate-300 font-serif italic font-light leading-relaxed mb-8 relative z-10">
                             "Human trust scales poorly. Mathematics scales infinitely. We are replacing the reliance on lawyers and centralized databases with deterministic cryptography."
                         </p>
-                        <p className="text-emerald-400 font-semibold text-sm tracking-wide">
-                            — Digital Will Protocol Core Contributors
+                        <p className="text-white font-medium uppercase tracking-widest text-xs relative z-10">
+                            — DWP Core Contributors
                         </p>
-                    </div>
+                    </motion.div>
                 </div>
 
-                <div className="max-w-4xl mx-auto">
-                    <h2 className="text-3xl font-bold text-white mb-8">Open Positions</h2>
+                {/* Open Positions */}
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={defaultTransition}
+                    className="max-w-5xl mx-auto"
+                >
+                    <div className="flex items-center justify-between mb-16 border-b border-white/10 pb-8">
+                        <h2 className="text-5xl font-medium text-white tracking-tighter">Open Positions.</h2>
+                        <span className="text-slate-500 font-mono text-sm uppercase tracking-widest bg-white/5 px-4 py-2 rounded-full hidden md:block">3 Roles Available</span>
+                    </div>
+
                     <div className="space-y-6">
                         {openings.map((job, idx) => (
-                            <Link href="/contact" key={idx} className="block bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_5px_20px_rgba(16,185,129,0.1)] group">
+                            <Link href="/contact" key={idx} className="block bg-[#050505] border border-white/5 hover:border-white/20 rounded-[2rem] p-8 lg:p-10 transition-all duration-500 group">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between">
-                                    <div className="flex items-start mb-4 md:mb-0">
-                                        <div className="p-3 bg-slate-950 rounded-xl mr-4 border border-slate-800 flex-shrink-0">
+                                    <div className="flex items-center mb-6 md:mb-0">
+                                        <div className="w-16 h-16 bg-[#111] rounded-2xl border border-white/5 flex items-center justify-center mr-6 group-hover:bg-white/5 transition-colors">
                                             {job.icon}
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors mb-1">
+                                            <h3 className="text-2xl font-medium text-white group-hover:text-slate-300 transition-colors tracking-tight mb-2">
                                                 {job.role}
                                             </h3>
-                                            <div className="flex flex-wrap items-center text-sm text-slate-400 gap-3 mt-2">
-                                                <span className="bg-slate-800 px-2 py-1 rounded text-slate-300">{job.department}</span>
-                                                <span className="bg-slate-800 px-2 py-1 rounded text-slate-300">{job.type}</span>
-                                                <span className="text-slate-500">{job.location}</span>
+                                            <div className="flex flex-wrap items-center text-sm font-mono gap-4 uppercase tracking-widest text-slate-500">
+                                                <span>{job.department}</span>
+                                                <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
+                                                <span>{job.type}</span>
+                                                <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
+                                                <span>{job.location}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center border-t md:border-t-0 border-slate-800 pt-4 md:pt-0">
-                                        <span className="text-emerald-400 font-mono text-sm md:mb-2">{job.salary}</span>
-                                        <span className="flex items-center text-white text-sm font-semibold group-hover:text-emerald-300 transition-colors">
-                                            Apply <ArrowRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
-                                        </span>
+                                    <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center">
+                                        <span className="text-slate-400 font-mono text-sm md:mb-4">{job.salary}</span>
+                                        <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500">
+                                            <ArrowRight className="h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
+                                        </div>
                                     </div>
                                 </div>
                             </Link>
                         ))}
                     </div>
 
-                    <div className="mt-16 text-center bg-slate-900/30 border border-slate-800 rounded-2xl p-8">
-                        <h4 className="text-lg font-bold text-white mb-2">Don't see a fit?</h4>
-                        <p className="text-slate-400 text-sm mb-4">
+                    <div className="mt-24 text-center">
+                        <h4 className="text-xl font-medium text-white mb-4">Don't see a fit?</h4>
+                        <p className="text-slate-400 text-lg font-light mb-8 max-w-xl mx-auto">
                             We are always looking for exceptional engineers who understand Zero-Knowledge proofs, Rust, or decentralized infrastructure.
                         </p>
-                        <a href="mailto:careers@digitalwill.protocol" className="text-emerald-400 hover:text-emerald-300 font-semibold underline decoration-emerald-500/30 underline-offset-4 transition-colors">
-                            Send us your GitHub
+                        <a href="mailto:careers@digitalwill.protocol" className="inline-block border-b border-white/30 text-white pb-1 font-medium tracking-wide hover:border-white transition-colors">
+                            Provide your PGP or GitHub
                         </a>
                     </div>
-                </div>
+                </motion.div>
 
             </div>
         </div>

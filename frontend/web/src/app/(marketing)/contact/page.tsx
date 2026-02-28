@@ -1,107 +1,140 @@
 'use client';
 
-import { Mail, MessageSquare, Twitter, Github, MapPin, Send } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mail, MessageSquare, Twitter, Github, MapPin, Send, Cpu } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ContactPage() {
+    const defaultTransition = { duration: 1.5, ease: [0.16, 1, 0.3, 1] };
+
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
+        <div className="min-h-screen bg-[#050505] pt-40 pb-24 font-sans selection:bg-white/20 selection:text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div className="text-center mb-16 slide-up max-w-3xl mx-auto pt-10">
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-white tracking-tight">
-                        Encrypted <span className="text-blue-500">Communications</span>
+                {/* Hero Minimalist Typography */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={defaultTransition}
+                    className="mb-40"
+                >
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 bg-[#111] rounded-full flex items-center justify-center border border-white/10">
+                            <Cpu className="h-5 w-5 text-white/70" />
+                        </div>
+                        <span className="text-white/40 uppercase tracking-[0.2em] text-xs font-bold">Secure Transmissions</span>
+                    </div>
+
+                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-light tracking-tighter text-white mb-8 leading-[0.9]">
+                        Initiate<br />
+                        <span className="font-medium text-slate-500 italic">Contact.</span>
                     </h1>
-                    <p className="text-lg text-slate-400 font-light leading-relaxed">
-                        Whether you are an institutional client seeking custom smart contract deployment, an auditor, or a researcher, we offer direct lines to our core engineering team.
+                    <p className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-3xl">
+                        Whether you require custom smart contract architecture or priority lifetime vault allocation, initiate a secure transmission with our operations team.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="grid lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
+                <div className="grid lg:grid-cols-2 gap-16 lg:gap-32 max-w-6xl mx-auto mb-40">
 
-                    {/* Contact Info */}
-                    <div className="space-y-8">
-                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:border-blue-500/30 transition-colors">
-                            <div className="flex items-start mb-6">
-                                <div className="p-3 bg-blue-500/10 rounded-xl mr-4 border border-blue-500/20">
-                                    <Mail className="h-6 w-6 text-blue-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-1">Direct Outreach</h3>
-                                    <p className="text-sm text-slate-400">For general inquiries and partnership discussions.</p>
-                                </div>
+                    {/* Communications Hub */}
+                    <div className="space-y-12">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={defaultTransition}
+                            className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12 hover:border-white/10 transition-colors"
+                        >
+                            <div className="w-16 h-16 bg-[#111] rounded-2xl border border-white/10 flex items-center justify-center mb-8">
+                                <Mail className="h-6 w-6 text-white" />
                             </div>
-                            <div className="bg-slate-950 rounded-xl p-4 border border-slate-800/50 mb-4">
-                                <p className="font-mono text-sm text-blue-300">hello@digitalwill.protocol</p>
-                            </div>
-                            <p className="text-xs text-slate-500 flex items-center">
-                                * Expected response time: 24-48 hours
+                            <h3 className="text-3xl font-medium text-white mb-4 tracking-tight">Direct Outreach</h3>
+                            <p className="text-slate-400 font-light text-lg mb-8">
+                                For institutional inquiries, DAO treasury management, and audit requests.
                             </p>
-                        </div>
-
-                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 hover:border-purple-500/30 transition-colors">
-                            <div className="flex items-start mb-6">
-                                <div className="p-3 bg-purple-500/10 rounded-xl mr-4 border border-purple-500/20">
-                                    <MessageSquare className="h-6 w-6 text-purple-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-1">Community & Support</h3>
-                                    <p className="text-sm text-slate-400">Join our Discord for real-time protocol discussions.</p>
-                                </div>
+                            <div className="bg-[#050505] rounded-xl p-6 border border-white/5 inline-block">
+                                <p className="font-mono text-sm text-slate-300 tracking-wider">hello@digitalwill.protocol</p>
                             </div>
-                            <a href="#" className="w-full inline-flex items-center justify-center p-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-xl font-bold transition-colors">
-                                Join our Discord Server
-                            </a>
-                        </div>
+                            <p className="text-xs text-slate-500 mt-6 font-mono uppercase tracking-widest">
+                                48-Hour SLA
+                            </p>
+                        </motion.div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <a href="#" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center hover:border-slate-600 transition-colors group">
-                                <Twitter className="h-8 w-8 text-slate-400 group-hover:text-blue-400 mb-3 transition-colors" />
-                                <span className="text-sm font-semibold text-slate-300">@DigitalWill_X</span>
-                            </a>
-                            <a href="https://github.com/subodh-001/decentralized-digital-will-protocol" target="_blank" rel="noopener noreferrer" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center hover:border-slate-600 transition-colors group">
-                                <Github className="h-8 w-8 text-slate-400 group-hover:text-white mb-3 transition-colors" />
-                                <span className="text-sm font-semibold text-slate-300">GitHub Repo</span>
-                            </a>
+                        <div className="grid sm:grid-cols-2 gap-6">
+                            <motion.a
+                                href="#"
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ ...defaultTransition, delay: 0.1 }}
+                                className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12 flex flex-col items-center justify-center hover:bg-white/[0.02] transition-colors group"
+                            >
+                                <Twitter className="h-8 w-8 text-slate-500 group-hover:text-white mb-6 transition-colors" />
+                                <span className="text-sm font-medium tracking-widest uppercase text-slate-400 group-hover:text-white transition-colors">@DigitalWill_X</span>
+                            </motion.a>
+                            <motion.a
+                                href="https://github.com/subodh-001/decentralized-digital-will-protocol"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ ...defaultTransition, delay: 0.2 }}
+                                className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] p-12 flex flex-col items-center justify-center hover:bg-white/[0.02] transition-colors group"
+                            >
+                                <Github className="h-8 w-8 text-slate-500 group-hover:text-white mb-6 transition-colors" />
+                                <span className="text-sm font-medium tracking-widest uppercase text-slate-400 group-hover:text-white transition-colors">Repository</span>
+                            </motion.a>
                         </div>
                     </div>
 
-                    {/* Contact Form */}
-                    <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-3xl p-8 lg:p-10 shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full filter blur-[50px] pointer-events-none"></div>
+                    {/* Dark Minimal Form */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={defaultTransition}
+                        className="bg-[#111] border border-white/5 rounded-[3rem] p-12 lg:p-16 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-                        <h2 className="text-2xl font-bold text-white mb-6">Send an Encrypted Message</h2>
-                        <form className="space-y-6 relative z-10">
+                        <h2 className="text-2xl font-medium text-white tracking-tight mb-2 relative z-10">Encrypted Payload</h2>
+                        <p className="text-slate-500 font-light mb-12 relative z-10">All fields are end-to-end encrypted before transmission.</p>
+
+                        <form className="space-y-10 relative z-10">
                             <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Alias / Name</label>
+                                <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-4">Alias / Nom de guerre</label>
                                 <input
                                     type="text"
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
+                                    className="w-full bg-transparent border-b border-white/10 pb-4 text-white text-lg placeholder:text-slate-700 focus:outline-none focus:border-white transition-colors font-light"
                                     placeholder="Satoshi"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Email Address or PGP Key</label>
+                                <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-4">Routing Address</label>
                                 <input
                                     type="text"
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                    placeholder="you@domain.com or PGP Fingerprint"
+                                    className="w-full bg-transparent border-b border-white/10 pb-4 text-white text-lg placeholder:text-slate-700 focus:outline-none focus:border-white transition-colors font-light"
+                                    placeholder="Email or PGP Block"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Message</label>
+                                <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-4">Transmission</label>
                                 <textarea
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all min-h-[150px] font-mono whitespace-pre-wrap"
-                                    placeholder="State your inquiry..."
+                                    className="w-full bg-transparent border-b border-white/10 pb-4 text-white text-lg placeholder:text-slate-700 focus:outline-none focus:border-white transition-colors font-light min-h-[120px] resize-none"
+                                    placeholder="State your operational intent..."
                                 ></textarea>
                             </div>
+
                             <button
                                 type="button"
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center group"
+                                className="w-full bg-white text-black hover:bg-slate-200 font-medium py-6 rounded-full transition-all flex items-center justify-center group tracking-widest uppercase text-xs"
                             >
-                                Send Payload <Send className="h-4 w-4 ml-2 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                Dispatch Signal
+                                <Send className="h-4 w-4 ml-3 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                             </button>
                         </form>
-                    </div>
+                    </motion.div>
 
                 </div>
             </div>
