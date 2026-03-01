@@ -1,94 +1,154 @@
-'use client';
+'use client'
 
-import { FileKey, EyeOff, ShieldCheck, Database, Server, Fingerprint } from 'lucide-react';
+import { motion } from 'framer-motion'
+import {
+    Shield,
+    Info,
+    Database,
+    LockKeyhole,
+    Network
+} from 'lucide-react'
+import Link from 'next/link'
+import { SharedFooter } from '@/components/shared-footer'
 
-export default function PrivacyPage() {
+export default function PrivacyPolicyPage() {
+    const defaultTransition = { duration: 0.5, ease: "easeOut" as const }
+
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div className="text-center mb-16 slide-up">
-                    <div className="inline-flex items-center justify-center p-4 bg-blue-500/10 rounded-full mb-6 border border-blue-500/20">
-                        <EyeOff className="h-10 w-10 text-blue-400" />
+        <div className="min-h-screen bg-[#0a0c10] font-sans text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
+            {/* Navigation */}
+            <nav className="sticky top-0 z-50 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Shield className="w-8 h-8" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-white tracking-tight">
-                        Zero-Knowledge <span className="text-blue-500">Privacy Policy</span>
-                    </h1>
-                    <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light">
-                        We cannot sell, leak, or expose your data because we mathematically cannot read it. Our privacy policy is driven by cryptographic impossibility, not corporate promises.
-                    </p>
-                    <p className="text-sm text-slate-500 mt-4 font-mono">
-                        Last Updated: October 2026 | Document ID: DWP-PRIV-V2
-                    </p>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                </Link>
+                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+                    <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
+                    <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
+                    <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Security</Link>
                 </div>
+                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
+                    Launch App
+                </Link>
+            </nav>
 
-                <div className="prose prose-invert prose-blue max-w-none space-y-12">
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
-                        <div className="flex items-center mb-6">
-                            <ShieldCheck className="h-8 w-8 text-emerald-400 mr-4" />
-                            <h2 className="text-2xl font-bold text-white m-0">1. The Absolute Baseline: Zero-Knowledge</h2>
-                        </div>
-                        <p className="text-slate-300 leading-relaxed mb-4">
-                            The Digital Will Protocol operates on a strict zero-knowledge (ZK), end-to-end encrypted (E2EE) framework. All sensitive data—including text notes, file payloads, and folder names—is encrypted <strong>client-side</strong> within your browser or mobile device utilizing the AES-256-GCM cipher before transit.
-                        </p>
-                        <p className="text-slate-300 leading-relaxed mb-4">
-                            <strong>We hold absolutely zero access to your plaintext data or your encryption keys.</strong> Consequently, we cannot comply with subpoenas or government requests for your file contents, as handing over the encrypted ciphertexts would provide authorities with mathematically indecipherable noise.
-                        </p>
-                    </section>
+            {/* Header */}
+            <header className="pt-16 pb-12 px-6 text-center max-w-4xl mx-auto relative z-10">
+                <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">
+                    Privacy Policy
+                </motion.h1>
+                <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                    Last Updated: March 2026
+                </motion.p>
+            </header>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
-                        <div className="flex items-center mb-6">
-                            <Database className="h-8 w-8 text-orange-400 mr-4" />
-                            <h2 className="text-2xl font-bold text-white m-0">2. Metadata & Centralized Routing</h2>
-                        </div>
-                        <p className="text-slate-300 leading-relaxed mb-4">
-                            While your payload is encrypted and decentralized via IPFS, our routing APIs (housed on Node.js/MongoDB Atlas) require minimal metadata to coordinate heartbeat logic and smart contract relaying.
-                        </p>
-                        <h3 className="text-lg font-bold text-white mb-3 mt-6">What we intentionally store:</h3>
-                        <ul className="list-disc pl-6 space-y-3 text-slate-300 mb-6">
-                            <li><strong>Public Wallet Addresses:</strong> Ethereum/Polygon 0x addresses derived from EIP-4361 signatures for authentication.</li>
-                            <li><strong>Encrypted Payload Artifacts:</strong> The actual AES-256 ciphertexts, Initialization Vectors (IVs), and IPFS Content Identifiers (CIDs).</li>
-                            <li><strong>Heartbeat Timestamps:</strong> Epoch timestamps of your last verifiable activity ping.</li>
-                            <li><strong>Notification Emails (Optional):</strong> If you choose to notify beneficiaries via standard Web2 protocols, we securely hash/salt and store these email addresses.</li>
-                        </ul>
-                        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl mt-6">
-                            <h4 className="font-bold text-red-400 mb-2">What we explicitly DO NOT store:</h4>
-                            <p className="text-slate-300 text-sm">
-                                IP addresses (they are scrubbed at the edge via Cloudflare), plaintext passwords (we don't use them), KYC documentation (we are permissionless), or web analytics tracking cookies (no Google Analytics, no Facebook Pixels).
+            <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 lg:flex lg:gap-16 pb-32">
+                {/* Sticky Sidebar */}
+                <aside className="hidden lg:block w-64 shrink-0 relative z-10">
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="sticky top-28 p-6 rounded-2xl bg-white/[0.02] backdrop-blur-md border border-white/5">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Table of Contents</h3>
+                        <nav className="flex flex-col gap-4">
+                            <a href="#intro" className="text-[#1152d4] font-bold flex items-center gap-3 group text-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-[#1152d4] shadow-[0_0_8px_#1152d4]"></span>
+                                Introduction
+                            </a>
+                            <a href="#data" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
+                                Data Collection
+                            </a>
+                            <a href="#crypto" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
+                                Cryptography
+                            </a>
+                            <a href="#third-party" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
+                                Third Parties
+                            </a>
+                        </nav>
+                    </motion.div>
+                </aside>
+
+                {/* Content Area */}
+                <section className="flex-1 max-w-3xl lg:mx-0 relative z-10">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="prose prose-invert prose-slate max-w-none text-slate-300 leading-relaxed">
+
+                        <div id="intro" className="mb-16 scroll-mt-32">
+                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                                <Info className="text-[#1152d4] w-6 h-6" />
+                                Introduction
+                            </h2>
+                            <p className="text-lg">
+                                DeadMan Protocol is built on the fundamental principle that privacy is a human right. Our architecture is designed to protect your digital legacy without ever compromising your identity or sensitive credentials. This policy outlines how we handle the minimal data required to maintain the protocol's integrity.
                             </p>
                         </div>
-                    </section>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
-                        <div className="flex items-center mb-6">
-                            <Server className="h-8 w-8 text-purple-400 mr-4" />
-                            <h2 className="text-2xl font-bold text-white m-0">3. Blockchain Permanence (The 'Right to be Forgotten')</h2>
+                        {/* Callout Box */}
+                        <div className="my-12 p-8 rounded-2xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(139,92,246,0.1)]">
+                            <div className="absolute -right-4 -top-4 opacity-5">
+                                <LockKeyhole className="w-48 h-48 text-[#8b5cf6]" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Shield className="text-[#8b5cf6] w-5 h-5" />
+                                    <h4 className="font-bold text-[#8b5cf6] uppercase tracking-widest text-sm">Zero-Knowledge Security Note</h4>
+                                </div>
+                                <p className="text-[#8b5cf6]/90 leading-relaxed font-medium text-lg">
+                                    The protocol's architecture ensures even the protocol infrastructure itself cannot access encrypted seeds or private keys. All encryption happens client-side before any data reaches the distributed ledger or IPFS.
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-slate-300 leading-relaxed mb-4">
-                            Please be acutely aware that <strong>blockchains are immutable ledgers</strong>. By interacting with the Digital Will Protocol smart contracts, certain transaction data (such as the deployment of your personal Vault contract, gas paid, and heartbeat transaction hashes) will be permanently etched into the Polygon network.
-                        </p>
-                        <p className="text-slate-300 leading-relaxed">
-                            While the GDPR generally affords European citizens the "Right to be Forgotten," it is mathematically impossible for us (or anyone else) to delete on-chain transaction hashes. We strongly advise that you never initiate a transaction using a wallet address that is inextricably linked to your real-world identity if you desire absolute anonymity.
-                        </p>
-                    </section>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
-                        <div className="flex items-center mb-6">
-                            <Fingerprint className="h-8 w-8 text-cyan-400 mr-4" />
-                            <h2 className="text-2xl font-bold text-white m-0">4. Third-Party Sub-Processors</h2>
+                        <div id="data" className="mb-16 scroll-mt-32">
+                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                                <Database className="text-[#1152d4] w-6 h-6" />
+                                Data Collection
+                            </h2>
+                            <p className="mb-6 text-lg">
+                                We do not collect personal identification information (PII). The DeadMan Protocol only interacts with:
+                            </p>
+                            <ul className="space-y-4">
+                                <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
+                                    <span><strong className="text-white">Public wallet addresses</strong> used to initiate smart contract triggers.</span>
+                                </li>
+                                <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
+                                    <span><strong className="text-white">Encrypted blobs</strong> that contain user-defined recovery instructions (which we cannot read).</span>
+                                </li>
+                                <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
+                                    <span><strong className="text-white">Network metadata</strong> necessary for meta-transaction broadcasting via Relayers.</span>
+                                </li>
+                            </ul>
                         </div>
-                        <p className="text-slate-300 leading-relaxed mb-4">
-                            To ensure high availability and censorship resistance, we leverage a tightly curated list of infrastructure providers. They receive only the encrypted data required to perform their functions:
-                        </p>
-                        <ul className="list-disc pl-6 space-y-3 text-slate-300">
-                            <li><strong>Web3.Storage / Filecoin:</strong> For decentralized pinning of your encrypted payloads via IPFS CIDs.</li>
-                            <li><strong>MongoDB Atlas (Frankfurt Region):</strong> For high-speed retrieval of your routing metadata. Data at rest is encrypted via AES-256.</li>
-                            <li><strong>Polygon PoS Network:</strong> The decentralized validator set executing the ultimate logic of your digital will.</li>
-                        </ul>
-                    </section>
 
-                </div>
-            </div>
+                        <div id="crypto" className="mb-16 scroll-mt-32">
+                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                                <LockKeyhole className="text-[#1152d4] w-6 h-6" />
+                                Cryptography Standards
+                            </h2>
+                            <p className="text-lg">
+                                All data stored via the DeadMan Protocol is secured using AES-256-GCM encryption combined with SECP256K1 elliptic curve signatures. Our "Dead Man's Switch" mechanism utilizes Time-Lock puzzles that are computationally impossible to solve before the user-defined expiration period.
+                            </p>
+                        </div>
+
+                        <div id="third-party" className="mb-16 scroll-mt-32">
+                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                                <Network className="text-[#1152d4] w-6 h-6" />
+                                Third Parties
+                            </h2>
+                            <p className="text-lg">
+                                We utilize decentralized networks (Ethereum, Polygon, IPFS, Arweave) to ensure permanence. We do not sell, rent, or trade any metadata to centralized third-party analytics or marketing firms. Period.
+                            </p>
+                        </div>
+
+                    </motion.div>
+                </section>
+            </main>
+
+            <SharedFooter />
         </div>
-    );
+    )
 }

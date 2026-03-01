@@ -23,7 +23,8 @@ import {
   AlertOctagon,
   Clock,
   KeyRound,
-  Network
+  Network,
+  LineChart
 } from 'lucide-react'
 import { AssetCreationForm } from '@/components/asset-creation-form'
 import { HeartbeatMonitor } from '@/components/heartbeat-monitor'
@@ -145,296 +146,167 @@ export default function HomePage() {
 
   if (!isConnected) {
     return (
-      <div ref={containerRef} className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white">
+      <div ref={containerRef} className="min-h-screen bg-[#080a0f] font-sans text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
         {/* Navigation */}
-        <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#050a1a]/80 border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-            {/* Left side Links */}
-            <div className="flex-1 flex items-center space-x-8">
-              <Link href="/features" className="text-sm font-semibold text-blue-100/70 hover:text-white transition-colors">Features</Link>
-              <Link href="/docs" className="text-sm font-semibold text-blue-100/70 hover:text-white transition-colors">Documentation</Link>
+        <nav className="sticky top-0 z-50 bg-[#080a0f]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Shield className="w-8 h-8" />
             </div>
-
-            {/* Center Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center flex-col justify-center group relative cursor-pointer">
-              <div className="absolute inset-0 bg-[#2b52ff]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <Shield className="h-8 w-8 text-[#2b52ff] mb-1 relative z-10" />
-              <span className="text-sm font-bold tracking-[0.2em] uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 relative z-10">
-                Digital Will
-              </span>
-            </Link>
-
-            {/* Right side Button */}
-            <div className="flex-1 flex items-center justify-end space-x-6">
-              <Link href="/security" className="hidden sm:block text-sm font-semibold text-blue-100/70 hover:text-white transition-colors">Security</Link>
-              <button
-                onClick={handleConnect}
-                disabled={isConnecting}
-                className="bg-[#2b52ff] hover:bg-white text-white hover:text-[#2b52ff] px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#2b52ff]/20 disabled:opacity-50"
-              >
-                {isConnecting ? (
-                  <span className="flex items-center"><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Connecting...</span>
-                ) : 'Launch App'}
-              </button>
-            </div>
+            <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+          </Link>
+          <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+            <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
+            <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
+            <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Security</Link>
           </div>
+          <button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)] disabled:opacity-50 flex items-center"
+          >
+            {isConnecting ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : null}
+            {isConnecting ? 'Connecting...' : 'Launch App'}
+          </button>
         </nav>
 
-        {/* Hero Section */}
-        <div className="h-screen flex flex-col justify-center pt-20 pb-10 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a1536] to-[#050a1a]"></div>
+        <main className="flex-1 flex flex-col relative">
+          {/* Hero Section */}
+          <section className="relative pt-24 pb-20 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[85vh]">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[600px] bg-[#1152d4]/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[#2b52ff]/10 rounded-full blur-[150px] pointer-events-none"
-          />
-
-          <div className="max-w-7xl mx-auto w-full relative z-20">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ ...defaultTransition, delay: 0.1 }}
-              className="mb-8"
+              transition={defaultTransition}
+              className="max-w-4xl mx-auto space-y-8 relative z-10"
             >
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-sm mb-6">
-                <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                <span className="text-xs font-semibold tracking-wide text-blue-100/80">Secure • Decentralized • Trustless</span>
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-sm mb-4">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                <span className="text-xs font-semibold tracking-wide text-blue-100/80 uppercase">Secure • Decentralized • Trustless</span>
               </div>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.1]">
-                Your Digital Legacy, <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2b52ff] to-[#a259ff]">Protected Forever.</span>
-              </h1>
-            </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...defaultTransition, delay: 0.3 }}
-              className="max-w-xl"
-            >
-              <p className="text-lg lg:text-xl text-blue-100/70 font-medium leading-relaxed mb-10">
-                A robust, zero-trust system verifying automated transfers of your digital assets via cryptographic heartbeats.
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] tracking-tight text-slate-100">
+                Your Digital Legacy,<br />
+                <span className="bg-gradient-to-r from-[#1152d4] to-[#8b5cf6] bg-clip-text text-transparent">Protected Forever.</span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                Decentralized asset inheritance secured by smart contracts and zero-knowledge encryption. Built for the future of finance.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
                 <button
                   onClick={handleConnect}
-                  className="w-full sm:w-auto bg-[#2b52ff] hover:bg-white text-white hover:text-[#2b52ff] px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-lg shadow-[#2b52ff]/30 hover:shadow-xl hover:-translate-y-1 active:scale-95"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#1152d4] text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 hover:shadow-[0_0_30px_rgba(17,82,212,0.6)] transition-all"
                 >
                   Access Protocol
                 </button>
-                <Link href="/features" className="w-full sm:w-auto flex justify-center text-sm font-bold text-white bg-white/5 hover:bg-white/10 px-8 py-4 rounded-xl border border-white/10 transition-all">
+                <Link href="/features" className="w-full sm:w-auto px-8 py-4 bg-white/[0.03] border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors backdrop-blur-md flex justify-center">
                   Read Specifications
                 </Link>
               </div>
 
-              <div className="flex items-center gap-6 text-xs font-semibold tracking-wider text-blue-100/50 mt-10 uppercase">
-                <span className="flex items-center"><Activity className="w-4 h-4 mr-2" /> AES-256-GCM</span>
-                <span className="flex items-center"><Server className="w-4 h-4 mr-2" /> IPFS</span>
-                <span className="flex items-center"><Zap className="w-4 h-4 mr-2" /> Polygon</span>
+              <div className="flex justify-center items-center gap-8 text-xs font-semibold tracking-wider text-slate-500 mt-12 uppercase">
+                <span className="flex items-center"><Shield className="w-4 h-4 mr-2" /> AES-256-GCM</span>
+                <span className="flex items-center"><Server className="w-4 h-4 mr-2" /> IPFS Storage</span>
+                <span className="flex items-center"><LineChart className="w-4 h-4 mr-2" /> Polygon Network</span>
               </div>
             </motion.div>
-          </div>
-        </div>
+          </section>
 
-        {/* The Core Problem Section */}
-        <div className="relative z-20 py-24 bg-[#020510] border-t border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={defaultTransition}
-              >
-                <div className="inline-flex items-center gap-2 mb-6 text-sm font-semibold text-red-500 uppercase tracking-widest bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
-                  <AlertOctagon className="w-4 h-4" /> The Multi-Billion Dollar Problem
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
-                  Billions in Crypto Are Lost Forever <br />
-                  <span className="text-white/40">When Owners Pass Away.</span>
-                </h2>
-                <p className="text-lg text-blue-100/60 leading-relaxed mb-8">
-                  Hardware wallets, paper seed phrases, and complex DeFi positions are entirely dependent on you staying alive. If tragedy strikes with no succession plan, your decentralized wealth becomes permanently inaccessible to your family.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    "Seed phrases hidden in safes are easily lost or stolen.",
-                    "Custodial exchanges require lengthy, painful legal battles.",
-                    "Loved ones lack the technical knowledge to recover assets."
-                  ].map((issue, idx) => (
-                    <div key={idx} className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_10px_red]"></div>
-                      <span className="text-slate-300 font-medium">{issue}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
+          {/* Feature Grid */}
+          <section className="px-6 py-20 relative z-10 border-t border-white/5 bg-[#05070a]">
+            <div className="flex flex-col gap-12 max-w-6xl mx-auto">
+              <div className="flex flex-col gap-3 text-center md:text-left">
+                <span className="text-[#1152d4] font-bold tracking-widest text-xs uppercase">Security Protocol</span>
+                <h2 className="text-3xl md:text-5xl font-bold text-slate-100 tracking-tight">Battle-Tested Architecture</h2>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={defaultTransition}
-                className="relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-[#2b52ff]/10 blur-3xl rounded-full"></div>
-                <div className="bg-[#050a1a] border border-white/10 p-8 rounded-[2rem] relative z-10 shadow-2xl">
-                  <div className="border-b border-white/10 pb-6 mb-6">
-                    <h3 className="text-xl font-bold text-white mb-2">The Legacy Dilemma</h3>
-                    <p className="text-sm text-slate-400">Comparing traditional vs. decentralized inheritance.</p>
-                  </div>
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">Traditional Lawyers</span>
-                      <span className="text-red-400 font-bold ml-4 text-right">Slow, Expensive, Public</span>
-                    </div>
-                    <div className="w-full bg-white/5 h-px"></div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">Hardware Wallets</span>
-                      <span className="text-red-400 font-bold ml-4 text-right">Single Point of Failure</span>
-                    </div>
-                    <div className="w-full bg-white/5 h-px"></div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-[#2b52ff] font-bold">Digital Will Protocol</span>
-                      <span className="text-green-400 font-bold ml-4 text-right">Trustless, Instant, Automated</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-
-        {/* How It Works Timeline Section */}
-        <div className="relative z-20 py-32 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-24 relative">
-              <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-[600px] h-[300px] bg-[#a259ff]/10 blur-[120px] rounded-full pointer-events-none"></div>
-              <span className="text-[#a259ff] uppercase tracking-[0.2em] text-sm font-extrabold mb-4 block">The Mechanism</span>
-              <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tight">How DWP Secures Your Future.</h2>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-8 relative">
-              {/* Connecting line for large screens */}
-              <div className="hidden lg:block absolute top-[4.5rem] left-20 right-20 h-0.5 bg-gradient-to-r from-white/0 via-[#2b52ff]/50 to-white/0 z-0"></div>
-
-              {[
-                {
-                  icon: <Lock />,
-                  title: "1. Zero-Knowledge Encryption",
-                  desc: "You paste your seed phrases locally. The AES-256 key is split via Shamir's Secret Sharing. We never see your data.",
-                  color: "from-[#2b52ff] to-[#00d2ff]"
-                },
-                {
-                  icon: <Clock />,
-                  title: "2. The Heartbeat Contract",
-                  desc: "A smart contract on Polygon holds the vault state. You prove you are alive by sending a free, gasless signature every X months.",
-                  color: "from-[#a259ff] to-[#ff00a0]"
-                },
-                {
-                  icon: <KeyRound />,
-                  title: "3. Automated Execution",
-                  desc: "If the countdown timer reaches zero without a heartbeat, the network unlocks the shards. Beneficiaries claim access cryptographically.",
-                  color: "from-[#00ff87] to-[#60efff]"
-                }
-              ].map((step, idx) => (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.2, duration: 0.6 }}
-                  className="relative z-10 bg-[#050a1a] border border-white/5 p-8 rounded-[2rem] group hover:border-white/20 transition-all hover:bg-white/[0.02]"
-                >
-                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${step.color} p-[1px] mb-8 mx-auto lg:mx-0 shadow-2xl`}>
-                    <div className="w-full h-full bg-[#050a1a] rounded-2xl flex items-center justify-center text-white group-hover:bg-transparent transition-colors">
-                      <div className="w-8 h-8">{step.icon}</div>
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-4 text-center lg:text-left">{step.title}</h3>
-                  <p className="text-blue-100/60 leading-relaxed text-center lg:text-left">{step.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Bento Grid Features */}
-        <div className="relative z-20 py-24 pb-32 bg-[#020510]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-20">
-              <span className="text-[#2b52ff] uppercase tracking-[0.15em] text-xs font-extrabold mb-4 block">Core Infrastructure</span>
-              <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-tight">Enterprise-Grade Security.</h2>
-            </div>
-
-            <div className="grid lg:grid-cols-12 gap-6">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={defaultTransition}
-                className="lg:col-span-8 bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 hover:bg-white/[0.04] transition-colors overflow-hidden relative group"
-              >
-                <div className="w-12 h-12 bg-[#2b52ff]/20 rounded-xl flex items-center justify-center mb-6 border border-[#2b52ff]/30">
-                  <Lock className="w-6 h-6 text-[#2b52ff]" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">Zero Trust Architecture</h3>
-                <p className="text-blue-100/60 leading-relaxed mb-6 max-w-lg">
-                  Your data is encrypted client-side. Our servers never touch your plaintext inputs. Verification happens natively via cryptographic primitives.
-                </p>
-                <ul className="space-y-3 text-sm text-blue-100/80 mb-8">
-                  <li className="flex items-center"><CheckCircle className="w-4 h-4 text-[#2b52ff] mr-3" /> Client-side AES-256-GCM encryption</li>
-                  <li className="flex items-center"><CheckCircle className="w-4 h-4 text-[#2b52ff] mr-3" /> No server access to private keys</li>
-                </ul>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ ...defaultTransition, delay: 0.1 }}
-                className="lg:col-span-4 bg-gradient-to-br from-[#0a1536] to-[#050a1a] border border-[#2b52ff]/20 rounded-[2rem] p-10 hover:border-[#2b52ff]/40 transition-colors shadow-2xl"
-              >
-                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6 border border-white/10">
-                  <Fingerprint className="w-6 h-6 text-[#a259ff]" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-4 tracking-tight">Shamir Secret Sharing</h3>
-                <p className="text-blue-100/60 text-sm leading-relaxed mb-6">
-                  Keys are split into 5 fragments across decentralized storage nodes, requiring a M-of-N threshold quorum to reassemble the payload.
-                </p>
-                <Link href="/security" className="text-xs font-bold text-white flex items-center hover:text-[#a259ff] transition-colors">
-                  Security Model <ArrowRight className="w-3 h-3 ml-2" />
-                </Link>
-              </motion.div>
-            </div>
-
-            <div className="grid md:grid-cols-4 gap-6 mt-6">
-              {[
-                { icon: <FileText />, title: "Creating Assets", desc: "Upload docs & keys to encrypt natively.", step: "01" },
-                { icon: <Lock />, title: "Encrypt & Split", desc: "AES-256 secures it, Shamir's splits keys.", step: "02" },
-                { icon: <Heart />, title: "Heartbeat", desc: "Periodic cryptographic proof-of-life ping.", step: "03" },
-                { icon: <Zap />, title: "Auto-Release", desc: "Polygon contract fires on heartbeat decay.", step: "04" },
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  className="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center hover:bg-white/[0.03] transition-colors"
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                  className="bg-white/[0.02] backdrop-blur-xl p-10 rounded-3xl flex flex-col gap-6 border border-white/5 hover:border-[#1152d4]/50 hover:bg-white/[0.04] transition-all group"
                 >
-                  <div className="text-2xl font-black text-[#2b52ff]/20 mb-2">{item.step}</div>
-                  <div className="w-10 h-10 mx-auto text-[#2b52ff] mb-4 flex items-center justify-center bg-white/5 rounded-full">{item.icon}</div>
-                  <h4 className="text-white font-bold mb-2">{item.title}</h4>
-                  <p className="text-xs text-blue-100/50">{item.desc}</p>
+                  <div className="w-14 h-14 rounded-2xl bg-[#1152d4]/10 flex items-center justify-center text-[#1152d4] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(17,82,212,0.3)] transition-all">
+                    <Lock className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-slate-100">Zero Trust Architecture</h3>
+                    <p className="text-slate-400 leading-relaxed">End-to-end encryption with zero-knowledge proofs ensuring privacy remains absolute. Servers never see plaintext.</p>
+                  </div>
                 </motion.div>
-              ))}
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="bg-white/[0.02] backdrop-blur-xl p-10 rounded-3xl flex flex-col gap-6 border border-white/5 hover:border-[#8b5cf6]/50 hover:bg-white/[0.04] transition-all group"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center text-[#8b5cf6] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all">
+                    <Key className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-slate-100">Shamir Secret Sharing</h3>
+                    <p className="text-slate-400 leading-relaxed">Distributed key security via advanced secret sharing protocols across decentralized nodes. No single point of failure.</p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="bg-white/[0.02] backdrop-blur-xl p-10 rounded-3xl flex flex-col gap-6 border border-white/5 hover:border-[#10b981]/50 hover:bg-white/[0.04] transition-all group"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-[#10b981]/10 flex items-center justify-center text-[#10b981] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all">
+                    <Clock className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-slate-100">Automated Execution</h3>
+                    <p className="text-slate-400 leading-relaxed">Precision-engineered heartbeat smart contracts trigger asset transfer automatically upon verification of life decay.</p>
+                  </div>
+                </motion.div>
+              </div>
             </div>
-          </div>
-        </div>
+          </section>
+
+          {/* Social Proof */}
+          <section className="px-6 py-24 relative overflow-hidden bg-[#080a0f]">
+            <div className="max-w-5xl mx-auto rounded-[3rem] overflow-hidden bg-white/[0.02] border border-[#1152d4]/20 relative p-10 md:p-16 backdrop-blur-xl">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-[#1152d4]/20 blur-[100px] pointer-events-none -z-10"></div>
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8b5cf6]/10 blur-[100px] pointer-events-none -z-10"></div>
+
+              <div className="max-w-2xl space-y-6 relative z-10">
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Secure Your Future Today</h2>
+                <p className="text-xl text-slate-400 leading-relaxed">Join over 12,000 users who trust DeadMan Protocol to secure their multi-generational wealth on-chain.</p>
+
+                <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  <button onClick={handleConnect} className="w-full sm:w-auto px-8 py-4 bg-white text-[#080a0f] rounded-full font-bold text-lg hover:scale-105 transition-transform flex items-center justify-center">
+                    Connect Wallet <ArrowRight className="w-5 h-5 ml-2" />
+                  </button>
+                  <div className="flex items-center gap-4">
+                    <div className="flex -space-x-3">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className={`w-10 h-10 rounded-full border-2 border-[#0a1536] bg-slate-800 flex items-center justify-center text-xs font-bold ${i === 4 ? 'bg-[#1152d4] text-white' : ''}`}>
+                          {i === 4 ? '+12k' : ''}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-sm">
+                      <p className="text-white font-bold">Protocol Active</p>
+                      <p className="text-slate-500">Securing $400M+ TVL</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
 
         <SharedFooter />
 

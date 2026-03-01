@@ -1,241 +1,194 @@
-'use client';
+'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Shield, Fingerprint, Lock, Zap, FileCode, CheckCircle2, ChevronRight, Activity, Server, ArrowRight } from 'lucide-react';
-import { useRef } from 'react';
-import Link from 'next/link';
+import { motion } from 'framer-motion'
+import {
+    Shield,
+    Key,
+    Zap,
+    ArrowRight,
+    MonitorSmartphone,
+    ServerCrash
+} from 'lucide-react'
+import Link from 'next/link'
+import { SharedFooter } from '@/components/shared-footer'
 
 export default function FeaturesPage() {
-    const containerRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
-
-    const defaultTransition: any = { duration: 0.8, ease: "easeOut" };
-
-    const features = [
-        {
-            icon: <Lock className="w-6 h-6 text-[#2b52ff]" />,
-            title: "Zero-Knowledge Architecture",
-            description: "End-to-end client-side AES-256-GCM encryption ensures your payloads are mathematically inaccessible to our infrastructure before they even reach IPFS.",
-            bgImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2600&auto=format&fit=crop"
-        },
-        {
-            icon: <Fingerprint className="w-6 h-6 text-[#2b52ff]" />,
-            title: "Shamir Secret Sharing",
-            description: "No single point of failure. Your master decryption key is mathematically fragmented via GF(2^8) polynomials and requires a threshold (e.g., 3-of-5) of your beneficiaries to reassemble.",
-            bgImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2600&auto=format&fit=crop"
-        },
-        {
-            icon: <Zap className="w-6 h-6 text-[#2b52ff]" />,
-            title: "Autonomous Execution",
-            description: "Immutable smart contracts on the Polygon network track your cryptographic heartbeats. If the temporal decay timer reaches zero, the contract acts seamlessly, unlocking the ciphertext URI.",
-            bgImage: "https://images.unsplash.com/photo-1639762681485-074b7f4d2315?q=80&w=2600&auto=format&fit=crop"
-        }
-    ];
+    const defaultTransition = { duration: 0.6, ease: "easeOut" as const }
 
     return (
-        <div ref={containerRef} className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white">
-
-            {/* Skai-style Hero */}
-            <div className="h-[80vh] flex flex-col justify-center pt-32 pb-20 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
-                <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a1536] to-[#050a1a]"></div>
-
-                {/* Abstract animated background shapes */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 2, ease: "easeOut" }}
-                    className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[#2b52ff]/10 rounded-full blur-[150px] pointer-events-none"
-                />
-
-                <div className="max-w-7xl mx-auto w-full relative z-20">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ ...defaultTransition, delay: 0.1 }}
-                        className="mb-8 overflow-hidden"
-                    >
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.1]">
-                            Engineered for <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2b52ff] to-[#a259ff]">Absolute Certainty.</span>
-                        </h1>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ ...defaultTransition, delay: 0.3 }}
-                        className="max-w-2xl"
-                    >
-                        <p className="text-lg lg:text-xl text-blue-100/70 font-medium leading-relaxed mb-10">
-                            A protocol engineered to replace human trust with unyielding cryptography. Built for institutions, accessible to everyone.
-                        </p>
-
-                        <div className="flex items-center gap-6 text-sm font-semibold tracking-wide text-white">
-                            <span className="flex items-center"><Activity className="w-5 h-5 mr-2 text-[#2b52ff]" /> 99.99% Uptime</span>
-                            <span className="flex items-center"><Server className="w-5 h-5 mr-2 text-[#a259ff]" /> IPFS Distributed</span>
-                        </div>
-                    </motion.div>
+        <div className="min-h-screen bg-[#0a0c10] font-sans text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
+            {/* Navigation */}
+            <nav className="sticky top-0 z-50 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Shield className="w-8 h-8" />
+                    </div>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                </Link>
+                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+                    <Link href="/features" className="text-white transition-colors text-sm font-medium">Features</Link>
+                    <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
+                    <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Security</Link>
                 </div>
-            </div>
+                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
+                    Launch App
+                </Link>
+            </nav>
 
-            {/* Platform Features - Bento Layout */}
-            <div className="bg-[#050a1a] relative z-20 py-24 pb-32">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                    <div className="text-center mb-20">
-                        <span className="text-[#2b52ff] uppercase tracking-[0.15em] text-xs font-extrabold mb-4 block">Platform Architecture</span>
-                        <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-tight">
-                            Complete Control Over Your Assets.
-                        </h2>
+            <main className="flex-1 flex flex-col relative w-full items-center">
+                {/* Header */}
+                <header className="relative pt-24 pb-16 px-6 text-center w-full max-w-5xl">
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#1152d4]/20 blur-[120px] rounded-full"></div>
                     </div>
 
-                    <div className="grid lg:grid-cols-12 gap-6">
-                        {/* Feature 1 - Large Card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={defaultTransition}
-                            className="lg:col-span-8 bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 lg:p-14 hover:bg-white/[0.04] transition-colors overflow-hidden relative group"
-                        >
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-[#2b52ff]/10 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none transition-transform duration-700 group-hover:scale-110"></div>
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="inline-flex items-center bg-white/[0.03] backdrop-blur-md px-4 py-1.5 rounded-full border border-[#1152d4]/30 mb-6">
+                        <span className="text-[10px] font-black tracking-[0.2em] text-[#1152d4]">TECHNICAL SPECIFICATIONS</span>
+                    </motion.div>
 
-                            <div className="w-14 h-14 bg-[#2b52ff]/20 rounded-xl flex items-center justify-center mb-8 border border-[#2b52ff]/30 shadow-lg shadow-[#2b52ff]/20">
-                                {features[0].icon}
+                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                        Core Protocol <span className="text-[#1152d4]">Features</span>
+                    </motion.h1>
+
+                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="max-w-2xl mx-auto text-slate-400 text-lg leading-relaxed">
+                        A trustless fail-safe mechanism for the decentralized future. Automated, secure, and permanent.
+                    </motion.p>
+                </header>
+
+                {/* Features Content */}
+                <div className="space-y-24 px-6 pb-32 max-w-5xl w-full">
+
+                    {/* Feature 1 */}
+                    <section className="grid md:grid-cols-2 gap-12 items-center">
+                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-2 md:order-1 space-y-6">
+                            <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-[#1152d4]/10 border border-[#1152d4]/20 text-[#1152d4] shadow-[0_0_20px_rgba(17,82,212,0.2)]">
+                                <Shield className="w-7 h-7" />
                             </div>
-                            <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">{features[0].title}</h3>
-                            <p className="text-blue-100/60 text-lg leading-relaxed max-w-xl mb-10">
-                                {features[0].description}
+                            <h2 className="text-3xl font-bold text-slate-100 tracking-tight">Trustless Asset Recovery</h2>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Automatically trigger encrypted payload transfers to designated beneficiary wallets if no activity is detected within your custom heartbeat interval. Fully non-custodial and secure.
                             </p>
-
-                            <Link href="/docs" className="inline-flex items-center text-[#2b52ff] font-bold text-sm hover:text-white transition-colors">
-                                Read Encryption Specs <ArrowRight className="w-4 h-4 ml-2" />
+                            <Link href="/docs/smart-contract" className="inline-flex items-center gap-2 text-[#1152d4] font-bold text-sm hover:underline hover:gap-3 transition-all">
+                                Explore Recovery Logic <ArrowRight className="w-4 h-4" />
                             </Link>
                         </motion.div>
 
-                        {/* Feature 2 - Small Card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ ...defaultTransition, delay: 0.1 }}
-                            className="lg:col-span-4 bg-gradient-to-br from-[#0a1536] to-[#050a1a] border border-[#2b52ff]/20 rounded-[2rem] p-10 hover:border-[#2b52ff]/40 transition-colors shadow-2xl shadow-[#2b52ff]/5"
-                        >
-                            <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-white/10">
-                                {features[1].icon}
+                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-white/[0.02] backdrop-blur-md rounded-2xl p-6 font-mono text-sm text-emerald-500 overflow-hidden border border-white/5 shadow-2xl relative group hover:border-[#1152d4]/30 transition-colors">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1152d4] to-emerald-500 opacity-50"></div>
+                            <div className="flex gap-2 mb-6">
+                                <div className="w-3 h-3 rounded-full bg-red-500/30"></div>
+                                <div className="w-3 h-3 rounded-full bg-yellow-500/30"></div>
+                                <div className="w-3 h-3 rounded-full bg-emerald-500/30"></div>
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">{features[1].title}</h3>
-                            <p className="text-blue-100/60 text-base leading-relaxed">
-                                {features[1].description}
-                            </p>
+                            <pre className="opacity-90 overflow-x-auto leading-loose"><code>
+                                <span className="text-pink-500">function</span> <span className="text-blue-400">triggerRecovery</span>() <span className="text-pink-500">external</span> {'{'}
+                                <span className="text-yellow-300">require</span>(block.timestamp &gt; lastHeartbeat + timeout);
+                                <span className="text-yellow-300">require</span>(status == Status.Active);
+
+                                <span className="text-pink-500">for</span> (<span className="text-slate-300">uint</span> i = 0; i &lt; beneficiaries.length; i++) {'{'}
+                                transfer(beneficiaries[i], allocation[i]);
+                                {'}'}
+
+                                <span className="text-blue-400">emit</span> AssetsRecovered(block.timestamp);
+                                {'}'}
+                            </code></pre>
                         </motion.div>
+                    </section>
 
-                        {/* Feature 3 - Wide Card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ ...defaultTransition, delay: 0.2 }}
-                            className="lg:col-span-12 bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 lg:p-14 hover:bg-white/[0.04] transition-colors relative overflow-hidden group mt-2"
-                        >
-                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1639762681485-074b7f4d2315?q=80')] opacity-[0.03] bg-cover bg-center pointer-events-none mix-blend-screen transition-transform duration-1000 group-hover:scale-105"></div>
-
-                            <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
-                                <div>
-                                    <div className="w-14 h-14 bg-[#2b52ff]/20 rounded-xl flex items-center justify-center mb-8 border border-[#2b52ff]/30 shadow-lg shadow-[#2b52ff]/20">
-                                        {features[2].icon}
-                                    </div>
-                                    <h3 className="text-4xl font-bold text-white mb-6 tracking-tight">{features[2].title}</h3>
-                                    <p className="text-blue-100/60 text-lg leading-relaxed mb-8">
-                                        {features[2].description}
-                                    </p>
-                                    <Link href="/docs/smart-contract" className="inline-flex items-center bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-6 py-3 rounded-full transition-colors border border-white/5">
-                                        View Contract ABI
-                                    </Link>
-                                </div>
-
-                                <div className="hidden md:block rounded-2xl border border-white/10 bg-[#050505]/50 backdrop-blur-sm p-6 overflow-hidden">
-                                    <pre className="text-xs text-[#2b52ff] font-mono leading-loose shadow-inner opacity-80">
-                                        <code className="text-purple-400">function</code> <code className="text-blue-200">releaseVault</code>(uint256 vaultId) <code className="text-purple-400">external</code> {'{\n'}
-                                        {'  '}Vault <code className="text-purple-400">storage</code> v = vaults[vaultId];{'\n'}
-                                        {'  '}<code className="text-purple-400">require</code>(block.timestamp &gt; v.unlockTime, <code className="text-green-300">"Not ready"</code>);{'\n'}
-                                        {'  '}v.status = Status.RELEASED;{'\n'}
-                                        {'  '}<code className="text-blue-300">emit</code> VaultReleased(vaultId, v.ipfsCID);{'\n'}
-                                        {'}'}
-                                    </pre>
+                    {/* Feature 2 */}
+                    <section className="grid md:grid-cols-2 gap-12 items-center">
+                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-white/[0.02] backdrop-blur-md aspect-square max-h-[400px] rounded-3xl flex items-center justify-center relative overflow-hidden border border-[#8b5cf6]/20 shadow-2xl">
+                            <div className="absolute inset-0 bg-[#8b5cf6]/5 group-hover:bg-[#8b5cf6]/10 transition-colors"></div>
+                            <div className="relative flex items-center justify-center w-full h-full">
+                                <Key className="w-48 h-48 text-[#8b5cf6] opacity-20 blur-xl absolute" />
+                                <Key className="w-32 h-32 text-[#8b5cf6] relative z-10 drop-shadow-[0_0_20px_rgba(139,92,246,0.6)]" />
+                                <div className="absolute inset-4 grid grid-cols-3 grid-rows-3 gap-6 pointer-events-none opacity-50">
+                                    <div className="border-2 border-[#8b5cf6]/20 rounded-xl backdrop-blur-sm"></div>
+                                    <div className="border-2 border-[#8b5cf6]/20 rounded-xl backdrop-blur-sm translate-x-6"></div>
+                                    <div className="border-2 border-[#8b5cf6]/20 rounded-xl backdrop-blur-sm -translate-y-6"></div>
+                                    <div className="border-2 border-[#8b5cf6]/20 rounded-xl backdrop-blur-sm translate-y-6"></div>
+                                    <div className="border-2 border-[#8b5cf6]/20 rounded-xl backdrop-blur-sm"></div>
                                 </div>
                             </div>
                         </motion.div>
-                    </div>
 
-                </div>
-            </div>
-
-            {/* Deep Tech Verification Section */}
-            <div className="bg-[#0a1536] py-32 border-t border-[#2b52ff]/10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={defaultTransition}
-                    >
-                        <Shield className="w-16 h-16 text-[#2b52ff] mx-auto mb-10" />
-                        <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-tight mb-6">
-                            Mathematically Proven.
-                        </h2>
-                        <div className="max-w-3xl mx-auto mb-16">
-                            <p className="text-lg text-blue-100/70 font-medium mb-4">
-                                The smart contracts governing the Digital Will Protocol are fully open-source and have undergone rigorous, multi-month formal verification and audits by elite Web3 security firms.
+                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-6">
+                            <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[#8b5cf6] shadow-[0_0_20px_rgba(139,92,246,0.2)]">
+                                <ServerCrash className="w-7 h-7" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-100 tracking-tight">Decentralized Key Sharding</h2>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Utilizing Shamir's Secret Sharing, your master encryption keys are split into multiple fragments distributed across our secure validator network. There is no single point of failure, and we never hold your complete key.
                             </p>
-                        </div>
+                            <Link href="/docs/shamir-sdk" className="inline-flex items-center gap-2 text-[#8b5cf6] font-bold text-sm hover:underline hover:gap-3 transition-all">
+                                View Sharding Protocol <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </motion.div>
+                    </section>
 
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
-                            <div className="flex items-center p-5 bg-white/[0.03] backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#2b52ff]/50 transition-colors">
-                                <CheckCircle2 className="w-5 h-5 text-[#2b52ff] mr-3" />
-                                <span className="text-white font-semibold text-sm">Halborn Audited</span>
+                    {/* Feature 3 */}
+                    <section className="grid md:grid-cols-2 gap-12 items-center">
+                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-2 md:order-1 space-y-6">
+                            <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                <Zap className="w-7 h-7" />
                             </div>
-                            <div className="flex items-center p-5 bg-white/[0.03] backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#2b52ff]/50 transition-colors">
-                                <CheckCircle2 className="w-5 h-5 text-[#2b52ff] mr-3" />
-                                <span className="text-white font-semibold text-sm">EIP-4361 Auth</span>
+                            <h2 className="text-3xl font-bold text-slate-100 tracking-tight">Gasless Verifications</h2>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Update your protocol status via off-chain signatures wrapped in native ERC-4337 meta-transactions. Gasless heartbeats allow you to maintain your fail-safe without constant transaction fees.
+                            </p>
+                            <Link href="/docs/zero-knowledge" className="inline-flex items-center gap-2 text-emerald-400 font-bold text-sm hover:underline hover:gap-3 transition-all">
+                                How it works <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </motion.div>
+
+                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-white/[0.02] backdrop-blur-md rounded-3xl p-10 border border-emerald-500/20 flex flex-col justify-center min-h-[320px] shadow-2xl relative group">
+                            <div className="w-full h-40 relative flex items-end">
+                                <div className="absolute inset-0 grid grid-cols-8 grid-rows-4 opacity-[0.05] pointer-events-none">
+                                    {Array.from({ length: 32 }).map((_, i) => (
+                                        <div key={i} className={`border-slate-100 ${i % 8 !== 7 ? 'border-r' : ''} ${i < 24 ? 'border-b' : ''}`}></div>
+                                    ))}
+                                </div>
+
+                                {/* Mock Chart SVG */}
+                                <svg className="w-full h-full text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.5)] overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 40">
+                                    <path d="M0,35 L10,35 L15,10 L20,38 L25,35 L40,35 L45,5 L50,39 L55,35 L70,35 L75,15 L80,38 L85,35 L100,35" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:stroke-[2.5px] transition-all" />
+                                    {/* Pulse dots */}
+                                    <circle cx="15" cy="10" r="1.5" fill="currentColor" className="animate-pulse" />
+                                    <circle cx="45" cy="5" r="1.5" fill="currentColor" className="animate-pulse" />
+                                    <circle cx="75" cy="15" r="1.5" fill="currentColor" className="animate-pulse" />
+                                </svg>
                             </div>
-                            <div className="flex items-center p-5 bg-white/[0.03] backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#2b52ff]/50 transition-colors">
-                                <CheckCircle2 className="w-5 h-5 text-[#2b52ff] mr-3" />
-                                <span className="text-white font-semibold text-sm">No Backend Secrets</span>
+
+                            <div className="mt-8 flex justify-between items-center text-xs uppercase font-bold text-slate-500 tracking-widest border-t border-white/5 pt-6">
+                                <span className="flex items-center"><MonitorSmartphone className="w-4 h-4 mr-2" /> Liveness Check</span>
+                                <span className="text-emerald-500 flex items-center bg-emerald-500/10 px-3 py-1 rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-2"></div> Active Pulse</span>
                             </div>
-                            <div className="flex items-center p-5 bg-white/[0.03] backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#2b52ff]/50 transition-colors">
-                                <CheckCircle2 className="w-5 h-5 text-[#2b52ff] mr-3" />
-                                <span className="text-white font-semibold text-sm">100% Open Source</span>
+                        </motion.div>
+                    </section>
+
+                    {/* Bottom CTA Overlay block */}
+                    <section className="relative pt-16">
+                        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white/[0.03] backdrop-blur-xl p-12 rounded-[3rem] border border-white/10 text-center overflow-hidden relative shadow-2xl">
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#1152d4]/10 via-transparent to-[#8b5cf6]/10 opacity-50 pointer-events-none"></div>
+                            <h2 className="text-4xl font-black mb-6 relative z-10 tracking-tight text-white">Secure Your Legacy</h2>
+                            <p className="text-slate-400 text-lg mb-10 max-w-2xl mx-auto relative z-10 leading-relaxed">
+                                Don't leave your digital assets in limbo. Deploy your DeadMan switch today and ensure your wealth reaches the right hands.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+                                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all">
+                                    Connect Wallet
+                                </Link>
+                                <Link href="/docs" className="bg-white/[0.05] hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-white/10 text-white">
+                                    Read Documentation
+                                </Link>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </section>
+
                 </div>
-            </div>
+            </main>
 
-            {/* Minimalist Closing CTA */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1 }}
-                className="py-32 bg-[#050a1a] text-center relative overflow-hidden"
-            >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl h-64 bg-[#2b52ff]/20 blur-[120px] rounded-full"></div>
-
-                <div className="relative z-10">
-                    <h2 className="text-4xl lg:text-6xl font-bold text-white tracking-tight mb-10">
-                        Deploy Your Vault Today.
-                    </h2>
-                    <button className="bg-[#2b52ff] hover:bg-white text-white hover:text-[#2b52ff] px-10 py-4 rounded-xl font-bold tracking-wide transition-all shadow-lg shadow-[#2b52ff]/30 hover:shadow-xl hover:-translate-y-1">
-                        Initiate Protocol
-                    </button>
-                    <p className="mt-6 text-slate-500 font-medium text-sm">No credit card required. Pay gas only.</p>
-                </div>
-            </motion.div>
-
+            <SharedFooter />
         </div>
-    );
+    )
 }
