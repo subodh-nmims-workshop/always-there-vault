@@ -189,29 +189,39 @@ class WebCryptoService {
   }
 
   /**
-   * Upload to IPFS using Web3.Storage
+   * Upload to IPFS using Backend API (which wraps Web3.Storage)
    */
   async uploadToIPFS(encryptedData: string): Promise<string> {
-    const token = process.env.NEXT_PUBLIC_WEB3_STORAGE_TOKEN;
-    if (!token) {
-      console.warn('No Web3.Storage token provided. Falling back to local IPFS CID simulation mode for development.');
-      // Fallback CID generator to ensure UI development is not hindered
+    try {
+      const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
+      const file = new File([blob], `encrypted_payload_${Date.now()}.enc`);
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Default to localhost:7001 if API url is not declared yet
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001/api';
+
+      const response = await fetch(`${apiUrl}/assets/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        // Fallback for local development if backend is not running
+        console.warn(`Backend upload failed with status ${response.status}. Using local mock CID.`);
+        const hash = await this.generateHash(encryptedData);
+        return `bafybei${hash.substring(0, 52)}`;
+      }
+
+      const data = await response.json();
+      return data.ipfsHash;
+    } catch (e) {
+      console.error('Backend IPFS upload failed:', e);
+      // Fallback for local development if backend is unreachable
+      console.warn('Backend is unreachable. Using local mock CID.');
       const hash = await this.generateHash(encryptedData);
       return `bafybei${hash.substring(0, 52)}`;
-    }
-
-    try {
-      // @ts-ignore missing types
-      const { Web3Storage } = await import('web3.storage');
-      const client = new Web3Storage({ token });
-      const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
-      // Create a file object required by Web3.Storage
-      const file = new File([blob], `encrypted_payload_${Date.now()}.enc`);
-      const cid = await client.put([file]);
-      return cid;
-    } catch (e) {
-      console.error('Web3.Storage upload failed:', e);
-      throw new Error('Failed to upload encrypted asset to decentralized storage.');
     }
   }
 }

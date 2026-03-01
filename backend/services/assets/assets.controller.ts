@@ -9,16 +9,55 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { AssetsService } from './assets.service';
+import { IpfsService } from './ipfs.service';
 import { CreateAssetDto, UpdateAssetDto } from './dto/asset.dto';
 import { Asset } from './schemas/asset.schema';
 
 @ApiTags('assets')
 @Controller('api/assets')
 export class AssetsController {
-  constructor(private readonly assetsService: AssetsService) { }
+  constructor(
+    private readonly assetsService: AssetsService,
+    private readonly ipfsService: IpfsService,
+  ) { }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload an encrypted file to IPFS' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<{ ipfsHash: string }> {
+    const ipfsHash = await this.ipfsService.uploadFile(file);
+    return { ipfsHash };
+  }
 
   @Post()
   @ApiOperation({ summary: 'Register asset metadata (encrypted data stored client-side)' })
