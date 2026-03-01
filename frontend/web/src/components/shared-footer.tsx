@@ -47,8 +47,8 @@ export function SharedFooter() {
                         <h4 className="text-white font-bold mb-4">Company</h4>
                         <ul className="space-y-3 text-sm">
                             <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                            <li><Link href="/about" className="hover:text-white transition-colors">Blog</Link></li>
-                            <li><Link href="/about" className="hover:text-white transition-colors">Careers</Link></li>
+                            <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+                            <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
                             <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                         </ul>
                     </div>

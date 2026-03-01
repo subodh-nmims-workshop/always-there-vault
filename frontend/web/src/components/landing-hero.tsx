@@ -343,7 +343,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
               <ul className="space-y-3 text-sm">
                 <li><Link href="/about" className="hover:text-[#2b52ff] transition-colors">About</Link></li>
                 <li><Link href="/blog" className="hover:text-[#2b52ff] transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-[#2b52ff] transition-colors cursor-not-allowed opacity-50">Careers</Link></li>
+                <li><Link href="/careers" className="hover:text-[#2b52ff] transition-colors">Careers</Link></li>
                 <li><Link href="/contact" className="hover:text-[#2b52ff] transition-colors">Contact</Link></li>
               </ul>
             </div>
