@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"lib/crypto.ts -> secrets.js-grempe\":{\"id\":\"lib/crypto.ts -> secrets.js-grempe\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_secrets_js-grempe_secrets_js.js\"]},\"lib/crypto.ts -> web3.storage\":{\"id\":\"lib/crypto.ts -> web3.storage\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_web3_storage_src_lib_js.js\"]}}"

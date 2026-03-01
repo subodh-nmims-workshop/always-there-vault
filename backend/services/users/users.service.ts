@@ -9,15 +9,26 @@ export class UsersService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
     ) { }
 
-    async createOrUpdateUser(walletAddress: string, email?: string, interval?: number): Promise<User> {
+    async createOrUpdateUser(walletAddress: string, email?: string, interval?: number, gracePeriod?: number): Promise<User> {
         const updateData: any = { lastActive: new Date() };
         if (email) updateData.email = email;
-        if (interval) updateData.heartbeatInterval = interval;
+        if (interval !== undefined) updateData.heartbeatInterval = interval;
+        if (gracePeriod !== undefined) updateData.gracePeriod = gracePeriod;
 
         return this.userModel.findOneAndUpdate(
             { walletAddress },
             { $set: updateData },
             { new: true, upsert: true } // Upsert creates the document if it doesn't exist
+        ).exec();
+    }
+
+    async updateHeartbeatSettings(walletAddress: string, interval: number, gracePeriod: number): Promise<User> {
+        const updateData = { heartbeatInterval: interval, gracePeriod: gracePeriod };
+
+        return this.userModel.findOneAndUpdate(
+            { walletAddress },
+            { $set: updateData },
+            { new: true, upsert: true }
         ).exec();
     }
 

@@ -3,12 +3,8 @@
  * Integrates with Web Crypto API and actual Shamir Secret Sharing
  */
 
-let secrets: any = null;
-if (typeof window !== 'undefined') {
-  secrets = require('secrets.js-grempe');
-}
-// @ts-expect-error Missing types for web3.storage
-import { Web3Storage } from 'web3.storage';
+// We will lazily import secrets.js-grempe and web3.storage inside the functions
+// to avoid SSR and client-side module evaluation crashes due to missing Node.js polyfills.
 
 export interface EncryptionResult {
   encryptedData: string;
@@ -138,6 +134,9 @@ class WebCryptoService {
     const keyId = await this.generateHash(keyHex).then(h => h.substring(0, 16));
     const shares: ShamirShare[] = [];
 
+    // Dynamically import secrets to avoid SSR/hydration crash
+    const secrets = (await import('secrets.js-grempe')).default || await import('secrets.js-grempe');
+
     // Perform Shamir's Secret Sharing mathematically
     const generatedShares = secrets.share(keyHex, totalShares, threshold);
 
@@ -166,10 +165,13 @@ class WebCryptoService {
   /**
    * Reconstruct key from Shamir shares
    */
-  reconstructKey(shares: ShamirShare[]): string {
+  async reconstructKey(shares: ShamirShare[]): Promise<string> {
     if (shares.length < 3) {
       throw new Error('Insufficient shares for reconstruction');
     }
+
+    // Dynamically import secrets to avoid SSR/hydration crash
+    const secrets = (await import('secrets.js-grempe')).default || await import('secrets.js-grempe');
 
     // Combine shares
     const shareStrings = shares.map(s => s.shareData);
@@ -199,6 +201,8 @@ class WebCryptoService {
     }
 
     try {
+      // @ts-ignore missing types
+      const { Web3Storage } = await import('web3.storage');
       const client = new Web3Storage({ token });
       const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
       // Create a file object required by Web3.Storage

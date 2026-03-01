@@ -1,8 +1,4 @@
 {
   "/page": "app/page.js",
-  "/(marketing)/features/page": "app/(marketing)/features/page.js",
-  "/(marketing)/roadmap/page": "app/(marketing)/roadmap/page.js",
-  "/(marketing)/terms/page": "app/(marketing)/terms/page.js",
-  "/(marketing)/privacy/page": "app/(marketing)/privacy/page.js",
-  "/(marketing)/security-policy/page": "app/(marketing)/security-policy/page.js"
+  "/(marketing)/features/page": "app/(marketing)/features/page.js"
 }

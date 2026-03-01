@@ -2,13 +2,14 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { HeartbeatService } from './heartbeat.service';
-import { RecordHeartbeatDto, HeartbeatStatusDto } from './dto/heartbeat.dto';
+import { RecordHeartbeatDto, HeartbeatStatusDto, HeartbeatSettingsDto } from './dto/heartbeat.dto';
 import { HeartbeatLog } from './schemas/heartbeat.schema';
 
 @ApiTags('heartbeat')
@@ -44,5 +45,23 @@ export class HeartbeatController {
     @Param('walletAddress') walletAddress: string,
   ): Promise<{ required: boolean; daysUntilDue: number }> {
     return this.heartbeatService.checkHeartbeatRequired(walletAddress);
+  }
+
+  @Get('settings/:walletAddress')
+  @ApiOperation({ summary: 'Get user heartbeat settings' })
+  @ApiResponse({ status: 200, description: 'Settings retrieved successfully' })
+  async getHeartbeatSettings(@Param('walletAddress') walletAddress: string): Promise<HeartbeatSettingsDto> {
+    return this.heartbeatService.getHeartbeatSettings(walletAddress);
+  }
+
+  @Put('settings/:walletAddress')
+  @ApiOperation({ summary: 'Update user heartbeat settings' })
+  @ApiBody({ type: HeartbeatSettingsDto })
+  @ApiResponse({ status: 200, description: 'Settings updated successfully' })
+  async updateHeartbeatSettings(
+    @Param('walletAddress') walletAddress: string,
+    @Body() settingsDto: HeartbeatSettingsDto,
+  ): Promise<HeartbeatSettingsDto> {
+    return this.heartbeatService.updateHeartbeatSettings(walletAddress, settingsDto);
   }
 }

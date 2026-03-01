@@ -4,8 +4,8 @@ import { Shield, Bug, Search, Lock, ShieldCheck, Mail } from 'lucide-react';
 
 export default function SecurityPolicyPage() {
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#050a1a] pt-24 pb-16 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                 <div className="text-center mb-16 slide-up">
                     <div className="inline-flex items-center justify-center p-4 bg-red-500/10 rounded-full mb-6 border border-red-500/20">
@@ -21,7 +21,7 @@ export default function SecurityPolicyPage() {
 
                 <div className="prose prose-invert prose-red max-w-none space-y-12">
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+                    <section className="bg-white/[0.02] border border-slate-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full filter blur-[80px] pointer-events-none"></div>
 
                         <div className="flex items-center mb-6 relative z-10">
@@ -33,7 +33,7 @@ export default function SecurityPolicyPage() {
                         </p>
 
                         <div className="grid md:grid-cols-2 gap-6 relative z-10">
-                            <div className="bg-slate-950 border border-red-900/50 p-6 rounded-2xl relative shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                            <div className="bg-[#050a1a] border border-red-900/50 p-6 rounded-2xl relative shadow-[0_0_15px_rgba(239,68,68,0.1)]">
                                 <div className="absolute top-0 right-0 bg-red-900/50 text-red-200 text-xs font-bold px-3 py-1 rounded-bl-lg">CRITICAL</div>
                                 <h3 className="text-2xl font-extrabold text-white mb-2">Up to $100,000</h3>
                                 <p className="text-sm text-slate-400">Paid in USDC/ETH</p>
@@ -45,7 +45,7 @@ export default function SecurityPolicyPage() {
                                 </ul>
                             </div>
 
-                            <div className="bg-slate-950 border border-orange-900/50 p-6 rounded-2xl relative">
+                            <div className="bg-[#050a1a] border border-orange-900/50 p-6 rounded-2xl relative">
                                 <div className="absolute top-0 right-0 bg-orange-900/50 text-orange-200 text-xs font-bold px-3 py-1 rounded-bl-lg">HIGH</div>
                                 <h3 className="text-2xl font-extrabold text-white mb-2">Up to $25,000</h3>
                                 <p className="text-sm text-slate-400">Paid in USDC/ETH</p>
@@ -58,7 +58,7 @@ export default function SecurityPolicyPage() {
                         </div>
                     </section>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
+                    <section className="bg-white/[0.02] border border-slate-800 rounded-3xl p-8 md:p-12">
                         <div className="flex items-center mb-6">
                             <Lock className="h-8 w-8 text-blue-400 mr-4" />
                             <h2 className="text-2xl font-bold text-white m-0">Safe Harbor Protocol</h2>
@@ -75,7 +75,7 @@ export default function SecurityPolicyPage() {
                         </ul>
                     </section>
 
-                    <section className="bg-slate-950 border-2 border-slate-800 rounded-3xl p-8 md:p-12 text-center">
+                    <section className="bg-[#050a1a] border-2 border-slate-800 rounded-3xl p-8 md:p-12 text-center">
                         <Mail className="h-12 w-12 text-slate-400 mx-auto mb-6" />
                         <h2 className="text-2xl font-bold text-white mb-4">How to Submit a Report</h2>
                         <p className="text-slate-300 leading-relaxed mb-8 max-w-xl mx-auto">

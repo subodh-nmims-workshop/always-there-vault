@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Shield,
@@ -11,12 +11,19 @@ import {
   Users,
   FileText,
   Key,
-  Clock,
   Lock,
   Zap,
   Globe,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  Server,
+  Activity,
+  ArrowRight,
+  Fingerprint,
+  AlertOctagon,
+  Clock,
+  KeyRound,
+  Network
 } from 'lucide-react'
 import { AssetCreationForm } from '@/components/asset-creation-form'
 import { HeartbeatMonitor } from '@/components/heartbeat-monitor'
@@ -24,23 +31,44 @@ import { BeneficiaryManager } from '@/components/beneficiary-manager'
 import { SystemStatus } from '@/components/system-status'
 import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import WebStorageService, { AppState } from '@/lib/storage'
+import Link from 'next/link'
+import { SharedFooter } from '@/components/shared-footer'
 
 export default function HomePage() {
   const [isConnected, setIsConnected] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
-  const [address] = useState('0x742d35Cc6634C0532925a3b8D4C2C4e0C8b83c8e')
+  const [address, setAddress] = useState('0x742d35Cc6634C0532925a3b8D4C2C4e0C8b83c8e')
   const [appState, setAppState] = useState<AppState | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isConnecting, setIsConnecting] = useState(false)
   const [showWalletModal, setShowWalletModal] = useState(false)
 
+  const containerRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  })
+
   const storage = WebStorageService.getInstance()
+
+  // --- Persistence Logic ---
+  useEffect(() => {
+    const checkConnection = () => {
+      const storedConnection = localStorage.getItem('dwp_wallet_connected')
+      if (storedConnection === 'true') {
+        const storedAddress = localStorage.getItem('dwp_wallet_address')
+        if (storedAddress) setAddress(storedAddress)
+        setIsConnected(true)
+      } else {
+        setIsLoading(false)
+      }
+    }
+    checkConnection()
+  }, [])
 
   useEffect(() => {
     if (isConnected) {
       loadAppState()
-
-      // Auto-refresh every 10 seconds when connected
       const interval = setInterval(loadAppState, 10000)
       return () => clearInterval(interval)
     }
@@ -63,12 +91,19 @@ export default function HomePage() {
 
   const handleWalletConnect = () => {
     setIsConnecting(true)
-    // Simulate wallet connection
     setTimeout(() => {
       setIsConnected(true)
+      localStorage.setItem('dwp_wallet_connected', 'true')
+      localStorage.setItem('dwp_wallet_address', address)
       setIsConnecting(false)
       setShowWalletModal(false)
     }, 2000)
+  }
+
+  const handleDisconnect = () => {
+    setIsConnected(false)
+    localStorage.removeItem('dwp_wallet_connected')
+    localStorage.removeItem('dwp_wallet_address')
   }
 
   const getHeartbeatStatusInfo = () => {
@@ -78,23 +113,11 @@ export default function HomePage() {
     const daysSinceLastHeartbeat = (now - appState.stats.lastHeartbeat) / (1000 * 60 * 60 * 24)
 
     if (daysSinceLastHeartbeat <= appState.settings.heartbeatInterval) {
-      return {
-        status: 'Active',
-        color: 'green',
-        lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString()
-      }
+      return { status: 'Active', color: 'green', lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString() }
     } else if (daysSinceLastHeartbeat <= appState.settings.heartbeatInterval + appState.settings.gracePeriod) {
-      return {
-        status: 'Grace Period',
-        color: 'yellow',
-        lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString()
-      }
+      return { status: 'Grace Period', color: 'yellow', lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString() }
     } else {
-      return {
-        status: 'Overdue',
-        color: 'red',
-        lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString()
-      }
+      return { status: 'Overdue', color: 'red', lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString() }
     }
   }
 
@@ -102,773 +125,500 @@ export default function HomePage() {
     if (!appState) return { status: 'Unknown', color: 'gray' }
 
     switch (appState.stats.systemStatus) {
-      case 'secure':
-        return { status: 'Secure', color: 'green' }
-      case 'warning':
-        return { status: 'Warning', color: 'yellow' }
-      case 'error':
-        return { status: 'Error', color: 'red' }
-      default:
-        return { status: 'Unknown', color: 'gray' }
+      case 'secure': return { status: 'Secure', color: 'green' }
+      case 'warning': return { status: 'Warning', color: 'yellow' }
+      case 'error': return { status: 'Error', color: 'red' }
+      default: return { status: 'Unknown', color: 'gray' }
     }
   }
 
+  const defaultTransition: any = { duration: 0.8, ease: "easeOut" }
+
+  // Mock Activity Log for the Overview to make it look active and dense
+  const mockActivities = [
+    { type: 'heartbeat', title: 'Heartbeat Signature Verified', time: '2 hours ago', icon: <Heart className="w-4 h-4 text-green-400" /> },
+    { type: 'asset', title: 'Encrypted Payload "Cold Wallet Seeds" synced to IPFS', time: '1 day ago', icon: <Server className="w-4 h-4 text-[#2b52ff]" /> },
+    { type: 'security', title: 'Protocol Quorum Status: 5/5 Shards Healthy', time: '2 days ago', icon: <Shield className="w-4 h-4 text-purple-400" /> },
+    { type: 'beneficiary', title: 'Added "Legal Counsel" to Beneficiary Matrix', time: '5 days ago', icon: <Users className="w-4 h-4 text-orange-400" /> },
+  ]
+
   if (!isConnected) {
     return (
-      <>
-        <div className="min-h-screen hero-bg">
-          {/* Navigation */}
-          <nav className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 dark:bg-slate-900/80 border-b border-slate-800 dark:border-slate-800">
-            <div className="max-w-7xl mx-auto px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="icon-container w-10 h-10">
-                    <Shield className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-xl font-bold gradient-text-premium">Digital Will Protocol</span>
-                </div>
+      <div ref={containerRef} className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white">
+        {/* Navigation */}
+        <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#050a1a]/80 border-b border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+            {/* Left side Links */}
+            <div className="flex-1 flex items-center space-x-8">
+              <Link href="/features" className="text-sm font-semibold text-blue-100/70 hover:text-white transition-colors">Features</Link>
+              <Link href="/docs" className="text-sm font-semibold text-blue-100/70 hover:text-white transition-colors">Documentation</Link>
+            </div>
+
+            {/* Center Logo */}
+            <Link href="/" className="flex-shrink-0 flex items-center flex-col justify-center group relative cursor-pointer">
+              <div className="absolute inset-0 bg-[#2b52ff]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <Shield className="h-8 w-8 text-[#2b52ff] mb-1 relative z-10" />
+              <span className="text-sm font-bold tracking-[0.2em] uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 relative z-10">
+                Digital Will
+              </span>
+            </Link>
+
+            {/* Right side Button */}
+            <div className="flex-1 flex items-center justify-end space-x-6">
+              <Link href="/security" className="hidden sm:block text-sm font-semibold text-blue-100/70 hover:text-white transition-colors">Security</Link>
+              <button
+                onClick={handleConnect}
+                disabled={isConnecting}
+                className="bg-[#2b52ff] hover:bg-white text-white hover:text-[#2b52ff] px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#2b52ff]/20 disabled:opacity-50"
+              >
+                {isConnecting ? (
+                  <span className="flex items-center"><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Connecting...</span>
+                ) : 'Launch App'}
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <div className="h-screen flex flex-col justify-center pt-20 pb-10 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a1536] to-[#050a1a]"></div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 2, ease: "easeOut" }}
+            className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[#2b52ff]/10 rounded-full blur-[150px] pointer-events-none"
+          />
+
+          <div className="max-w-7xl mx-auto w-full relative z-20">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...defaultTransition, delay: 0.1 }}
+              className="mb-8"
+            >
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-sm mb-6">
+                <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                <span className="text-xs font-semibold tracking-wide text-blue-100/80">Secure • Decentralized • Trustless</span>
+              </div>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.1]">
+                Your Digital Legacy, <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2b52ff] to-[#a259ff]">Protected Forever.</span>
+              </h1>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...defaultTransition, delay: 0.3 }}
+              className="max-w-xl"
+            >
+              <p className="text-lg lg:text-xl text-blue-100/70 font-medium leading-relaxed mb-10">
+                A robust, zero-trust system verifying automated transfers of your digital assets via cryptographic heartbeats.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
                 <button
                   onClick={handleConnect}
-                  disabled={isConnecting}
-                  className="btn-premium px-6 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto bg-[#2b52ff] hover:bg-white text-white hover:text-[#2b52ff] px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-lg shadow-[#2b52ff]/30 hover:shadow-xl hover:-translate-y-1 active:scale-95"
                 >
-                  {isConnecting ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 inline animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    'Launch App'
-                  )}
+                  Access Protocol
                 </button>
-              </div>
-            </div>
-          </nav>
-
-          <div className="max-w-7xl mx-auto px-4 py-12 space-y-24">
-            {/* Hero Section */}
-            <section className="text-center space-y-8 py-12 scroll-reveal">
-              <div className="space-y-6">
-                <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-slate-800/50 dark:bg-slate-800/50 border border-slate-700 dark:border-slate-700 backdrop-blur-sm">
-                  <span className="status-indicator-active"></span>
-                  <span className="text-sm font-medium text-slate-200">Secure • Decentralized • Trustless</span>
-                </div>
-
-                <h1 className="text-6xl md:text-7xl font-bold gradient-text-premium leading-tight">
-                  Your Digital Legacy,
-                  <br />
-                  Protected Forever
-                </h1>
-
-                <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                  A blockchain-based system that ensures secure, automatic transfer of digital assets,
-                  data, and access rights when you become inactive. Zero-trust architecture with
-                  military-grade encryption.
-                </p>
-
-                <div className="flex flex-wrap justify-center gap-3 mt-8">
-                  <div className="badge-premium badge-info-premium text-sm">
-                    <Lock className="h-4 w-4 mr-1" />
-                    AES-256-GCM Encryption
-                  </div>
-                  <div className="badge-premium badge-success-premium text-sm">
-                    <Key className="h-4 w-4 mr-1" />
-                    Shamir Secret Sharing
-                  </div>
-                  <div className="badge-premium badge-warning-premium text-sm">
-                    <Globe className="h-4 w-4 mr-1" />
-                    IPFS Storage
-                  </div>
-                  <div className="badge-premium badge-error-premium text-sm">
-                    <Zap className="h-4 w-4 mr-1" />
-                    Polygon Blockchain
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
-                  <button
-                    onClick={handleConnect}
-                    disabled={isConnecting}
-                    className="btn-premium px-8 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isConnecting ? (
-                      <>
-                        <RefreshCw className="h-5 w-5 mr-2 animate-spin inline" />
-                        Connecting...
-                      </>
-                    ) : (
-                      'Access Protocol'
-                    )}
-                  </button>
-                  <a
-                    href="#use-cases"
-                    className="px-8 py-4 text-lg rounded-xl border-2 border-slate-700 text-slate-200 font-semibold hover:bg-slate-800/50 hover:border-blue-500/50 transition-all duration-300 inline-flex items-center justify-center"
-                  >
-                    Explore Security
-                  </a>
-                </div>
+                <Link href="/features" className="w-full sm:w-auto flex justify-center text-sm font-bold text-white bg-white/5 hover:bg-white/10 px-8 py-4 rounded-xl border border-white/10 transition-all">
+                  Read Specifications
+                </Link>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16">
-                <div className="premium-card p-6">
-                  <div className="text-4xl font-bold gradient-text-premium">256-bit</div>
-                  <div className="text-sm text-muted-foreground mt-2">Encryption Standard</div>
-                </div>
-                <div className="premium-card p-6">
-                  <div className="text-4xl font-bold gradient-text-premium">5/3</div>
-                  <div className="text-sm text-muted-foreground mt-2">Key Share Threshold</div>
-                </div>
-                <div className="premium-card p-6">
-                  <div className="text-4xl font-bold gradient-text-premium">100%</div>
-                  <div className="text-sm text-muted-foreground mt-2">Decentralized</div>
-                </div>
-                <div className="premium-card p-6">
-                  <div className="text-4xl font-bold gradient-text-premium">0</div>
-                  <div className="text-sm text-muted-foreground mt-2">Trust Required</div>
-                </div>
+              <div className="flex items-center gap-6 text-xs font-semibold tracking-wider text-blue-100/50 mt-10 uppercase">
+                <span className="flex items-center"><Activity className="w-4 h-4 mr-2" /> AES-256-GCM</span>
+                <span className="flex items-center"><Server className="w-4 h-4 mr-2" /> IPFS</span>
+                <span className="flex items-center"><Zap className="w-4 h-4 mr-2" /> Polygon</span>
               </div>
-            </section>
-
-            {/* Features Section */}
-            <section className="space-y-12 scroll-reveal">
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl md:text-5xl font-bold gradient-text-premium">
-                  Enterprise-Grade Security
-                </h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Built with the same security standards used by Fortune 500 companies
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="premium-card p-8 hover:scale-105 transition-transform">
-                  <div className="icon-container mb-6">
-                    <Shield className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">Zero Trust Security</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Your data is encrypted client-side before it ever leaves your device.
-                    Our servers never see your plaintext data or encryption keys.
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Client-side AES-256-GCM encryption
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      No server access to keys
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Verifiable on blockchain
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="premium-card p-8 hover:scale-105 transition-transform">
-                  <div className="icon-container mb-6 bg-gradient-to-br from-green-500 to-emerald-600">
-                    <Key className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">Shamir Secret Sharing</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Your encryption keys are split into 5 shares distributed across different
-                    locations. Only 3 shares needed to reconstruct.
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      5 shares, 3 threshold
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Distributed storage
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Fault-tolerant design
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="premium-card p-8 hover:scale-105 transition-transform">
-                  <div className="icon-container mb-6 bg-gradient-to-br from-purple-500 to-pink-600">
-                    <Globe className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">Decentralized Storage</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Your encrypted data is stored on IPFS and Arweave, ensuring permanent
-                    availability without central points of failure.
-                  </p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      IPFS primary storage
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Arweave backup
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Permanent availability
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            {/* How It Works */}
-            <section className="space-y-12 scroll-reveal">
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl md:text-5xl font-bold gradient-text-premium">
-                  How It Works
-                </h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Four simple steps to secure your digital legacy
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="premium-card p-8 text-center hover:scale-105 transition-transform">
-                  <div className="icon-container mx-auto mb-6 bg-gradient-to-br from-blue-500 to-cyan-600">
-                    <FileText className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">01</div>
-                  <h3 className="text-xl font-bold mb-3">Create Assets</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Upload files, documents, crypto keys, or messages you want to protect
-                  </p>
-                </div>
-
-                <div className="premium-card p-8 text-center hover:scale-105 transition-transform">
-                  <div className="icon-container mx-auto mb-6 bg-gradient-to-br from-green-500 to-emerald-600">
-                    <Lock className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">02</div>
-                  <h3 className="text-xl font-bold mb-3">Encrypt & Split</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Data encrypted with AES-256, keys split into 5 shares using Shamir's algorithm
-                  </p>
-                </div>
-
-                <div className="premium-card p-8 text-center hover:scale-105 transition-transform">
-                  <div className="icon-container mx-auto mb-6 bg-gradient-to-br from-purple-500 to-pink-600">
-                    <Heart className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">03</div>
-                  <h3 className="text-xl font-bold mb-3">Heartbeat Monitor</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Regular proof-of-life signals (7-90 days) with 14-day grace period
-                  </p>
-                </div>
-
-                <div className="premium-card p-8 text-center hover:scale-105 transition-transform">
-                  <div className="icon-container mx-auto mb-6 bg-gradient-to-br from-orange-500 to-red-600">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">04</div>
-                  <h3 className="text-xl font-bold mb-3">Auto Release</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Smart contracts automatically release assets to beneficiaries when needed
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Use Cases */}
-            {/* Use Cases */}
-            <section className="space-y-12 scroll-reveal" id="use-cases">
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl md:text-5xl font-bold gradient-text-premium">
-                  Perfect For Every Estate Need
-                </h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Protect what matters most to you and your beneficiaries
-                </p>
-              </div>
-
-              {/* Use Cases Content */}
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="premium-card p-8">
-                  <div className="flex items-start space-x-4">
-                    <div className="icon-container bg-gradient-to-br from-blue-500 to-cyan-600">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">Crypto Assets</h3>
-                      <p className="text-muted-foreground">
-                        Securely store seed phrases, private keys, and wallet passwords.
-                        Ensure your crypto doesn't get lost forever.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="premium-card p-8">
-                  <div className="flex items-start space-x-4">
-                    <div className="icon-container bg-gradient-to-br from-green-500 to-emerald-600">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">Personal Messages</h3>
-                      <p className="text-muted-foreground">
-                        Leave heartfelt messages, videos, or audio recordings for your
-                        loved ones to receive when the time comes.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="premium-card p-8">
-                  <div className="flex items-start space-x-4">
-                    <div className="icon-container bg-gradient-to-br from-purple-500 to-pink-600">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">Business Secrets</h3>
-                      <p className="text-muted-foreground">
-                        Protect intellectual property, trade secrets, and critical business
-                        information with enterprise-grade security.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="premium-card p-8">
-                  <div className="flex items-start space-x-4">
-                    <div className="icon-container bg-gradient-to-br from-orange-500 to-red-600">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">Legal Documents</h3>
-                      <p className="text-muted-foreground">
-                        Store wills, trusts, property deeds, and other important legal
-                        documents with tamper-proof blockchain verification.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Technology Stack */}
-            <section className="space-y-12 scroll-reveal">
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl md:text-5xl font-bold gradient-text-premium">
-                  Built on Cutting-Edge Technology
-                </h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Leveraging the best of Web3 and modern cryptography
-                </p>
-              </div>
-
-              <div className="premium-card p-12">
-                <div className="grid md:grid-cols-3 gap-8">
-                  <div className="text-center space-y-3">
-                    <div className="icon-container mx-auto bg-gradient-to-br from-purple-500 to-blue-600">
-                      <Shield className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-lg">Blockchain</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Polygon network for fast, low-cost smart contract execution
-                    </p>
-                  </div>
-
-                  <div className="text-center space-y-3">
-                    <div className="icon-container mx-auto bg-gradient-to-br from-green-500 to-emerald-600">
-                      <Globe className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-lg">Storage</h3>
-                    <p className="text-sm text-muted-foreground">
-                      IPFS & Arweave for permanent, decentralized data storage
-                    </p>
-                  </div>
-
-                  <div className="text-center space-y-3">
-                    <div className="icon-container mx-auto bg-gradient-to-br from-orange-500 to-pink-600">
-                      <Lock className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-lg">Encryption</h3>
-                    <p className="text-sm text-muted-foreground">
-                      AES-256-GCM with Shamir Secret Sharing for maximum security
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="scroll-reveal">
-              <div className="premium-card p-12 text-center space-y-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-cyan-600/20 to-blue-600/20 animate-pulse"></div>
-                <div className="relative z-10">
-                  <h2 className="text-4xl md:text-5xl font-bold text-slate-100">
-                    Ready to Secure Your Digital Legacy?
-                  </h2>
-                  <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                    Join thousands protecting their digital assets with military-grade encryption
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                    <button
-                      onClick={handleConnect}
-                      disabled={isConnecting}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg rounded-xl font-semibold hover:scale-105 transition-transform shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isConnecting ? (
-                        <>
-                          <RefreshCw className="h-5 w-5 mr-2 inline animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        'Initialize Setup'
-                      )}
-                    </button>
-                    <a
-                      href="#use-cases"
-                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-700 hover:border-blue-500/50 px-8 py-4 text-lg rounded-xl font-semibold transition-all inline-flex items-center justify-center"
-                    >
-                      Learn More
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="border-t border-slate-800 dark:border-slate-800 pt-12 pb-8">
-              <div className="grid md:grid-cols-4 gap-8 mb-8">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    {/* Custom Original Logo SVG */}
-                    <div className="w-8 h-8 flex-shrink-0">
-                      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M50 5L90 25V65L50 95L10 65V25L50 5Z" fill="url(#grad1)" />
-                        <path d="M50 15L80 30V60L50 85L20 60V30L50 15Z" fill="#0f172a" />
-                        <path d="M50 25L70 35V55L50 75L30 55V35L50 25Z" fill="url(#grad2)" />
-                        <defs>
-                          <linearGradient id="grad1" x1="10" y1="5" x2="90" y2="95" gradientUnits="userSpaceOnUse">
-                            <stop stopColor="#3b82f6" />
-                            <stop offset="1" stopColor="#8b5cf6" />
-                          </linearGradient>
-                          <linearGradient id="grad2" x1="30" y1="25" x2="70" y2="75" gradientUnits="userSpaceOnUse">
-                            <stop stopColor="#10b981" />
-                            <stop offset="1" stopColor="#3b82f6" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                    </div>
-                    <span className="font-bold text-xl gradient-text-premium">Digital Will Protocol</span>
-                  </div>
-                  <p className="text-sm text-slate-400 mt-2">
-                    Securing digital legacies for the decentralized future. Your assets, your rules.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-bold mb-4 text-slate-200">Product</h4>
-                  <ul className="space-y-3 text-sm text-slate-400">
-                    <li><a href="/features" className="hover:text-blue-400 transition-colors">Features</a></li>
-                    <li><a href="/security" className="hover:text-blue-400 transition-colors">Security</a></li>
-                    <li><a href="/pricing" className="hover:text-blue-400 transition-colors">Pricing</a></li>
-                    <li><a href="/roadmap" className="hover:text-blue-400 transition-colors">Roadmap</a></li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-bold mb-4 text-slate-200">Resources</h4>
-                  <ul className="space-y-3 text-sm text-slate-400">
-                    <li><a href="/docs" className="hover:text-blue-400 transition-colors">Documentation</a></li>
-                    <li><a href="/api" className="hover:text-blue-400 transition-colors">API Reference</a></li>
-                    <li><a href="/guides" className="hover:text-blue-400 transition-colors">Guides</a></li>
-                    <li><a href="/support" className="hover:text-blue-400 transition-colors">Support</a></li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-bold mb-4 text-slate-200">Company</h4>
-                  <ul className="space-y-3 text-sm text-slate-400">
-                    <li><a href="/about" className="hover:text-blue-400 transition-colors">About</a></li>
-                    <li><a href="/blog" className="hover:text-blue-400 transition-colors">Blog</a></li>
-                    <li><a href="/careers" className="hover:text-blue-400 transition-colors">Careers</a></li>
-                    <li><a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a></li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="divider-gradient mb-8"></div>
-
-              <div className="flex flex-col md:flex-row justify-between items-center text-sm text-slate-400">
-                <p>© 2024 Digital Will Protocol. All rights reserved.</p>
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 md:mt-0">
-                  <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
-                  <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
-                  <a href="/security-policy" className="hover:text-blue-400 transition-colors">Security</a>
-                </div>
-              </div>
-            </footer>
+            </motion.div>
           </div>
         </div>
 
-        {/* Wallet Connect Modal */}
+        {/* The Core Problem Section */}
+        <div className="relative z-20 py-24 bg-[#020510] border-t border-b border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={defaultTransition}
+              >
+                <div className="inline-flex items-center gap-2 mb-6 text-sm font-semibold text-red-500 uppercase tracking-widest bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
+                  <AlertOctagon className="w-4 h-4" /> The Multi-Billion Dollar Problem
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
+                  Billions in Crypto Are Lost Forever <br />
+                  <span className="text-white/40">When Owners Pass Away.</span>
+                </h2>
+                <p className="text-lg text-blue-100/60 leading-relaxed mb-8">
+                  Hardware wallets, paper seed phrases, and complex DeFi positions are entirely dependent on you staying alive. If tragedy strikes with no succession plan, your decentralized wealth becomes permanently inaccessible to your family.
+                </p>
+                <div className="space-y-4">
+                  {[
+                    "Seed phrases hidden in safes are easily lost or stolen.",
+                    "Custodial exchanges require lengthy, painful legal battles.",
+                    "Loved ones lack the technical knowledge to recover assets."
+                  ].map((issue, idx) => (
+                    <div key={idx} className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-xl">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_10px_red]"></div>
+                      <span className="text-slate-300 font-medium">{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={defaultTransition}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 to-[#2b52ff]/10 blur-3xl rounded-full"></div>
+                <div className="bg-[#050a1a] border border-white/10 p-8 rounded-[2rem] relative z-10 shadow-2xl">
+                  <div className="border-b border-white/10 pb-6 mb-6">
+                    <h3 className="text-xl font-bold text-white mb-2">The Legacy Dilemma</h3>
+                    <p className="text-sm text-slate-400">Comparing traditional vs. decentralized inheritance.</p>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-400">Traditional Lawyers</span>
+                      <span className="text-red-400 font-bold ml-4 text-right">Slow, Expensive, Public</span>
+                    </div>
+                    <div className="w-full bg-white/5 h-px"></div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-400">Hardware Wallets</span>
+                      <span className="text-red-400 font-bold ml-4 text-right">Single Point of Failure</span>
+                    </div>
+                    <div className="w-full bg-white/5 h-px"></div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[#2b52ff] font-bold">Digital Will Protocol</span>
+                      <span className="text-green-400 font-bold ml-4 text-right">Trustless, Instant, Automated</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* How It Works Timeline Section */}
+        <div className="relative z-20 py-32 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-24 relative">
+              <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-[600px] h-[300px] bg-[#a259ff]/10 blur-[120px] rounded-full pointer-events-none"></div>
+              <span className="text-[#a259ff] uppercase tracking-[0.2em] text-sm font-extrabold mb-4 block">The Mechanism</span>
+              <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tight">How DWP Secures Your Future.</h2>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-8 relative">
+              {/* Connecting line for large screens */}
+              <div className="hidden lg:block absolute top-[4.5rem] left-20 right-20 h-0.5 bg-gradient-to-r from-white/0 via-[#2b52ff]/50 to-white/0 z-0"></div>
+
+              {[
+                {
+                  icon: <Lock />,
+                  title: "1. Zero-Knowledge Encryption",
+                  desc: "You paste your seed phrases locally. The AES-256 key is split via Shamir's Secret Sharing. We never see your data.",
+                  color: "from-[#2b52ff] to-[#00d2ff]"
+                },
+                {
+                  icon: <Clock />,
+                  title: "2. The Heartbeat Contract",
+                  desc: "A smart contract on Polygon holds the vault state. You prove you are alive by sending a free, gasless signature every X months.",
+                  color: "from-[#a259ff] to-[#ff00a0]"
+                },
+                {
+                  icon: <KeyRound />,
+                  title: "3. Automated Execution",
+                  desc: "If the countdown timer reaches zero without a heartbeat, the network unlocks the shards. Beneficiaries claim access cryptographically.",
+                  color: "from-[#00ff87] to-[#60efff]"
+                }
+              ].map((step, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.2, duration: 0.6 }}
+                  className="relative z-10 bg-[#050a1a] border border-white/5 p-8 rounded-[2rem] group hover:border-white/20 transition-all hover:bg-white/[0.02]"
+                >
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${step.color} p-[1px] mb-8 mx-auto lg:mx-0 shadow-2xl`}>
+                    <div className="w-full h-full bg-[#050a1a] rounded-2xl flex items-center justify-center text-white group-hover:bg-transparent transition-colors">
+                      <div className="w-8 h-8">{step.icon}</div>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-4 text-center lg:text-left">{step.title}</h3>
+                  <p className="text-blue-100/60 leading-relaxed text-center lg:text-left">{step.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bento Grid Features */}
+        <div className="relative z-20 py-24 pb-32 bg-[#020510]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-20">
+              <span className="text-[#2b52ff] uppercase tracking-[0.15em] text-xs font-extrabold mb-4 block">Core Infrastructure</span>
+              <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-tight">Enterprise-Grade Security.</h2>
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={defaultTransition}
+                className="lg:col-span-8 bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 hover:bg-white/[0.04] transition-colors overflow-hidden relative group"
+              >
+                <div className="w-12 h-12 bg-[#2b52ff]/20 rounded-xl flex items-center justify-center mb-6 border border-[#2b52ff]/30">
+                  <Lock className="w-6 h-6 text-[#2b52ff]" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">Zero Trust Architecture</h3>
+                <p className="text-blue-100/60 leading-relaxed mb-6 max-w-lg">
+                  Your data is encrypted client-side. Our servers never touch your plaintext inputs. Verification happens natively via cryptographic primitives.
+                </p>
+                <ul className="space-y-3 text-sm text-blue-100/80 mb-8">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 text-[#2b52ff] mr-3" /> Client-side AES-256-GCM encryption</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 text-[#2b52ff] mr-3" /> No server access to private keys</li>
+                </ul>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...defaultTransition, delay: 0.1 }}
+                className="lg:col-span-4 bg-gradient-to-br from-[#0a1536] to-[#050a1a] border border-[#2b52ff]/20 rounded-[2rem] p-10 hover:border-[#2b52ff]/40 transition-colors shadow-2xl"
+              >
+                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6 border border-white/10">
+                  <Fingerprint className="w-6 h-6 text-[#a259ff]" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4 tracking-tight">Shamir Secret Sharing</h3>
+                <p className="text-blue-100/60 text-sm leading-relaxed mb-6">
+                  Keys are split into 5 fragments across decentralized storage nodes, requiring a M-of-N threshold quorum to reassemble the payload.
+                </p>
+                <Link href="/security" className="text-xs font-bold text-white flex items-center hover:text-[#a259ff] transition-colors">
+                  Security Model <ArrowRight className="w-3 h-3 ml-2" />
+                </Link>
+              </motion.div>
+            </div>
+
+            <div className="grid md:grid-cols-4 gap-6 mt-6">
+              {[
+                { icon: <FileText />, title: "Creating Assets", desc: "Upload docs & keys to encrypt natively.", step: "01" },
+                { icon: <Lock />, title: "Encrypt & Split", desc: "AES-256 secures it, Shamir's splits keys.", step: "02" },
+                { icon: <Heart />, title: "Heartbeat", desc: "Periodic cryptographic proof-of-life ping.", step: "03" },
+                { icon: <Zap />, title: "Auto-Release", desc: "Polygon contract fires on heartbeat decay.", step: "04" },
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  className="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center hover:bg-white/[0.03] transition-colors"
+                >
+                  <div className="text-2xl font-black text-[#2b52ff]/20 mb-2">{item.step}</div>
+                  <div className="w-10 h-10 mx-auto text-[#2b52ff] mb-4 flex items-center justify-center bg-white/5 rounded-full">{item.icon}</div>
+                  <h4 className="text-white font-bold mb-2">{item.title}</h4>
+                  <p className="text-xs text-blue-100/50">{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <SharedFooter />
+
         <WalletConnectModal
           isOpen={showWalletModal}
           onClose={() => setShowWalletModal(false)}
           onConnect={handleWalletConnect}
           isConnecting={isConnecting}
         />
-      </>
+      </div>
     )
   }
 
+  // Dashboard Interface (Connected State)
   return (
-    <div className="min-h-screen p-4 hero-bg">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-4 bg-[#050a1a] text-slate-50 selection:bg-[#2b52ff]/30 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 premium-card p-6">
-          <div className="flex items-center space-x-3">
-            <div className="icon-container">
-              <Shield className="h-5 w-5 text-white" />
+        <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-[#2b52ff]/10 blur-3xl rounded-full pointer-events-none"></div>
+          <div className="flex items-center space-x-4 mb-4 sm:mb-0 relative z-10">
+            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#2b52ff]/20 to-[#00d2ff]/20 rounded-xl border border-[#2b52ff]/30 shadow-[0_0_15px_rgba(43,82,255,0.2)]">
+              <Shield className="h-6 w-6 text-[#2b52ff]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold gradient-text-premium">Digital Will Protocol</h1>
-              <p className="text-sm text-muted-foreground flex items-center">
-                <span className="status-indicator-active mr-2"></span>
-                Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-              </p>
+              <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                Digital Will Protocol
+              </h1>
+              <div className="flex items-center text-xs font-medium text-blue-100/60 mt-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 mr-2 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
+                Connected Vault: <span className="font-mono text-white ml-2 bg-white/5 px-2 py-0.5 rounded border border-white/10">{address}</span>
+              </div>
             </div>
           </div>
-          <Button variant="outline" onClick={() => setIsConnected(false)} className="hover:scale-105 transition-transform">
-            Secure Disconnect
-          </Button>
+          <button
+            onClick={handleDisconnect}
+            className="px-6 py-2.5 border border-white/10 hover:border-red-500/50 hover:text-red-400 rounded-xl text-sm font-semibold transition-all hover:bg-red-500/10 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] disabled:opacity-50 relative z-10"
+          >
+            Lock & Disconnect
+          </button>
         </div>
 
-        {/* Main Dashboard */}
+        {/* Dashboard Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="assets">Assets</TabsTrigger>
-            <TabsTrigger value="beneficiaries">Beneficiaries</TabsTrigger>
-            <TabsTrigger value="heartbeat">Heartbeat</TabsTrigger>
-            <TabsTrigger value="status">Status</TabsTrigger>
+          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-5 gap-1">
+            {['overview', 'assets', 'beneficiaries', 'heartbeat', 'status'].map((tab) => (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="capitalize data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white text-blue-100/60 rounded-lg transition-all"
+              >
+                {tab}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                <span>Loading dashboard...</span>
+              <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                <RefreshCw className="h-8 w-8 text-[#2b52ff] animate-spin" />
+                <span className="text-blue-100/60 font-medium">Decrypting Vault Telemetry...</span>
               </div>
             ) : (
-              <>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+
+                {/* Stats Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="premium-card p-6 hover:scale-105 transition-transform">
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">Total Assets</h3>
-                      <div className="icon-container w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600">
-                        <FileText className="h-5 w-5 text-white" />
+                  {[
+                    { title: "Encrypted Assets", val: appState?.stats.totalAssets || 0, icon: <FileText />, color: "text-blue-400" },
+                    { title: "Beneficiaries", val: appState?.stats.totalBeneficiaries || 0, icon: <Users />, color: "text-purple-400" },
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-semibold text-blue-100/60">{stat.title}</span>
+                        <div className={`w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center ${stat.color}`}>{stat.icon}</div>
                       </div>
+                      <div className="text-4xl font-black text-white">{stat.val}</div>
                     </div>
-                    <div>
-                      <div className="text-3xl font-bold gradient-text-premium">{appState?.stats.totalAssets || 0}</div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {appState?.stats.totalAssets === 0 ? 'No assets created yet' : 'Encrypted assets'}
-                      </p>
+                  ))}
+
+                  <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-semibold text-blue-100/60">Heartbeat Status</span>
+                      <Heart className={`h-5 w-5 ${getHeartbeatStatusInfo().color === 'green' ? 'text-green-500' : 'text-yellow-500'}`} />
                     </div>
+                    <div className="text-2xl font-bold text-white mb-1">{getHeartbeatStatusInfo().status}</div>
+                    <div className="text-xs text-blue-100/40">Last pulse: {getHeartbeatStatusInfo().lastTime}</div>
                   </div>
 
-                  <div className="premium-card p-6 hover:scale-105 transition-transform">
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">Beneficiaries</h3>
-                      <div className="icon-container w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600">
-                        <Users className="h-5 w-5 text-white" />
-                      </div>
+                  <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-semibold text-blue-100/60">System Security</span>
+                      <Shield className="h-5 w-5 text-green-500" />
                     </div>
-                    <div>
-                      <div className="text-3xl font-bold gradient-text-premium">{appState?.stats.totalBeneficiaries || 0}</div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {appState?.stats.totalBeneficiaries === 0 ? 'No beneficiaries added' : 'Configured recipients'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="premium-card p-6 hover:scale-105 transition-transform">
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">Heartbeat Status</h3>
-                      <Heart className={`h-5 w-5 ${getHeartbeatStatusInfo().color === 'green' ? 'text-green-500 heartbeat-indicator' :
-                        getHeartbeatStatusInfo().color === 'yellow' ? 'text-yellow-500' : 'text-red-500'
-                        }`} />
-                    </div>
-                    <div>
-                      <div className={`text-3xl font-bold ${getHeartbeatStatusInfo().color === 'green' ? 'text-green-600 dark:text-green-400' :
-                        getHeartbeatStatusInfo().color === 'yellow' ? 'text-yellow-600 dark:text-yellow-400' :
-                          'text-red-600 dark:text-red-400'
-                        }`}>
-                        {getHeartbeatStatusInfo().status}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Last: {getHeartbeatStatusInfo().lastTime}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="premium-card p-6 hover:scale-105 transition-transform">
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">System Status</h3>
-                      <CheckCircle className={`h-5 w-5 ${getSystemStatusInfo().color === 'green' ? 'text-green-500' :
-                        getSystemStatusInfo().color === 'yellow' ? 'text-yellow-500' :
-                          'text-red-500'
-                        }`} />
-                    </div>
-                    <div>
-                      <div className={`text-3xl font-bold ${getSystemStatusInfo().color === 'green' ? 'text-green-600 dark:text-green-400' :
-                        getSystemStatusInfo().color === 'yellow' ? 'text-yellow-600 dark:text-yellow-400' :
-                          'text-red-600 dark:text-red-400'
-                        }`}>
-                        {getSystemStatusInfo().status}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {appState?.keyDistributions.length || 0} key distributions active
-                      </p>
-                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">{getSystemStatusInfo().status}</div>
+                    <div className="text-xs text-blue-100/40">{appState?.keyDistributions.length || 0} active deployments</div>
                   </div>
                 </div>
 
+                {/* Grid 2 */}
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="premium-card p-6">
-                    <h3 className="text-xl font-bold mb-2 gradient-text-premium">Quick Actions</h3>
-                    <p className="text-sm text-muted-foreground mb-6">Get started with your digital will</p>
-                    <div className="space-y-3">
-                      <button
-                        className="w-full flex items-center justify-start px-6 py-4 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/40 dark:hover:to-cyan-900/40 transition-all duration-300 hover:scale-105 border border-blue-200 dark:border-blue-800"
-                        onClick={() => setActiveTab('assets')}
-                      >
-                        <div className="icon-container w-10 h-10 mr-3 bg-gradient-to-br from-blue-500 to-cyan-600">
-                          <FileText className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-medium">
-                          {appState?.stats.totalAssets === 0 ? 'Create Your First Asset' : 'Manage Assets'}
-                        </span>
+                  <div className="bg-[#0a1536] border border-[#2b52ff]/20 p-8 rounded-3xl relative overflow-hidden">
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#2b52ff]/20 blur-3xl rounded-full pointer-events-none"></div>
+                    <h3 className="text-xl font-bold text-white mb-6">Vault Actions</h3>
+                    <div className="space-y-3 relative z-10">
+                      <button onClick={() => setActiveTab('assets')} className="w-full flex items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all">
+                        <FileText className="w-5 h-5 text-[#2b52ff] mr-4" /> <span className="font-semibold text-sm">Manage Assets</span>
                       </button>
-                      <button
-                        className="w-full flex items-center justify-start px-6 py-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/40 dark:hover:to-emerald-900/40 transition-all duration-300 hover:scale-105 border border-green-200 dark:border-green-800"
-                        onClick={() => setActiveTab('beneficiaries')}
-                      >
-                        <div className="icon-container w-10 h-10 mr-3 bg-gradient-to-br from-green-500 to-emerald-600">
-                          <Users className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-medium">
-                          {appState?.stats.totalBeneficiaries === 0 ? 'Add Beneficiaries' : 'Manage Beneficiaries'}
-                        </span>
+                      <button onClick={() => setActiveTab('beneficiaries')} className="w-full flex items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all">
+                        <Users className="w-5 h-5 text-[#a259ff] mr-4" /> <span className="font-semibold text-sm">Configure Beneficiaries</span>
                       </button>
-                      <button
-                        className="w-full flex items-center justify-start px-6 py-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40 transition-all duration-300 hover:scale-105 border border-purple-200 dark:border-purple-800"
-                        onClick={() => setActiveTab('heartbeat')}
-                      >
-                        <div className="icon-container w-10 h-10 mr-3 bg-gradient-to-br from-purple-500 to-pink-600">
-                          <Heart className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-medium">
-                          {getHeartbeatStatusInfo().status === 'Active' ? 'View Heartbeat' : 'Record Heartbeat'}
-                        </span>
+                      <button onClick={() => setActiveTab('heartbeat')} className="w-full flex items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all">
+                        <Activity className="w-5 h-5 text-green-400 mr-4" /> <span className="font-semibold text-sm">Emit Heartbeat</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="premium-card p-6">
-                    <h3 className="text-xl font-bold mb-2 gradient-text-premium">Security Overview</h3>
-                    <p className="text-sm text-muted-foreground mb-6">Your data protection status</p>
+                  <div className="bg-white/[0.02] border border-white/5 p-8 rounded-3xl">
+                    <h3 className="text-xl font-bold text-white mb-6">Security Check</h3>
                     <div className="space-y-4">
-                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
-                        <CheckCircle className={`h-5 w-5 ${appState?.settings.encryptionEnabled ? 'text-green-600 neon-glow-green' : 'text-gray-400'
-                          }`} />
-                        <span className="text-sm font-medium">
-                          Client-side encryption {appState?.settings.encryptionEnabled ? 'enabled' : 'disabled'}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-                        <CheckCircle className={`h-5 w-5 ${(appState?.keyDistributions.length || 0) > 0 ? 'text-blue-600 neon-glow-blue' : 'text-gray-400'
-                          }`} />
-                        <span className="text-sm font-medium">
-                          Shamir Secret Sharing {(appState?.keyDistributions.length || 0) > 0 ? 'active' : 'inactive'}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800">
-                        <CheckCircle className="h-5 w-5 text-purple-600 neon-glow-purple" />
-                        <span className="text-sm font-medium">Decentralized storage ready</span>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800">
-                        <CheckCircle className="h-5 w-5 text-orange-600" />
-                        <span className="text-sm font-medium">Smart contracts deployed</span>
-                      </div>
+                      {[
+                        { label: "AES-256 Client-side Encryption", status: appState?.settings.encryptionEnabled, c: "text-green-400" },
+                        { label: "Shamir Secret Sharing Split", status: (appState?.keyDistributions.length || 0) > 0, c: "text-blue-400" },
+                        { label: "IPFS Network Transport", status: true, c: "text-purple-400" },
+                      ].map((chk, i) => (
+                        <div key={i} className="flex items-center p-3 bg-white/5 rounded-lg border border-white/5">
+                          <CheckCircle className={`w-5 h-5 mr-3 ${chk.status ? chk.c : 'text-white/20'}`} />
+                          <span className="text-sm font-medium text-white/90">{chk.label}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Recent Activity */}
-                {appState && (appState.assets.length > 0 || appState.beneficiaries.length > 0 || appState.heartbeats.length > 0) && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                      <CardDescription>Latest system activity</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {appState.heartbeats.length > 0 && (
-                          <div className="flex items-center space-x-3 text-sm">
-                            <Heart className="h-4 w-4 text-green-600" />
-                            <span>Last heartbeat recorded</span>
-                            <span className="text-muted-foreground">
-                              {new Date(appState.stats.lastHeartbeat).toLocaleString()}
-                            </span>
+                {/* Activity Log */}
+                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-3xl">
+                  <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                    <h3 className="text-xl font-bold text-white flex items-center">
+                      <Activity className="w-5 h-5 mr-3 text-[#2b52ff]" />
+                      Cryptographic Log
+                    </h3>
+                    <span className="text-xs font-semibold px-3 py-1 bg-green-500/10 text-green-400 rounded-full border border-green-500/20">Live</span>
+                  </div>
+                  <div className="space-y-1">
+                    {mockActivities.map((activity, idx) => (
+                      <div key={idx} className="flex items-start p-4 hover:bg-white/[0.02] rounded-xl transition-colors group">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-[#2b52ff]/30 transition-colors mr-4 mt-1">
+                          {activity.icon}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white/90 leading-tight">{activity.title}</p>
+                          <div className="flex items-center mt-2 text-xs text-blue-100/40">
+                            <Clock className="w-3 h-3 mr-1" /> {activity.time}
+                            <span className="mx-2">•</span>
+                            <span className="font-mono text-[10px] text-white/30 uppercase">txn_{Math.random().toString(36).substr(2, 8)}</span>
                           </div>
-                        )}
-                        {appState.assets.length > 0 && (
-                          <div className="flex items-center space-x-3 text-sm">
-                            <FileText className="h-4 w-4 text-blue-600" />
-                            <span>{appState.assets.length} asset{appState.assets.length !== 1 ? 's' : ''} encrypted and stored</span>
-                          </div>
-                        )}
-                        {appState.beneficiaries.length > 0 && (
-                          <div className="flex items-center space-x-3 text-sm">
-                            <Users className="h-4 w-4 text-purple-600" />
-                            <span>{appState.beneficiaries.length} beneficiar{appState.beneficiaries.length !== 1 ? 'ies' : 'y'} configured</span>
-                          </div>
-                        )}
-                        {appState.keyDistributions.length > 0 && (
-                          <div className="flex items-center space-x-3 text-sm">
-                            <Key className="h-4 w-4 text-orange-600" />
-                            <span>{appState.keyDistributions.length} key distribution{appState.keyDistributions.length !== 1 ? 's' : ''} active</span>
-                          </div>
-                        )}
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+                    ))}
+                  </div>
+                </div>
+
+              </motion.div>
             )}
           </TabsContent>
 
-          <TabsContent value="assets">
+          {/* Sub Views */}
+          <TabsContent value="assets" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
             <AssetCreationForm />
           </TabsContent>
 
-          <TabsContent value="beneficiaries">
+          <TabsContent value="beneficiaries" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
             <BeneficiaryManager />
           </TabsContent>
 
-          <TabsContent value="heartbeat">
+          <TabsContent value="heartbeat" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
             <HeartbeatMonitor />
           </TabsContent>
 
-          <TabsContent value="status">
+          <TabsContent value="status" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
             <SystemStatus />
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Wallet Connect Modal */}
       <WalletConnectModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}

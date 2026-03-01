@@ -14,6 +14,9 @@ export class User {
     @Prop({ default: 30 }) // Default heartbeat interval in days
     heartbeatInterval: number;
 
+    @Prop({ default: 14 }) // Default grace period in days
+    gracePeriod: number;
+
     @Prop({ type: Date, default: Date.now })
     lastActive: Date;
 }

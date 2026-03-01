@@ -5,8 +5,9 @@ import Link from 'next/link';
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-16">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#050a1a] pt-24 pb-16 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#2b52ff]/5 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                 <div className="text-center mb-16 slide-up">
                     <div className="inline-flex items-center justify-center p-4 bg-orange-500/10 rounded-full mb-6 border border-orange-500/20">
@@ -35,7 +36,7 @@ export default function TermsPage() {
 
                 <div className="prose prose-invert prose-orange max-w-none space-y-12">
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
+                    <section className="bg-white/[0.02] border border-slate-800 rounded-3xl p-8 md:p-12">
                         <div className="flex items-center mb-6">
                             <Cpu className="h-8 w-8 text-emerald-400 mr-4" />
                             <h2 className="text-2xl font-bold text-white m-0">1. Acceptance & Autonomous Execution</h2>
@@ -48,7 +49,7 @@ export default function TermsPage() {
                         </p>
                     </section>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
+                    <section className="bg-white/[0.02] border border-slate-800 rounded-3xl p-8 md:p-12">
                         <div className="flex items-center mb-6">
                             <FileSignature className="h-8 w-8 text-blue-400 mr-4" />
                             <h2 className="text-2xl font-bold text-white m-0">2. Prohibited End Uses</h2>
@@ -66,7 +67,7 @@ export default function TermsPage() {
                         </p>
                     </section>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12">
+                    <section className="bg-white/[0.02] border border-slate-800 rounded-3xl p-8 md:p-12">
                         <div className="flex items-center mb-6">
                             <ShieldAlert className="h-8 w-8 text-rose-400 mr-4" />
                             <h2 className="text-2xl font-bold text-white m-0">3. Limitation of Liability</h2>
@@ -83,7 +84,7 @@ export default function TermsPage() {
                         </ul>
                     </section>
 
-                    <section className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12 text-center">
+                    <section className="bg-white/[0.02] border border-slate-800 rounded-3xl p-8 md:p-12 text-center">
                         <h2 className="text-2xl font-bold text-white mb-4">4. Open Source Licensing</h2>
                         <p className="text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto">
                             The underlying cryptography, smart contracts, and front-end interface of the Digital Will Protocol are open-sourced under the MIT License. You are free to fork, audit, and compile the code yourself.

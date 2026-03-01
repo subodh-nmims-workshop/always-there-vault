@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNumber, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum HeartbeatMethod {
@@ -51,6 +51,20 @@ export class HeartbeatDto {
   ipAddress?: string;
 }
 
+export class HeartbeatSettingsDto {
+  @ApiProperty({ description: 'Heartbeat interval in days', minimum: 1, maximum: 365 })
+  @IsNumber()
+  @Min(1)
+  @Max(365)
+  interval: number;
+
+  @ApiProperty({ description: 'Grace period in days', minimum: 1, maximum: 90 })
+  @IsNumber()
+  @Min(1)
+  @Max(90)
+  gracePeriod: number;
+}
+
 export class HeartbeatStatusDto {
   @ApiProperty({ description: 'Current heartbeat status' })
   status: 'active' | 'grace_period' | 'overdue' | 'inactive';
@@ -69,4 +83,10 @@ export class HeartbeatStatusDto {
 
   @ApiProperty({ description: 'Days remaining in grace period' })
   gracePeriodRemaining: number;
+
+  @ApiProperty({ description: 'Configured interval in days' })
+  interval: number;
+
+  @ApiProperty({ description: 'Configured grace period in days' })
+  gracePeriod: number;
 }
