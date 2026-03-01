@@ -19,6 +19,7 @@ import {
   Twitter,
   MessageCircle
 } from 'lucide-react'
+import Link from 'next/link'
 
 interface LandingHeroProps {
   onGetStarted: () => void
@@ -302,30 +303,15 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
       </div>
 
       {/* Footer */}
-      <footer className="py-12 bg-gray-900 text-gray-400 border-t border-gray-800">
+      <footer className="py-12 bg-[#050a1a] text-slate-400 border-t border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                {/* Custom Original Logo SVG */}
-                <div className="w-8 h-8 flex-shrink-0">
-                  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M50 5L90 25V65L50 95L10 65V25L50 5Z" fill="url(#gradHero1)" />
-                    <path d="M50 15L80 30V60L50 85L20 60V30L50 15Z" fill="#111827" />
-                    <path d="M50 25L70 35V55L50 75L30 55V35L50 25Z" fill="url(#gradHero2)" />
-                    <defs>
-                      <linearGradient id="gradHero1" x1="10" y1="5" x2="90" y2="95" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#3b82f6" />
-                        <stop offset="1" stopColor="#8b5cf6" />
-                      </linearGradient>
-                      <linearGradient id="gradHero2" x1="30" y1="25" x2="70" y2="75" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#10b981" />
-                        <stop offset="1" stopColor="#3b82f6" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
+                <div className="text-[#2b52ff] flex items-center justify-center">
+                  <Shield className="w-8 h-8" />
                 </div>
-                <span className="text-white font-bold text-lg">Digital Will Protocol</span>
+                <span className="text-white font-bold text-lg tracking-tight">DeadMan Protocol</span>
               </div>
               <p className="text-sm">
                 Securing digital legacies for the decentralized future. Your assets, your rules.
@@ -335,40 +321,40 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
             <div>
               <h4 className="text-white font-bold mb-4">Product</h4>
               <ul className="space-y-3 text-sm">
-                <li><a href="/features" className="hover:text-blue-400 transition-colors">Features</a></li>
-                <li><a href="/security" className="hover:text-blue-400 transition-colors">Security</a></li>
-                <li><a href="/pricing" className="hover:text-blue-400 transition-colors">Pricing</a></li>
-                <li><a href="/roadmap" className="hover:text-blue-400 transition-colors">Roadmap</a></li>
+                <li><Link href="/features" className="hover:text-[#2b52ff] transition-colors">Features</Link></li>
+                <li><Link href="/security" className="hover:text-[#2b52ff] transition-colors">Security</Link></li>
+                <li><Link href="/pricing" className="hover:text-[#2b52ff] transition-colors">Pricing</Link></li>
+                <li><Link href="/roadmap" className="hover:text-[#2b52ff] transition-colors">Roadmap</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-white font-bold mb-4">Resources</h4>
               <ul className="space-y-3 text-sm">
-                <li><a href="/docs" className="hover:text-blue-400 transition-colors">Documentation</a></li>
-                <li><a href="/api" className="hover:text-blue-400 transition-colors">API Reference</a></li>
-                <li><a href="/guides" className="hover:text-blue-400 transition-colors">Guides</a></li>
-                <li><a href="/support" className="hover:text-blue-400 transition-colors">Support</a></li>
+                <li><Link href="/docs" className="hover:text-[#2b52ff] transition-colors">Documentation</Link></li>
+                <li><Link href="/api" className="hover:text-[#2b52ff] transition-colors">API Reference</Link></li>
+                <li><Link href="/guides" className="hover:text-[#2b52ff] transition-colors">Guides</Link></li>
+                <li><Link href="/support" className="hover:text-[#2b52ff] transition-colors">Support</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-white font-bold mb-4">Company</h4>
               <ul className="space-y-3 text-sm">
-                <li><a href="/about" className="hover:text-blue-400 transition-colors">About</a></li>
-                <li><a href="/blog" className="hover:text-blue-400 transition-colors">Blog</a></li>
-                <li><a href="/careers" className="hover:text-blue-400 transition-colors">Careers</a></li>
-                <li><a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a></li>
+                <li><Link href="/about" className="hover:text-[#2b52ff] transition-colors">About</Link></li>
+                <li><Link href="/blog" className="hover:text-[#2b52ff] transition-colors">Blog</Link></li>
+                <li><Link href="#" className="hover:text-[#2b52ff] transition-colors cursor-not-allowed opacity-50">Careers</Link></li>
+                <li><Link href="/contact" className="hover:text-[#2b52ff] transition-colors">Contact</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-            <p>© 2024 Digital Will Protocol. All rights reserved.</p>
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
+            <p>© 2026 DeadMan Protocol. All rights reserved.</p>
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 md:mt-0">
-              <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
-              <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
-              <a href="/security-policy" className="hover:text-blue-400 transition-colors">Security</a>
+              <Link href="/privacy" className="hover:text-[#2b52ff] transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-[#2b52ff] transition-colors">Terms of Service</Link>
+              <Link href="/security" className="hover:text-[#2b52ff] transition-colors">Security</Link>
             </div>
           </div>
         </div>
