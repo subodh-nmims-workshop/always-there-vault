@@ -49,26 +49,125 @@ export default function DocsPage() {
 
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 mt-8 pb-32">
 
-                {/* Quick Starts Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+                {/* Detailed Content Sections */}
+                <div className="space-y-12 mb-20">
 
-                    <Link href="/docs/quick-start" className="bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-[#1152d4]/50 p-6 rounded-2xl transition-all group">
-                        <Terminal className="w-8 h-8 text-[#1152d4] mb-4 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-lg font-bold text-white mb-2">Quick Start Guide</h3>
-                        <p className="text-slate-400 text-sm leading-relaxed">Get up and running with the client SDK in under 5 minutes. Learn how to initiate a protocol vault.</p>
-                    </Link>
+                    {/* Quick Start Guide */}
+                    <section id="quick-start" className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Terminal className="w-32 h-32 text-[#1152d4]" />
+                        </div>
+                        <div className="relative z-10 max-w-3xl">
+                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 flex items-center gap-3">
+                                <Terminal className="w-8 h-8 text-[#1152d4]" />
+                                Quick Start Guide
+                            </h2>
+                            <p className="text-slate-400 text-lg mb-6 leading-relaxed">
+                                Get up and running with the client SDK in under 5 minutes. Learn how to initiate a protocol vault and configure your first digital asset.
+                            </p>
 
-                    <Link href="/docs/smart-contract" className="bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-[#8b5cf6]/50 p-6 rounded-2xl transition-all group">
-                        <Cpu className="w-8 h-8 text-[#8b5cf6] mb-4 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-lg font-bold text-white mb-2">Smart Contracts</h3>
-                        <p className="text-slate-400 text-sm leading-relaxed">Deep dive into the Solidity architecture managing the liveness checks and secure asset disbursement.</p>
-                    </Link>
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-white font-bold mb-2">1. Installation</h3>
+                                    <div className="bg-[#0a0c10] border border-white/10 p-4 rounded-xl font-mono text-sm text-slate-300">
+                                        npm install @deadman/protocol-sdk ethers
+                                    </div>
+                                </div>
 
-                    <Link href="/docs/shamir-sdk" className="bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-emerald-500/50 p-6 rounded-2xl transition-all group">
-                        <Fingerprint className="w-8 h-8 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-lg font-bold text-white mb-2">Cryptography & Sharding</h3>
-                        <p className="text-slate-400 text-sm leading-relaxed">Understand the mathematics behind Shamir's Secret Sharing and our zero-knowledge heartbeat signatures.</p>
-                    </Link>
+                                <div>
+                                    <h3 className="text-white font-bold mb-2">2. Initialize the Vault</h3>
+                                    <div className="bg-[#0a0c10] border border-white/10 p-4 rounded-xl font-mono text-sm text-slate-300 overflow-x-auto">
+                                        <pre><code>{`import { DeadManVault } from '@deadman/protocol-sdk';
+
+// Connect with standard Web3 provider
+const vault = new DeadManVault(provider.getSigner());
+
+// Initialize a new digital will with a 30-day heartbeat
+await vault.initialize({
+  heartbeatInterval: 30 * 24 * 60 * 60, // 30 days
+  gracePeriod: 14 * 24 * 60 * 60 // 14 days
+});`}</code></pre>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-white font-bold mb-2">3. Add Beneficiaries & Encrypt Assets</h3>
+                                    <p className="text-slate-400 text-sm mb-3">The SDK automatically manages client-side AES encryption and Shamir key sharding before dispatching metadata to the smart contract.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Smart Contracts */}
+                    <section id="smart-contracts" className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Cpu className="w-32 h-32 text-[#8b5cf6]" />
+                        </div>
+                        <div className="relative z-10 max-w-3xl">
+                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 flex items-center gap-3">
+                                <Cpu className="w-8 h-8 text-[#8b5cf6]" />
+                                Smart Contracts Architecture
+                            </h2>
+                            <p className="text-slate-400 text-lg mb-6 leading-relaxed">
+                                Deep dive into the Solidity architecture managing the liveness checks and secure asset disbursement on the Polygon network.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-6 mt-8">
+                                <div className="bg-[#0a0c10] border border-white/5 p-6 rounded-2xl">
+                                    <h4 className="text-white font-bold mb-2">Liveness Oracle (Heartbeat)</h4>
+                                    <p className="text-sm text-slate-400">Maintains a purely decentralized mapping of wallet addresses to their `lastPing` timestamps. Emits `HeartbeatMissed` events consumed by relayers.</p>
+                                </div>
+                                <div className="bg-[#0a0c10] border border-white/5 p-6 rounded-2xl">
+                                    <h4 className="text-white font-bold mb-2">Asset Registry</h4>
+                                    <p className="text-sm text-slate-400">Stores IPFS CIDs of the encrypted payload and the encrypted Shamir shares. Ensures only designated beneficiary wallets can trigger read requests.</p>
+                                </div>
+                                <div className="bg-[#0a0c10] border border-white/5 p-6 rounded-2xl md:col-span-2">
+                                    <h4 className="text-white font-bold mb-2">The Release Mechanism</h4>
+                                    <p className="text-sm text-slate-400 mb-3">When a heartbeat expires and the grace period passes, any beneficiary can call `triggerRelease()`. The contract validates the temporal conditions, verifies the caller via `msg.sender`, and decrypts the target's Shamir shares specific to that beneficiary's public key.</p>
+                                    <div className="bg-white/[0.03] p-3 rounded-lg border border-white/10 font-mono text-xs text-purple-300">
+                                        function triggerRelease(address vaultOwner) external onlyBeneficiary(vaultOwner) returns (bytes memory encryptedShare)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Cryptography & Sharding */}
+                    <section id="cryptography" className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Fingerprint className="w-32 h-32 text-emerald-500" />
+                        </div>
+                        <div className="relative z-10 max-w-3xl">
+                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 flex items-center gap-3">
+                                <Fingerprint className="w-8 h-8 text-emerald-500" />
+                                Cryptography & Sharding
+                            </h2>
+                            <p className="text-slate-400 text-lg mb-6 leading-relaxed">
+                                Understand the mathematics behind Shamir's Secret Sharing and our zero-knowledge heartbeat signatures.
+                            </p>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-white font-bold mb-2 border-l-2 border-emerald-500 pl-3">Client-Side AES-256-GCM</h3>
+                                    <p className="text-slate-400 text-sm">Your files never leave your browser unencrypted. We use the Web Crypto API to generate a high-entropy 256-bit symmetric key, encrypting files locally before IPFS transit.</p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-white font-bold mb-2 border-l-2 border-emerald-500 pl-3">Shamir's Secret Sharing (M-of-N)</h3>
+                                    <p className="text-slate-400 text-sm mb-3">The symmetric master key is never stored whole. It is mathematically split into `N` shares using polynomial interpolation over a finite field. A minimum threshold `M` (e.g., 3 of 5) is required to reconstruct the key.</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className="bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1 rounded-full border border-emerald-500/20">Polynomial: f(x) = a0 + a1*x + ... + a(k-1)*x^(k-1)</span>
+                                        <span className="bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1 rounded-full border border-emerald-500/20">a0 = Master Key</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-white font-bold mb-2 border-l-2 border-emerald-500 pl-3">Zero-Knowledge Verification</h3>
+                                    <p className="text-slate-400 text-sm">Heartbeats are verified on-chain using ECDSA signatures. The backend protocol proves you are alive by relaying your signed payload without ever knowing your private key, maintaining 100% non-custodial operations.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
                 </div>
 
