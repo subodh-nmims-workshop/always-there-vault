@@ -27,8 +27,9 @@ import {
 } from 'lucide-react'
 import { AssetCreationForm } from '@/components/asset-creation-form'
 import { HeartbeatMonitor } from '@/components/heartbeat-monitor'
-import { BeneficiaryManager } from '@/components/beneficiary-manager'
-import { SystemStatus } from '@/components/system-status'
+import { OverviewDashboard } from '@/components/overview-dashboard'
+import { BeneficiariesDashboard } from '@/components/beneficiaries-dashboard'
+import { StatusDashboard } from '@/components/status-dashboard'
 import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import WebStorageService, { AppState } from '@/lib/storage'
 import Link from 'next/link'
@@ -490,131 +491,34 @@ export default function HomePage() {
             ))}
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="mt-6">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-24 space-y-4">
                 <RefreshCw className="h-8 w-8 text-[#2b52ff] animate-spin" />
                 <span className="text-blue-100/60 font-medium">Decrypting Vault Telemetry...</span>
               </div>
             ) : (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-
-                {/* Stats Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { title: "Encrypted Assets", val: appState?.stats.totalAssets || 0, icon: <FileText />, color: "text-blue-400" },
-                    { title: "Beneficiaries", val: appState?.stats.totalBeneficiaries || 0, icon: <Users />, color: "text-purple-400" },
-                  ].map((stat, i) => (
-                    <div key={i} className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-semibold text-blue-100/60">{stat.title}</span>
-                        <div className={`w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center ${stat.color}`}>{stat.icon}</div>
-                      </div>
-                      <div className="text-4xl font-black text-white">{stat.val}</div>
-                    </div>
-                  ))}
-
-                  <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-semibold text-blue-100/60">Heartbeat Status</span>
-                      <Heart className={`h-5 w-5 ${getHeartbeatStatusInfo().color === 'green' ? 'text-green-500' : 'text-yellow-500'}`} />
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">{getHeartbeatStatusInfo().status}</div>
-                    <div className="text-xs text-blue-100/40">Last pulse: {getHeartbeatStatusInfo().lastTime}</div>
-                  </div>
-
-                  <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-semibold text-blue-100/60">System Security</span>
-                      <Shield className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">{getSystemStatusInfo().status}</div>
-                    <div className="text-xs text-blue-100/40">{appState?.keyDistributions.length || 0} active deployments</div>
-                  </div>
-                </div>
-
-                {/* Grid 2 */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-[#0a1536] border border-[#2b52ff]/20 p-8 rounded-3xl relative overflow-hidden">
-                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#2b52ff]/20 blur-3xl rounded-full pointer-events-none"></div>
-                    <h3 className="text-xl font-bold text-white mb-6">Vault Actions</h3>
-                    <div className="space-y-3 relative z-10">
-                      <button onClick={() => setActiveTab('assets')} className="w-full flex items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all">
-                        <FileText className="w-5 h-5 text-[#2b52ff] mr-4" /> <span className="font-semibold text-sm">Manage Assets</span>
-                      </button>
-                      <button onClick={() => setActiveTab('beneficiaries')} className="w-full flex items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all">
-                        <Users className="w-5 h-5 text-[#a259ff] mr-4" /> <span className="font-semibold text-sm">Configure Beneficiaries</span>
-                      </button>
-                      <button onClick={() => setActiveTab('heartbeat')} className="w-full flex items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all">
-                        <Activity className="w-5 h-5 text-green-400 mr-4" /> <span className="font-semibold text-sm">Emit Heartbeat</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/[0.02] border border-white/5 p-8 rounded-3xl">
-                    <h3 className="text-xl font-bold text-white mb-6">Security Check</h3>
-                    <div className="space-y-4">
-                      {[
-                        { label: "AES-256 Client-side Encryption", status: appState?.settings.encryptionEnabled, c: "text-green-400" },
-                        { label: "Shamir Secret Sharing Split", status: (appState?.keyDistributions.length || 0) > 0, c: "text-blue-400" },
-                        { label: "IPFS Network Transport", status: true, c: "text-purple-400" },
-                      ].map((chk, i) => (
-                        <div key={i} className="flex items-center p-3 bg-white/5 rounded-lg border border-white/5">
-                          <CheckCircle className={`w-5 h-5 mr-3 ${chk.status ? chk.c : 'text-white/20'}`} />
-                          <span className="text-sm font-medium text-white/90">{chk.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Activity Log */}
-                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-3xl">
-                  <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-                    <h3 className="text-xl font-bold text-white flex items-center">
-                      <Activity className="w-5 h-5 mr-3 text-[#2b52ff]" />
-                      Cryptographic Log
-                    </h3>
-                    <span className="text-xs font-semibold px-3 py-1 bg-green-500/10 text-green-400 rounded-full border border-green-500/20">Live</span>
-                  </div>
-                  <div className="space-y-1">
-                    {mockActivities.map((activity, idx) => (
-                      <div key={idx} className="flex items-start p-4 hover:bg-white/[0.02] rounded-xl transition-colors group">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-[#2b52ff]/30 transition-colors mr-4 mt-1">
-                          {activity.icon}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-white/90 leading-tight">{activity.title}</p>
-                          <div className="flex items-center mt-2 text-xs text-blue-100/40">
-                            <Clock className="w-3 h-3 mr-1" /> {activity.time}
-                            <span className="mx-2">•</span>
-                            <span className="font-mono text-[10px] text-white/30 uppercase">txn_{Math.random().toString(36).substr(2, 8)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <OverviewDashboard />
               </motion.div>
             )}
           </TabsContent>
 
           {/* Sub Views */}
-          <TabsContent value="assets" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
+          <TabsContent value="assets" className="mt-6">
             <AssetCreationForm />
           </TabsContent>
 
-          <TabsContent value="beneficiaries" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
-            <BeneficiaryManager />
+          <TabsContent value="beneficiaries" className="mt-6">
+            <BeneficiariesDashboard />
           </TabsContent>
 
-          <TabsContent value="heartbeat" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
+          <TabsContent value="heartbeat" className="mt-6">
             <HeartbeatMonitor />
           </TabsContent>
 
-          <TabsContent value="status" className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
-            <SystemStatus />
+          <TabsContent value="status" className="mt-6">
+            <StatusDashboard />
           </TabsContent>
         </Tabs>
       </div>
