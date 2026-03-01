@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Globe, ArrowRight, Network, Fingerprint, LockKeyhole, Github, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { SharedFooter } from '@/components/shared-footer';
 
 export default function CareersPage() {
     const defaultTransition: any = { duration: 0.8, ease: "easeOut" };
@@ -35,13 +36,32 @@ export default function CareersPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#050a1a] pb-24 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
+        <div className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden flex flex-col">
+
+            {/* Navigation */}
+            <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Globe className="w-8 h-8" />
+                    </div>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Careers</span>
+                </Link>
+                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+                    <Link href="/about" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">About</Link>
+                    <Link href="/blog" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Blog</Link>
+                    <Link href="/careers" className="text-white transition-colors text-sm font-medium">Careers</Link>
+                    <Link href="/contact" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Contact</Link>
+                </div>
+                <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">
+                    Dashboard
+                </Link>
+            </nav>
 
             {/* Ambient background meshes */}
             <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#2b52ff]/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-40">
+            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-32 pb-32">
 
                 {/* Hero Section */}
                 <motion.div
@@ -175,7 +195,10 @@ export default function CareersPage() {
                     </div>
                 </motion.div>
 
-            </div>
+            </main>
+
+            <SharedFooter />
         </div>
     );
 }
+

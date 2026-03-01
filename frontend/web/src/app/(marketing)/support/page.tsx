@@ -2,16 +2,37 @@
 
 import { motion } from 'framer-motion';
 import { LifeBuoy, AlertTriangle, MessageCircle, FileQuestion, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { SharedFooter } from '@/components/shared-footer';
 
 export default function SupportPage() {
     const defaultTransition = { duration: 0.8, ease: "easeOut" as any };
 
     return (
-        <div className="min-h-screen bg-[#050a1a] pt-32 pb-24 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
+        <div className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden flex flex-col">
 
+            {/* Navigation */}
+            <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <LifeBuoy className="w-8 h-8" />
+                    </div>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Support</span>
+                </Link>
+                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+                    <Link href="/contact" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Contact Us</Link>
+                    <Link href="/support" className="text-white transition-colors text-sm font-medium">Support Center</Link>
+                    <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
+                </div>
+                <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">
+                    Dashboard
+                </Link>
+            </nav>
+
+            {/* Ambient effects */}
             <div className="absolute top-[0%] left-[20%] w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen"></div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 pb-32">
 
                 {/* Header Section */}
                 <motion.div
@@ -145,7 +166,9 @@ export default function SupportPage() {
                     </div>
                 </div>
 
-            </div>
+            </main>
+
+            <SharedFooter />
         </div>
     );
 }

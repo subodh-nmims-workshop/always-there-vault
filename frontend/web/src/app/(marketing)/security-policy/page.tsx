@@ -2,10 +2,32 @@
 
 import { Shield, Bug, Search, Lock, ShieldCheck, Mail } from 'lucide-react';
 
+import Link from 'next/link';
+import { SharedFooter } from '@/components/shared-footer';
+
 export default function SecurityPolicyPage() {
     return (
-        <div className="min-h-screen bg-[#050a1a] pt-24 pb-16 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden flex flex-col">
+
+            {/* Navigation */}
+            <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Shield className="w-8 h-8" />
+                    </div>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Security</span>
+                </Link>
+                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+                    <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
+                    <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Platform Security</Link>
+                    <Link href="/security-policy" className="text-white transition-colors text-sm font-medium">Bounty Program</Link>
+                </div>
+                <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">
+                    Dashboard
+                </Link>
+            </nav>
+
+            <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 pb-32">
 
                 <div className="text-center mb-16 slide-up">
                     <div className="inline-flex items-center justify-center p-4 bg-red-500/10 rounded-full mb-6 border border-red-500/20">
@@ -95,9 +117,10 @@ export default function SecurityPolicyPage() {
                             We typically respond to critical PGP-encrypted reports within 12 hours.
                         </p>
                     </section>
-
                 </div>
-            </div>
+            </main>
+
+            <SharedFooter />
         </div>
     );
 }
