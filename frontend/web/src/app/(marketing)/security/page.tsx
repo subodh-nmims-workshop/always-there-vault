@@ -144,6 +144,60 @@ export default function SecurityPage() {
                         </motion.div>
                     </section>
 
+                    {/* Threat Model section */}
+                    <section className="mt-32 border-t border-white/10 pt-20">
+                        <div className="max-w-4xl mx-auto space-y-12">
+                            <div className="text-center space-y-4">
+                                <h2 className="text-4xl font-bold tracking-tight text-white">Adversarial Threat Models</h2>
+                                <p className="text-xl text-slate-400">How we mitigate state-level actors, malicious insiders, and infrastructure collapse.</p>
+                            </div>
+
+                            <div className="space-y-12">
+                                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-2xl flex flex-col md:flex-row gap-8">
+                                    <div className="md:w-1/3">
+                                        <h3 className="text-xl font-bold tracking-tight text-slate-100">Scenario 1: Complete Database Breach</h3>
+                                    </div>
+                                    <div className="md:w-2/3 space-y-4">
+                                        <p className="text-slate-400 leading-relaxed text-sm">
+                                            <strong className="text-white block mb-1">The Threat:</strong> Hackers compromise our backend database (MongoDB) and gain access to all records.
+                                        </p>
+                                        <p className="text-emerald-400 leading-relaxed text-sm bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
+                                            <strong className="text-emerald-300 block mb-1">The Defense:</strong> They acquire nothing actionable. Our database only stores the IPFS hash (CID) pointing to your ciphertext payload and encrypted Shamir shares. Without your precise Decryption Key Sequence (which remains client-side), it is mathematically impossible to read your will.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-2xl flex flex-col md:flex-row gap-8">
+                                    <div className="md:w-1/3">
+                                        <h3 className="text-xl font-bold tracking-tight text-slate-100">Scenario 2: Malicious Validator Node</h3>
+                                    </div>
+                                    <div className="md:w-2/3 space-y-4">
+                                        <p className="text-slate-400 leading-relaxed text-sm">
+                                            <strong className="text-white block mb-1">The Threat:</strong> A node operator attempts to prematurely release your inheritance or steal your data.
+                                        </p>
+                                        <p className="text-emerald-400 leading-relaxed text-sm bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
+                                            <strong className="text-emerald-300 block mb-1">The Defense:</strong> The threshold signature scheme requires an m-of-n consensus. A single malicious node cannot recreate the key. Furthermore, the nodes don't have the final decryption key—they only hold encrypted shards meant strictly for the beneficiary's public wallet address.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-2xl flex flex-col md:flex-row gap-8">
+                                    <div className="md:w-1/3">
+                                        <h3 className="text-xl font-bold tracking-tight text-slate-100">Scenario 3: AWS / Server Takedown</h3>
+                                    </div>
+                                    <div className="md:w-2/3 space-y-4">
+                                        <p className="text-slate-400 leading-relaxed text-sm">
+                                            <strong className="text-white block mb-1">The Threat:</strong> The core development team is coerced or physical servers are seized by authorities.
+                                        </p>
+                                        <p className="text-emerald-400 leading-relaxed text-sm bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
+                                            <strong className="text-emerald-300 block mb-1">The Defense:</strong> Asset storage exists entirely on the decentralized IPFS network (via Storacha), secured by native Polygon smart contracts. The execution of the decay timer and release protocols occurs purely on-chain, requiring zero centralized infrastructure to execute successfully.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                 </div>
             </main>
 

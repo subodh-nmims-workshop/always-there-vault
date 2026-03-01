@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Server, Code, Terminal, Key, Database, Globe, Play } from 'lucide-react';
+import Link from 'next/link';
+import { SharedFooter } from '@/components/shared-footer';
 
 export default function ApiReferencePage() {
     const defaultTransition = { duration: 0.8, ease: "easeOut" as any };
@@ -9,30 +11,52 @@ export default function ApiReferencePage() {
     const endpoints = [
         {
             method: "POST",
-            path: "/v1/vaults/metadata",
-            desc: "Store non-sensitive descriptive metadata linking a wallet to a generic protocol heartbeat configuration.",
+            path: "/v1/assets",
+            desc: "Create a new encrypted asset reference. Associates the IPFS CID with the owner's wallet and defines release conditions.",
             status: "Stable"
         },
         {
             method: "GET",
-            path: "/v1/vaults/:walletAddress",
-            desc: "Retrieve public IPFS references and threshold details for a specific owner.",
+            path: "/v1/assets/owner/:walletAddress",
+            desc: "Retrieve all active asset configurations for a specific wallet address. Returns metadata, not the decryption keys.",
             status: "Stable"
         },
         {
             method: "POST",
-            path: "/v1/nodes/heartbeat",
-            desc: "Ping the centralized oracle fallback network. If strictly using the on-chain DWP contract, this API is unnecessary.",
+            path: "/v1/heartbeat/ping",
+            desc: "Record a liveness check-in for a specific wallet. Extends the decay timer before assets are released to beneficiaries.",
+            status: "Stable"
+        },
+        {
+            method: "POST",
+            path: "/v1/beneficiaries/claim",
+            desc: "Initiate an asset claim process. Requires proving identity and verifying the owner's vault has decayed.",
             status: "Beta"
         }
     ];
 
     return (
-        <div className="min-h-screen bg-[#050a1a] pt-32 pb-24 font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
+        <div className="min-h-screen bg-[#050a1a] font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden flex flex-col">
 
-            <div className="absolute top-[20%] right-[-5%] w-[600px] h-[600px] bg-[#2b52ff]/10 rounded-full blur-[120px] pointer-events-none"></div>
+            {/* Navigation (Added for consistency) */}
+            <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Terminal className="w-8 h-8" />
+                    </div>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan API</span>
+                </Link>
+                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+                    <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
+                    <Link href="/api" className="text-white transition-colors text-sm font-medium">API Reference</Link>
+                    <Link href="/support" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Support</Link>
+                </div>
+                <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">
+                    Dashboard
+                </Link>
+            </nav>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20 pb-24 w-full">
 
                 {/* Header Section */}
                 <motion.div
@@ -95,7 +119,7 @@ export default function ApiReferencePage() {
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#2b52ff]/5 blur-[40px] pointer-events-none group-hover:scale-150 transition-transform duration-700 rounded-full"></div>
                                     <div className="flex flex-wrap items-center justify-between mb-4 relative z-10 gap-4">
                                         <div className="flex items-center gap-3">
-                                            <span className={`px-3 py-1 text-xs font-bold rounded-md tracking-wider ${ep.method === 'POST' ? 'bg-[#2b52ff]/20 text-[#2b52ff] border border-[#2b52ff]/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}>
+                                            <span className={`px-3 py-1 text-xs font-bold rounded-md tracking-wider ${ep.method === 'POST' ? 'bg-[#2b52ff]/20 text-[#2b52ff] border border-[#2b52ff]/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}>
                                                 {ep.method}
                                             </span>
                                             <code className="text-white font-mono font-bold text-lg">{ep.path}</code>
@@ -134,11 +158,13 @@ export default function ApiReferencePage() {
                                     <pre className="font-mono text-xs leading-loose">
                                         <span className="text-slate-400">{'{'}</span>{'\n'}
                                         <span className="text-slate-400">  </span><span className="text-purple-400">"status"</span><span className="text-slate-400">: </span><span className="text-green-300">"success"</span><span className="text-slate-400">,</span>{'\n'}
-                                        <span className="text-slate-400">  </span><span className="text-purple-400">"data"</span><span className="text-slate-400">: </span><span className="text-slate-400">{'{'}</span>{'\n'}
-                                        <span className="text-slate-400">    </span><span className="text-blue-300">"vaultId"</span><span className="text-slate-400">: </span><span className="text-orange-300">928</span><span className="text-slate-400">,</span>{'\n'}
-                                        <span className="text-slate-400">    </span><span className="text-blue-300">"isDecayed"</span><span className="text-slate-400">: </span><span className="text-blue-500">false</span><span className="text-slate-400">,</span>{'\n'}
-                                        <span className="text-slate-400">    </span><span className="text-blue-300">"ipfsCID"</span><span className="text-slate-400">: </span><span className="text-green-300">"bafybei..."</span>{'\n'}
-                                        <span className="text-slate-400">  </span><span className="text-slate-400">{'}'}</span>{'\n'}
+                                        <span className="text-slate-400">  </span><span className="text-purple-400">"data"</span><span className="text-slate-400">: </span><span className="text-slate-400">[</span>{'\n'}
+                                        <span className="text-slate-400">    </span><span className="text-slate-400">{'{'}</span>{'\n'}
+                                        <span className="text-slate-400">      </span><span className="text-blue-300">"assetId"</span><span className="text-slate-400">: </span><span className="text-green-300">"ast_f83h29"</span><span className="text-slate-400">,</span>{'\n'}
+                                        <span className="text-slate-400">      </span><span className="text-blue-300">"type"</span><span className="text-slate-400">: </span><span className="text-green-300">"seed_phrase"</span><span className="text-slate-400">,</span>{'\n'}
+                                        <span className="text-slate-400">      </span><span className="text-blue-300">"cid"</span><span className="text-slate-400">: </span><span className="text-green-300">"bafybeig..."</span>{'\n'}
+                                        <span className="text-slate-400">    </span><span className="text-slate-400">{'}'}</span>{'\n'}
+                                        <span className="text-slate-400">  </span><span className="text-slate-400">]</span>{'\n'}
                                         <span className="text-slate-400">{'}'}</span>
                                     </pre>
                                     <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#020510] to-transparent pointer-events-none"></div>
@@ -153,7 +179,9 @@ export default function ApiReferencePage() {
                     </div>
 
                 </div>
-            </div>
+            </main>
+
+            <SharedFooter />
         </div>
     );
 }

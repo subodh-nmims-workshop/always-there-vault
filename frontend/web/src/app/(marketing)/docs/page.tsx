@@ -72,18 +72,84 @@ export default function DocsPage() {
 
                 </div>
 
+                {/* Architecture Overview */}
+                <section className="mb-20">
+                    <h2 className="text-3xl font-bold tracking-tight text-white mb-8 text-center">System Architecture</h2>
+                    <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 backdrop-blur-md">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            <div className="space-y-6">
+                                <h3 className="text-xl font-bold text-white">Zero-Trust Pipeline</h3>
+                                <p className="text-slate-400 leading-relaxed text-sm">
+                                    The DeadMan Protocol architecture is designed explicitly so that the backend—whether ours or a decentralized relayer's—never has access to the raw payload or the complete decryption keys.
+                                </p>
+                                <ul className="space-y-4">
+                                    <li className="flex gap-3 items-start">
+                                        <div className="w-6 h-6 rounded-full bg-[#1152d4]/10 text-[#1152d4] flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">1</div>
+                                        <div>
+                                            <strong className="text-white block text-sm mb-1">Client Encryption</strong>
+                                            <p className="text-slate-500 text-xs">AES-256-GCM encryption occurs entirely within the user's browser context.</p>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-3 items-start">
+                                        <div className="w-6 h-6 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">2</div>
+                                        <div>
+                                            <strong className="text-white block text-sm mb-1">Key Sharding</strong>
+                                            <p className="text-slate-500 text-xs">The master key is split using Shamir's Secret Sharing (m-of-n threshold) and distributed to validators.</p>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-3 items-start">
+                                        <div className="w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">3</div>
+                                        <div>
+                                            <strong className="text-white block text-sm mb-1">Smart Contract Lock</strong>
+                                            <p className="text-slate-500 text-xs">The shares are locked on-chain, requiring a lapse in the heartbeat timer to unlock.</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-[#0a0c10] border border-white/10 rounded-2xl p-6 h-full flex flex-col justify-center relative overflow-hidden group">
+                                {/* Abstract Diagram */}
+                                <div className="absolute inset-0 bg-[#1152d4]/5 group-hover:bg-[#1152d4]/10 transition-colors"></div>
+                                <div className="relative z-10 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-full flex justify-between items-center px-4">
+                                        <div className="px-4 py-2 rounded-lg bg-slate-800 text-xs font-mono text-slate-300 border border-slate-700">User Wallet</div>
+                                        <div className="w-16 h-px bg-slate-700 relative">
+                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500"></div>
+                                        </div>
+                                        <div className="px-4 py-2 rounded-lg bg-blue-900/40 text-xs font-mono text-blue-300 border border-blue-800">Browser (AES)</div>
+                                    </div>
+                                    <div className="w-px h-8 bg-slate-700"></div>
+                                    <div className="w-full flex justify-center">
+                                        <div className="px-6 py-3 rounded-xl bg-purple-900/40 text-sm font-bold text-purple-300 border border-purple-800 shadow-[0_0_15px_rgba(139,92,246,0.2)]">Shamir Subsystem</div>
+                                    </div>
+                                    <div className="flex gap-4 mt-2">
+                                        <div className="w-px h-8 bg-slate-700 transform rotate-12"></div>
+                                        <div className="w-px h-8 bg-slate-700"></div>
+                                        <div className="w-px h-8 bg-slate-700 transform -rotate-12"></div>
+                                    </div>
+                                    <div className="w-full flex justify-between px-2">
+                                        <div className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center bg-slate-800 text-[10px] text-slate-400">Node A</div>
+                                        <div className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center bg-slate-800 text-[10px] text-slate-400">Node B</div>
+                                        <div className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center bg-slate-800 text-[10px] text-slate-400">Node C</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <section className="bg-white/[0.01] border border-white/5 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1152d4]/5 to-transparent pointer-events-none"></div>
                     <h2 className="text-2xl font-bold text-white mb-4 relative z-10">Looking for the API Reference?</h2>
                     <p className="text-slate-400 mb-8 max-w-lg mx-auto relative z-10">Access the full REST API documentation for relay integrations, webhook subscriptions, and custom liveness monitors.</p>
-                    <button className="bg-white text-[#0a0c10] px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-all relative z-10">
+                    <Link href="/api" className="inline-block bg-white text-[#0a0c10] px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-all relative z-10">
                         View API Reference
-                    </button>
+                    </Link>
                 </section>
 
-            </main>
+            </main >
 
             <SharedFooter />
-        </div>
+        </div >
     )
 }

@@ -6,7 +6,8 @@ import {
     Info,
     Database,
     LockKeyhole,
-    Network
+    Network,
+    Globe
 } from 'lucide-react'
 import Link from 'next/link'
 import { SharedFooter } from '@/components/shared-footer'
@@ -52,19 +53,23 @@ export default function PrivacyPolicyPage() {
                         <nav className="flex flex-col gap-4">
                             <a href="#intro" className="text-[#1152d4] font-bold flex items-center gap-3 group text-sm">
                                 <span className="h-1.5 w-1.5 rounded-full bg-[#1152d4] shadow-[0_0_8px_#1152d4]"></span>
-                                Introduction
+                                1. Introduction
                             </a>
                             <a href="#data" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
                                 <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                Data Collection
+                                2. Data We Process
                             </a>
                             <a href="#crypto" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
                                 <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                Cryptography
+                                3. Cryptography
                             </a>
                             <a href="#third-party" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
                                 <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                Third Parties
+                                4. Third Parties
+                            </a>
+                            <a href="#cookies" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
+                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
+                                5. Cookies
                             </a>
                         </nav>
                     </motion.div>
@@ -77,10 +82,10 @@ export default function PrivacyPolicyPage() {
                         <div id="intro" className="mb-16 scroll-mt-32">
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Info className="text-[#1152d4] w-6 h-6" />
-                                Introduction
+                                1. Introduction
                             </h2>
                             <p className="text-lg">
-                                DeadMan Protocol is built on the fundamental principle that privacy is a human right. Our architecture is designed to protect your digital legacy without ever compromising your identity or sensitive credentials. This policy outlines how we handle the minimal data required to maintain the protocol's integrity.
+                                DeadMan Protocol is built on the fundamental principle that privacy is a human right. Our architecture is explicitly designed to protect your digital legacy without ever compromising your identity or sensitive credentials. This policy outlines how we minimize data collection while maintaining the protocol's integrity and liveness.
                             </p>
                         </div>
 
@@ -92,10 +97,10 @@ export default function PrivacyPolicyPage() {
                             <div className="relative z-10">
                                 <div className="flex items-center gap-3 mb-4">
                                     <Shield className="text-[#8b5cf6] w-5 h-5" />
-                                    <h4 className="font-bold text-[#8b5cf6] uppercase tracking-widest text-sm">Zero-Knowledge Security Note</h4>
+                                    <h4 className="font-bold text-[#8b5cf6] uppercase tracking-widest text-sm">Zero-Knowledge Guarantee</h4>
                                 </div>
                                 <p className="text-[#8b5cf6]/90 leading-relaxed font-medium text-lg">
-                                    The protocol's architecture ensures even the protocol infrastructure itself cannot access encrypted seeds or private keys. All encryption happens client-side before any data reaches the distributed ledger or IPFS.
+                                    The protocol's architecture ensures even the creators of the protocol cannot access your encrypted seeds, documents, or private keys. The backend logic only orchestrates the heartbeat timers and handles encrypted blobs; the decryption relies entirely on cryptographic proofs occurring client-side or within isolated smart contract environments upon valid release.
                                 </p>
                             </div>
                         </div>
@@ -103,23 +108,32 @@ export default function PrivacyPolicyPage() {
                         <div id="data" className="mb-16 scroll-mt-32">
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Database className="text-[#1152d4] w-6 h-6" />
-                                Data Collection
+                                2. Data We Process
                             </h2>
                             <p className="mb-6 text-lg">
-                                We do not collect personal identification information (PII). The DeadMan Protocol only interacts with:
+                                We actively avoid collecting Personally Identifiable Information (PII) such as your name, physical address, or IP address logs. The DeadMan Protocol only interacts with the following technical data:
                             </p>
                             <ul className="space-y-4">
                                 <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
-                                    <span><strong className="text-white">Public wallet addresses</strong> used to initiate smart contract triggers.</span>
+                                    <div className="flex-1">
+                                        <strong className="text-white block mb-1">Public Wallet Addresses</strong>
+                                        <span className="text-slate-400 text-sm">Used exclusively to map ownership of vaults to your cryptographic identity, allowing the smart contract to verify heartbeat signatures.</span>
+                                    </div>
                                 </li>
                                 <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
-                                    <span><strong className="text-white">Encrypted blobs</strong> that contain user-defined recovery instructions (which we cannot read).</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] mt-2.5 shrink-0 shadow-[0_0_8px_#8b5cf6]"></div>
+                                    <div className="flex-1">
+                                        <strong className="text-white block mb-1">Encrypted Payload Blobs (IPFS CIDs)</strong>
+                                        <span className="text-slate-400 text-sm">The content ID referencing your encrypted assets stored on decentralized networks. We cannot read the contents of these blobs.</span>
+                                    </div>
                                 </li>
                                 <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
-                                    <span><strong className="text-white">Network metadata</strong> necessary for meta-transaction broadcasting via Relayers.</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2.5 shrink-0 shadow-[0_0_8px_#10b981]"></div>
+                                    <div className="flex-1">
+                                        <strong className="text-white block mb-1">On-Chain Activity Metadata</strong>
+                                        <span className="text-slate-400 text-sm">Timestamps of your heartbeat transactions and the configured expiration interval to accurately trigger the Dead Man's Switch.</span>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
@@ -127,20 +141,39 @@ export default function PrivacyPolicyPage() {
                         <div id="crypto" className="mb-16 scroll-mt-32">
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <LockKeyhole className="text-[#1152d4] w-6 h-6" />
-                                Cryptography Standards
+                                3. Cryptography Standards
                             </h2>
                             <p className="text-lg">
-                                All data stored via the DeadMan Protocol is secured using AES-256-GCM encryption combined with SECP256K1 elliptic curve signatures. Our "Dead Man's Switch" mechanism utilizes Time-Lock puzzles that are computationally impossible to solve before the user-defined expiration period.
+                                All data stored via the DeadMan Protocol UI is secured using AES-256-GCM encryption in the browser prior to transmission. Secrets are sharded using Shamir's Secret Sharing (SSS) before they are sent to the relayer network. Because the decryption keys are never transmitted whole, even a complete database compromise of an indexing node yields no actionable intelligence to an attacker.
                             </p>
                         </div>
 
                         <div id="third-party" className="mb-16 scroll-mt-32">
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Network className="text-[#1152d4] w-6 h-6" />
-                                Third Parties
+                                4. Third-Party Interactions
                             </h2>
                             <p className="text-lg">
-                                We utilize decentralized networks (Ethereum, Polygon, IPFS, Arweave) to ensure permanence. We do not sell, rent, or trade any metadata to centralized third-party analytics or marketing firms. Period.
+                                By interacting with our interface, your browser must communicate with external decentralized infrastructure to function correctly. This is inherent to Web3 architecture:
+                            </p>
+                            <br />
+                            <h3 className="text-xl font-bold text-white mt-4 mb-2">RPC Providers</h3>
+                            <p className="text-lg mb-4">
+                                Our frontend queries blockchain data (like contract state) via RPC providers (e.g., Alchemy, Infura, or public endpoints). These providers may log your IP address temporarily for DDoS protection, subject to their own respective privacy policies.
+                            </p>
+                            <h3 className="text-xl font-bold text-white mt-4 mb-2">IPFS Pinning Services</h3>
+                            <p className="text-lg">
+                                Your encrypted blobs are pinned using decentralized storage providers (such as Storacha or Web3.Storage). While the encrypted bytes reside on public networks, they remain indecipherable without the threshold of key shards held by the smart contract.
+                            </p>
+                        </div>
+
+                        <div id="cookies" className="mb-16 scroll-mt-32">
+                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                                <Globe className="text-[#1152d4] w-6 h-6" />
+                                5. Cookies & Local Storage
+                            </h2>
+                            <p className="text-lg">
+                                We do not use tracking cookies. We utilize your browser's Local Storage exclusively to cache non-sensitive application state (like your preferred UI theme, or current wallet connection status) to enhance performance. We never store raw private keys in Local Storage.
                             </p>
                         </div>
 

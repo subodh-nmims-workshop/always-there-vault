@@ -39,6 +39,16 @@ import { SharedFooter } from '@/components/shared-footer'
 export default function HomePage() {
   const [isConnected, setIsConnected] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem('dwp_active_tab')
+    if (savedTab) setActiveTab(savedTab)
+  }, [])
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val)
+    localStorage.setItem('dwp_active_tab', val)
+  }
   const [address, setAddress] = useState('0x742d35Cc6634C0532925a3b8D4C2C4e0C8b83c8e')
   const [appState, setAppState] = useState<AppState | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -350,7 +360,7 @@ export default function HomePage() {
         </div>
 
         {/* Dashboard Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-5 gap-1">
             {['overview', 'assets', 'beneficiaries', 'heartbeat', 'status'].map((tab) => (
               <TabsTrigger

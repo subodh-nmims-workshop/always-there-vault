@@ -1,6 +1,3 @@
-import { SharedHeader } from '@/components/shared-header';
-import { SharedFooter } from '@/components/shared-footer';
-
 export default function MarketingLayout({
     children,
 }: {
@@ -14,9 +11,7 @@ export default function MarketingLayout({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/5 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
 
             <div className="relative z-10 flex flex-col min-h-screen">
-                <SharedHeader />
                 <main className="flex-grow">{children}</main>
-                <SharedFooter />
             </div>
         </div>
     );

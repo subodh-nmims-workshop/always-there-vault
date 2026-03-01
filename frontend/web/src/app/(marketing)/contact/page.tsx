@@ -73,6 +73,74 @@ export default function ContactPage() {
 
                 </div>
 
+                {/* Contact Form & Office Location */}
+                <div className="grid md:grid-cols-2 gap-12 w-full mb-24">
+                    {/* Form */}
+                    <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 backdrop-blur-md">
+                        <h3 className="text-2xl font-bold text-white mb-6">Send a Message</h3>
+                        <form className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Name / Pseudonym</label>
+                                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors" placeholder="Satoshi Nakamoto" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Email <span className="text-red-500">*</span></label>
+                                <input type="email" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors" placeholder="satoshi@protonmail.com" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Inquiry Type</label>
+                                <select className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors appearance-none">
+                                    <option className="bg-[#0a0c10]">Partnership</option>
+                                    <option className="bg-[#0a0c10]">Institutional Demo</option>
+                                    <option className="bg-[#0a0c10]">Press</option>
+                                    <option className="bg-[#0a0c10]">Security Report / Bug Bounty</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Message</label>
+                                <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors resize-none" placeholder="How can we help?"></textarea>
+                            </div>
+                            <button type="submit" className="w-full bg-[#1152d4] hover:bg-[#1152d4]/90 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#1152d4]/20 mt-4">
+                                Submit Request
+                            </button>
+                        </form>
+                    </motion.div>
+
+                    {/* DAO Locations */}
+                    <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-8">
+                        <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 backdrop-blur-md h-full flex flex-col justify-center">
+                            <h3 className="text-2xl font-bold text-white mb-6">DAO Hubs</h3>
+                            <p className="text-slate-400 leading-relaxed mb-8">
+                                DeadMan Protocol operates as a decentralized autonomous organization. We do not have a single physical headquarters, but our core contributors operate out of several crypto-friendly hubs.
+                            </p>
+
+                            <div className="space-y-6">
+                                <div className="flex gap-4">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                    <div>
+                                        <h4 className="font-bold text-white">Zug, Switzerland (Crypto Valley)</h4>
+                                        <p className="text-sm text-slate-500">Legal & Regulatory Foundation</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2 shrink-0"></div>
+                                    <div>
+                                        <h4 className="font-bold text-white">Singapore</h4>
+                                        <p className="text-sm text-slate-500">APAC Operations & Relayer Hub</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] mt-2 shrink-0"></div>
+                                    <div>
+                                        <h4 className="font-bold text-white">Dubai, UAE</h4>
+                                        <p className="text-sm text-slate-500">Institutional Partnerships</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+
             </main>
 
             <SharedFooter />

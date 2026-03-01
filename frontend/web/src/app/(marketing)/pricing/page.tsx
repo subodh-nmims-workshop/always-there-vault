@@ -156,8 +156,60 @@ export default function PricingPage() {
                             Contact Sales
                         </button>
                     </motion.div>
-
                 </div>
+
+                {/* Detailed Comparison Section */}
+                <section className="w-full max-w-5xl mb-32">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold tracking-tight text-white mb-4">Detailed Plan Comparison</h2>
+                        <p className="text-slate-400">Everything you need to know about what's included in each tier.</p>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-white/10">
+                                    <th className="p-6 font-semibold text-white w-1/3">Feature</th>
+                                    <th className="p-6 font-semibold text-slate-300 w-1/5 text-center">Basic</th>
+                                    <th className="p-6 font-bold text-[#1152d4] w-1/5 text-center bg-[#1152d4]/5">Premium</th>
+                                    <th className="p-6 font-semibold text-emerald-400 w-1/5 text-center">Institutional</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5 text-sm">
+                                <tr>
+                                    <td className="p-6 text-slate-300">Max Beneficiaries</td>
+                                    <td className="p-6 text-slate-400 text-center">1</td>
+                                    <td className="p-6 text-white text-center font-medium bg-[#1152d4]/5">Up to 5</td>
+                                    <td className="p-6 text-slate-400 text-center">Unlimited</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-6 text-slate-300">On-Chain Heartbeats</td>
+                                    <td className="p-6 text-slate-400 text-center">User Pays Gas (L1)</td>
+                                    <td className="p-6 text-white text-center font-medium bg-[#1152d4]/5">Gasless (L2 Relayed)</td>
+                                    <td className="p-6 text-slate-400 text-center">Custom Dedicated Relayer</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-6 text-slate-300">IPFS Storage Limit</td>
+                                    <td className="p-6 text-slate-400 text-center">50 MB</td>
+                                    <td className="p-6 text-white text-center font-medium bg-[#1152d4]/5">5 GB (Priority Pinning)</td>
+                                    <td className="p-6 text-slate-400 text-center">100 GB+</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-6 text-slate-300">Shamir Key Shards</td>
+                                    <td className="p-6 text-slate-400 text-center">Standard (3-of-5)</td>
+                                    <td className="p-6 text-white text-center font-medium bg-[#1152d4]/5">Advanced (Custom m-of-n)</td>
+                                    <td className="p-6 text-slate-400 text-center">Enterprise Grade</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-6 text-slate-300">Smart Contract Type</td>
+                                    <td className="p-6 text-slate-400 text-center">Shared Protocol</td>
+                                    <td className="p-6 text-white text-center font-medium bg-[#1152d4]/5">Shared Protocol</td>
+                                    <td className="p-6 text-slate-400 text-center">Dedicated Isolated Contract</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
                 {/* FAQs */}
                 <section className="w-full max-w-4xl">
@@ -176,9 +228,9 @@ export default function PricingPage() {
                     </div>
                 </section>
 
-            </main>
+            </main >
 
             <SharedFooter />
-        </div>
+        </div >
     )
 }

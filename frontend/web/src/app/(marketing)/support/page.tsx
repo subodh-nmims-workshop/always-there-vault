@@ -90,6 +90,61 @@ export default function SupportPage() {
                     </motion.div>
                 </div>
 
+                {/* Additional Support Resources */}
+                <div className="space-y-12 mb-20">
+                    <div className="text-center space-y-4">
+                        <h2 className="text-3xl font-bold tracking-tight text-white">Targeted Troubleshooting</h2>
+                        <p className="text-slate-400">Quickly resolve common protocol integration issues.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {[
+                            { title: 'Heartbeat Check-ins', desc: 'Transaction failing? Ensure you have sufficient L1 gas or check relayer node status for L2 gasless execution.' },
+                            { title: 'Beneficiary Claiming', desc: 'Getting a decryption error? The Master Key can only be reassembled if m-of-n nodes have broadcasted their shards.' },
+                            { title: 'IPFS Pinning Issues', desc: 'Assets taking too long to upload? Verify your payload size does not exceed your subscription tier limits.' }
+                        ].map((item, i) => (
+                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
+                                <h4 className="font-bold text-white mb-2">{item.title}</h4>
+                                <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* SLA Table */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 mb-20 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#2b52ff]/5 rounded-full blur-[60px] pointer-events-none"></div>
+                    <h2 className="text-2xl font-bold text-white mb-8 tracking-tight">Service Level Agreements (SLA)</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-white/10 text-slate-400 text-sm">
+                                    <th className="pb-4 font-semibold w-1/3">Tier</th>
+                                    <th className="pb-4 font-semibold w-1/3">Initial Response Target</th>
+                                    <th className="pb-4 font-semibold w-1/3">Resolution Target</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5 text-sm">
+                                <tr>
+                                    <td className="py-4 text-white font-medium">Basic (Free)</td>
+                                    <td className="py-4 text-slate-400">48-72 hours (Community-driven)</td>
+                                    <td className="py-4 text-slate-400">Best Effort</td>
+                                </tr>
+                                <tr>
+                                    <td className="py-4 text-[#2b52ff] font-bold">Premium Subscriber</td>
+                                    <td className="py-4 text-slate-300">Under 6 hours</td>
+                                    <td className="py-4 text-slate-300">24 hours</td>
+                                </tr>
+                                <tr>
+                                    <td className="py-4 text-emerald-400 font-bold">Institutional Partner</td>
+                                    <td className="py-4 text-slate-300">Under 1 hour (24/7 Priority)</td>
+                                    <td className="py-4 text-slate-300">Escalated Engineering</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

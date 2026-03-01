@@ -1,1 +1,46 @@
-{"node":{"26cae6e918111f03beb38fdcbf94062d32c34b3f":{"workers":{"app/page":"2564"},"layer":{"app/page":"action-browser"}},"723e53efedb9e5a0e19fa03ae401282792048e36":{"workers":{"app/page":"2564"},"layer":{"app/page":"action-browser"}},"9c01f6652e44ba3635380a20a5be4ca934060ee9":{"workers":{"app/page":"2564"},"layer":{"app/page":"action-browser"}},"c0e42961779ebbad7a319f092f95f638fbbf16d8":{"workers":{"app/page":"2564"},"layer":{"app/page":"action-browser"}},"e3fdaac66b0532dfd181c06f9209b0616792e215":{"workers":{"app/page":"2564"},"layer":{"app/page":"action-browser"}}},"edge":{},"encryptionKey":"3+Vpej0Cdht5ZswQMD/5flJDjOTU8pgMB0AckGc5JkE="}
+{
+  "node": {
+    "26cae6e918111f03beb38fdcbf94062d32c34b3f": {
+      "workers": {
+        "app/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fnothing%2FDesktop%2FNmims%2FDeadMan%20Protocol%2Ffrontend%2Fweb%2Fsrc%2Fapp%2Factions%2Fheartbeat.ts%22%2C%5B%22getHeartbeatSettings%22%2C%22updateHeartbeatSettings%22%2C%22getHeartbeatHistory%22%2C%22recordHeartbeat%22%2C%22getHeartbeatStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/page": "action-browser"
+      }
+    },
+    "723e53efedb9e5a0e19fa03ae401282792048e36": {
+      "workers": {
+        "app/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fnothing%2FDesktop%2FNmims%2FDeadMan%20Protocol%2Ffrontend%2Fweb%2Fsrc%2Fapp%2Factions%2Fheartbeat.ts%22%2C%5B%22getHeartbeatSettings%22%2C%22updateHeartbeatSettings%22%2C%22getHeartbeatHistory%22%2C%22recordHeartbeat%22%2C%22getHeartbeatStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/page": "action-browser"
+      }
+    },
+    "9c01f6652e44ba3635380a20a5be4ca934060ee9": {
+      "workers": {
+        "app/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fnothing%2FDesktop%2FNmims%2FDeadMan%20Protocol%2Ffrontend%2Fweb%2Fsrc%2Fapp%2Factions%2Fheartbeat.ts%22%2C%5B%22getHeartbeatSettings%22%2C%22updateHeartbeatSettings%22%2C%22getHeartbeatHistory%22%2C%22recordHeartbeat%22%2C%22getHeartbeatStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/page": "action-browser"
+      }
+    },
+    "c0e42961779ebbad7a319f092f95f638fbbf16d8": {
+      "workers": {
+        "app/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fnothing%2FDesktop%2FNmims%2FDeadMan%20Protocol%2Ffrontend%2Fweb%2Fsrc%2Fapp%2Factions%2Fheartbeat.ts%22%2C%5B%22getHeartbeatSettings%22%2C%22updateHeartbeatSettings%22%2C%22getHeartbeatHistory%22%2C%22recordHeartbeat%22%2C%22getHeartbeatStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/page": "action-browser"
+      }
+    },
+    "e3fdaac66b0532dfd181c06f9209b0616792e215": {
+      "workers": {
+        "app/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fnothing%2FDesktop%2FNmims%2FDeadMan%20Protocol%2Ffrontend%2Fweb%2Fsrc%2Fapp%2Factions%2Fheartbeat.ts%22%2C%5B%22getHeartbeatSettings%22%2C%22updateHeartbeatSettings%22%2C%22getHeartbeatHistory%22%2C%22recordHeartbeat%22%2C%22getHeartbeatStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/page": "action-browser"
+      }
+    }
+  },
+  "edge": {},
+  "encryptionKey": "aQ7ky7KQsqgCcbtaBJRaxKCRfDPFqccpMmw65OzV6rg="
+}

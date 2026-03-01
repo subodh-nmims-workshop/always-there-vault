@@ -185,6 +185,58 @@ export default function FeaturesPage() {
                         </motion.div>
                     </section>
 
+                    {/* Deep Explanation Section */}
+                    <section className="mt-32 border-t border-white/10 pt-20">
+                        <div className="max-w-4xl mx-auto space-y-12">
+                            <div className="text-center space-y-4">
+                                <h2 className="text-4xl font-bold tracking-tight text-white">How DeadMan Protocol Actually Works</h2>
+                                <p className="text-xl text-slate-400">A deep dive into the decentralized architecture securing your digital legacy.</p>
+                            </div>
+
+                            <div className="space-y-16">
+                                <div className="space-y-4">
+                                    <h3 className="text-2xl font-bold tracking-tight text-blue-400 flex items-center gap-3">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 text-sm">1</span>
+                                        Asset Encryption Pipeline
+                                    </h3>
+                                    <p className="text-slate-300 leading-relaxed text-lg">
+                                        When you upload an asset (like a private key, a legal document, or a seed phrase), the protocol never sees the raw data. It is instantly encrypted in your browser using AES-256-GCM encryption. The master key generated to encrypt this payload is then passed through our Shamir Secret Sharing algorithm, which shatters the key into multiple cryptographic shards.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-2xl font-bold tracking-tight text-purple-400 flex items-center gap-3">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 text-sm">2</span>
+                                        Decentralized Storage (IPFS)
+                                    </h3>
+                                    <p className="text-slate-300 leading-relaxed text-lg">
+                                        The securely encrypted payload is uploaded directly to the InterPlanetary File System (IPFS) via Storacha. IPFS ensures that your data is not stored on a centralized server that can be shut down, hacked, or censored. Your data becomes a permanent part of the decentralized web, accessible via a unique Content Identifier (CID).
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-2xl font-bold tracking-tight text-emerald-400 flex items-center gap-3">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">3</span>
+                                        The Smart Contract Heartbeat
+                                    </h3>
+                                    <p className="text-slate-300 leading-relaxed text-lg">
+                                        To prove you are alive, you periodically "check in" with the Ethereum/Polygon smart contract. This is known as a Heartbeat. You set the interval (e.g., every 3 months). If you fail to check in within this timeframe, the contract enters a "Grace Period". If the grace period expires, the smart contract officially flags your status as "Inactive".
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-2xl font-bold tracking-tight text-orange-400 flex items-center gap-3">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 text-sm">4</span>
+                                        Automated Beneficiary Release
+                                    </h3>
+                                    <p className="text-slate-300 leading-relaxed text-lg">
+                                        Once the smart contract confirms your inactivity, it automatically triggers the release mechanism. The validating nodes compile the necessary key shards and encrypt them using the public keys of your designated beneficiaries. Your beneficiaries can then claim the IPFS payload, decrypt the master key with their private wallet, and finally unlock the inheritance. The system is 100% automated and zero-knowledge.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                 </div>
             </main>
 

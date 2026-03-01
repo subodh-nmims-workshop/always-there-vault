@@ -1,14 +1,14 @@
 {
   "lib/crypto.ts -> secrets.js-grempe": {
-    "id": 7046,
+    "id": "lib/crypto.ts -> secrets.js-grempe",
     "files": [
-      "static/chunks/46.cc95a52f9b163908.js"
+      "static/chunks/_app-pages-browser_node_modules_secrets_js-grempe_secrets_js.js"
     ]
   },
   "lib/crypto.ts -> web3.storage": {
-    "id": 9532,
+    "id": "lib/crypto.ts -> web3.storage",
     "files": [
-      "static/chunks/532.8881d38abd130663.js"
+      "static/chunks/_app-pages-browser_node_modules_web3_storage_src_lib_js.js"
     ]
   }
 }

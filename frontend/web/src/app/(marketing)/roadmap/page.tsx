@@ -111,7 +111,7 @@ export default function RoadmapPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all">
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-slate-500/50">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/10 px-2 py-1 rounded">Planned</span>
                                     <span className="text-slate-500 font-mono text-sm">Q3 2026</span>
@@ -119,6 +119,50 @@ export default function RoadmapPage() {
                                 <h3 className="text-xl font-bold mb-3 text-white">Cross-Chain Recovery</h3>
                                 <p className="text-slate-400 leading-relaxed text-sm mb-4">
                                     Rolling out automated disbursement layers for Solana, Arbitrum, and native Bitcoin integration via DLCs.
+                                </p>
+                            </div>
+                        </motion.div>
+
+                        {/* Phase 4 */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative flex items-start md:justify-between w-full md:even:flex-row-reverse group">
+                            <div className="hidden md:block w-[calc(50%-3rem)]"></div>
+
+                            {/* Center Node */}
+                            <div className="absolute left-0 md:left-1/2 -ml-3 mt-1.5 w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center shrink-0 z-10 transition-colors group-hover:border-emerald-500 group-hover:bg-emerald-500/20">
+                                <CircleDashed className="w-4 h-4 text-slate-500 group-hover:text-emerald-500 transition-colors" />
+                            </div>
+
+                            {/* Content */}
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-emerald-500/50">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/10 px-2 py-1 rounded group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors">Future</span>
+                                    <span className="text-slate-500 font-mono text-sm group-hover:text-emerald-500/70 transition-colors">Q4 2026</span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3 text-white">Zero-Knowledge Beneficiary Proofs</h3>
+                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                    Implementing zk-SNARKs so beneficiaries can prove their identity and right to claim assets without revealing their original wallet address to the public chain.
+                                </p>
+                            </div>
+                        </motion.div>
+
+                        {/* Phase 5 */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative flex items-start md:justify-between w-full md:even:flex-row-reverse group">
+                            <div className="hidden md:block w-[calc(50%-3rem)]"></div>
+
+                            {/* Center Node */}
+                            <div className="absolute left-0 md:left-1/2 -ml-3 mt-1.5 w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center shrink-0 z-10 transition-colors group-hover:border-blue-500 group-hover:bg-blue-500/20">
+                                <CircleDashed className="w-4 h-4 text-slate-500 group-hover:text-blue-500 transition-colors" />
+                            </div>
+
+                            {/* Content */}
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-blue-500/50">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/10 px-2 py-1 rounded group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">Future</span>
+                                    <span className="text-slate-500 font-mono text-sm group-hover:text-blue-500/70 transition-colors">Q1 2027</span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3 text-white">Institutional Decentralized Relayers</h3>
+                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                    Allowing registered law firms, banks, and trusts to run their own dedicated relayers inside the consensus network for hybrid legal-smart-contract execution.
                                 </p>
                             </div>
                         </motion.div>

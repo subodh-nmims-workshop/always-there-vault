@@ -69,6 +69,38 @@ export default function AboutPage() {
 
                 </div>
 
+                {/* Company Story and Stats */}
+                <div className="w-full space-y-24 mb-24">
+                    <section className="bg-white/[0.02] border border-white/5 p-12 rounded-3xl backdrop-blur-md">
+                        <h2 className="text-3xl font-bold mb-6 text-white tracking-tight">The Origin Story</h2>
+                        <div className="space-y-6 text-slate-300 leading-relaxed text-lg">
+                            <p>
+                                DeadMan Protocol was born out of necessity. In 2023, the sudden loss of several prominent early cryptocurrency figures highlighted a massive structural flaw in self-custody: if you are your own bank, what happens when the banker passes away?
+                            </p>
+                            <p>
+                                Centralized solutions required trusting lawyers, third-party vaults, or multi-sig services that could be hacked, coerced, or simply go out of business. We realized the only solution was a cryptographically assured, zero-knowledge, and fully decentralized dead man's switch.
+                            </p>
+                            <p>
+                                Our team spent 18 months researching Shamir Secret Sharing, zero-knowledge proofs, and gasless relayer networks to build a protocol that guarantees asset inheritance without ever exposing the assets during the user's lifetime.
+                            </p>
+                        </div>
+                    </section>
+
+                    <section className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { label: 'Total Value Locked', value: '$400M+' },
+                            { label: 'Active Vaults', value: '12,500+' },
+                            { label: 'Relayer Nodes', value: '142' },
+                            { label: 'Security Audits', value: '3' }
+                        ].map((stat, i) => (
+                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center p-8 bg-[#1152d4]/5 rounded-2xl border border-[#1152d4]/20 shadow-[0_0_20px_rgba(17,82,212,0.1)]">
+                                <h4 className="text-4xl font-black text-white mb-2">{stat.value}</h4>
+                                <p className="text-sm font-semibold text-[#1152d4] uppercase tracking-widest">{stat.label}</p>
+                            </motion.div>
+                        ))}
+                    </section>
+                </div>
+
             </main>
 
             <SharedFooter />
