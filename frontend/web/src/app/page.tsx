@@ -32,7 +32,10 @@ import { OverviewDashboard } from '@/components/overview-dashboard'
 import { BeneficiariesDashboard } from '@/components/beneficiaries-dashboard'
 import { BeneficiaryManager } from '@/components/beneficiary-manager'
 import { StatusDashboard } from '@/components/status-dashboard'
+import { SubscriptionDashboard } from '@/components/subscription-dashboard'
 import { WalletConnectModal } from '@/components/wallet-connect-modal'
+import { ModeIndicator } from '@/components/mode-indicator'
+import { TrialBanner } from '@/components/trial-banner'
 import WebStorageService, { AppState } from '@/lib/storage'
 import Link from 'next/link'
 import { SharedFooter } from '@/components/shared-footer'
@@ -343,8 +346,11 @@ export default function HomePage() {
       </nav>
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24">
+        {/* Trial Banner */}
+        <TrialBanner />
+
         {/* Header / Vault Info */}
-        <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative z-50">
           <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-[#2b52ff]/10 blur-3xl rounded-full pointer-events-none"></div>
           <div className="flex items-center space-x-4 mb-4 sm:mb-0 relative z-10 w-full sm:w-auto">
             <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#2b52ff]/20 to-[#00d2ff]/20 rounded-xl border border-[#2b52ff]/30 shadow-[0_0_15px_rgba(43,82,255,0.2)]">
@@ -360,12 +366,17 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+
+          {/* Mode Indicator */}
+          <div className="relative">
+            <ModeIndicator />
+          </div>
         </div>
 
         {/* Dashboard Content */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-5 gap-1 shadow-lg backdrop-blur-md">
-            {['overview', 'assets', 'beneficiaries', 'heartbeat', 'status'].map((tab) => (
+          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-6 gap-1 shadow-lg backdrop-blur-md">
+            {['overview', 'assets', 'beneficiaries', 'heartbeat', 'subscription', 'status'].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
@@ -412,6 +423,10 @@ export default function HomePage() {
 
           <TabsContent value="heartbeat" className="mt-6">
             <HeartbeatMonitor />
+          </TabsContent>
+
+          <TabsContent value="subscription" className="mt-6">
+            <SubscriptionDashboard />
           </TabsContent>
 
           <TabsContent value="status" className="mt-6">

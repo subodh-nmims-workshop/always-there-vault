@@ -6,6 +6,9 @@ import { Users, Plus, Mail, Wallet, Edit, Trash2, Check, X, Shield, CheckCircle 
 import WebStorageService, { StoredBeneficiary } from '@/lib/storage'
 import { useApp } from '@/contexts/AppContext'
 import { addBeneficiary } from '@/lib/blockchain'
+import { ConfirmationDialog } from './confirmation-dialog'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { toast } from 'sonner'
 
 export function BeneficiaryManager() {
   const { state, refreshState } = useApp()
@@ -20,12 +23,36 @@ export function BeneficiaryManager() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; beneficiaryId: string | null; beneficiaryName: string }>({
+    isOpen: false,
+    beneficiaryId: null,
+    beneficiaryName: ''
+  })
 
+  const { subscription } = useSubscription()
   const storage = WebStorageService.getInstance()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name || !formData.email) return
+
+    // 1. Check subscription
+    if (!subscription || subscription.status === 'expired') {
+      toast.error('Subscription Expired', {
+        description: 'Please upgrade to continue adding beneficiaries.'
+      })
+      return
+    }
+
+    // 2. Enforce limits
+    if (subscription.limits && subscription.beneficiariesCount !== undefined) {
+      if (subscription.beneficiariesCount >= subscription.limits.beneficiaries) {
+        toast.error('Limit reached', {
+          description: `Your ${subscription.plan} plan allows up to ${subscription.limits.beneficiaries} beneficiaries.`
+        })
+        return
+      }
+    }
 
     setIsSubmitting(true)
 
@@ -34,7 +61,7 @@ export function BeneficiaryManager() {
       if (formData.walletAddress) {
         const txResult = await addBeneficiary(formData.walletAddress)
         if (!txResult.success) {
-          alert(`Decentralized Registry Failed: ${txResult.error}`)
+          toast.error(`Decentralized Registry Failed: ${txResult.error}`)
           return
         }
       }
@@ -76,12 +103,13 @@ export function BeneficiaryManager() {
       setShowAddForm(false)
       setEditingId(null)
 
-      setShowSuccessPopup(true)
-      setTimeout(() => setShowSuccessPopup(false), 3000)
+      toast.success('Beneficiary Saved', {
+        description: 'Global database synced successfully.'
+      })
 
     } catch (error) {
       console.error('Failed to save beneficiary:', error)
-      alert('Failed to save beneficiary. Please try again.')
+      toast.error('Failed to save beneficiary')
     } finally {
       setIsSubmitting(false)
     }
@@ -97,15 +125,25 @@ export function BeneficiaryManager() {
     setShowAddForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this beneficiary?')) {
-      try {
-        await storage.deleteBeneficiary(id)
-        await refreshState()
-      } catch (error) {
-        console.error('Failed to delete beneficiary:', error)
-        alert('Failed to delete beneficiary.')
-      }
+  const handleDelete = (id: string, name: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      beneficiaryId: id,
+      beneficiaryName: name
+    })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.beneficiaryId) return
+
+    try {
+      await storage.deleteBeneficiary(deleteConfirmation.beneficiaryId)
+      await refreshState()
+      toast.success('Beneficiary deleted successfully')
+      setDeleteConfirmation({ isOpen: false, beneficiaryId: null, beneficiaryName: '' })
+    } catch (error) {
+      console.error('Failed to delete beneficiary:', error)
+      toast.error('Failed to delete beneficiary')
     }
   }
 
@@ -205,7 +243,7 @@ export function BeneficiaryManager() {
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(beneficiary.id)}
+                      onClick={() => handleDelete(beneficiary.id, beneficiary.name)}
                       className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium transition-colors border border-red-500/20 hover:border-red-500/50"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -352,6 +390,18 @@ export function BeneficiaryManager() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, beneficiaryId: null, beneficiaryName: '' })}
+        onConfirm={confirmDelete}
+        title="Delete Beneficiary?"
+        message={`Are you sure you want to remove ${deleteConfirmation.beneficiaryName} from your beneficiaries? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   )
 }

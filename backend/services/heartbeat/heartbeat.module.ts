@@ -6,12 +6,14 @@ import { HeartbeatLog, HeartbeatLogSchema } from './schemas/heartbeat.schema';
 import { HeartbeatCronService } from './heartbeat.cron';
 import { UsersModule } from '../users/users.module';
 import { BlockchainModule } from '../blockchain/blockchain.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: HeartbeatLog.name, schema: HeartbeatLogSchema }]),
     UsersModule,
-    BlockchainModule
+    BlockchainModule,
+    EmailModule
   ],
   controllers: [HeartbeatController],
   providers: [HeartbeatService, HeartbeatCronService],

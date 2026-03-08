@@ -8,6 +8,8 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('window');
@@ -19,6 +21,29 @@ const HomeScreen = ({ navigation }: any) => {
     lastHeartbeat: new Date(),
     systemStatus: 'secure',
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadStats();
+    }, [])
+  );
+
+  const loadStats = async () => {
+    try {
+      const storedAssets = await AsyncStorage.getItem('digital_will_assets');
+      const storedBeneficiaries = await AsyncStorage.getItem('digital_will_beneficiaries');
+      const storedHeartbeat = await AsyncStorage.getItem('digital_will_heartbeat');
+
+      setStats({
+        totalAssets: storedAssets ? JSON.parse(storedAssets).length : 0,
+        beneficiaries: storedBeneficiaries ? JSON.parse(storedBeneficiaries).length : 0,
+        lastHeartbeat: storedHeartbeat ? new Date(parseInt(storedHeartbeat, 10)) : new Date(),
+        systemStatus: 'secure',
+      });
+    } catch (e) {
+      console.warn('Failed to load dashboard stats', e);
+    }
+  };
 
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -32,7 +57,11 @@ const HomeScreen = ({ navigation }: any) => {
         navigation.navigate('Heartbeat');
         break;
       default:
-        Alert.alert('Coming Soon', 'This feature is under development');
+        Alert.alert(
+          '🔒 Feature Locked',
+          'This protocol module is currently under development. Enhanced encryption and decentralized access will be available in the next version.',
+          [{ text: 'Acknowledged', style: 'default' }]
+        );
     }
   };
 
@@ -78,14 +107,14 @@ const HomeScreen = ({ navigation }: any) => {
         <StatCard
           title="Total Assets"
           value={stats.totalAssets}
-          subtitle="No assets created yet"
+          subtitle={stats.totalAssets === 0 ? "No assets created yet" : "Encrypted on device"}
           icon="folder"
           color="#3b82f6"
         />
         <StatCard
           title="Beneficiaries"
           value={stats.beneficiaries}
-          subtitle="No beneficiaries added"
+          subtitle={stats.beneficiaries === 0 ? "No beneficiaries added" : "Configured to receive"}
           icon="people"
           color="#10b981"
         />

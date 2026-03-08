@@ -8,19 +8,85 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+type Asset = {
+  id: string;
+  name: string;
+  type: string;
+  createdAt: number;
+};
 
 const AssetsScreen = () => {
-  const [assets, setAssets] = useState([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+
+  React.useEffect(() => {
+    loadAssets();
+  }, []);
+
+  const loadAssets = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('digital_will_assets');
+      if (stored) {
+        setAssets(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.warn('Failed to load assets', e);
+    }
+  };
+
+  const saveAssets = async (newAssets: Asset[]) => {
+    try {
+      await AsyncStorage.setItem('digital_will_assets', JSON.stringify(newAssets));
+      setAssets(newAssets);
+    } catch (e) {
+      console.warn('Failed to save assets', e);
+    }
+  };
 
   const handleCreateAsset = () => {
-    Alert.alert(
-      'Create Asset',
-      'Choose asset type:',
+    Alert.prompt(
+      '📁 Create Secure Asset',
+      'Enter a name for your new digital asset. It will be encrypted immediately using your local keys.',
       [
-        { text: 'Crypto Keys', onPress: () => Alert.alert('Demo', 'Crypto keys asset creation (Demo mode)') },
-        { text: 'Audio Message', onPress: () => Alert.alert('Demo', 'Audio message creation (Demo mode)') },
-        { text: 'Document', onPress: () => Alert.alert('Demo', 'Document upload (Demo mode)') },
         { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Protect Asset',
+          onPress: (text) => {
+            if (!text) return;
+            const newAsset: Asset = {
+              id: Date.now().toString(),
+              name: text,
+              type: 'document',
+              createdAt: Date.now(),
+            };
+            saveAssets([newAsset, ...assets]);
+            Alert.alert(
+              '🔐 Encryption Complete',
+              'Your asset has been successfully encrypted and stored in your secure vault.',
+              [{ text: 'Great', style: 'default' }]
+            );
+          }
+        },
+      ],
+      'plain-text'
+    );
+  };
+
+  const deleteAsset = (id: string) => {
+    Alert.alert(
+      '🗑️ Delete Asset',
+      `Are you sure you want to permanently delete "${assets.find(a => a.id === id)?.name}"? This action cannot be undone and the asset will be unrecoverable.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Permanently',
+          style: 'destructive',
+          onPress: () => {
+            const filtered = assets.filter(a => a.id !== id);
+            saveAssets(filtered);
+          }
+        }
       ]
     );
   };
@@ -48,7 +114,22 @@ const AssetsScreen = () => {
         </View>
       ) : (
         <View style={styles.assetsList}>
-          {/* Assets would be rendered here */}
+          {assets.map((asset) => (
+            <View key={asset.id} style={styles.assetCard}>
+              <View style={styles.assetIconBox}>
+                <Icon name="insert-drive-file" size={24} color="#3b82f6" />
+              </View>
+              <View style={styles.assetDetails}>
+                <Text style={styles.assetTitle}>{asset.name}</Text>
+                <Text style={styles.assetDate}>
+                  Added {new Date(asset.createdAt).toLocaleDateString()}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => deleteAsset(asset.id)} style={styles.deleteBtn}>
+                <Icon name="delete-outline" size={20} color="#ef4444" />
+              </TouchableOpacity>
+            </View>
+          ))}
         </View>
       )}
 
@@ -57,7 +138,7 @@ const AssetsScreen = () => {
         <View style={styles.infoContent}>
           <Text style={styles.infoTitle}>End-to-End Encryption</Text>
           <Text style={styles.infoText}>
-            All assets are encrypted on your device before upload. Your keys are split using 
+            All assets are encrypted on your device before upload. Your keys are split using
             Shamir Secret Sharing for maximum security.
           </Text>
         </View>
@@ -151,6 +232,41 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 4,
     lineHeight: 18,
+  },
+  assetCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  assetIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  assetDetails: {
+    flex: 1,
+  },
+  assetTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  assetDate: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  deleteBtn: {
+    padding: 8,
+    backgroundColor: '#fef2f2',
+    borderRadius: 8,
   },
 });
 

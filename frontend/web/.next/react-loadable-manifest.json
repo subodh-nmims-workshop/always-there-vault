@@ -16,5 +16,11 @@
     "files": [
       "static/chunks/_app-pages-browser_node_modules_secrets_js-grempe_secrets_js.js"
     ]
+  },
+  "lib/mode-service.ts -> ethers": {
+    "id": "lib/mode-service.ts -> ethers",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_ethers_lib_esm_index_js.js"
+    ]
   }
 }

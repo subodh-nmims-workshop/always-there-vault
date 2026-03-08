@@ -13,6 +13,10 @@ import WebStorageService, { StoredAsset, StoredFolder } from '@/lib/storage'
 import { registerTokenAsset } from '@/lib/blockchain'
 import { CategoryModal } from './category-modal'
 import type { AssetCategory } from '@/lib/category-handlers'
+import ModeService from '@/lib/mode-service'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { ConfirmationDialog } from './confirmation-dialog'
+import { toast } from 'sonner'
 
 export function AssetCreationForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -45,6 +49,16 @@ export function AssetCreationForm() {
     amountOrId: '',
     beneficiaryId: ''
   })
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; assetId: string | null; assetName: string }>({
+    isOpen: false,
+    assetId: null,
+    assetName: ''
+  })
+  const [deleteFolderConfirmation, setDeleteFolderConfirmation] = useState<{ isOpen: boolean; folderId: string | null; folderName: string }>({
+    isOpen: false,
+    folderId: null,
+    folderName: ''
+  })
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
@@ -61,6 +75,8 @@ export function AssetCreationForm() {
 
   const crypto = WebCryptoService.getInstance()
   const storage = WebStorageService.getInstance()
+  const modeService = ModeService.getInstance()
+  const { subscription } = useSubscription()
 
   useEffect(() => {
     loadAssets()
@@ -96,7 +112,7 @@ export function AssetCreationForm() {
       const storedBeneficiaries = await storage.getAllBeneficiaries()
       console.log('📋 Loaded beneficiaries:', storedBeneficiaries.length)
       setBeneficiaries(storedBeneficiaries)
-      
+
       // If no beneficiaries, create a default one for testing
       if (storedBeneficiaries.length === 0) {
         console.log('⚠️ No beneficiaries found. Assets will be saved without beneficiary assignment.')
@@ -122,6 +138,24 @@ export function AssetCreationForm() {
 
   const handleCreateAsset = async () => {
     if (!selectedFile || !assetType || !assetName) return
+
+    // Check subscription status
+    if (!subscription || subscription.status === 'expired') {
+      toast.error('Subscription Expired', {
+        description: 'Please upgrade your plan to continue creating assets.'
+      })
+      return
+    }
+
+    // Enforce limits
+    if (subscription.limits && subscription.assetsCount !== undefined) {
+      if (subscription.assetsCount >= subscription.limits.assets) {
+        toast.error('Asset Limit Reached', {
+          description: `Your ${subscription.plan} plan allows up to ${subscription.limits.assets} assets. Please upgrade for more.`
+        })
+        return
+      }
+    }
 
     // Get wallet address from localStorage
     const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
@@ -150,19 +184,19 @@ export function AssetCreationForm() {
         id: storage.generateId(),
         name: assetName,
         type: assetType,
-        folderId: currentFolderId, // Use active folder hierarchy
+        folderId: currentFolderId,
         encryptedData: encryptionResult.encryptedData,
         keyId: encryptionResult.keyId,
         iv: encryptionResult.iv,
         ipfsHash: ipfsCID,
-        // Default: bind to all configured beneficiaries by ID; folder-level sharing can refine later
         beneficiaries: beneficiaries.map((b: any) => b.id),
         createdAt: encryptionResult.timestamp,
         size: selectedFile.size,
         mimeType: selectedFile.type
       }
 
-      await storage.saveAsset(asset)
+      // Use ModeService to save based on current mode
+      const saveResult = await modeService.saveAsset(asset)
       await storage.saveKeyDistribution(keyDistribution)
 
       setUploadProgress(100)
@@ -171,11 +205,18 @@ export function AssetCreationForm() {
         setIsModalOpen(false)
         resetForm()
         loadAssets()
+        if (saveResult.syncPending) {
+          toast.warning('Saved Locally', {
+            description: 'Sync with backend pending (offline mode)'
+          })
+        } else {
+          toast.success('Asset created successfully')
+        }
       }, 800)
 
     } catch (error) {
       console.error('Asset creation failed:', error)
-      alert('Failed to create asset. Please try again.')
+      toast.error('Failed to create asset')
       setIsEncrypting(false)
     }
   }
@@ -188,14 +229,20 @@ export function AssetCreationForm() {
     setIsEncrypting(false)
   }
 
-  const handleDeleteAsset = async (assetId: string) => {
-    if (confirm('Are you sure you want to permanently delete this digital asset?')) {
-      try {
-        await storage.deleteAsset(assetId)
-        await loadAssets()
-      } catch (error) {
-        console.error('Failed to delete asset:', error)
-      }
+  const handleDeleteAsset = (assetId: string, assetName: string) => {
+    setDeleteConfirmation({ isOpen: true, assetId, assetName })
+  }
+
+  const confirmDeleteAsset = async () => {
+    if (!deleteConfirmation.assetId) return
+
+    try {
+      // Use ModeService to delete based on current mode
+      await modeService.deleteAsset(deleteConfirmation.assetId)
+      await loadAssets()
+      setDeleteConfirmation({ isOpen: false, assetId: null, assetName: '' })
+    } catch (error) {
+      console.error('Failed to delete asset:', error)
     }
   }
 
@@ -207,11 +254,11 @@ export function AssetCreationForm() {
 
     try {
       console.log('🔓 Decrypting asset:', asset.name)
-      
+
       // Get all key distributions and find the one for this asset
       const allKeyDists = await storage.getAllKeyDistributions()
       const keyDist = allKeyDists.find(kd => kd.keyId === asset.keyId)
-      
+
       if (!keyDist) {
         throw new Error('Key distribution not found for this asset')
       }
@@ -267,7 +314,9 @@ export function AssetCreationForm() {
 
     const beneficiary = beneficiaries.find((b: any) => b.id === onChainForm.beneficiaryId)
     if (!beneficiary || !beneficiary.walletAddress) {
-      alert('Selected beneficiary is missing a wallet address.')
+      toast.error('Beneficiary error', {
+        description: 'Selected beneficiary is missing a wallet address.'
+      })
       return
     }
 
@@ -279,9 +328,11 @@ export function AssetCreationForm() {
     )
 
     if (!result.success) {
-      alert(`Failed to register token asset: ${result.error}`)
+      toast.error(`Failed to register token asset: ${result.error}`)
       return
     }
+
+    toast.success('On-chain asset registered')
 
     setIsOnChainModalOpen(false)
     setOnChainForm({
@@ -315,21 +366,27 @@ export function AssetCreationForm() {
       setShareFolderTarget(null)
       setShareFolderSelection([])
       await loadAssets()
+      toast.success('Folder permissions updated')
     } catch (error) {
       console.error('Failed to update folder sharing:', error)
-      alert('Failed to update folder sharing. Please try again.')
+      toast.error('Failed to update folder sharing')
     }
   }
 
-  const handleDeleteFolder = async (folderId: string) => {
-    if (confirm('Delete this folder and ALL its contents recursively? This cannot be undone.')) {
-      try {
-        // Fallback for custom logic if storage method doesn't trigger recursion natively in UI layer
-        await storage.deleteFolder(folderId)
-        await loadAssets()
-      } catch (error) {
-        console.error('Failed to prune folder:', error)
-      }
+  const handleDeleteFolder = (folderId: string, folderName: string) => {
+    setDeleteFolderConfirmation({ isOpen: true, folderId, folderName })
+  }
+
+  const confirmDeleteFolder = async () => {
+    if (!deleteFolderConfirmation.folderId) return
+
+    try {
+      // Fallback for custom logic if storage method doesn't trigger recursion natively in UI layer
+      await storage.deleteFolder(deleteFolderConfirmation.folderId)
+      await loadAssets()
+      setDeleteFolderConfirmation({ isOpen: false, folderId: null, folderName: '' })
+    } catch (error) {
+      console.error('Failed to prune folder:', error)
     }
   }
 
@@ -422,7 +479,7 @@ export function AssetCreationForm() {
     // Validate that this is a valid AssetCategory
     const validCategories: AssetCategory[] = [
       'bank_account',
-      'self_custody_crypto', 
+      'self_custody_crypto',
       'exchange_account',
       'crypto_keys',
       'business_secret',
@@ -430,12 +487,12 @@ export function AssetCreationForm() {
       'photo',
       'video'
     ]
-    
+
     if (!validCategories.includes(categoryId as AssetCategory)) {
       console.error('❌ Invalid category ID:', categoryId)
       return
     }
-    
+
     console.log('✅ Opening category modal for:', categoryId)
     setSelectedCategory(categoryId as AssetCategory)
     setIsCategoryModalOpen(true)
@@ -443,15 +500,33 @@ export function AssetCreationForm() {
 
   // Handle category modal submission
   const handleCategorySubmit = async (data: { name: string; type: string; structuredData: string; file?: File }) => {
+    // Check subscription status
+    if (!subscription || subscription.status === 'expired') {
+      toast.error('Subscription Expired', {
+        description: 'Please upgrade your plan to continue creating assets.'
+      })
+      throw new Error('Subscription expired')
+    }
+
+    // Enforce limits
+    if (subscription.limits && subscription.assetsCount !== undefined) {
+      if (subscription.assetsCount >= subscription.limits.assets) {
+        toast.error('Asset Limit Reached', {
+          description: `Your ${subscription.plan} plan allows up to ${subscription.limits.assets} assets. Please upgrade for more.`
+        })
+        throw new Error('Asset limit reached')
+      }
+    }
+
     const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
-    
+
     try {
       console.log('🔐 Starting category asset encryption...', { name: data.name, type: data.type })
-      
+
       // Encrypt the structured data
       const encryptionResult = await crypto.encryptData(data.structuredData)
       console.log('✅ Data encrypted successfully')
-      
+
       // Generate and split encryption key
       const encryptionKey = crypto.generateEncryptionKey()
       const keyDistribution = await crypto.splitKey(encryptionKey)
@@ -466,15 +541,14 @@ export function AssetCreationForm() {
           console.log('✅ File uploaded to IPFS:', ipfsCID)
         } catch (ipfsError) {
           console.warn('⚠️ IPFS upload failed, continuing without file:', ipfsError)
-          // Continue without IPFS - data is still encrypted locally
         }
       }
 
-      // Get beneficiary IDs, fallback to empty array if none configured
-      const beneficiaryIds = beneficiaries.length > 0 
+      // Get beneficiary IDs
+      const beneficiaryIds = beneficiaries.length > 0
         ? beneficiaries.map((b: any) => b.id)
         : []
-      
+
       if (beneficiaryIds.length === 0) {
         console.warn('⚠️ No beneficiaries configured. Asset will be saved without beneficiary assignment.')
       }
@@ -494,17 +568,25 @@ export function AssetCreationForm() {
         mimeType: data.file?.type || 'application/json'
       }
 
-      console.log('💾 Saving asset to IndexedDB...', asset.id)
-      await storage.saveAsset(asset)
+      console.log('💾 Saving asset using ModeService...')
+      // Use ModeService to save based on current mode
+      const saveResult = await modeService.saveAsset(asset)
       console.log('💾 Saving key distribution...', keyDistribution.keyId)
       await storage.saveKeyDistribution(keyDistribution)
       console.log('✅ Asset saved successfully!')
-      
-      // Keep user in the same category view after adding
+
       await loadAssets()
-      
+
       setIsCategoryModalOpen(false)
       setSelectedCategory(null)
+
+      if (saveResult.syncPending) {
+        setTimeout(() => toast.warning('Saved Locally', {
+          description: 'Sync with backend or blockchain pending'
+        }), 500)
+      } else {
+        setTimeout(() => toast.success('Asset saved successfully'), 500)
+      }
     } catch (error: any) {
       console.error('❌ Failed to save category asset:', error)
       console.error('Error details:', {
@@ -550,13 +632,13 @@ export function AssetCreationForm() {
               <MoreVertical className="w-5 h-5" />
             </button>
             <div className="absolute right-0 top-6 mt-1 w-32 bg-slate-800 border border-slate-700 rounded-xl shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }} 
+              <button
+                onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
                 className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-t-xl flex items-center"
               >
                 <Eye className="h-3 w-3 mr-2" /> View
               </button>
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id) }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center">
+              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center">
                 <Trash2 className="h-3 w-3 mr-2" /> Delete
               </button>
             </div>
@@ -600,13 +682,13 @@ export function AssetCreationForm() {
         </div>
         <div className="hidden md:block w-24 text-right text-sm text-slate-400 pr-4">{formatFileSize(asset.size)}</div>
         <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-          <button 
-            onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }} 
+          <button
+            onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
             className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 transition-colors"
           >
             <Eye className="h-4 w-4" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id) }} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors">
+          <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -642,7 +724,7 @@ export function AssetCreationForm() {
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                handleDeleteFolder(folder.id)
+                handleDeleteFolder(folder.id, folder.name)
               }}
               className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center"
             >
@@ -685,7 +767,7 @@ export function AssetCreationForm() {
         <button
           onClick={(e) => {
             e.stopPropagation()
-            handleDeleteFolder(folder.id)
+            handleDeleteFolder(folder.id, folder.name)
           }}
           className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
         >
@@ -749,8 +831,8 @@ export function AssetCreationForm() {
         {/* Mobile categories scale */}
         <div className="flex md:hidden gap-4 overflow-x-auto py-2 no-scrollbar px-2 max-w-[100vw] text-transparent">
           {categories.map(cat => (
-            <div 
-              key={cat.id} 
+            <div
+              key={cat.id}
               onClick={() => {
                 if (cat.isFilter || cat.id === 'all') {
                   setActiveCategory(cat.id)
@@ -758,7 +840,7 @@ export function AssetCreationForm() {
                   // For category views, just set active category (don't open modal)
                   setActiveCategory(cat.id)
                 }
-              }} 
+              }}
               className="flex flex-col items-center gap-2 min-w-[70px] cursor-pointer group"
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${activeCategory === cat.id ? 'bg-blue-600/20 border border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.2)]' : 'bg-white/[0.03] border border-white/5 text-slate-400 group-hover:bg-white/[0.08]'}`}>
@@ -827,7 +909,7 @@ export function AssetCreationForm() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-3">
               {activeCategory === 'all' ? 'Directory Contents' : `${categories.find(c => c.id === activeCategory)?.label}`}
-              
+
               {/* Add button for category views */}
               {activeCategory !== 'all' && !currentFolderId && (
                 <button
@@ -874,7 +956,7 @@ export function AssetCreationForm() {
             (() => {
               const currentCategory = categories.find(c => c.id === activeCategory)
               const Icon = currentCategory?.icon || FolderOpen
-              
+
               // Special handling for crypto wallets
               if (activeCategory === 'self_custody_crypto') {
                 return (
@@ -902,7 +984,7 @@ export function AssetCreationForm() {
                   </div>
                 )
               }
-              
+
               // Generic empty state for other categories
               if (currentCategory && !currentCategory.isFilter && activeCategory !== 'all') {
                 return (
@@ -936,7 +1018,7 @@ export function AssetCreationForm() {
                   </div>
                 )
               }
-              
+
               // Default empty state for "All Files" or filter views
               return (
                 <div className="h-64 flex flex-col items-center justify-center text-center bg-white/[0.02] border border-white/5 rounded-3xl">
@@ -1270,22 +1352,20 @@ export function AssetCreationForm() {
                           key={b.id}
                           type="button"
                           onClick={() => toggleShareSelection(b.id)}
-                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${
-                            checked
-                              ? 'bg-emerald-500/10 border-emerald-500/40'
-                              : 'bg-slate-900/40 border-slate-800 hover:border-slate-600'
-                          }`}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${checked
+                            ? 'bg-emerald-500/10 border-emerald-500/40'
+                            : 'bg-slate-900/40 border-slate-800 hover:border-slate-600'
+                            }`}
                         >
                           <div>
                             <p className="text-sm font-semibold text-white">{b.name}</p>
                             <p className="text-[11px] text-slate-400">{b.email}</p>
                           </div>
                           <div
-                            className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                              checked
-                                ? 'bg-emerald-500 border-emerald-400'
-                                : 'bg-slate-900 border-slate-600'
-                            }`}
+                            className={`w-5 h-5 rounded-md border flex items-center justify-center ${checked
+                              ? 'bg-emerald-500 border-emerald-400'
+                              : 'bg-slate-900 border-slate-600'
+                              }`}
                           >
                             {checked && <CheckCircle className="w-3 h-3 text-white" />}
                           </div>
@@ -1388,7 +1468,7 @@ export function AssetCreationForm() {
                     className="w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
-                      handleDeleteFolder(contextMenu.folder!.id)
+                      handleDeleteFolder(contextMenu.folder!.id, contextMenu.folder!.name)
                     }}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1519,6 +1599,30 @@ export function AssetCreationForm() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Asset Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, assetId: null, assetName: '' })}
+        onConfirm={confirmDeleteAsset}
+        title="Delete Asset?"
+        message={`Are you sure you want to permanently delete "${deleteConfirmation.assetName}"? This action cannot be undone and all encrypted data will be lost.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Delete Folder Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={deleteFolderConfirmation.isOpen}
+        onClose={() => setDeleteFolderConfirmation({ isOpen: false, folderId: null, folderName: '' })}
+        onConfirm={confirmDeleteFolder}
+        title="Delete Folder?"
+        message={`Are you sure you want to delete "${deleteFolderConfirmation.folderName}" and ALL its contents? This will permanently remove all assets inside this folder and cannot be undone.`}
+        confirmText="Delete All"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   )
 }

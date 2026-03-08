@@ -11,6 +11,9 @@ export class User {
     @Prop()
     email: string;
 
+    @Prop()
+    name: string;
+
     @Prop({ default: 30 }) // Default heartbeat interval in days
     heartbeatInterval: number;
 

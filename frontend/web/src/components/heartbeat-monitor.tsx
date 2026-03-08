@@ -6,6 +6,7 @@ import { ShieldCheck, Clock, Activity, AlertTriangle, Fingerprint, Settings, Ref
 import { recordHeartbeat, getHeartbeatStatus, HeartbeatPayload, getHeartbeatSettings, updateHeartbeatSettings } from '@/app/actions/heartbeat'
 import { submitHeartbeat, configureHeartbeat as configureBlockchainHeartbeat } from '@/lib/blockchain'
 import { useApp } from '@/contexts/AppContext'
+import { toast } from 'sonner'
 
 export function HeartbeatMonitor() {
   const [walletAddress, setWalletAddress] = useState<string>('')
@@ -14,13 +15,14 @@ export function HeartbeatMonitor() {
   const [heartbeats, setHeartbeats] = useState<any[]>([])
   const [statusInfo, setStatusInfo] = useState<{ status: string; daysUntilDue: number; isOverdue: boolean } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { refreshState } = useApp()
+  const { refreshState, state } = useApp()
 
   const [settings, setSettings] = useState({
     heartbeatInterval: 30,
     gracePeriod: 14
   })
   const [showSettings, setShowSettings] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
@@ -34,8 +36,19 @@ export function HeartbeatMonitor() {
   }, [])
 
   useEffect(() => {
-    if (walletAddress) fetchLiveStatus()
+    if (walletAddress) {
+      fetchLiveStatus()
+      loadHeartbeatHistory()
+    }
   }, [walletAddress])
+
+  const loadHeartbeatHistory = () => {
+    // Load from AppContext state
+    if (state?.heartbeats) {
+      const sortedHeartbeats = [...state.heartbeats].sort((a, b) => b.timestamp - a.timestamp)
+      setHeartbeats(sortedHeartbeats.slice(0, 10)) // Last 10 heartbeats
+    }
+  }
 
   const fetchLiveStatus = async () => {
     setIsLoading(true)
@@ -81,13 +94,17 @@ export function HeartbeatMonitor() {
       if (response.success) {
         await fetchLiveStatus()
         await refreshState()
-        setShowSuccessPopup(true)
-        setTimeout(() => setShowSuccessPopup(false), 3000)
+        loadHeartbeatHistory() // Reload history
+        toast.success('Heartbeat Recorded', {
+          description: 'Proof-of-life verified successfully.'
+        })
       } else throw new Error('Local Context Rejected Pulse')
 
     } catch (error: any) {
       console.error('Failed to record heartbeat:', error)
-      alert(`Failed to transmit cryptographic proof-of-life.\n\nError: ${error.message}`)
+      toast.error('Transmission Failed', {
+        description: `Failed to transmit cryptographic proof-of-life.\n\nError: ${error.message}`
+      })
     } finally {
       setIsRecording(false)
     }
@@ -120,11 +137,17 @@ export function HeartbeatMonitor() {
 
       if (chainError) {
         // Inform user that on-chain sync failed but local config is saved
-        alert(`Config saved locally.\n\nOn-chain sync failed: ${chainError}`)
+        toast.warning('On-chain Sync Issue', {
+          description: `Config saved locally, but on-chain sync failed: ${chainError}`
+        })
+      } else {
+        toast.success('Protocol configuration updated')
       }
     } catch (error: any) {
       console.error(error)
-      alert(`Configuration update failed:\n${error.message}`)
+      toast.error('Configuration Failed', {
+        description: `Configuration update failed: ${error.message}`
+      })
     } finally {
       setIsSavingSettings(false)
     }
@@ -186,10 +209,16 @@ export function HeartbeatMonitor() {
             </span>
             Live Connection
           </span>
-          <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium text-slate-200 shadow-inner">
-            <Settings className="w-4 h-4" />
-            Protocol Config
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setShowHistory(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium text-slate-200 shadow-inner">
+              <Activity className="w-4 h-4" />
+              History
+            </button>
+            <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium text-slate-200 shadow-inner">
+              <Settings className="w-4 h-4" />
+              Protocol Config
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
@@ -301,6 +330,101 @@ export function HeartbeatMonitor() {
           </div>
         </button>
       </motion.div>
+
+      {/* Heartbeat History Modal */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-6 sticky top-0 bg-slate-900 z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20">
+                    <Activity className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Heartbeat History</h3>
+                    <p className="text-xs text-slate-400 mt-1">Last 10 proof-of-life signatures</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowHistory(false)} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-2 rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {heartbeats.length === 0 ? (
+                <div className="text-center py-12">
+                  <Activity className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                  <p className="text-slate-300 font-medium">No heartbeat history yet</p>
+                  <p className="text-sm text-slate-500 mt-2">Record your first heartbeat to see it here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {heartbeats.map((heartbeat, index) => (
+                    <motion.div
+                      key={heartbeat.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-purple-500/30 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/20">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold text-sm">
+                              {new Date(heartbeat.timestamp).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Method: <span className="text-slate-400 font-medium">{heartbeat.method || 'wallet_signature'}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {heartbeat.verified && (
+                            <span className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs font-semibold">
+                              Verified
+                            </span>
+                          )}
+                          {index === 0 && (
+                            <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 text-xs font-semibold">
+                              Latest
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {heartbeat.signature && (
+                        <div className="mt-3 pt-3 border-t border-slate-800">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Signature</p>
+                          <p className="text-xs text-slate-400 font-mono break-all">
+                            {heartbeat.signature.substring(0, 32)}...{heartbeat.signature.substring(heartbeat.signature.length - 8)}
+                          </p>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 pt-6 border-t border-slate-800">
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="w-full px-6 py-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-slate-300 font-bold hover:bg-slate-800 transition-all text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Settings Modal */}
       <AnimatePresence>

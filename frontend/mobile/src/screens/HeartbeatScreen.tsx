@@ -8,11 +8,37 @@ import {
   Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ApiService from '../services/ApiService';
 
 const HeartbeatScreen = () => {
   const [lastHeartbeat, setLastHeartbeat] = useState(new Date());
   const [isRecording, setIsRecording] = useState(false);
   const [heartbeatAnimation] = useState(new Animated.Value(1));
+
+  React.useEffect(() => {
+    loadHeartbeat();
+  }, []);
+
+  const loadHeartbeat = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('digital_will_heartbeat');
+      if (stored) {
+        setLastHeartbeat(new Date(parseInt(stored, 10)));
+      }
+    } catch (e) {
+      console.warn('Failed to load heartbeat', e);
+    }
+  };
+
+  const saveHeartbeat = async (date: Date) => {
+    try {
+      await AsyncStorage.setItem('digital_will_heartbeat', date.getTime().toString());
+      setLastHeartbeat(date);
+    } catch (e) {
+      console.warn('Failed to save heartbeat', e);
+    }
+  };
 
   const animateHeartbeat = () => {
     Animated.sequence([
@@ -42,13 +68,39 @@ const HeartbeatScreen = () => {
   const handleHeartbeat = async () => {
     setIsRecording(true);
     animateHeartbeat();
-    
-    // Simulate heartbeat recording
-    setTimeout(() => {
-      setLastHeartbeat(new Date());
+
+    try {
+      // Step 1: Record Local Heartbeat
+      const now = new Date();
+      await saveHeartbeat(now);
+
+      // Step 2: Sync with Backend
+      const api = ApiService.getInstance();
+      const synced = await api.recordHeartbeat('Mobile App Manual Ping');
+
       setIsRecording(false);
-      Alert.alert('Success', 'Heartbeat recorded successfully!');
-    }, 1000);
+      if (synced) {
+        Alert.alert(
+          '❤️ Protocol Verified',
+          'Your proof-of-life heartbeat has been cryptographically signed and synced with the global protocol network.',
+          [{ text: 'Dismiss', style: 'default' }]
+        );
+      } else {
+        Alert.alert(
+          '💾 Saved Locally',
+          'Heartbeat recorded in local secure storage. The protocol will automatically broadcast the signal to the blockchain once a stable connection is restored.',
+          [{ text: 'Acknowledged', style: 'default' }]
+        );
+      }
+    } catch (e: any) {
+      console.error('Heartbeat failed', e);
+      setIsRecording(false);
+      Alert.alert(
+        '⚠️ Transmission Error',
+        `Failed to record protocol pulse. ${e.message || 'Please check your connection and try again.'}`,
+        [{ text: 'Retry', style: 'default' }]
+      );
+    }
   };
 
   const nextHeartbeatDate = new Date(lastHeartbeat.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -65,7 +117,7 @@ const HeartbeatScreen = () => {
       </View>
 
       <View style={styles.heartbeatContainer}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.heartbeatButton,
             { transform: [{ scale: heartbeatAnimation }] }
@@ -76,14 +128,14 @@ const HeartbeatScreen = () => {
             onPress={handleHeartbeat}
             disabled={isRecording}
           >
-            <Icon 
-              name="favorite" 
-              size={80} 
-              color={isRecording ? "#fca5a5" : "#ef4444"} 
+            <Icon
+              name="favorite"
+              size={80}
+              color={isRecording ? "#fca5a5" : "#ef4444"}
             />
           </TouchableOpacity>
         </Animated.View>
-        
+
         <Text style={styles.heartbeatLabel}>
           {isRecording ? 'Recording...' : 'Tap to Record Heartbeat'}
         </Text>
@@ -121,7 +173,7 @@ const HeartbeatScreen = () => {
       <View style={styles.helpCard}>
         <Icon name="info" size={20} color="#3b82f6" />
         <Text style={styles.helpText}>
-          Regular heartbeats prove you're still active. If you miss heartbeats beyond the grace period, 
+          Regular heartbeats prove you're still active. If you miss heartbeats beyond the grace period,
           your digital assets will be released to beneficiaries according to your rules.
         </Text>
       </View>

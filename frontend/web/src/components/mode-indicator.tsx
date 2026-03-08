@@ -1,0 +1,287 @@
+'use client'
+
+import { Server, Network, ChevronDown, Check, ExternalLink, ShieldCheck, Zap } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import ModeService from '@/lib/mode-service'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { useRouter } from 'next/navigation'
+
+export function ModeIndicator() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isSwitching, setIsSwitching] = useState(false)
+  const [switchMessage, setSwitchMessage] = useState('')
+  const router = useRouter()
+  const modeService = ModeService.getInstance()
+  const { subscription, switchMode } = useSubscription()
+  const currentMode = subscription?.mode || 'centralized'
+
+  const handleModeSwitch = async (newMode: 'centralized' | 'decentralized') => {
+    if (newMode === currentMode || isSwitching) return
+
+    console.log(`🔄 Switching from ${currentMode} to ${newMode}`)
+    setIsSwitching(true)
+    setSwitchMessage(`Initiating ${newMode} synchronization...`)
+
+    try {
+      await modeService.switchMode(newMode, setSwitchMessage)
+      await switchMode(newMode)
+      console.log(`✅ Mode switched successfully to ${newMode}`)
+
+      setSwitchMessage('Switch Complete! Reloading Interface...')
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+    } catch (error) {
+      console.error('❌ Failed to switch mode:', error)
+      alert('Failed to switch mode. Please try again.')
+      setIsSwitching(false)
+      setSwitchMessage('')
+    }
+  }
+
+  const handlePricingClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsOpen(false)
+    router.push('/pricing')
+  }
+
+  const isCentralized = currentMode === 'centralized'
+
+  return (
+    <div className="relative z-[100]">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-4 px-5 py-3 rounded-2xl transition-all duration-300 group border box-border ${isCentralized
+          ? 'bg-[#0f172a]/80 border-blue-500/30 hover:bg-[#1e293b]/90 hover:border-blue-400/50 hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]'
+          : 'bg-[#0f172a]/80 border-purple-500/30 hover:bg-[#1e293b]/90 hover:border-purple-400/50 hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]'
+          } backdrop-blur-xl relative overflow-hidden`}
+      >
+        {/* Subtle animated background gradient */}
+        <div className={`absolute inset-0 opacity-20 transition-opacity duration-500 group-hover:opacity-40 bg-gradient-to-r ${isCentralized ? 'from-blue-600/30 to-cyan-500/30' : 'from-purple-600/30 to-fuchsia-500/30'
+          }`} />
+
+        <div className="relative flex items-center gap-3 z-10">
+          <motion.div
+            layoutId="mode-icon-container"
+            className={`w-12 h-12 rounded-xl flex items-center justify-center border shadow-inner ${isCentralized
+              ? 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-400/30 shadow-blue-500/20 text-blue-400'
+              : 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-400/30 shadow-purple-500/20 text-purple-400'
+              }`}
+          >
+            {isCentralized ? <Server className="w-6 h-6" /> : <Network className="w-6 h-6" />}
+          </motion.div>
+
+          <div className="text-left">
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Storage Tier</p>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border backdrop-blur-md flex items-center gap-1 ${isCentralized
+                ? 'bg-blue-500/10 text-blue-300 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                : 'bg-purple-500/10 text-purple-300 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                }`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                Active
+              </span>
+            </div>
+            <p className="text-lg font-bold text-white tracking-wide capitalize bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+              {currentMode} Node
+            </p>
+          </div>
+        </div>
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+          <ChevronDown className={`w-5 h-5 relative z-10 transition-colors ${isCentralized ? 'text-blue-400 group-hover:text-blue-300' : 'text-purple-400 group-hover:text-purple-300'}`} />
+        </motion.div>
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110]"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -15, transformOrigin: 'top right' }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="absolute right-0 top-[calc(100%+12px)] w-[420px] bg-[#050914]/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden z-[120] ring-1 ring-white/5"
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="p-5 border-b border-white/10 relative">
+                <h3 className="text-lg font-bold text-white mb-1.5 flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_12px_rgba(74,222,128,0.8)]"></div>
+                  Storage Architecture
+                </h3>
+                <p className="text-sm text-slate-400 font-medium">Configure how your data and keys are secured</p>
+              </div>
+
+              <div className="p-3 space-y-2 relative">
+                {/* Centralized Option */}
+                <motion.button
+                  whileHover={{ scale: isCentralized ? 1 : 1.01 }}
+                  whileTap={{ scale: isCentralized ? 1 : 0.98 }}
+                  onClick={() => handleModeSwitch('centralized')}
+                  disabled={isSwitching}
+                  className={`w-full text-left p-4 rounded-xl transition-all duration-300 relative overflow-hidden flex flex-col gap-3 group ${isCentralized
+                    ? 'bg-blue-900/10 border-2 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20'
+                    : 'bg-white/[0.02] border-2 border-transparent hover:bg-white/[0.04] hover:border-white/10'
+                    }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${isCentralized
+                        ? 'bg-blue-500/20 border border-blue-400/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                        : 'bg-white/5 border border-white/10 text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 group-hover:border-blue-500/30'
+                        }`}>
+                        <Server className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`font-bold text-lg leading-none ${isCentralized ? 'text-white' : 'text-slate-300 group-hover:text-white transition-colors'}`}>
+                            Cloud Vault
+                          </span>
+                          {isCentralized && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-black tracking-wider uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-xs font-medium ${isCentralized ? 'text-blue-200/70' : 'text-slate-500 group-hover:text-slate-400 transition-colors'}`}>
+                          Managed Security • Fast Recovery
+                        </p>
+                      </div>
+                    </div>
+                    {isCentralized ? (
+                      <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/40">
+                        <Check className="w-3.5 h-3.5 text-blue-400" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border-2 border-slate-700 group-hover:border-blue-500/50 transition-colors" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {[
+                      { l: 'Auto Backup', i: <ShieldCheck className="w-3 h-3" /> },
+                      { l: 'Instant Restore', i: <Zap className="w-3 h-3" /> }
+                    ].map((feature, idx) => (
+                      <span key={idx} className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg font-semibold ${isCentralized
+                        ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
+                        : 'bg-white/[0.03] text-slate-400 border border-white/5 group-hover:border-white/10'
+                        }`}>
+                        {feature.i}
+                        {feature.l}
+                      </span>
+                    ))}
+                  </div>
+                </motion.button>
+
+                {/* Decentralized Option */}
+                <motion.button
+                  whileHover={{ scale: !isCentralized ? 1 : 1.01 }}
+                  whileTap={{ scale: !isCentralized ? 1 : 0.98 }}
+                  onClick={() => handleModeSwitch('decentralized')}
+                  disabled={isSwitching}
+                  className={`w-full text-left p-4 rounded-xl transition-all duration-300 relative overflow-hidden flex flex-col gap-3 group ${!isCentralized
+                    ? 'bg-purple-900/10 border-2 border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/20'
+                    : 'bg-white/[0.02] border-2 border-transparent hover:bg-white/[0.04] hover:border-white/10'
+                    }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${!isCentralized
+                        ? 'bg-purple-500/20 border border-purple-400/50 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                        : 'bg-white/5 border border-white/10 text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 group-hover:border-purple-500/30'
+                        }`}>
+                        <Network className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`font-bold text-lg leading-none ${!isCentralized ? 'text-white' : 'text-slate-300 group-hover:text-white transition-colors'}`}>
+                            Web3 Vault
+                          </span>
+                          {!isCentralized && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-black tracking-wider uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-xs font-medium ${!isCentralized ? 'text-purple-200/70' : 'text-slate-500 group-hover:text-slate-400 transition-colors'}`}>
+                          Self-Custodial • Smart Contract
+                        </p>
+                      </div>
+                    </div>
+                    {!isCentralized ? (
+                      <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/40">
+                        <Check className="w-3.5 h-3.5 text-purple-400" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border-2 border-slate-700 group-hover:border-purple-500/50 transition-colors" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {[
+                      { l: 'Zero-Knowledge', i: <ShieldCheck className="w-3 h-3" /> },
+                      { l: 'True Ownership', i: <Zap className="w-3 h-3" /> }
+                    ].map((feature, idx) => (
+                      <span key={idx} className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg font-semibold ${!isCentralized
+                        ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
+                        : 'bg-white/[0.03] text-slate-400 border border-white/5 group-hover:border-white/10'
+                        }`}>
+                        {feature.i}
+                        {feature.l}
+                      </span>
+                    ))}
+                  </div>
+                </motion.button>
+              </div>
+
+              {/* Status footer for switching */}
+              <AnimatePresence>
+                {isSwitching && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="px-4 py-3 bg-[#111827] border-t border-white/5 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin flex-shrink-0" />
+                      <motion.span
+                        key={switchMessage}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-xs font-semibold text-blue-200/90 leading-tight"
+                      >
+                        {switchMessage}
+                      </motion.span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="p-4 bg-[#0a0f1d] border-t border-white/10 group/link cursor-pointer hover:bg-[#0c1325] transition-colors" onClick={handlePricingClick}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 group-hover/link:to-pink-400 transition-all">
+                    Upgrade to Enterprise Tier
+                  </span>
+                  <ExternalLink className="w-4 h-4 text-slate-400 group-hover/link:text-white transition-colors group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}

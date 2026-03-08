@@ -7,73 +7,68 @@ describe("HeartbeatTracker", function () {
   let heartbeatTracker: HeartbeatTracker;
   let owner: SignerWithAddress;
   let user1: SignerWithAddress;
+  let user2: SignerWithAddress;
 
   beforeEach(async function () {
-    [owner, user1] = await ethers.getSigners();
+    [owner, user1, user2] = await ethers.getSigners();
 
-    const HeartbeatTracker = await ethers.getContractFactory("HeartbeatTracker");
-    heartbeatTracker = await HeartbeatTracker.deploy();
+    const HeartbeatTrackerFactory = await ethers.getContractFactory("HeartbeatTracker");
+    heartbeatTracker = await HeartbeatTrackerFactory.deploy();
     await heartbeatTracker.waitForDeployment();
   });
 
-  describe("Configuration", function () {
+  describe("Heartbeat Configuration", function () {
     it("Should configure heartbeat settings", async function () {
-      const interval = 7 * 24 * 60 * 60; // 7 days
-      const gracePeriod = 3 * 24 * 60 * 60; // 3 days
-
+      const interval = 30 * 24 * 60 * 60; // 30 days
+      const gracePeriod = 7 * 24 * 60 * 60; // 7 days
+      
       await heartbeatTracker.configureHeartbeat(interval, gracePeriod);
-
+      
       const heartbeat = await heartbeatTracker.getUserHeartbeat(owner.address);
       expect(heartbeat.heartbeatInterval).to.equal(interval);
       expect(heartbeat.gracePeriod).to.equal(gracePeriod);
       expect(heartbeat.isActive).to.be.true;
     });
 
-    it("Should reject invalid intervals", async function () {
-      const invalidInterval = 12 * 60 * 60; // 12 hours (less than 1 day)
-      const gracePeriod = 3 * 24 * 60 * 60;
-
+    it("Should not allow interval less than 1 day", async function () {
+      const interval = 12 * 60 * 60; // 12 hours
+      const gracePeriod = 7 * 24 * 60 * 60; // 7 days
+      
       await expect(
-        heartbeatTracker.configureHeartbeat(invalidInterval, gracePeriod)
+        heartbeatTracker.configureHeartbeat(interval, gracePeriod)
       ).to.be.revertedWith("Interval must be at least 1 day");
     });
 
-    it("Should reject invalid grace periods", async function () {
-      const interval = 7 * 24 * 60 * 60;
-      const invalidGracePeriod = 12 * 60 * 60; // 12 hours (less than 1 day)
-
+    it("Should not allow grace period less than 1 day", async function () {
+      const interval = 30 * 24 * 60 * 60; // 30 days
+      const gracePeriod = 12 * 60 * 60; // 12 hours
+      
       await expect(
-        heartbeatTracker.configureHeartbeat(interval, invalidGracePeriod)
+        heartbeatTracker.configureHeartbeat(interval, gracePeriod)
       ).to.be.revertedWith("Grace period must be at least 1 day");
     });
   });
 
   describe("Heartbeat Submission", function () {
     beforeEach(async function () {
-      const interval = 7 * 24 * 60 * 60;
-      const gracePeriod = 3 * 24 * 60 * 60;
+      const interval = 30 * 24 * 60 * 60; // 30 days
+      const gracePeriod = 7 * 24 * 60 * 60; // 7 days
       await heartbeatTracker.configureHeartbeat(interval, gracePeriod);
     });
 
     it("Should submit heartbeat", async function () {
       await heartbeatTracker.submitHeartbeat();
-
+      
       const heartbeat = await heartbeatTracker.getUserHeartbeat(owner.address);
       expect(heartbeat.totalHeartbeats).to.equal(1);
-      expect(heartbeat.isActive).to.be.true;
-    });
-
-    it("Should emit HeartbeatSubmitted event", async function () {
-      await expect(heartbeatTracker.submitHeartbeat())
-        .to.emit(heartbeatTracker, "HeartbeatSubmitted")
-        .withArgs(owner.address, await ethers.provider.getBlock('latest').then(b => b!.timestamp + 1), 1);
+      expect(heartbeat.lastHeartbeat).to.be.gt(0);
     });
 
     it("Should increment heartbeat count", async function () {
       await heartbeatTracker.submitHeartbeat();
       await heartbeatTracker.submitHeartbeat();
       await heartbeatTracker.submitHeartbeat();
-
+      
       const heartbeat = await heartbeatTracker.getUserHeartbeat(owner.address);
       expect(heartbeat.totalHeartbeats).to.equal(3);
     });
@@ -81,57 +76,109 @@ describe("HeartbeatTracker", function () {
     it("Should store heartbeat history", async function () {
       await heartbeatTracker.submitHeartbeat();
       await heartbeatTracker.submitHeartbeat();
-
+      
       const history = await heartbeatTracker.getHeartbeatHistory(owner.address);
       expect(history.length).to.equal(2);
     });
   });
 
-  describe("Status Checks", function () {
+  describe("Inactivity Detection", function () {
     beforeEach(async function () {
-      const interval = 7 * 24 * 60 * 60;
-      const gracePeriod = 3 * 24 * 60 * 60;
+      const interval = 30 * 24 * 60 * 60; // 30 days
+      const gracePeriod = 7 * 24 * 60 * 60; // 7 days
       await heartbeatTracker.configureHeartbeat(interval, gracePeriod);
       await heartbeatTracker.submitHeartbeat();
     });
 
-    it("Should not be in grace period initially", async function () {
-      const isInGrace = await heartbeatTracker.isInGracePeriod(owner.address);
-      expect(isInGrace).to.be.false;
+    it("Should not be in grace period immediately after heartbeat", async function () {
+      const inGrace = await heartbeatTracker.isInGracePeriod(owner.address);
+      expect(inGrace).to.be.false;
     });
 
-    it("Should not be inactive initially", async function () {
+    it("Should be in grace period after interval expires", async function () {
+      // Fast forward 31 days (past interval, within grace period)
+      await ethers.provider.send("evm_increaseTime", [31 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+      
+      const inGrace = await heartbeatTracker.isInGracePeriod(owner.address);
+      expect(inGrace).to.be.true;
+    });
+
+    it("Should be inactive after grace period expires", async function () {
+      // Fast forward 38 days (past interval + grace period)
+      await ethers.provider.send("evm_increaseTime", [38 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+      
+      const isInactive = await heartbeatTracker.isInactive(owner.address);
+      expect(isInactive).to.be.true;
+    });
+
+    it("Should not be inactive within interval", async function () {
       const isInactive = await heartbeatTracker.isInactive(owner.address);
       expect(isInactive).to.be.false;
+    });
+  });
+
+  describe("Time Calculations", function () {
+    beforeEach(async function () {
+      const interval = 30 * 24 * 60 * 60; // 30 days
+      const gracePeriod = 7 * 24 * 60 * 60; // 7 days
+      await heartbeatTracker.configureHeartbeat(interval, gracePeriod);
+      await heartbeatTracker.submitHeartbeat();
     });
 
     it("Should calculate time until due", async function () {
       const timeUntilDue = await heartbeatTracker.getTimeUntilDue(owner.address);
-      const interval = 7 * 24 * 60 * 60;
+      const interval = 30 * 24 * 60 * 60;
+      expect(timeUntilDue).to.be.closeTo(interval, 10); // Within 10 seconds
+    });
+
+    it("Should return 0 when overdue", async function () {
+      // Fast forward 31 days
+      await ethers.provider.send("evm_increaseTime", [31 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
       
-      expect(timeUntilDue).to.be.closeTo(interval, 5);
+      const timeUntilDue = await heartbeatTracker.getTimeUntilDue(owner.address);
+      expect(timeUntilDue).to.equal(0);
     });
   });
 
   describe("Multiple Users", function () {
-    it("Should handle multiple users independently", async function () {
-      // Owner configures
-      await heartbeatTracker.connect(owner).configureHeartbeat(
-        7 * 24 * 60 * 60,
-        3 * 24 * 60 * 60
-      );
-
-      // User1 configures
-      await heartbeatTracker.connect(user1).configureHeartbeat(
-        14 * 24 * 60 * 60,
-        5 * 24 * 60 * 60
-      );
-
+    it("Should track heartbeats independently", async function () {
+      // Configure for owner
+      await heartbeatTracker.configureHeartbeat(30 * 24 * 60 * 60, 7 * 24 * 60 * 60);
+      await heartbeatTracker.submitHeartbeat();
+      
+      // Configure for user1
+      await heartbeatTracker.connect(user1).configureHeartbeat(60 * 24 * 60 * 60, 14 * 24 * 60 * 60);
+      await heartbeatTracker.connect(user1).submitHeartbeat();
+      
       const ownerHeartbeat = await heartbeatTracker.getUserHeartbeat(owner.address);
       const user1Heartbeat = await heartbeatTracker.getUserHeartbeat(user1.address);
+      
+      expect(ownerHeartbeat.heartbeatInterval).to.equal(30 * 24 * 60 * 60);
+      expect(user1Heartbeat.heartbeatInterval).to.equal(60 * 24 * 60 * 60);
+    });
+  });
 
-      expect(ownerHeartbeat.heartbeatInterval).to.equal(7 * 24 * 60 * 60);
-      expect(user1Heartbeat.heartbeatInterval).to.equal(14 * 24 * 60 * 60);
+  describe("Events", function () {
+    it("Should emit HeartbeatSubmitted event", async function () {
+      const interval = 30 * 24 * 60 * 60;
+      const gracePeriod = 7 * 24 * 60 * 60;
+      await heartbeatTracker.configureHeartbeat(interval, gracePeriod);
+      
+      await expect(heartbeatTracker.submitHeartbeat())
+        .to.emit(heartbeatTracker, "HeartbeatSubmitted")
+        .withArgs(owner.address, await ethers.provider.getBlock("latest").then(b => b!.timestamp + 1), 1);
+    });
+
+    it("Should emit SettingsUpdated event", async function () {
+      const interval = 30 * 24 * 60 * 60;
+      const gracePeriod = 7 * 24 * 60 * 60;
+      
+      await expect(heartbeatTracker.configureHeartbeat(interval, gracePeriod))
+        .to.emit(heartbeatTracker, "SettingsUpdated")
+        .withArgs(owner.address, interval, gracePeriod);
     });
   });
 });

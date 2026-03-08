@@ -15,6 +15,11 @@ import { HeartbeatModule } from '../services/heartbeat/heartbeat.module';
 import { BlockchainModule } from '../services/blockchain/blockchain.module';
 import { UsersModule } from '../services/users/users.module';
 import { ReleaseModule } from '../services/release/release.module';
+import { SubscriptionModule } from '../services/subscription/subscription.module';
+import { StripeModule } from '../services/stripe/stripe.module';
+import { EmailModule } from '../services/email/email.module';
+import { CacheModule } from '../services/cache/cache.module';
+import { LoggerModule } from '../services/logger/logger.module';
 
 @Module({
   imports: [
@@ -32,6 +37,8 @@ import { ReleaseModule } from '../services/release/release.module';
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
+    LoggerModule,
+    CacheModule,
     AuthModule,
     UsersModule,
     AssetsModule,
@@ -39,6 +46,9 @@ import { ReleaseModule } from '../services/release/release.module';
     HeartbeatModule,
     BlockchainModule,
     ReleaseModule,
+    SubscriptionModule,
+    StripeModule,
+    EmailModule,
   ],
   controllers: [],
   providers: [],
