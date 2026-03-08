@@ -1,0 +1,11 @@
+{
+    "name": "decentralized-digital-will-frontend",
+    "version": "1.0.0",
+    "description": "Frontend entry points for Web and Mobile",
+    "scripts": {
+        "start": "npm run start:web",
+        "start:web": "cd web && npm run dev",
+        "start:mobile": "cd mobile && npm start",
+        "setup": "cd web && npm install && cd ../mobile && npm install"
+    }
+}

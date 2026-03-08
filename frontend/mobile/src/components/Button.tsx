@@ -177,27 +177,27 @@ const styles = StyleSheet.create({
   },
   // Primary Button
   primaryButton: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
+    backgroundColor: '#1152d4',
+    borderColor: '#1152d4',
   },
   primaryButtonText: {
     color: '#ffffff',
   },
   // Secondary Button
   secondaryButton: {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#f3f4f6',
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b',
   },
   secondaryButtonText: {
-    color: '#374151',
+    color: '#e5e7eb',
   },
   // Outline Button
   outlineButton: {
     backgroundColor: 'transparent',
-    borderColor: '#3b82f6',
+    borderColor: '#1152d4',
   },
   outlineButtonText: {
-    color: '#3b82f6',
+    color: '#1152d4',
   },
   // Ghost Button
   ghostButton: {
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   ghostButtonText: {
-    color: '#3b82f6',
+    color: '#e5e7eb',
   },
   // Danger Button
   dangerButton: {

@@ -60,7 +60,9 @@ const Card: React.FC<CardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#020617',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
     shadowColor: '#000000',
     shadowOffset: {
       width: 0,

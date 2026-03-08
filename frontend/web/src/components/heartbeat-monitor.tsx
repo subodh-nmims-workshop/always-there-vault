@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShieldCheck, Clock, Activity, AlertTriangle, Fingerprint, Settings, RefreshCw, X, ShieldAlert } from 'lucide-react'
-import { recordHeartbeat, getHeartbeatStatus, getHeartbeatHistory, HeartbeatPayload, getHeartbeatSettings, updateHeartbeatSettings } from '@/app/actions/heartbeat'
+import { ShieldCheck, Clock, Activity, AlertTriangle, Fingerprint, Settings, RefreshCw, X, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import { recordHeartbeat, getHeartbeatStatus, HeartbeatPayload, getHeartbeatSettings, updateHeartbeatSettings } from '@/app/actions/heartbeat'
+import { submitHeartbeat, configureHeartbeat as configureBlockchainHeartbeat } from '@/lib/blockchain'
+import { useApp } from '@/contexts/AppContext'
 
 export function HeartbeatMonitor() {
   const [walletAddress, setWalletAddress] = useState<string>('')
@@ -12,6 +14,7 @@ export function HeartbeatMonitor() {
   const [heartbeats, setHeartbeats] = useState<any[]>([])
   const [statusInfo, setStatusInfo] = useState<{ status: string; daysUntilDue: number; isOverdue: boolean } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { refreshState } = useApp()
 
   const [settings, setSettings] = useState({
     heartbeatInterval: 30,
@@ -19,6 +22,7 @@ export function HeartbeatMonitor() {
   })
   const [showSettings, setShowSettings] = useState(false)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   useEffect(() => {
     const address = localStorage.getItem('dwp_wallet_address')
@@ -41,7 +45,7 @@ export function HeartbeatMonitor() {
 
       const statRes = await getHeartbeatStatus(walletAddress)
       if (statRes.success && statRes.status !== 'Not Found' && statRes.status !== 'inactive') {
-        setStatusInfo({ status: statRes.status, daysUntilDue: statRes.daysUntilDue, isOverdue: statRes.isOverdue })
+        setStatusInfo({ status: statRes.status || 'unknown', daysUntilDue: statRes.daysUntilDue || 0, isOverdue: statRes.isOverdue || false })
         if (statRes.lastHeartbeat) setLastHeartbeat(new Date(statRes.lastHeartbeat))
         if (statRes.interval && statRes.gracePeriod) setSettings({ heartbeatInterval: statRes.interval, gracePeriod: statRes.gracePeriod })
       } else if (statRes.status === 'inactive' || statRes.status === 'Not Found') {
@@ -57,36 +61,73 @@ export function HeartbeatMonitor() {
   const handleHeartbeat = async () => {
     if (!walletAddress) return
     setIsRecording(true)
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // DECENTRALIZED SMART CONTRACT EXECUTION
+      const chainResponse = await submitHeartbeat()
+
+      if (!chainResponse.success) {
+        throw new Error(chainResponse.error || 'Smart Contract execution reverted')
+      }
+
       const payload: HeartbeatPayload = {
         walletAddress,
         method: 'wallet_signature',
-        signature: '0x' + Array.from({ length: 128 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+        signature: chainResponse.txHash || '0x' + Array.from({ length: 128 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
         ipAddress: '127.0.0.1'
       }
       const response = await recordHeartbeat(payload)
-      if (response.success) await fetchLiveStatus()
-      else throw new Error('Server Rejected Pulse')
-    } catch (error) {
+
+      if (response.success) {
+        await fetchLiveStatus()
+        await refreshState()
+        setShowSuccessPopup(true)
+        setTimeout(() => setShowSuccessPopup(false), 3000)
+      } else throw new Error('Local Context Rejected Pulse')
+
+    } catch (error: any) {
       console.error('Failed to record heartbeat:', error)
-      alert('Failed to transmit cryptographic proof-of-life. Please try again.')
+      alert(`Failed to transmit cryptographic proof-of-life.\n\nError: ${error.message}`)
     } finally {
       setIsRecording(false)
     }
   }
 
   const handleSettingsUpdate = async () => {
-    if (!walletAddress) return
     setIsSavingSettings(true)
-    const res = await updateHeartbeatSettings(walletAddress, settings.heartbeatInterval, settings.gracePeriod)
-    if (res.success) {
+
+    try {
+      // Try to sync with blockchain, but don't block local save if it fails
+      let chainError: string | null = null
+      try {
+        const chainResponse = await configureBlockchainHeartbeat(settings.heartbeatInterval, settings.gracePeriod)
+        if (!chainResponse.success) {
+          chainError = chainResponse.error || 'Smart Contract setting update reverted'
+        }
+      } catch (err: any) {
+        chainError = err?.message || 'Unable to reach blockchain provider'
+      }
+
+      // Always persist settings locally so the app behaves correctly
+      const res = await updateHeartbeatSettings(walletAddress || 'local', settings.heartbeatInterval, settings.gracePeriod)
+      if (!res.success) {
+        throw new Error('Failed to update local protocol settings.')
+      }
+
       await fetchLiveStatus()
+      await refreshState()
       setShowSettings(false)
-    } else {
-      alert("Failed to update protocol settings.")
+
+      if (chainError) {
+        // Inform user that on-chain sync failed but local config is saved
+        alert(`Config saved locally.\n\nOn-chain sync failed: ${chainError}`)
+      }
+    } catch (error: any) {
+      console.error(error)
+      alert(`Configuration update failed:\n${error.message}`)
+    } finally {
+      setIsSavingSettings(false)
     }
-    setIsSavingSettings(false)
   }
 
   const getHeartbeatDisplayState = () => {
@@ -102,9 +143,12 @@ export function HeartbeatMonitor() {
   }
 
   const getDaysUntilDueDisplay = (): number => {
-    if (statusInfo) return statusInfo.daysUntilDue
+    if (statusInfo && typeof statusInfo.daysUntilDue === 'number' && !isNaN(statusInfo.daysUntilDue)) {
+      return statusInfo.daysUntilDue
+    }
     const nextDue = getNextHeartbeatDue()
-    return Math.ceil((nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    const days = Math.ceil((nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    return isNaN(days) ? 0 : days
   }
 
   const calculateProgress = () => {
@@ -118,9 +162,7 @@ export function HeartbeatMonitor() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-4">
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
-          <Activity className="w-10 h-10 text-blue-500" />
-        </motion.div>
+        <Activity className="w-10 h-10 text-blue-500 animate-pulse" />
         <p className="text-slate-400 font-medium tracking-wide">Syncing Protocol Matrix...</p>
       </div>
     )
@@ -332,6 +374,26 @@ export function HeartbeatMonitor() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Success Popup */}
+      <AnimatePresence>
+        {showSuccessPopup && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+          >
+            <div className="bg-emerald-500/20 p-2 rounded-full">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-white font-bold tracking-wide">Heartbeat Recorded</p>
+              <p className="text-emerald-200 text-xs font-medium">Proof-of-life verified successfully.</p>
             </div>
           </motion.div>
         )}

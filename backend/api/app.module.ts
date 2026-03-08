@@ -24,9 +24,11 @@ import { ReleaseModule } from '../services/release/release.module';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URI'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const uri = 'mongodb://admin:password@127.0.0.1:27017/digital-will?authSource=admin';
+        console.log('🔍 MongoDB URI:', uri);
+        return { uri };
+      },
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),

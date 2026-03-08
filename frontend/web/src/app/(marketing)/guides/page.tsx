@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { Compass, Search, FileText, ArrowRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { SharedFooter } from '@/components/shared-footer';
+import { useState } from 'react';
 
 export default function GuidesPage() {
+    const [activeTab, setActiveTab] = useState("All Guides");
     const defaultTransition = { duration: 0.8, ease: "easeOut" as any };
 
     const categories = [
@@ -107,9 +109,16 @@ export default function GuidesPage() {
                     transition={{ ...defaultTransition, delay: 0.2 }}
                     className="flex flex-wrap justify-center gap-4 mb-20"
                 >
-                    <button className="bg-[#2b52ff] text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-[#2b52ff]/30 border border-[#2b52ff]">All Guides</button>
+                    <button
+                        onClick={() => setActiveTab('All Guides')}
+                        className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all tracking-wide ${activeTab === 'All Guides' ? 'bg-[#2b52ff] text-white shadow-lg shadow-[#2b52ff]/30 border border-[#2b52ff]' : 'bg-white/[0.03] text-slate-300 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/[0.05]'}`}>
+                        All Guides
+                    </button>
                     {categories.map((cat, i) => (
-                        <button key={i} className="bg-white/[0.03] text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold border border-white/10 hover:border-white/20 hover:bg-white/[0.05] transition-all tracking-wide">
+                        <button
+                            key={i}
+                            onClick={() => setActiveTab(cat)}
+                            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all tracking-wide ${activeTab === cat ? 'bg-[#2b52ff] text-white shadow-lg shadow-[#2b52ff]/30 border border-[#2b52ff]' : 'bg-white/[0.03] text-slate-300 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/[0.05]'}`}>
                             {cat}
                         </button>
                     ))}
@@ -119,28 +128,29 @@ export default function GuidesPage() {
                 <div className="max-w-4xl mx-auto space-y-24 mb-24">
 
                     {/* Guide 1: Heartbeat Relayer */}
-                    <section id="heartbeat-relayer" className="scroll-mt-32">
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-xs font-bold bg-white/10 text-slate-300 px-3 py-1 rounded-full uppercase tracking-widest border border-white/10">Node Architecture</span>
-                            <span className="text-slate-500 text-sm">12 min read</span>
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Setting up a Heartbeat Relayer</h2>
-                        <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
-                            To ensure true zero-knowledge and gasless operations for the end-user, the DeadMan Protocol relies on a network of automated relayers to ping the Liveness Oracle. Here is how to run a dockerized node to monitor addresses and automate L2 signatures.
-                        </p>
+                    {(activeTab === 'All Guides' || activeTab === 'Node Architecture') && (
+                        <section id="heartbeat-relayer" className="scroll-mt-32">
+                            <div className="flex items-center gap-3 mb-6">
+                                <span className="text-xs font-bold bg-white/10 text-slate-300 px-3 py-1 rounded-full uppercase tracking-widest border border-white/10">Node Architecture</span>
+                                <span className="text-slate-500 text-sm">12 min read</span>
+                            </div>
+                            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Setting up a Heartbeat Relayer</h2>
+                            <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
+                                To ensure true zero-knowledge and gasless operations for the end-user, the DeadMan Protocol relies on a network of automated relayers to ping the Liveness Oracle. Here is how to run a dockerized node to monitor addresses and automate L2 signatures.
+                            </p>
 
-                        <div className="prose prose-invert prose-blue max-w-none text-slate-300">
-                            <h3 className="text-white text-2xl font-semibold mb-4 mt-8">Prerequisites</h3>
-                            <ul className="mb-6 space-y-2 list-disc pl-5">
-                                <li>Docker and Docker-Compose installed</li>
-                                <li>An active Polygon RPC Provider URL (Alchemy, Infura, etc.)</li>
-                                <li>A Relayer Wallet with sufficient MATIC for transaction fees</li>
-                            </ul>
+                            <div className="prose prose-invert prose-blue max-w-none text-slate-300">
+                                <h3 className="text-white text-2xl font-semibold mb-4 mt-8">Prerequisites</h3>
+                                <ul className="mb-6 space-y-2 list-disc pl-5">
+                                    <li>Docker and Docker-Compose installed</li>
+                                    <li>An active Polygon RPC Provider URL (Alchemy, Infura, etc.)</li>
+                                    <li>A Relayer Wallet with sufficient MATIC for transaction fees</li>
+                                </ul>
 
-                            <h3 className="text-white text-2xl font-semibold mb-4 mt-8">1. Clone and Configure</h3>
-                            <p className="mb-4">Begin by cloning the relayer repository and configuring your environment variables. The relayer needs to know which contract it is interacting with and its own private funding key.</p>
-                            <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto mb-8 shadow-inner">
-                                <pre><code>{`git clone https://github.com/deadman-protocol/relayer-node.git
+                                <h3 className="text-white text-2xl font-semibold mb-4 mt-8">1. Clone and Configure</h3>
+                                <p className="mb-4">Begin by cloning the relayer repository and configuring your environment variables. The relayer needs to know which contract it is interacting with and its own private funding key.</p>
+                                <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto mb-8 shadow-inner">
+                                    <pre><code>{`git clone https://github.com/deadman-protocol/relayer-node.git
 cd relayer-node
 cp .env.example .env
 
@@ -148,49 +158,52 @@ cp .env.example .env
 RELAYER_PRIVATE_KEY=your_private_key
 POLYGON_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/YOUR_KEY
 CONTRACT_ADDRESS=0x123...`}</code></pre>
-                            </div>
+                                </div>
 
-                            <h3 className="text-white text-2xl font-semibold mb-4 mt-8">2. Run the Docker Container</h3>
-                            <p className="mb-4">The relayer is designed to be highly available and lightweight. It runs a continuous polling loop validating EIP-712 signatures against the Polygon network.</p>
+                                <h3 className="text-white text-2xl font-semibold mb-4 mt-8">2. Run the Docker Container</h3>
+                                <p className="mb-4">The relayer is designed to be highly available and lightweight. It runs a continuous polling loop validating EIP-712 signatures against the Polygon network.</p>
 
-                            <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto mb-8 shadow-inner">
-                                <pre><code>{`docker-compose up -d --build
+                                <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto mb-8 shadow-inner">
+                                    <pre><code>{`docker-compose up -d --build
 
 # Check the logs to ensure successful connection
 docker logs -f relayer-node-main`}</code></pre>
-                            </div>
+                                </div>
 
-                            <div className="bg-[#2b52ff]/10 border border-[#2b52ff]/30 p-6 rounded-2xl mt-8">
-                                <h4 className="text-white font-bold mb-2 flex items-center gap-2">⚠️ Important Note on Gas</h4>
-                                <p className="text-sm text-blue-200/80 m-0">
-                                    The relayer will pay the gas fees on behalf of the users to submit their heartbeat transactions. Ensure your relayer wallet always maintains a minimum balance of 2 MATIC to prevent transaction halts.
-                                </p>
+                                <div className="bg-[#2b52ff]/10 border border-[#2b52ff]/30 p-6 rounded-2xl mt-8">
+                                    <h4 className="text-white font-bold mb-2 flex items-center gap-2">⚠️ Important Note on Gas</h4>
+                                    <p className="text-sm text-blue-200/80 m-0">
+                                        The relayer will pay the gas fees on behalf of the users to submit their heartbeat transactions. Ensure your relayer wallet always maintains a minimum balance of 2 MATIC to prevent transaction halts.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    )}
 
                     {/* Guide 2: React SSR Encryption Flow */}
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    {(activeTab === 'All Guides' || activeTab === 'Frontend Implementation') && (
+                        <>
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 
-                    <section id="react-ssr-flow" className="scroll-mt-32">
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-xs font-bold bg-[#1152d4]/10 text-[#5c8df6] px-3 py-1 rounded-full uppercase tracking-widest border border-[#1152d4]/30">Frontend Implementation</span>
-                            <span className="text-slate-500 text-sm">8 min read</span>
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Client-Side Zero-Knowledge Flow in React</h2>
-                        <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
-                            Modern web frameworks like Next.js blur the lines between server and client. Discover how we isolate the encryption context strictly to the browser window, preventing secret leakage during SSR hydration.
-                        </p>
+                            <section id="react-ssr-flow" className="scroll-mt-32">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="text-xs font-bold bg-[#1152d4]/10 text-[#5c8df6] px-3 py-1 rounded-full uppercase tracking-widest border border-[#1152d4]/30">Frontend Implementation</span>
+                                    <span className="text-slate-500 text-sm">8 min read</span>
+                                </div>
+                                <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Client-Side Zero-Knowledge Flow in React</h2>
+                                <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
+                                    Modern web frameworks like Next.js blur the lines between server and client. Discover how we isolate the encryption context strictly to the browser window, preventing secret leakage during SSR hydration.
+                                </p>
 
-                        <div className="prose prose-invert prose-blue max-w-none text-slate-300">
-                            <h3 className="text-white text-2xl font-semibold mb-4 mt-8">The Hydration Dilemma</h3>
-                            <p className="mb-6">During Next.js hydration, initial state is rendered on the server before being sent to the client. If an encryption key is generated or used within the initial render cycle without proper scoping, it could theoretically be captured in server logs or memory dumps.</p>
+                                <div className="prose prose-invert prose-blue max-w-none text-slate-300">
+                                    <h3 className="text-white text-2xl font-semibold mb-4 mt-8">The Hydration Dilemma</h3>
+                                    <p className="mb-6">During Next.js hydration, initial state is rendered on the server before being sent to the client. If an encryption key is generated or used within the initial render cycle without proper scoping, it could theoretically be captured in server logs or memory dumps.</p>
 
-                            <h3 className="text-white text-2xl font-semibold mb-4 mt-8">Isolating the Web Crypto API</h3>
-                            <p className="mb-4">We wrap all AES-256-GCM logic in a strict client-side boundary, leveraging the `window.crypto.subtle` API which naturally cannot execute in a Node.js server context.</p>
+                                    <h3 className="text-white text-2xl font-semibold mb-4 mt-8">Isolating the Web Crypto API</h3>
+                                    <p className="mb-4">We wrap all AES-256-GCM logic in a strict client-side boundary, leveraging the \`window.crypto.subtle\` API which naturally cannot execute in a Node.js server context.</p>
 
-                            <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto shadow-inner">
-                                <pre><code>{`'use client';
+                                    <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto shadow-inner">
+                                        <pre><code>{`'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -214,36 +227,87 @@ export function EncryptAssetComponent({ file }) {
     encryptPayload();
   }, [file]);
 }`}</code></pre>
-                            </div>
-                        </div>
-                    </section>
+                                    </div>
+                                </div>
+                            </section>
+                        </>
+                    )}
 
                     {/* Guide 3: Next JS and IPFS */}
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    {(activeTab === 'All Guides' || activeTab === 'Node Architecture') && (
+                        <>
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 
-                    <section id="ipfs-pinning" className="scroll-mt-32">
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-xs font-bold bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/30">Node Architecture</span>
-                            <span className="text-slate-500 text-sm">15 min read</span>
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Pinning Encrypted Blobs to IPFS</h2>
-                        <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
-                            IPFS is wonderful for decentralization but lacks inherent persistence guarantees without "pinning". Here is our strategy for ensuring digital wills survive the test of time using backend microservices.
-                        </p>
+                            <section id="ipfs-pinning" className="scroll-mt-32">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="text-xs font-bold bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/30">Node Architecture</span>
+                                    <span className="text-slate-500 text-sm">15 min read</span>
+                                </div>
+                                <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Pinning Encrypted Blobs to IPFS</h2>
+                                <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
+                                    IPFS is wonderful for decentralization but lacks inherent persistence guarantees without "pinning". Here is our strategy for ensuring digital wills survive the test of time using backend microservices.
+                                </p>
 
-                        <div className="prose prose-invert prose-purple max-w-none text-slate-300">
-                            <p className="mb-6">Instead of pushing to IPFS directly from the browser (which exposes API keys or relies on unstable client connections), we utilize a robust NestJS backend proxy that interacts with Web3.Storage.</p>
+                                <div className="prose prose-invert prose-purple max-w-none text-slate-300">
+                                    <p className="mb-6">Instead of pushing to IPFS directly from the browser (which exposes API keys or relies on unstable client connections), we utilize a robust NestJS backend proxy that interacts with Web3.Storage.</p>
 
-                            <h3 className="text-white text-2xl font-semibold mb-4 mt-8">Backend Architecture Pattern</h3>
-                            <ul className="mb-6 space-y-2 list-disc pl-5">
-                                <li><strong>Client:</strong> Encrypts file -&gt; Converts to ArrayBuffer -&gt; POSTs FormData to NestJS.</li>
-                                <li><strong>Backend (IpfsService):</strong> Receives blob -&gt; Authenticates via @web3-storage/w3up-client -&gt; Uploads -&gt; Pins -&gt; Returns CID.</li>
-                                <li><strong>Client:</strong> Receives CID -&gt; Dispatches transaction to Polygon linking Vault to CID.</li>
-                            </ul>
+                                    <h3 className="text-white text-2xl font-semibold mb-4 mt-8">Backend Architecture Pattern</h3>
+                                    <ul className="mb-6 space-y-2 list-disc pl-5">
+                                        <li><strong>Client:</strong> Encrypts file -&gt; Converts to ArrayBuffer -&gt; POSTs FormData to NestJS.</li>
+                                        <li><strong>Backend (IpfsService):</strong> Receives blob -&gt; Authenticates via @web3-storage/w3up-client -&gt; Uploads -&gt; Pins -&gt; Returns CID.</li>
+                                        <li><strong>Client:</strong> Receives CID -&gt; Dispatches transaction to Polygon linking Vault to CID.</li>
+                                    </ul>
 
-                            <p>This architecture abstracts the immense complexity of IPFS persistence directly away from the user, whilst retaining 100% data sovereignity since the backend only ever receives an uncrackable AES ciphertext blob.</p>
-                        </div>
-                    </section>
+                                    <p>This architecture abstracts the immense complexity of IPFS persistence directly away from the user, whilst retaining 100% data sovereignity since the backend only ever receives an uncrackable AES ciphertext blob.</p>
+                                </div>
+                            </section>
+                        </>
+                    )}
+
+                    {/* Placeholder Guide: Cryptographic Theory */}
+                    {(activeTab === 'All Guides' || activeTab === 'Cryptographic Theory') && (
+                        <>
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                            <section id="crypto-theory" className="scroll-mt-32">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="text-xs font-bold bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30">Cryptographic Theory</span>
+                                </div>
+                                <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Implementing Multi-Party Computation</h2>
+                                <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
+                                    A theoretical breakdown of distributing AES decryption keys across an M-of-N validator network using Shamir's Secret Sharing.
+                                </p>
+                                <div className="prose prose-invert max-w-none text-slate-300">
+                                    <p>Our core cryptographic guarantee is that no single party—not even DeadMan Protocol engineers—can arbitrarily decrypt a user's digital will without consensus. To achieve this, we harness Shamir's Secret Sharing (SSS) algorithm across a distributed operator network.</p>
+                                    <p>When a user encrypts a file locally in their browser, an AES-256-GCM symmetric key is generated. This master key is immediately divided into exactly `N` independent mathematical shards. A threshold requirement `M` is defined (e.g. 5 of 9 shards). Only when the Polygon Smart Contract registers a missed heartbeat event will the network nodes release their encrypted shards to the designated beneficiaries.</p>
+                                </div>
+                            </section>
+                        </>
+                    )}
+
+                    {/* Placeholder Guide: Smart Contract Integration */}
+                    {(activeTab === 'All Guides' || activeTab === 'Smart Contract Integration') && (
+                        <>
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                            <section id="smart-contracts" className="scroll-mt-32">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="text-xs font-bold bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full uppercase tracking-widest border border-orange-500/30">Smart Contract Integration</span>
+                                </div>
+                                <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Verifying the Smart Contract on Polygon</h2>
+                                <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
+                                    Step-by-step guide to using Hardhat and the Etherscan API to independently verify our deployed EVM bytecode.
+                                </p>
+                                <div className="prose prose-invert max-w-none text-slate-300">
+                                    <p>Trust but verify. As a fully open-source protocol, our Liveness Oracle and Asset Registry smart contracts are deployed natively on Polygon and are 100% verified on Polygonscan.</p>
+                                    <p>To verify the contract independently on your local machine, you can pull the ABI from our GitHub repository and run a bytecode hash comparison using Hardhat.</p>
+                                    <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto shadow-inner">
+                                        <pre><code>{`npx hardhat verify --network polygon 0xContractAddressHere ConstructorArgs`}</code></pre>
+                                    </div>
+                                </div>
+                            </section>
+                        </>
+                    )}
 
                 </div>
             </main>

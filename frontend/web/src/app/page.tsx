@@ -30,6 +30,7 @@ import { AssetCreationForm } from '@/components/asset-creation-form'
 import { HeartbeatMonitor } from '@/components/heartbeat-monitor'
 import { OverviewDashboard } from '@/components/overview-dashboard'
 import { BeneficiariesDashboard } from '@/components/beneficiaries-dashboard'
+import { BeneficiaryManager } from '@/components/beneficiary-manager'
 import { StatusDashboard } from '@/components/status-dashboard'
 import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import WebStorageService, { AppState } from '@/lib/storage'
@@ -293,25 +294,12 @@ export default function HomePage() {
 
               <div className="max-w-2xl space-y-6 relative z-10">
                 <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Secure Your Future Today</h2>
-                <p className="text-xl text-slate-400 leading-relaxed">Join over 12,000 users who trust DeadMan Protocol to secure their multi-generational wealth on-chain.</p>
+                <p className="text-xl text-slate-400 leading-relaxed">Join users who trust DeadMan Protocol to secure their digital legacy on-chain.</p>
 
                 <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <button onClick={handleConnect} className="w-full sm:w-auto px-8 py-4 bg-white text-[#080a0f] rounded-full font-bold text-lg hover:scale-105 transition-transform flex items-center justify-center">
                     Connect Wallet <ArrowRight className="w-5 h-5 ml-2" />
                   </button>
-                  <div className="flex items-center gap-4">
-                    <div className="flex -space-x-3">
-                      {[1, 2, 3, 4].map(i => (
-                        <div key={i} className={`w-10 h-10 rounded-full border-2 border-[#0a1536] bg-slate-800 flex items-center justify-center text-xs font-bold ${i === 4 ? 'bg-[#1152d4] text-white' : ''}`}>
-                          {i === 4 ? '+12k' : ''}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-sm">
-                      <p className="text-white font-bold">Protocol Active</p>
-                      <p className="text-slate-500">Securing $400M+ TVL</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -332,41 +320,56 @@ export default function HomePage() {
 
   // Dashboard Interface (Connected State)
   return (
-    <div className="min-h-screen p-4 bg-[#050a1a] text-slate-50 selection:bg-[#2b52ff]/30 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
+    <div className="min-h-screen bg-[#050a1a] text-slate-50 selection:bg-[#2b52ff]/30 font-sans flex flex-col relative overflow-hidden">
+      {/* Global Navigation */}
+      <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Shield className="w-8 h-8" />
+          </div>
+          <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+        </Link>
+        <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
+          <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
+          <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
+          <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Security</Link>
+        </div>
+        <button
+          onClick={handleDisconnect}
+          className="border border-red-500/30 text-red-400 hover:bg-red-500/10 px-5 py-2 rounded-full font-bold text-sm transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+        >
+          Disconnect
+        </button>
+      </nav>
+
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24">
+        {/* Header / Vault Info */}
         <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative overflow-hidden">
           <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-[#2b52ff]/10 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="flex items-center space-x-4 mb-4 sm:mb-0 relative z-10">
+          <div className="flex items-center space-x-4 mb-4 sm:mb-0 relative z-10 w-full sm:w-auto">
             <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#2b52ff]/20 to-[#00d2ff]/20 rounded-xl border border-[#2b52ff]/30 shadow-[0_0_15px_rgba(43,82,255,0.2)]">
-              <Shield className="h-6 w-6 text-[#2b52ff]" />
+              <KeyRound className="h-6 w-6 text-[#2b52ff]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-                Digital Will Protocol
+                Encrypted Vault Instance
               </h1>
               <div className="flex items-center text-xs font-medium text-blue-100/60 mt-1">
                 <span className="w-2 h-2 rounded-full bg-green-500 mr-2 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                Connected Vault: <span className="font-mono text-white ml-2 bg-white/5 px-2 py-0.5 rounded border border-white/10">{address}</span>
+                Connected Account: <span className="font-mono text-white ml-2 bg-white/5 px-2 py-0.5 rounded border border-white/10">{address}</span>
               </div>
             </div>
           </div>
-          <button
-            onClick={handleDisconnect}
-            className="px-6 py-2.5 border border-white/10 hover:border-red-500/50 hover:text-red-400 rounded-xl text-sm font-semibold transition-all hover:bg-red-500/10 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] disabled:opacity-50 relative z-10"
-          >
-            Lock & Disconnect
-          </button>
         </div>
 
         {/* Dashboard Content */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-5 gap-1 shadow-lg backdrop-blur-md">
             {['overview', 'assets', 'beneficiaries', 'heartbeat', 'status'].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="capitalize data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white text-blue-100/60 rounded-lg transition-all"
+                className="capitalize data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white text-slate-400 rounded-lg transition-all font-semibold"
               >
                 {tab}
               </TabsTrigger>
@@ -381,7 +384,7 @@ export default function HomePage() {
               </div>
             ) : (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <OverviewDashboard />
+                <OverviewDashboard onNavigate={setActiveTab} />
               </motion.div>
             )}
           </TabsContent>
@@ -392,7 +395,19 @@ export default function HomePage() {
           </TabsContent>
 
           <TabsContent value="beneficiaries" className="mt-6">
-            <BeneficiariesDashboard />
+            <BeneficiariesDashboard onNavigate={setActiveTab} />
+          </TabsContent>
+
+          <TabsContent value="beneficiaries_manage" className="mt-6">
+            <div className="mb-6 flex items-center bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-xl">
+              <button
+                onClick={() => setActiveTab('beneficiaries')}
+                className="text-slate-400 hover:text-white transition-colors flex items-center font-medium gap-2 px-4 py-2 hover:bg-white/5 rounded-xl"
+              >
+                ← Return to Beneficiaries Overview
+              </button>
+            </div>
+            <BeneficiaryManager />
           </TabsContent>
 
           <TabsContent value="heartbeat" className="mt-6">
@@ -403,7 +418,9 @@ export default function HomePage() {
             <StatusDashboard />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
+
+      <SharedFooter />
 
       <WalletConnectModal
         isOpen={showWalletModal}

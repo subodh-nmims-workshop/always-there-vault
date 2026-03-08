@@ -1,0 +1,328 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Upload, Lock, AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { 
+  getCategoryTemplate, 
+  generateStructuredData, 
+  validateCategoryData,
+  type AssetCategory,
+  type CategoryTemplate,
+  type CategoryField
+} from '@/lib/category-handlers'
+
+interface CategoryModalProps {
+  isOpen: boolean
+  onClose: () => void
+  category: AssetCategory
+  onSubmit: (data: { name: string; type: string; structuredData: string; file?: File }) => Promise<void>
+}
+
+export function CategoryModal({ isOpen, onClose, category, onSubmit }: CategoryModalProps) {
+  const [template, setTemplate] = useState<CategoryTemplate | null>(null)
+  const [formData, setFormData] = useState<Record<string, any>>({})
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<string[]>([])
+  const [showSuccess, setShowSuccess] = useState(false)
+
+  useEffect(() => {
+    if (isOpen && category) {
+      try {
+        console.log('🔄 Initializing category modal for:', category)
+        const tmpl = getCategoryTemplate(category)
+        console.log('✅ Template loaded:', tmpl.label, 'with', tmpl.fields.length, 'fields')
+        setTemplate(tmpl)
+        setFormData({})
+        setSelectedFile(null)
+        setErrors([])
+        setShowSuccess(false)
+      } catch (error) {
+        console.error('❌ Failed to initialize category modal:', error)
+        setErrors(['Initialization failed. Please try again.'])
+      }
+    }
+  }, [isOpen, category])
+
+  const handleFieldChange = (fieldName: string, value: any) => {
+    setFormData(prev => ({ ...prev, [fieldName]: value }))
+    setErrors([]) // Clear errors on change
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!template) return
+
+    // Validate
+    const validation = validateCategoryData(template, formData)
+    if (!validation.valid) {
+      setErrors(validation.errors)
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrors([])
+
+    try {
+      console.log('📝 Form data:', formData)
+      
+      // Generate structured data
+      const structuredData = generateStructuredData(template, formData)
+      console.log('📄 Generated structured data length:', structuredData.length)
+      
+      // Get asset name from first field or use template label
+      const assetName = formData[template.fields[0]?.name] || `${template.label} - ${new Date().toLocaleDateString()}`
+      console.log('🏷️ Asset name:', assetName)
+
+      await onSubmit({
+        name: assetName,
+        type: category,
+        structuredData,
+        file: selectedFile || undefined
+      })
+
+      setShowSuccess(true)
+      setTimeout(() => {
+        onClose()
+        setFormData({})
+        setSelectedFile(null)
+      }, 1500)
+    } catch (error: any) {
+      console.error('❌ Submit error:', error)
+      const errorMessage = error?.message || 'Failed to save asset. Please try again.'
+      setErrors([errorMessage])
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const renderField = (field: CategoryField) => {
+    const value = formData[field.name] || ''
+
+    const fieldClasses = "w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-inner"
+
+    return (
+      <div key={field.name} className="space-y-2">
+        <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+          {field.label}
+          {field.required && <span className="text-red-400 ml-1">*</span>}
+          {field.encrypted && <Lock className="inline-block w-3 h-3 ml-2 text-yellow-400" />}
+        </label>
+
+        {field.type === 'text' && (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            className={fieldClasses}
+          />
+        )}
+
+        {field.type === 'password' && (
+          <input
+            type="password"
+            value={value}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            className={`${fieldClasses} font-mono`}
+          />
+        )}
+
+        {field.type === 'number' && (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            className={fieldClasses}
+          />
+        )}
+
+        {field.type === 'textarea' && (
+          <textarea
+            value={value}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            rows={field.encrypted ? 4 : 3}
+            className={`${fieldClasses} resize-none ${field.encrypted ? 'font-mono' : ''}`}
+          />
+        )}
+
+        {field.type === 'select' && (
+          <select
+            value={value}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            className={fieldClasses}
+          >
+            <option value="">{field.placeholder}</option>
+            {field.options?.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        )}
+
+        {field.helpText && (
+          <p className="text-xs text-slate-500 flex items-start gap-1 mt-1">
+            <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+            <span>{field.helpText}</span>
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  if (!template) return null
+
+  const Icon = template.icon
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+          >
+            {/* Header */}
+            <div className={`${template.bgColor} border-b border-white/10 p-6`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-xl ${template.bgColor} flex items-center justify-center ${template.color}`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{template.label}</h2>
+                    <p className="text-xs text-slate-400 mt-1">{template.instructions}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Success Message */}
+            <AnimatePresence>
+              {showSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-green-500/10 border-b border-green-500/20 p-4"
+                >
+                  <div className="flex items-center gap-3 text-green-400">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span className="text-sm font-medium">Asset saved successfully!</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Error Messages */}
+            {errors.length > 0 && (
+              <div className="bg-red-500/10 border-b border-red-500/20 p-4">
+                <div className="flex items-start gap-3 text-red-400">
+                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-1">
+                    {errors.map((error, idx) => (
+                      <p key={idx} className="text-sm">{error}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Form Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] space-y-5">
+              {/* Examples */}
+              <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4">
+                <p className="text-xs uppercase tracking-widest text-blue-400 font-bold mb-2">Examples</p>
+                <div className="flex flex-wrap gap-2">
+                  {template.examples.map((example, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs bg-blue-500/10 text-blue-300 px-3 py-1 rounded-full"
+                    >
+                      {example}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dynamic Fields */}
+              {template.fields.map(field => renderField(field))}
+
+              {/* Optional File Upload */}
+              <div className="space-y-2">
+                <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+                  Attach File (Optional)
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="category-file-upload"
+                  />
+                  <label
+                    htmlFor="category-file-upload"
+                    className="flex items-center justify-center gap-3 w-full bg-black/40 border border-white/10 border-dashed rounded-xl px-4 py-6 text-sm text-slate-400 hover:text-white hover:border-blue-500/50 transition-all cursor-pointer"
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span>{selectedFile ? selectedFile.name : 'Click to upload supporting document'}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-white/10 p-6 bg-black/20">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs text-slate-500">
+                  <Lock className="inline-block w-3 h-3 mr-1" />
+                  All sensitive data is encrypted with AES-256-GCM
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                  >
+                    {isSubmitting ? 'Encrypting...' : 'Save Securely'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}

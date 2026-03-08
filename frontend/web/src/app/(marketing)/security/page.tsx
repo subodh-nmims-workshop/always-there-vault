@@ -86,7 +86,7 @@ export default function SecurityPage() {
                                 <span className="text-purple-400">const</span> <span className="text-blue-400">iv</span> = window.crypto.getRandomValues(<span className="text-purple-400">new</span> Uint8Array(<span className="text-orange-300">12</span>));
                                 <span className="text-purple-400">const</span> <span className="text-blue-400">encodedData</span> = <span className="text-purple-400">new</span> TextEncoder().encode(plaintextSeed);
 
-                                <span className="text-slate-500">// Payload is encrypted BEFORE leaving device</span>
+                                <span className="text-slate-500">{"// Payload is encrypted BEFORE leaving device"}</span>
                                 <span className="text-purple-400">const</span> encryptedBuffer = <span className="text-purple-400">await</span> window.crypto.subtle.encrypt(
                                 {'{'} <span className="text-emerald-300">name</span>: <span className="text-emerald-300">"AES-GCM"</span>, iv {'}'},
                                 keyMaterial,

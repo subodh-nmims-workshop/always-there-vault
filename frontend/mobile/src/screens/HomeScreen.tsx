@@ -177,14 +177,14 @@ const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#080a0f',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#05070a',
     marginBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#334155',

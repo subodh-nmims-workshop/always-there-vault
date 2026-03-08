@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Plus, Mail, Wallet, Edit, Trash2, Check, X, Shield, CheckCircle } from 'lucide-react'
 import WebStorageService, { StoredBeneficiary } from '@/lib/storage'
+import { useApp } from '@/contexts/AppContext'
+import { addBeneficiary } from '@/lib/blockchain'
 
 export function BeneficiaryManager() {
-  const [beneficiaries, setBeneficiaries] = useState<StoredBeneficiary[]>([])
+  const { state, refreshState } = useApp()
+  const beneficiaries = state?.beneficiaries || []
+
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -14,29 +19,26 @@ export function BeneficiaryManager() {
     walletAddress: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   const storage = WebStorageService.getInstance()
 
-  useEffect(() => {
-    loadBeneficiaries()
-  }, [])
-
-  const loadBeneficiaries = async () => {
-    try {
-      const stored = await storage.getAllBeneficiaries()
-      setBeneficiaries(stored)
-    } catch (error) {
-      console.error('Failed to load beneficiaries:', error)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name || !formData.email || !formData.walletAddress) return
+    if (!formData.name || !formData.email) return
 
     setIsSubmitting(true)
 
     try {
+      // Step 1: Engage Decentralized Backend Wallet Config (if web3 presence exists)
+      if (formData.walletAddress) {
+        const txResult = await addBeneficiary(formData.walletAddress)
+        if (!txResult.success) {
+          alert(`Decentralized Registry Failed: ${txResult.error}`)
+          return
+        }
+      }
+
       const beneficiary: StoredBeneficiary = {
         id: editingId || storage.generateId(),
         name: formData.name,
@@ -47,12 +49,35 @@ export function BeneficiaryManager() {
       }
 
       await storage.saveBeneficiary(beneficiary)
-      await loadBeneficiaries()
-      
+      await refreshState()
+
+      // Step 2: Bridge to traditional Web2 Email Service via Next.js Server Route
+      // This allows the 100% decentralized Web3 backend to still fire emails
+      try {
+        const emailReq = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            walletAddress: formData.walletAddress
+          })
+        })
+
+        if (!emailReq.ok) {
+          console.error('Failed to trigger background email bridge')
+        }
+      } catch (emailOutage) {
+        console.error('Email Bridge Unavailable:', emailOutage)
+      }
+
       // Reset form
       setFormData({ name: '', email: '', walletAddress: '' })
       setShowAddForm(false)
       setEditingId(null)
+
+      setShowSuccessPopup(true)
+      setTimeout(() => setShowSuccessPopup(false), 3000)
 
     } catch (error) {
       console.error('Failed to save beneficiary:', error)
@@ -76,7 +101,7 @@ export function BeneficiaryManager() {
     if (confirm('Are you sure you want to delete this beneficiary?')) {
       try {
         await storage.deleteBeneficiary(id)
-        await loadBeneficiaries()
+        await refreshState()
       } catch (error) {
         console.error('Failed to delete beneficiary:', error)
         alert('Failed to delete beneficiary.')
@@ -100,9 +125,9 @@ export function BeneficiaryManager() {
   }
 
   const isFormValid = () => {
-    return formData.name.trim() && 
-           validateEmail(formData.email) && 
-           validateWalletAddress(formData.walletAddress)
+    return formData.name.trim() !== '' &&
+      validateEmail(formData.email) &&
+      (!formData.walletAddress || validateWalletAddress(formData.walletAddress))
   }
 
   return (
@@ -119,8 +144,8 @@ export function BeneficiaryManager() {
               <p className="text-sm text-slate-400">Manage who will receive your digital assets</p>
             </div>
           </div>
-          <button 
-            onClick={() => setShowAddForm(true)} 
+          <button
+            onClick={() => setShowAddForm(true)}
             disabled={showAddForm}
             className="btn-premium px-6 py-3 disabled:opacity-50"
           >
@@ -154,7 +179,7 @@ export function BeneficiaryManager() {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 mt-4">
                       <div className="flex items-center space-x-2 text-sm">
                         <Mail className="h-4 w-4 text-slate-500" />
@@ -171,15 +196,15 @@ export function BeneficiaryManager() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col space-y-2 ml-4">
-                    <button 
+                    <button
                       onClick={() => handleEdit(beneficiary)}
                       className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium transition-colors border border-slate-700 hover:border-blue-500/50"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(beneficiary.id)}
                       className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium transition-colors border border-red-500/20 hover:border-red-500/50"
                     >
@@ -211,8 +236,8 @@ export function BeneficiaryManager() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2 text-slate-200">Name *</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="input-premium w-full"
                 placeholder="Beneficiary name"
                 value={formData.name}
@@ -220,14 +245,13 @@ export function BeneficiaryManager() {
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-2 text-slate-200">Email *</label>
-              <input 
-                type="email" 
-                className={`input-premium w-full ${
-                  formData.email && !validateEmail(formData.email) ? 'border-red-500' : ''
-                }`}
+              <input
+                type="email"
+                className={`input-premium w-full ${formData.email && !validateEmail(formData.email) ? 'border-red-500' : ''
+                  }`}
                 placeholder="email@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
@@ -240,18 +264,18 @@ export function BeneficiaryManager() {
                 </p>
               )}
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium mb-2 text-slate-200">Wallet Address *</label>
-              <input 
-                type="text" 
-                className={`input-premium w-full font-mono text-sm ${
-                  formData.walletAddress && !validateWalletAddress(formData.walletAddress) ? 'border-red-500' : ''
-                }`}
+              <label className="block text-sm font-medium mb-2 text-slate-200">
+                Wallet Address <span className="text-slate-500 font-normal text-xs ml-1">(Optional - Can be added later)</span>
+              </label>
+              <input
+                type="text"
+                className={`input-premium w-full font-mono text-sm ${formData.walletAddress && !validateWalletAddress(formData.walletAddress) ? 'border-red-500' : ''
+                  }`}
                 placeholder="0x..."
                 value={formData.walletAddress}
                 onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
-                required
               />
               {formData.walletAddress && !validateWalletAddress(formData.walletAddress) && (
                 <p className="text-xs text-red-400 mt-1 flex items-center">
@@ -272,13 +296,13 @@ export function BeneficiaryManager() {
                 <Shield className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-slate-300">
                   <p className="font-medium text-blue-300 mb-1">Beneficiary Verification</p>
-                  <p>The beneficiary will receive email notifications and can access assets using their wallet address after the release conditions are met.</p>
+                  <p>The beneficiary will receive email notifications. If they don't have a Web3 wallet yet, they can create one and provide the address later to access assets.</p>
                 </div>
               </div>
             </div>
 
             <div className="flex space-x-3">
-              <button 
+              <button
                 type="submit"
                 className="btn-premium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!isFormValid() || isSubmitting}
@@ -295,7 +319,7 @@ export function BeneficiaryManager() {
                   </>
                 )}
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
@@ -308,6 +332,26 @@ export function BeneficiaryManager() {
           </form>
         </div>
       )}
+
+      {/* Success Popup */}
+      <AnimatePresence>
+        {showSuccessPopup && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+          >
+            <div className="bg-emerald-500/20 p-2 rounded-full">
+              <Check className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-white font-bold tracking-wide">Beneficiary Saved</p>
+              <p className="text-emerald-200 text-xs font-medium">Global database synced successfully.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

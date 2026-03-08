@@ -1,19 +1,32 @@
 /**
  * Client-side Storage Service for Web App
  * Handles localStorage, IndexedDB, and encrypted data persistence
+ * NOW WITH FOLDER SYSTEM - Like OneDrive!
  */
 
 import WebCryptoService, { EncryptionResult, KeyDistribution } from './crypto';
+
+export interface StoredFolder {
+  id: string;
+  name: string;
+  parentId: string | null; // null = root folder
+  color?: string;
+  icon?: string;
+  beneficiaries: string[]; // Beneficiary IDs who can access
+  createdAt: number;
+  updatedAt: number;
+}
 
 export interface StoredAsset {
   id: string;
   name: string;
   type: string;
+  folderId: string | null; // null = root, otherwise folder ID
   encryptedData: string;
   keyId: string;
   iv: string;
   ipfsHash?: string;
-  beneficiaries: string[];
+  beneficiaries: string[]; // Beneficiary IDs for this asset
   createdAt: number;
   size: number;
   mimeType?: string;
@@ -37,6 +50,7 @@ export interface StoredHeartbeat {
 }
 
 export interface AppState {
+  folders: StoredFolder[];
   assets: StoredAsset[];
   beneficiaries: StoredBeneficiary[];
   heartbeats: StoredHeartbeat[];
@@ -95,6 +109,9 @@ class WebStorageService {
         const db = (event.target as IDBOpenDBRequest).result;
 
         // Create object stores
+        if (!db.objectStoreNames.contains('folders')) {
+          db.createObjectStore('folders', { keyPath: 'id' });
+        }
         if (!db.objectStoreNames.contains('assets')) {
           db.createObjectStore('assets', { keyPath: 'id' });
         }
@@ -115,7 +132,8 @@ class WebStorageService {
    * Get current app state
    */
   async getAppState(): Promise<AppState> {
-    const [assets, beneficiaries, heartbeats, keyDistributions] = await Promise.all([
+    const [folders, assets, beneficiaries, heartbeats, keyDistributions] = await Promise.all([
+      this.getAllFolders(),
       this.getAllAssets(),
       this.getAllBeneficiaries(),
       this.getAllHeartbeats(),
@@ -128,6 +146,7 @@ class WebStorageService {
       : Date.now();
 
     return {
+      folders,
       assets,
       beneficiaries,
       heartbeats,
@@ -189,10 +208,10 @@ class WebStorageService {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['beneficiaries'], 'readwrite');
       const store = transaction.objectStore('beneficiaries');
-      const request = store.put(beneficiary);
+      store.put(beneficiary);
 
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
     });
   }
 
@@ -213,10 +232,10 @@ class WebStorageService {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['beneficiaries'], 'readwrite');
       const store = transaction.objectStore('beneficiaries');
-      const request = store.delete(id);
+      store.delete(id);
 
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
     });
   }
 
@@ -228,10 +247,10 @@ class WebStorageService {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['heartbeats'], 'readwrite');
       const store = transaction.objectStore('heartbeats');
-      const request = store.put(heartbeat);
+      store.put(heartbeat);
 
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
     });
   }
 
@@ -390,6 +409,236 @@ class WebStorageService {
     } catch (error) {
       throw new Error(`Import failed: ${error}`);
     }
+  }
+
+  /**
+   * ============================================
+   * FOLDER MANAGEMENT (OneDrive-like system)
+   * ============================================
+   */
+
+  /**
+   * Create a new folder
+   */
+  async createFolder(name: string, parentId: string | null = null, beneficiaries: string[] = []): Promise<StoredFolder> {
+    await this.ensureDB();
+
+    const folder: StoredFolder = {
+      id: this.generateId(),
+      name,
+      parentId,
+      beneficiaries,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      color: this.getRandomColor(),
+      icon: this.getFolderIcon(name)
+    };
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['folders'], 'readwrite');
+      const store = transaction.objectStore('folders');
+      const request = store.add(folder);
+
+      request.onsuccess = () => resolve(folder);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Get all folders
+   */
+  async getAllFolders(): Promise<StoredFolder[]> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['folders'], 'readonly');
+      const store = transaction.objectStore('folders');
+      const request = store.getAll();
+
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Get folder by ID
+   */
+  async getFolder(id: string): Promise<StoredFolder | null> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['folders'], 'readonly');
+      const store = transaction.objectStore('folders');
+      const request = store.get(id);
+
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Get folders by parent ID
+   */
+  async getFoldersByParent(parentId: string | null): Promise<StoredFolder[]> {
+    const allFolders = await this.getAllFolders();
+    return allFolders.filter(f => f.parentId === parentId);
+  }
+
+  /**
+   * Update folder
+   */
+  async updateFolder(id: string, updates: Partial<StoredFolder>): Promise<void> {
+    await this.ensureDB();
+    const folder = await this.getFolder(id);
+    if (!folder) throw new Error('Folder not found');
+
+    const updated = { ...folder, ...updates, updatedAt: Date.now() };
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['folders'], 'readwrite');
+      const store = transaction.objectStore('folders');
+      const request = store.put(updated);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Delete folder (and move contents to parent or root)
+   */
+  async deleteFolder(id: string): Promise<void> {
+    await this.ensureDB();
+    const folder = await this.getFolder(id);
+    if (!folder) return;
+
+    // Move all assets in this folder to parent
+    const assets = await this.getAssetsByFolder(id);
+    for (const asset of assets) {
+      await this.updateAsset(asset.id, { folderId: folder.parentId });
+    }
+
+    // Move all subfolders to parent
+    const subfolders = await this.getFoldersByParent(id);
+    for (const subfolder of subfolders) {
+      await this.updateFolder(subfolder.id, { parentId: folder.parentId });
+    }
+
+    // Delete the folder
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['folders'], 'readwrite');
+      const store = transaction.objectStore('folders');
+      const request = store.delete(id);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Get assets by folder
+   */
+  async getAssetsByFolder(folderId: string | null): Promise<StoredAsset[]> {
+    const allAssets = await this.getAllAssets();
+    return allAssets.filter(a => a.folderId === folderId);
+  }
+
+  /**
+   * Move asset to folder
+   */
+  async moveAssetToFolder(assetId: string, folderId: string | null): Promise<void> {
+    return this.updateAsset(assetId, { folderId });
+  }
+
+  /**
+   * Share folder with beneficiaries
+   */
+  async shareFolderWithBeneficiaries(folderId: string, beneficiaryAddresses: string[]): Promise<void> {
+    const folder = await this.getFolder(folderId);
+    if (!folder) throw new Error('Folder not found');
+
+    // Replace folder-level mapping with the explicit selection
+    const updatedBeneficiaries = Array.from(new Set(beneficiaryAddresses));
+    await this.updateFolder(folderId, { beneficiaries: updatedBeneficiaries });
+
+    const assets = await this.getAssetsByFolder(folderId);
+    for (const asset of assets) {
+      // For assets inside this folder, align with the folder's beneficiary set
+      await this.updateAsset(asset.id, { beneficiaries: updatedBeneficiaries });
+    }
+  }
+
+  /**
+   * Get folder path (breadcrumb)
+   */
+  async getFolderPath(folderId: string | null): Promise<StoredFolder[]> {
+    if (!folderId) return [];
+
+    const path: StoredFolder[] = [];
+    let currentId: string | null = folderId;
+
+    while (currentId) {
+      const folder = await this.getFolder(currentId);
+      if (!folder) break;
+      path.unshift(folder);
+      currentId = folder.parentId;
+    }
+
+    return path;
+  }
+
+  /**
+   * Helper: Get random color for folder
+   */
+  private getRandomColor(): string {
+    const colors = ['blue', 'green', 'purple', 'orange', 'pink', 'cyan', 'yellow'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  /**
+   * Helper: Get folder icon based on name
+   */
+  private getFolderIcon(name: string): string {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('doc') || lowerName.includes('file')) return 'document';
+    if (lowerName.includes('photo') || lowerName.includes('image')) return 'photo';
+    if (lowerName.includes('video') || lowerName.includes('movie')) return 'video';
+    if (lowerName.includes('music') || lowerName.includes('audio')) return 'music';
+    if (lowerName.includes('key') || lowerName.includes('password')) return 'key';
+    return 'folder';
+  }
+
+  /**
+   * Update asset (add folderId support)
+   */
+  async updateAsset(id: string, updates: Partial<StoredAsset>): Promise<void> {
+    await this.ensureDB();
+    const asset = await this.getAsset(id);
+    if (!asset) throw new Error('Asset not found');
+
+    const updated = { ...asset, ...updates };
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['assets'], 'readwrite');
+      const store = transaction.objectStore('assets');
+      const request = store.put(updated);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Get asset by ID
+   */
+  async getAsset(id: string): Promise<StoredAsset | null> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['assets'], 'readonly');
+      const store = transaction.objectStore('assets');
+      const request = store.get(id);
+
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
   }
 }
 

@@ -1,8 +1,20 @@
 {
-  "lib/crypto.ts -> secrets.js-grempe": {
-    "id": 7046,
+  "components/asset-creation-form.tsx -> @/lib/ipfs-client": {
+    "id": "components/asset-creation-form.tsx -> @/lib/ipfs-client",
     "files": [
-      "static/chunks/46.cc95a52f9b163908.js"
+      "static/chunks/_app-pages-browser_src_lib_ipfs-client_ts.js"
+    ]
+  },
+  "lib/crypto.ts -> ./ipfs-client": {
+    "id": "lib/crypto.ts -> ./ipfs-client",
+    "files": [
+      "static/chunks/_app-pages-browser_src_lib_ipfs-client_ts.js"
+    ]
+  },
+  "lib/crypto.ts -> secrets.js-grempe": {
+    "id": "lib/crypto.ts -> secrets.js-grempe",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_secrets_js-grempe_secrets_js.js"
     ]
   }
 }

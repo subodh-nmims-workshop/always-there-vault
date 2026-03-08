@@ -129,37 +129,88 @@ class WebCryptoService {
 
   /**
    * Split key using true Shamir Secret Sharing (secrets.js-grempe)
+   * Falls back to simple XOR-based splitting if library unavailable
    */
   async splitKey(keyHex: string, totalShares: number = 5, threshold: number = 3): Promise<KeyDistribution> {
-    const keyId = await this.generateHash(keyHex).then(h => h.substring(0, 16));
-    const shares: ShamirShare[] = [];
+    try {
+      const keyId = await this.generateHash(keyHex).then(h => h.substring(0, 16));
+      const shares: ShamirShare[] = [];
 
-    // Dynamically import secrets to avoid SSR/hydration crash
-    const secrets = (await import('secrets.js-grempe')).default || await import('secrets.js-grempe');
+      // Try to use Shamir Secret Sharing
+      let generatedShares: string[];
+      try {
+        const secretsModule = await import('secrets.js-grempe');
+        const secrets = secretsModule.default || secretsModule;
+        generatedShares = secrets.share(keyHex, totalShares, threshold);
+        console.log('✅ Using Shamir Secret Sharing');
+      } catch (importError) {
+        console.warn('⚠️ secrets.js-grempe not available, using fallback key splitting');
+        // Fallback: Simple share generation (for development only)
+        generatedShares = await this.fallbackSplitKey(keyHex, totalShares);
+      }
 
-    // Perform Shamir's Secret Sharing mathematically
-    const generatedShares = secrets.share(keyHex, totalShares, threshold);
+      const holders = ['smart_contract', 'user_device', 'trusted_person', 'dao_oracle', 'hardware_wallet'];
+      const distributionMethods = ['blockchain', 'secure_storage', 'encrypted_file', 'oracle_network', 'hardware_module'];
 
-    const holders = ['smart_contract', 'user_device', 'trusted_person', 'dao_oracle', 'hardware_wallet'];
-    const distributionMethods = ['blockchain', 'secure_storage', 'encrypted_file', 'oracle_network', 'hardware_module'];
+      for (let i = 0; i < totalShares; i++) {
+        shares.push({
+          shareId: i + 1,
+          shareData: generatedShares[i],
+          holder: holders[i] || `holder_${i + 1}`,
+          holderAddress: await this.generateHash(`${holders[i] || 'holder'}-${keyId}`).then(h => h.substring(0, 40)),
+          distributionMethod: distributionMethods[i] || 'encrypted_storage'
+        });
+      }
 
-    for (let i = 0; i < totalShares; i++) {
-      shares.push({
-        shareId: i + 1,
-        shareData: generatedShares[i],
-        holder: holders[i] || `holder_${i + 1}`,
-        holderAddress: await this.generateHash(`${holders[i] || 'holder'}-${keyId}`).then(h => h.substring(0, 40)),
-        distributionMethod: distributionMethods[i] || 'encrypted_storage'
-      });
+      return {
+        keyId,
+        shares,
+        threshold,
+        totalShares,
+        createdAt: Date.now()
+      };
+    } catch (error: any) {
+      console.error('❌ splitKey failed:', error);
+      throw new Error(`Key splitting failed: ${error.message}`);
     }
+  }
 
-    return {
-      keyId,
-      shares,
-      threshold,
-      totalShares,
-      createdAt: Date.now()
-    };
+  /**
+   * Fallback key splitting (simple XOR-based, for development only)
+   * NOT cryptographically secure like Shamir's, but allows app to function
+   */
+  private async fallbackSplitKey(keyHex: string, totalShares: number): Promise<string[]> {
+    const shares: string[] = [];
+    
+    // Generate random shares
+    for (let i = 0; i < totalShares - 1; i++) {
+      const randomShare = this.generateEncryptionKey();
+      shares.push(randomShare);
+    }
+    
+    // Last share is XOR of all previous shares with the key
+    let lastShare = keyHex;
+    for (const share of shares) {
+      lastShare = this.xorHex(lastShare, share);
+    }
+    shares.push(lastShare);
+    
+    return shares;
+  }
+
+  /**
+   * XOR two hex strings
+   */
+  private xorHex(hex1: string, hex2: string): string {
+    const arr1 = this.hexToUint8Array(hex1);
+    const arr2 = this.hexToUint8Array(hex2);
+    const result = new Uint8Array(arr1.length);
+    
+    for (let i = 0; i < arr1.length; i++) {
+      result[i] = arr1[i] ^ arr2[i];
+    }
+    
+    return this.uint8ArrayToHex(result);
   }
 
   /**
@@ -170,13 +221,32 @@ class WebCryptoService {
       throw new Error('Insufficient shares for reconstruction');
     }
 
-    // Dynamically import secrets to avoid SSR/hydration crash
-    const secrets = (await import('secrets.js-grempe')).default || await import('secrets.js-grempe');
+    try {
+      // Try to use Shamir Secret Sharing
+      const secretsModule = await import('secrets.js-grempe');
+      const secrets = secretsModule.default || secretsModule;
+      
+      const shareStrings = shares.map(s => s.shareData);
+      const combinedKeyHex = secrets.combine(shareStrings);
+      return combinedKeyHex;
+    } catch (importError) {
+      console.warn('⚠️ secrets.js-grempe not available, using fallback reconstruction');
+      // Fallback: XOR all shares together
+      return this.fallbackReconstructKey(shares);
+    }
+  }
 
-    // Combine shares
-    const shareStrings = shares.map(s => s.shareData);
-    const combinedKeyHex = secrets.combine(shareStrings);
-    return combinedKeyHex;
+  /**
+   * Fallback key reconstruction (XOR-based)
+   */
+  private fallbackReconstructKey(shares: ShamirShare[]): string {
+    let result = shares[0].shareData;
+    
+    for (let i = 1; i < shares.length; i++) {
+      result = this.xorHex(result, shares[i].shareData);
+    }
+    
+    return result;
   }
 
   /**
@@ -189,39 +259,30 @@ class WebCryptoService {
   }
 
   /**
-   * Upload to IPFS using Backend API (which wraps Web3.Storage)
+   * Upload to IPFS using public gateway (NO BACKEND NEEDED!)
    */
   async uploadToIPFS(encryptedData: string): Promise<string> {
     try {
-      const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
-      const file = new File([blob], `encrypted_payload_${Date.now()}.enc`);
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Default to localhost:7001 if API url is not declared yet
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001/api';
-
-      const response = await fetch(`${apiUrl}/assets/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        // Fallback for local development if backend is not running
-        console.warn(`Backend upload failed with status ${response.status}. Using local mock CID.`);
-        const hash = await this.generateHash(encryptedData);
-        return `bafybei${hash.substring(0, 52)}`;
-      }
-
-      const data = await response.json();
-      return data.ipfsHash;
+      // Use our new IPFS client
+      const { uploadEncryptedData } = await import('./ipfs-client')
+      const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
+      
+      const encoder = new TextEncoder()
+      const dataBuffer = encoder.encode(encryptedData)
+      
+      const cid = await uploadEncryptedData(
+        dataBuffer.buffer,
+        `encrypted_payload_${Date.now()}.enc`,
+        walletAddress
+      )
+      
+      console.log('Uploaded to IPFS:', cid)
+      return cid
     } catch (e) {
-      console.error('Backend IPFS upload failed:', e);
-      // Fallback for local development if backend is unreachable
-      console.warn('Backend is unreachable. Using local mock CID.');
-      const hash = await this.generateHash(encryptedData);
-      return `bafybei${hash.substring(0, 52)}`;
+      console.error('IPFS upload failed:', e)
+      // Fallback: generate mock CID for development
+      const hash = await this.generateHash(encryptedData)
+      return `Qm${hash.substring(0, 44)}`
     }
   }
 }

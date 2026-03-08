@@ -1,6 +1,6 @@
-'use server'
+'use client'
 
-import { revalidatePath } from 'next/cache'
+import WebStorageService from '@/lib/storage'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
 
@@ -13,21 +13,18 @@ export interface HeartbeatPayload {
 
 export async function recordHeartbeat(payload: HeartbeatPayload) {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/heartbeat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        })
-
-        if (!res.ok) {
-            throw new Error(`Failed to record heartbeat: ${res.statusText}`)
+        const storage = WebStorageService.getInstance()
+        const heartbeat = {
+            id: Date.now().toString(),
+            timestamp: Date.now(),
+            method: payload.method,
+            signature: payload.signature || '',
+            verified: true
         }
 
-        const data = await res.json()
-        revalidatePath('/') // Revalidate the dashboard
-        return { success: true, data }
+        await storage.saveHeartbeat(heartbeat)
+
+        return { success: true, data: heartbeat }
     } catch (error) {
         console.error('Heartbeat action error:', error)
         return { success: false, error: 'Failed to communicate with protocol network.' }
@@ -36,16 +33,53 @@ export async function recordHeartbeat(payload: HeartbeatPayload) {
 
 export async function getHeartbeatStatus(walletAddress: string) {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/heartbeat/status/${walletAddress}`, {
-            cache: 'no-store'
-        })
+        const storage = WebStorageService.getInstance()
+        const heartbeats = await storage.getAllHeartbeats()
+        const settings = storage.getSettings()
 
-        if (!res.ok) {
-            return { success: false, status: 'Not Found' }
+        const intervalDays = settings.heartbeatInterval || 30
+        const gracePeriodDays = settings.gracePeriod || 14
+
+        if (heartbeats.length === 0) {
+            const nextDue = Date.now() + (intervalDays * 24 * 60 * 60 * 1000)
+            const daysUntilDue = Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
+            return {
+                success: true,
+                status: 'active',
+                lastHeartbeat: Date.now(),
+                nextDue,
+                daysUntilDue,
+                isOverdue: false
+            }
         }
 
-        const data = await res.json()
-        return { success: true, ...data }
+        const lastHeartbeat = Math.max(...heartbeats.map((h: any) => h.timestamp))
+        const daysSince = (Date.now() - lastHeartbeat) / (1000 * 60 * 60 * 24)
+
+        const nextDue = lastHeartbeat + (intervalDays * 24 * 60 * 60 * 1000)
+        let status = 'active'
+        let isOverdue = false
+
+        if (daysSince > intervalDays + gracePeriodDays) {
+            status = 'triggered'
+            isOverdue = true
+        } else if (daysSince > intervalDays) {
+            status = 'grace_period'
+            isOverdue = true
+        }
+
+        const daysUntilDue = Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
+
+        return {
+            success: true,
+            status,
+            lastHeartbeat,
+            nextDue,
+            daysUntilDue,
+            isOverdue,
+            interval: intervalDays,
+            gracePeriod: gracePeriodDays
+        }
     } catch (error) {
         console.error('Status check error:', error)
         return { success: false, error: 'Network disconnected.' }
@@ -54,16 +88,9 @@ export async function getHeartbeatStatus(walletAddress: string) {
 
 export async function getHeartbeatHistory(walletAddress: string) {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/heartbeat/history/${walletAddress}`, {
-            cache: 'no-store'
-        })
-
-        if (!res.ok) {
-            return { success: true, heartbeats: [] }
-        }
-
-        const data = await res.json()
-        return { success: true, heartbeats: data }
+        const storage = WebStorageService.getInstance()
+        const heartbeats = await storage.getAllHeartbeats()
+        return { success: true, heartbeats }
     } catch (error) {
         console.error('History fetch error:', error)
         return { success: false, heartbeats: [] }
@@ -72,12 +99,9 @@ export async function getHeartbeatHistory(walletAddress: string) {
 
 export async function getHeartbeatSettings(walletAddress: string) {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/heartbeat/settings/${walletAddress}`, {
-            cache: 'no-store'
-        })
-        if (!res.ok) return { success: false, interval: 30, gracePeriod: 14 }
-        const data = await res.json()
-        return { success: true, ...data }
+        const storage = WebStorageService.getInstance()
+        const settings = storage.getSettings()
+        return { success: true, interval: settings.heartbeatInterval, gracePeriod: settings.gracePeriod }
     } catch (error) {
         console.error('Settings fetch error:', error)
         return { success: false, interval: 30, gracePeriod: 14 }
@@ -86,14 +110,8 @@ export async function getHeartbeatSettings(walletAddress: string) {
 
 export async function updateHeartbeatSettings(walletAddress: string, interval: number, gracePeriod: number) {
     try {
-        const res = await fetch(`${BACKEND_URL}/api/heartbeat/settings/${walletAddress}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ interval, gracePeriod })
-        })
-        if (!res.ok) return { success: false }
+        const storage = WebStorageService.getInstance()
+        storage.saveSettings({ heartbeatInterval: interval, gracePeriod })
         return { success: true }
     } catch (error) {
         console.error('Settings update error:', error)

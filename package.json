@@ -14,7 +14,11 @@
     "lint": "eslint **/*.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "rm -rf dist node_modules",
-    "setup": "npm install"
+    "setup": "npm install && cd frontend/web && npm install && cd ../mobile && npm install",
+    "start": "npm run start:web",
+    "start:services": "bash ./start.sh",
+    "start:web": "cd frontend/web && npm run dev",
+    "start:mobile": "cd frontend/mobile && npm start"
   },
   "keywords": [
     "blockchain",
