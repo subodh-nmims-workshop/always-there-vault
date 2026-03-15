@@ -287,7 +287,8 @@ export class SubscriptionService {
   async checkLimits(userId: string): Promise<{
     canAddAsset: boolean;
     canAddBeneficiary: boolean;
-    canUploadFile: boolean;
+    canUploadCentralized: boolean;
+    canUploadDecentralized: boolean;
     usage: any;
   }> {
     const subscription = await this.getSubscription(userId);
@@ -296,42 +297,41 @@ export class SubscriptionService {
       return {
         canAddAsset: false,
         canAddBeneficiary: false,
-        canUploadFile: false,
+        canUploadCentralized: false,
+        canUploadDecentralized: false,
         usage: {
           assets: subscription.assetsCount,
           beneficiaries: subscription.beneficiariesCount,
-          storageGB: subscription.storageUsedGB,
+          centralizedUsed: subscription.centralizedStorageUsedMB,
+          decentralizedUsed: subscription.decentralizedStorageUsedMB,
         },
       };
     }
 
     return {
-      canAddAsset: subscription.assetsCount < subscription.limits.assets,
-      canAddBeneficiary: subscription.beneficiariesCount < subscription.limits.beneficiaries,
-      canUploadFile: subscription.storageUsedGB < (subscription.limits.storageGB || 10),
+      canAddAsset: subscription.assetsCount < (subscription.limits.assets || Infinity),
+      canAddBeneficiary: subscription.beneficiariesCount < (subscription.limits.beneficiaries || Infinity),
+      canUploadCentralized: subscription.centralizedStorageUsedMB < (subscription.limits.centralizedStorageMB || 500),
+      canUploadDecentralized: subscription.decentralizedStorageUsedMB < (subscription.limits.decentralizedStorageMB || 500),
       usage: {
         assets: `${subscription.assetsCount}/${subscription.limits.assets}`,
         beneficiaries: `${subscription.beneficiariesCount}/${subscription.limits.beneficiaries}`,
-        storageGB: `${subscription.storageUsedGB}/${subscription.limits.storageGB || 10}`,
+        centralizedMB: `${subscription.centralizedStorageUsedMB}/${subscription.limits.centralizedStorageMB}`,
+        decentralizedMB: `${subscription.decentralizedStorageUsedMB}/${subscription.limits.decentralizedStorageMB}`,
       },
     };
   }
 
   async updateUsage(
     userId: string,
-    updates: { assets?: number; beneficiaries?: number; storageGB?: number },
+    updates: { assets?: number; beneficiaries?: number; centralizedMB?: number; decentralizedMB?: number },
   ): Promise<SubscriptionDocument> {
     const subscription = await this.getSubscription(userId);
 
-    if (updates.assets !== undefined) {
-      subscription.assetsCount = updates.assets;
-    }
-    if (updates.beneficiaries !== undefined) {
-      subscription.beneficiariesCount = updates.beneficiaries;
-    }
-    if (updates.storageGB !== undefined) {
-      subscription.storageUsedGB = updates.storageGB;
-    }
+    if (updates.assets !== undefined) subscription.assetsCount = updates.assets;
+    if (updates.beneficiaries !== undefined) subscription.beneficiariesCount = updates.beneficiaries;
+    if (updates.centralizedMB !== undefined) subscription.centralizedStorageUsedMB = updates.centralizedMB;
+    if (updates.decentralizedMB !== undefined) subscription.decentralizedStorageUsedMB = updates.decentralizedMB;
 
     return subscription.save();
   }

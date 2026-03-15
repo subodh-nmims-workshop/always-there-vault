@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.27;
 
 /**
  * @title DigitalWill Protocol
@@ -32,18 +32,18 @@ contract DigitalWill {
 
     /**
      * @dev Register or update a digital will condition
-     * @param _interval The maximum time allowed between heartbeats (in seconds)
+     * @param interval The maximum time allowed between heartbeats (in seconds)
      */
-    function registerWill(uint256 _interval) external {
-        require(_interval >= 1 days, "Interval must be at least 1 day");
+    function registerWill(uint256 interval) external {
+        require(interval >= 1 days, "Interval must be at least 1 day");
         
         WillCondition storage userWill = wills[msg.sender];
-        userWill.heartbeatInterval = _interval;
+        userWill.heartbeatInterval = interval;
         userWill.lastHeartbeat = block.timestamp;
         userWill.isActive = true;
         userWill.isTriggered = false;
 
-        emit WillRegistered(msg.sender, _interval);
+        emit WillRegistered(msg.sender, interval);
     }
 
     /**
@@ -62,32 +62,32 @@ contract DigitalWill {
     /**
      * @dev Add or remove an authorized nominee address
      */
-    function setNominee(address _nominee, bool _status) external {
+    function setNominee(address nominee, bool status) external {
         require(wills[msg.sender].isActive, "No active will found");
-        require(_nominee != msg.sender, "Cannot be your own nominee");
+        require(nominee != msg.sender, "Cannot be your own nominee");
         
-        nominees[msg.sender][_nominee] = _status;
+        nominees[msg.sender][nominee] = status;
         
-        if (_status) {
-            emit NomineeAuthorized(msg.sender, _nominee);
+        if (status) {
+            emit NomineeAuthorized(msg.sender, nominee);
         } else {
-            emit NomineeRevoked(msg.sender, _nominee);
+            emit NomineeRevoked(msg.sender, nominee);
         }
     }
 
     /**
      * @dev Store an encrypted payload (like the 5th Shamir Share) on-chain
      */
-    function setOnChainPayload(string calldata _payload) external {
+    function setOnChainPayload(string calldata payload) external {
         require(wills[msg.sender].isActive, "No active will found");
-        onChainPayloads[msg.sender] = _payload;
+        onChainPayloads[msg.sender] = payload;
     }
 
     /**
      * @dev Check if the owner's deadman switch conditions are met (publicly callable by anyone, e.g. Cron Job)
      */
-    function checkAndTrigger(address _owner) external {
-        WillCondition storage userWill = wills[_owner];
+    function checkAndTrigger(address owner) external {
+        WillCondition storage userWill = wills[owner];
         require(userWill.isActive, "No active will found");
         require(!userWill.isTriggered, "Will already triggered");
 
@@ -95,26 +95,26 @@ contract DigitalWill {
         require(timeSinceHeartbeat > userWill.heartbeatInterval, "Heartbeat interval not yet breached");
 
         userWill.isTriggered = true;
-        emit DeadmanTriggered(_owner, block.timestamp);
+        emit DeadmanTriggered(owner, block.timestamp);
     }
 
     /**
      * @dev Returns true if the deadman switch has been triggered
      */
-    function isTriggered(address _owner) external view returns (bool) {
-        return wills[_owner].isTriggered;
+    function isTriggered(address owner) external view returns (bool) {
+        return wills[owner].isTriggered;
     }
 
     /**
      * @dev Allows an authorized nominee to claim the on-chain payload IF the switch is triggered
      */
-    function claimPayload(address _owner) external returns (string memory) {
-        WillCondition memory userWill = wills[_owner];
+    function claimPayload(address owner) external returns (string memory) {
+        WillCondition memory userWill = wills[owner];
         require(userWill.isActive, "No active will found");
         require(userWill.isTriggered, "Deadman switch has NOT been triggered yet");
-        require(nominees[_owner][msg.sender], "You are not an authorized nominee");
+        require(nominees[owner][msg.sender], "You are not an authorized nominee");
 
-        emit PayloadReleased(_owner, msg.sender);
-        return onChainPayloads[_owner];
+        emit PayloadReleased(owner, msg.sender);
+        return onChainPayloads[owner];
     }
 }

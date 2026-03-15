@@ -60,3 +60,29 @@ pids/
 # Temporary folders
 tmp/
 temp/
+
+# Next.js
+.next/
+frontend/web/.next/
+out/
+
+# Expo / React Native
+.expo/
+frontend/mobile/.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+node_modules/
+
+# Docker
+docker-compose.override.yml
+# Metrics
+prometheus_data/
+grafana_data/
+
+# Local database (for dev only)
+*.db
+backend/*.db

@@ -42,10 +42,26 @@
 
 ## 🚀 Quick Start
 
+```bash
+# Start all services (web + mobile + backend + blockchain)
+./start.sh start
+```
+
+**Access:**
+- **Web:** http://localhost:7000
+- **Mobile:** Scan QR code with Expo Go app
+- **Backend:** http://localhost:7001
+
+**Stop:** Press Ctrl+C or run `./start.sh stop`
+
+**First time?** Run `./start.sh install` first to install dependencies
+
+📖 See [RUN_PROJECT.md](RUN_PROJECT.md) for detailed instructions
+
 ### Prerequisites
 - Node.js 18+
-- MongoDB 7.0+
-- Docker & Docker Compose (for production)
+- npm 9+
+- Expo Go app (for mobile)
 
 ### Installation
 

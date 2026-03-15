@@ -200,14 +200,22 @@ export class StripeService {
   }
 
   /**
-   * Handle failed payment
+   * Handle failed payment or chargebacks
    */
   private async handlePaymentFailed(invoice: Stripe.Invoice) {
     const userId = (invoice as any).subscription_details?.metadata?.userId;
     if (!userId) return;
 
-    console.log(`Payment failed for user ${userId}`);
-    // TODO: Send payment failure notification
+    console.log(`❌ Payment failed / Chargeback for user ${userId}. Suspending subscription.`);
+
+    try {
+      // Suspend subscription immediately
+      await this.subscriptionService.cancelSubscription(userId);
+      console.log(`✅ Subscription suspended for user ${userId} due to payment failure limit / chargeback.`);
+      // TODO: Suspend heartbeat monitoring and lock IPFS access here if needed.
+    } catch (error) {
+      console.error(`Failed to handle payment failure logic for user ${userId}:`, error);
+    }
   }
 
   /**
@@ -216,9 +224,9 @@ export class StripeService {
   private getPlanPricing(planType: string, mode: string): { monthly: number; yearly: number } {
     const pricing = {
       centralized: {
-        starter: { monthly: 4.99, yearly: 49.99 },
-        professional: { monthly: 9.99, yearly: 99.99 },
-        enterprise: { monthly: 29.99, yearly: 299.99 },
+        starter: { monthly: 4.99, yearly: 49.90 },
+        professional: { monthly: 14.99, yearly: 149.90 },
+        enterprise: { monthly: 49.99, yearly: 499.90 },
       },
       decentralized: {
         starter: { monthly: 0, yearly: 0 }, // Free

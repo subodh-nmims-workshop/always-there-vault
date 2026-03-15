@@ -1,239 +1,265 @@
-import React, { useEffect, useState } from 'react';
-import {
-  StatusBar,
-  Alert,
-  Platform,
-  PermissionsAndroid,
+import React, { useState, useEffect } from 'react';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  StatusBar, 
+  ActivityIndicator,
+  LogBox
 } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import * as Font from 'expo-font';
+import { 
+  Shield, 
+  Folder, 
+  Users, 
+  Zap, 
+  Settings,
+} from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import Services
-import BiometricService from './src/services/BiometricService';
-import CryptoService from './src/services/CryptoService';
-import StorageService from './src/services/StorageService';
+// ─── Google Fonts Packages ────────────────────────────────────────────────────
+import { 
+  Orbitron_400Regular, 
+  Orbitron_500Medium, 
+  Orbitron_700Bold, 
+  Orbitron_900Black 
+} from '@expo-google-fonts/orbitron';
+import { 
+  Inter_400Regular, 
+  Inter_500Medium, 
+  Inter_600SemiBold,
+  Inter_700Bold, 
+  Inter_900Black 
+} from '@expo-google-fonts/inter';
 
-// Import Screens
 import HomeScreen from './src/screens/HomeScreen';
 import AssetsScreen from './src/screens/AssetsScreen';
 import BeneficiariesScreen from './src/screens/BeneficiariesScreen';
 import HeartbeatScreen from './src/screens/HeartbeatScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import LandingScreen from './src/screens/LandingScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import { COLORS, FONTS, SHADOWS } from './src/theme';
 
-// Import Types
-import { RootStackParamList } from './src/types';
+LogBox.ignoreLogs(['Sending `onAnimatedValueUpdate`']);
 
-const Tab = createBottomTabNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
-const App = (): JSX.Element => {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [biometricCapabilities, setBiometricCapabilities] = useState<any>(null);
+// ─── Error Boundary ───────────────────────────────────────────────────────────
+interface ErrorBoundaryProps {
+  children?: React.ReactNode;
+}
 
-  useEffect(() => {
-    initializeApp();
-  }, []);
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
 
-  const initializeApp = async () => {
-    try {
-      // Request permissions on Android
-      if (Platform.OS === 'android') {
-        await requestAndroidPermissions();
-      }
-
-      // Initialize services
-      const biometricService = BiometricService.getInstance();
-      const cryptoService = CryptoService.getInstance();
-      const storageService = StorageService.getInstance();
-
-      // Check biometric capabilities
-      const capabilities = await biometricService.checkBiometricCapabilities();
-      setBiometricCapabilities(capabilities);
-
-      // Check if this is first launch
-      const isFirstLaunch = await AsyncStorage.getItem('isFirstLaunch');
-      if (isFirstLaunch === null) {
-        await AsyncStorage.setItem('isFirstLaunch', 'false');
-        // Show onboarding or setup wizard
-        showWelcomeMessage();
-      }
-
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('App initialization failed:', error);
-      Alert.alert(
-        'Initialization Error',
-        'Failed to initialize the app. Please restart the application.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
-
-  const requestAndroidPermissions = async () => {
-    try {
-      const permissions = [
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      ];
-
-      await PermissionsAndroid.requestMultiple(permissions);
-    } catch (error) {
-      console.warn('Permission request failed:', error);
-    }
-  };
-
-  const showWelcomeMessage = () => {
-    Alert.alert(
-      'Welcome to Digital Will Protocol',
-      'Your decentralized, secure digital inheritance system. Your data is encrypted client-side and never leaves your control.',
-      [
-        {
-          text: 'Get Started',
-          onPress: () => {
-            if (biometricCapabilities?.available) {
-              Alert.alert(
-                'Biometric Security',
-                `${biometricCapabilities.biometryType} is available. Would you like to enable it for enhanced security?`,
-                [
-                  { text: 'Later', style: 'cancel' },
-                  { text: 'Enable', onPress: setupBiometrics },
-                ]
-              );
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const setupBiometrics = async () => {
-    try {
-      const biometricService = BiometricService.getInstance();
-      const result = await biometricService.createBiometricKeys();
-
-      if (result.success) {
-        Alert.alert('Success', 'Biometric authentication has been enabled.');
-      } else {
-        Alert.alert('Error', result.error || 'Failed to setup biometric authentication.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to setup biometric authentication.');
-    }
-  };
-
-  if (!isInitialized) {
-    // You could show a splash screen here
-    return <></>;
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
   }
 
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('PROTOCOL KERNEL CRASH:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Shield size={64} color={COLORS.error} />
+          <Text style={[styles.splashTitle, { marginTop: 20 }]}>KERNEL CRASH</Text>
+          <Text style={styles.splashSubtitle}>EMERGENCY REBOOT REQUIRED</Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// ─── Root App ─────────────────────────────────────────────────────────────────
+export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [appState, setAppState] = useState<'splash' | 'landing' | 'login' | 'setup_security' | 'unlock' | 'home'>('splash');
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Load fonts directly from installed npm packages to fix "Cannot find module" errors
+        await Font.loadAsync({
+          'Orbitron_400Regular': Orbitron_400Regular,
+          'Orbitron_500Medium': Orbitron_500Medium,
+          'Orbitron_700Bold': Orbitron_700Bold,
+          'Orbitron_900Black': Orbitron_900Black,
+          'Inter_400Regular': Inter_400Regular,
+          'Inter_500Medium': Inter_500Medium,
+          'Inter_600SemiBold': Inter_600SemiBold,
+          'Inter_700Bold': Inter_700Bold,
+          'Inter_900Black': Inter_900Black,
+        });
+        
+        const wallet = await AsyncStorage.getItem('dwp_wallet_address');
+        const setupDone = await AsyncStorage.getItem('dwp_setup_complete');
+        
+        // Artificial delay for premium system initialization feel
+        setTimeout(() => {
+          if (wallet && setupDone) {
+            setAppState('unlock');
+          } else if (wallet && !setupDone) {
+            setAppState('setup_security');
+          } else {
+            setAppState('landing');
+          }
+          setFontsLoaded(true);
+        }, 1800);
+      } catch (e) {
+        console.warn('Protocol bootstrap warning:', e);
+        setFontsLoaded(true);
+        setAppState('landing');
+      }
+    }
+
+    prepare();
+  }, []);
+
+  if (!fontsLoaded || appState === 'splash') {
+    return (
+      <View style={styles.splashContainer}>
+        <StatusBar barStyle="light-content" />
+        <Shield size={80} color={COLORS.primary} style={styles.splashLogo} />
+        <Text style={styles.splashTitle}>DEADMAN</Text>
+        <Text style={styles.splashSubtitle}>PROTOCOL</Text>
+        <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 40 }} />
+      </View>
+    );
+  }
+
+  const renderContent = () => {
+    switch (appState) {
+      case 'landing':
+        return <LandingScreen onConnectWallet={() => setAppState('login')} />;
+      case 'login':
+        return (
+          <LoginScreen 
+            mode="wallet_auth" 
+            onBack={() => setAppState('landing')}
+            onSuccess={() => setAppState('setup_security')}
+          />
+        );
+      case 'setup_security':
+        return (
+          <LoginScreen 
+            mode="setup_security" 
+            onSuccess={async () => {
+              await AsyncStorage.setItem('dwp_setup_complete', 'true');
+              setAppState('home');
+            }} 
+          />
+        );
+      case 'unlock':
+        return <LoginScreen mode="app_unlock" onSuccess={() => setAppState('home')} />;
+      case 'home':
+        return (
+          <NavigationContainer>
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+              <Tab.Navigator
+                screenOptions={({ route }) => ({
+                  headerShown: false,
+                  tabBarIcon: ({ color, size }) => {
+                    const iconConfig = {
+                      Home: Shield,
+                      Assets: Folder,
+                      Beneficiaries: Users,
+                      Heartbeat: Zap,
+                      Settings: Settings,
+                    };
+                    const IconComp = iconConfig[route.name as keyof typeof iconConfig] || Shield;
+                    return <IconComp size={size} color={color} />;
+                  },
+                  tabBarActiveTintColor: COLORS.primary,
+                  tabBarInactiveTintColor: COLORS.textDim,
+                  tabBarStyle: {
+                    backgroundColor: COLORS.background,
+                    borderTopColor: COLORS.border,
+                    height: 85,
+                    paddingBottom: 25,
+                    paddingTop: 10,
+                    position: 'absolute',
+                  },
+                  tabBarBackground: () => (
+                    <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: COLORS.glass, borderTopWidth: 1, borderTopColor: COLORS.glassBorder }} />
+                  ),
+                  tabBarLabelStyle: {
+                    fontFamily: FONTS.orbitron.bold,
+                    fontSize: 8,
+                    letterSpacing: 1,
+                  },
+                })}
+              >
+                <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'OVERVIEW' }} />
+                <Tab.Screen name="Assets" component={AssetsScreen} options={{ title: 'ASSETS' }} />
+                <Tab.Screen name="Beneficiaries" component={BeneficiariesScreen} options={{ title: 'PROTEGE' }} />
+                <Tab.Screen name="Heartbeat" component={HeartbeatScreen} options={{ title: 'PULSE' }} />
+                <Tab.Screen name="Settings" options={{ title: 'CONFIG' }}>
+                  {() => <SettingsScreen onLogout={() => setAppState('landing')} />}
+                </Tab.Screen>
+              </Tab.Navigator>
+          </NavigationContainer>
+        );
+      default:
+        return <LandingScreen onConnectWallet={() => setAppState('login')} />;
+    }
+  };
+
   return (
-    <NavigationContainer>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#0f172a"
-        translucent={false}
-      />
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName: string;
-
-            switch (route.name) {
-              case 'Home':
-                iconName = 'home';
-                break;
-              case 'Assets':
-                iconName = 'folder';
-                break;
-              case 'Beneficiaries':
-                iconName = 'people';
-                break;
-              case 'Heartbeat':
-                iconName = 'favorite';
-                break;
-              case 'Settings':
-                iconName = 'settings';
-                break;
-              default:
-                iconName = 'help';
-            }
-
-            return <Icon name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#3b82f6',
-          tabBarInactiveTintColor: '#64748b',
-          tabBarStyle: {
-            backgroundColor: '#0f172a',
-            borderTopColor: '#1e293b',
-            borderTopWidth: 1,
-            paddingBottom: Platform.OS === 'ios' ? 20 : 5,
-            paddingTop: 5,
-            height: Platform.OS === 'ios' ? 85 : 60,
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '600',
-          },
-          headerStyle: {
-            backgroundColor: '#0f172a',
-            borderBottomColor: '#1e293b',
-            borderBottomWidth: 1,
-            elevation: 0,
-            shadowOpacity: 0,
-          },
-          headerTintColor: '#f8fafc',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-            fontSize: 18,
-          },
-          headerTitleAlign: 'center',
-        })}
-      >
-        <Tab.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{
-            title: 'Digital Will',
-            headerTitle: 'Digital Will Protocol'
-          }}
-        />
-        <Tab.Screen
-          name="Assets"
-          component={AssetsScreen}
-          options={{
-            title: 'Assets',
-            headerTitle: 'My Digital Assets'
-          }}
-        />
-        <Tab.Screen
-          name="Beneficiaries"
-          component={BeneficiariesScreen}
-          options={{
-            title: 'Beneficiaries',
-            headerTitle: 'Beneficiaries'
-          }}
-        />
-        <Tab.Screen
-          name="Heartbeat"
-          component={HeartbeatScreen}
-          options={{
-            title: 'Heartbeat',
-            headerTitle: 'Proof of Life'
-          }}
-        />
-        <Tab.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            title: 'Settings',
-            headerTitle: 'Settings'
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+          <StatusBar barStyle="light-content" />
+          {renderContent()}
+        </View>
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
-};
+}
 
-export default App;
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  splashContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  splashLogo: {
+    marginBottom: 30,
+    ...SHADOWS.blue
+  },
+  splashTitle: {
+    color: COLORS.text,
+    fontFamily: FONTS.orbitron.black,
+    fontSize: 28,
+    letterSpacing: 3,
+  },
+  splashSubtitle: {
+    color: '#3b82f6',
+    fontFamily: FONTS.inter.bold,
+    fontSize: 12,
+    letterSpacing: 4,
+    marginTop: 10,
+  },
+});

@@ -43,8 +43,10 @@ import { SharedFooter } from '@/components/shared-footer'
 export default function HomePage() {
   const [isConnected, setIsConnected] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
+    setHasMounted(true)
     const savedTab = localStorage.getItem('dwp_active_tab')
     if (savedTab) setActiveTab(savedTab)
   }, [])
@@ -60,10 +62,7 @@ export default function HomePage() {
   const [showWalletModal, setShowWalletModal] = useState(false)
 
   const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  })
+  const { scrollYProgress } = useScroll()
 
   const storage = WebStorageService.getInstance()
 
@@ -105,12 +104,13 @@ export default function HomePage() {
     setShowWalletModal(true)
   }
 
-  const handleWalletConnect = () => {
+  const handleWalletConnect = (walletAddress: string) => {
     setIsConnecting(true)
     setTimeout(() => {
       setIsConnected(true)
       localStorage.setItem('dwp_wallet_connected', 'true')
-      localStorage.setItem('dwp_wallet_address', address)
+      localStorage.setItem('dwp_wallet_address', walletAddress)
+      setAddress(walletAddress)
       setIsConnecting(false)
       setShowWalletModal(false)
     }, 2000)
@@ -157,6 +157,10 @@ export default function HomePage() {
     { type: 'security', title: 'Protocol Quorum Status: 5/5 Shards Healthy', time: '2 days ago', icon: <Shield className="w-4 h-4 text-purple-400" /> },
     { type: 'beneficiary', title: 'Added "Legal Counsel" to Beneficiary Matrix', time: '5 days ago', icon: <Users className="w-4 h-4 text-orange-400" /> },
   ]
+
+  if (!hasMounted) {
+    return <div className="min-h-screen bg-[#080a0f]" /> // Empty shell while mounting
+  }
 
   if (!isConnected) {
     return (

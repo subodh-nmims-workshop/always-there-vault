@@ -253,6 +253,11 @@ export function HeartbeatMonitor() {
               <div className="flex-1">
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Last Pulse</p>
                 <p className="text-white font-bold text-lg">{lastHeartbeat ? lastHeartbeat.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}</p>
+                {lastHeartbeat && (
+                  <p className="text-slate-500 text-xs mt-1">
+                    Next due: {new Date(lastHeartbeat.getTime() + settings.heartbeatInterval * 24 * 60 * 60 * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -282,7 +287,8 @@ export function HeartbeatMonitor() {
 
               <div className="text-center z-10 relative">
                 <p className={`text-6xl font-black text-white drop-shadow-[0_0_10px_theme(colors.${heartbeatDisplay.color}.500/50)] tracking-tighter`}>{Math.max(0, daysUntilDue)}</p>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Days Left</p>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Days Until Next</p>
+                <p className="text-slate-500 text-[10px] font-medium mt-0.5">Heartbeat Due</p>
               </div>
             </div>
           </div>

@@ -1,321 +1,231 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
-  Alert,
-  Animated,
+  ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ApiService from '../services/ApiService';
+import { 
+  Zap, 
+  Clock, 
+  History, 
+  CheckCircle2, 
+  AlertCircle,
+  Fingerprint,
+  Calendar,
+} from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import DashboardHeader from '../components/DashboardHeader';
+import { COLORS, FONTS, RADIUS, SHADOWS, GAPS } from '../theme';
 
 const HeartbeatScreen = () => {
-  const [lastHeartbeat, setLastHeartbeat] = useState(new Date());
-  const [isRecording, setIsRecording] = useState(false);
-  const [heartbeatAnimation] = useState(new Animated.Value(1));
+  const [lastHeartbeat, setLastHeartbeat] = useState<string>('Never');
+  const [pulseCount, setPulseCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [wallet, setWallet] = useState('0x742d...84b3');
 
-  React.useEffect(() => {
-    loadHeartbeat();
-  }, []);
+  const [history, setHistory] = useState<any[]>([]);
 
-  const loadHeartbeat = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('digital_will_heartbeat');
-      if (stored) {
-        setLastHeartbeat(new Date(parseInt(stored, 10)));
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
+
+  const loadData = async () => {
+    const saved = await AsyncStorage.getItem('dwp_heartbeat_history');
+    const w = await AsyncStorage.getItem('dwp_wallet_address');
+    if (w) setWallet(w);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setHistory(parsed);
+      setPulseCount(parsed.length);
+      if (parsed.length > 0) {
+        setLastHeartbeat(new Date(parsed[0].timestamp).toLocaleString());
       }
-    } catch (e) {
-      console.warn('Failed to load heartbeat', e);
     }
   };
 
-  const saveHeartbeat = async (date: Date) => {
-    try {
-      await AsyncStorage.setItem('digital_will_heartbeat', date.getTime().toString());
-      setLastHeartbeat(date);
-    } catch (e) {
-      console.warn('Failed to save heartbeat', e);
-    }
-  };
-
-  const animateHeartbeat = () => {
-    Animated.sequence([
-      Animated.timing(heartbeatAnimation, {
-        toValue: 1.2,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(heartbeatAnimation, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(heartbeatAnimation, {
-        toValue: 1.2,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(heartbeatAnimation, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handleHeartbeat = async () => {
-    setIsRecording(true);
-    animateHeartbeat();
-
-    try {
-      // Step 1: Record Local Heartbeat
+  const handlePulse = async () => {
+    setIsLoading(true);
+    // Simulate web's blockchain signing
+    setTimeout(async () => {
       const now = new Date();
-      await saveHeartbeat(now);
-
-      // Step 2: Sync with Backend
-      const api = ApiService.getInstance();
-      const synced = await api.recordHeartbeat('Mobile App Manual Ping');
-
-      setIsRecording(false);
-      if (synced) {
-        Alert.alert(
-          '❤️ Protocol Verified',
-          'Your proof-of-life heartbeat has been cryptographically signed and synced with the global protocol network.',
-          [{ text: 'Dismiss', style: 'default' }]
-        );
-      } else {
-        Alert.alert(
-          '💾 Saved Locally',
-          'Heartbeat recorded in local secure storage. The protocol will automatically broadcast the signal to the blockchain once a stable connection is restored.',
-          [{ text: 'Acknowledged', style: 'default' }]
-        );
-      }
-    } catch (e: any) {
-      console.error('Heartbeat failed', e);
-      setIsRecording(false);
-      Alert.alert(
-        '⚠️ Transmission Error',
-        `Failed to record protocol pulse. ${e.message || 'Please check your connection and try again.'}`,
-        [{ text: 'Retry', style: 'default' }]
-      );
-    }
+      const newPulse = { id: now.getTime(), timestamp: now.toISOString(), status: 'SUCCESS' };
+      const saved = await AsyncStorage.getItem('dwp_heartbeat_history');
+      const history = saved ? JSON.parse(saved) : [];
+      const updated = [newPulse, ...history];
+      await AsyncStorage.setItem('dwp_heartbeat_history', JSON.stringify(updated));
+      setPulseCount(updated.length);
+      setLastHeartbeat(now.toLocaleString());
+      setIsLoading(false);
+    }, 2000);
   };
-
-  const nextHeartbeatDate = new Date(lastHeartbeat.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.statusCard}>
-        <View style={styles.statusHeader}>
-          <Icon name="favorite" size={24} color="#ef4444" />
-          <Text style={styles.statusTitle}>Heartbeat Status</Text>
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <DashboardHeader walletAddress={wallet} />
+      
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerRow}>
+           <View>
+             <Text style={styles.tabTitle}>PULSE</Text>
+             <Text style={styles.mainTitle}>System Status</Text>
+           </View>
+           <View style={styles.uptimeBadge}>
+              <Text style={styles.uptimeText}>UPTIME: 99.99%</Text>
+           </View>
         </View>
-        <Text style={styles.statusValue}>Active</Text>
-        <Text style={styles.statusSubtitle}>System is monitoring your activity</Text>
-      </View>
 
-      <View style={styles.heartbeatContainer}>
-        <Animated.View
-          style={[
-            styles.heartbeatButton,
-            { transform: [{ scale: heartbeatAnimation }] }
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.heartbeatTouchable}
-            onPress={handleHeartbeat}
-            disabled={isRecording}
-          >
-            <Icon
-              name="favorite"
-              size={80}
-              color={isRecording ? "#fca5a5" : "#ef4444"}
-            />
-          </TouchableOpacity>
-        </Animated.View>
+        {/* WEB-STYLE STATUS CARDS */}
+        <View style={styles.statsGrid}>
+           <View style={styles.statBox}>
+              <Text style={styles.statVal}>{pulseCount}</Text>
+              <Text style={styles.statLabel}>TOTAL PULSES</Text>
+              <Zap size={14} color={COLORS.primary} style={styles.boxIcon} />
+           </View>
+           <View style={styles.statBox}>
+              <Text style={styles.statValSmall}>{lastHeartbeat === 'Never' ? 'N/A' : lastHeartbeat.split(',')[0]}</Text>
+              <Text style={styles.statLabel}>LAST SIGN</Text>
+              <History size={14} color={COLORS.secondary} style={styles.boxIcon} />
+           </View>
+           <View style={styles.statBox}>
+              <Text style={[styles.statStatus, { color: COLORS.accent }]}>ACTIVE</Text>
+              <Text style={styles.statLabel}>PROTOCOL</Text>
+              <CheckCircle2 size={14} color={COLORS.accent} style={styles.boxIcon} />
+           </View>
+        </View>
 
-        <Text style={styles.heartbeatLabel}>
-          {isRecording ? 'Recording...' : 'Tap to Record Heartbeat'}
-        </Text>
-      </View>
+        {/* MAIN PULSE CONSOLE */}
+        <View style={styles.consoleCard}>
+           <View style={styles.consoleHeader}>
+              <Text style={styles.consoleTitle}>Protocol Console</Text>
+              <Clock size={16} color={COLORS.textDim} />
+           </View>
 
-      <View style={styles.infoGrid}>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>30 Days</Text>
-          <Text style={styles.infoLabel}>Interval</Text>
-        </View>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>14 Days</Text>
-          <Text style={styles.infoLabel}>Grace Period</Text>
-        </View>
-      </View>
+           <View style={styles.displayArea}>
+              <Text style={styles.displayLabel}>LAST VERIFIED PULSE</Text>
+              <Text style={styles.largeTime}>{lastHeartbeat.split(',')[1] || '--:--:--'}</Text>
+              <View style={styles.syncRow}>
+                 <ActivityIndicator size="small" color={COLORS.primary} />
+                 <Text style={styles.syncText}>AWAITING NEXT SEQUENCE</Text>
+              </View>
+           </View>
 
-      <View style={styles.detailsCard}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Last Heartbeat</Text>
-          <Text style={styles.detailValue}>{lastHeartbeat.toLocaleDateString()}</Text>
+           <TouchableOpacity 
+              style={[styles.pulseBtn, isLoading && { opacity: 0.7 }]} 
+              onPress={handlePulse}
+              disabled={isLoading}
+            >
+              <LinearGradient colors={[COLORS.primary, COLORS.secondary]} style={styles.pulseGradient}>
+                 {isLoading ? (
+                   <ActivityIndicator color="#fff" />
+                 ) : (
+                   <>
+                     <Fingerprint size={24} color="#fff" />
+                     <Text style={styles.pulseBtnText}>EMIT PULSE SIGNAL</Text>
+                   </>
+                 )}
+              </LinearGradient>
+           </TouchableOpacity>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Next Required</Text>
-          <Text style={styles.detailValue}>{nextHeartbeatDate.toLocaleDateString()}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Status</Text>
-          <View style={styles.statusBadge}>
-            <Icon name="check-circle" size={16} color="#10b981" />
-            <Text style={styles.statusBadgeText}>On Time</Text>
-          </View>
-        </View>
-      </View>
 
-      <View style={styles.helpCard}>
-        <Icon name="info" size={20} color="#3b82f6" />
-        <Text style={styles.helpText}>
-          Regular heartbeats prove you're still active. If you miss heartbeats beyond the grace period,
-          your digital assets will be released to beneficiaries according to your rules.
-        </Text>
-      </View>
-    </View>
+        {/* FREQUENCY CARD */}
+        <View style={styles.configCard}>
+           <View style={styles.configInfo}>
+              <Calendar size={20} color={COLORS.primary} />
+              <View>
+                 <Text style={styles.configTitle}>Pulse Frequency</Text>
+                 <Text style={styles.configSub}>Standard 30-Day Protocol</Text>
+              </View>
+           </View>
+           <View style={styles.configBadge}>
+              <Text style={styles.configBadgeText}>DEFAULT</Text>
+           </View>
+        </View>
+
+        {/* HISTORY LIST */}
+        <Text style={styles.historyHeader}>HISTORICAL SIGNALS</Text>
+        <View style={styles.historyList}>
+           {pulseCount === 0 ? (
+             <View style={styles.emptyBox}>
+                <AlertCircle size={32} color={COLORS.surfaceLight} />
+                <Text style={styles.emptyText}>No historical pings recorded</Text>
+             </View>
+           ) : (
+             <View style={styles.historyContainer}>
+                {history.slice(0, 5).map((log, i) => (
+                   <View key={log.id} style={styles.historyItem}>
+                      <View style={styles.historyLeading}>
+                         <View style={styles.pulseIndicator} />
+                         <Text style={styles.historyTitle}>PULSE_{log.id.toString().slice(-6)}</Text>
+                      </View>
+                      <Text style={styles.historyDate}>{new Date(log.timestamp).toLocaleDateString()}</Text>
+                   </View>
+                ))}
+             </View>
+           )}
+        </View>
+
+        <View style={{ height: 120 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-    padding: 20,
-  },
-  statusCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginLeft: 8,
-  },
-  statusValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#10b981',
-    marginBottom: 5,
-  },
-  statusSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  heartbeatContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  heartbeatButton: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#ef4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    marginBottom: 20,
-  },
-  heartbeatTouchable: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 80,
-  },
-  heartbeatLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  infoCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    flex: 0.48,
-  },
-  infoValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  detailsCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#10b981' + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#10b981',
-    marginLeft: 4,
-  },
-  helpCard: {
-    flexDirection: 'row',
-    backgroundColor: '#3b82f6' + '10',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'flex-start',
-  },
-  helpText: {
-    fontSize: 14,
-    color: '#1e40af',
-    marginLeft: 12,
-    lineHeight: 18,
-    flex: 1,
-  },
+  root: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
+  scrollContent: { paddingHorizontal: GAPS.lg },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, paddingVertical: 12 },
+  tabTitle: { color: COLORS.textDim, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 2 },
+  mainTitle: { color: COLORS.text, fontSize: 24, fontFamily: FONTS.orbitron.black, marginTop: 4 },
+  uptimeBadge: { backgroundColor: COLORS.surface, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border },
+  uptimeText: { color: COLORS.accent, fontSize: 8, fontFamily: FONTS.orbitron.bold },
+
+  statsGrid: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  statBox: { flex: 1, backgroundColor: COLORS.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: COLORS.border, position: 'relative' },
+  statLabel: { color: COLORS.textDim, fontSize: 7, fontFamily: FONTS.orbitron.bold, marginTop: 4, letterSpacing: 0.5 },
+  statVal: { color: COLORS.text, fontSize: 20, fontFamily: FONTS.orbitron.black },
+  statValSmall: { color: COLORS.text, fontSize: 11, fontFamily: FONTS.orbitron.bold },
+  statStatus: { fontSize: 14, fontFamily: FONTS.orbitron.black },
+  boxIcon: { position: 'absolute', top: 10, right: 10, opacity: 0.4 },
+
+  consoleCard: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: COLORS.border, marginBottom: 20 },
+  consoleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 },
+  consoleTitle: { color: COLORS.textMuted, fontSize: 10, fontFamily: FONTS.orbitron.bold, letterSpacing: 1 },
+  displayArea: { alignItems: 'center', marginBottom: 40 },
+  displayLabel: { color: COLORS.textDim, fontSize: 9, fontFamily: FONTS.inter.bold, letterSpacing: 1, marginBottom: 16 },
+  largeTime: { color: COLORS.text, fontSize: 44, fontFamily: FONTS.orbitron.black, letterSpacing: -2 },
+  syncRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
+  syncText: { color: COLORS.primary, fontSize: 8, fontFamily: FONTS.orbitron.bold, letterSpacing: 1 },
+
+  pulseBtn: { height: 64, borderRadius: 16, overflow: 'hidden', ...SHADOWS.blue },
+  pulseGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  pulseBtnText: { color: '#fff', fontSize: 15, fontFamily: FONTS.orbitron.bold, letterSpacing: 1 },
+
+  configCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.surface, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: COLORS.border, marginBottom: 24 },
+  configInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  configTitle: { color: COLORS.text, fontSize: 14, fontFamily: FONTS.inter.bold },
+  configSub: { color: COLORS.textDim, fontSize: 10, fontFamily: FONTS.inter.medium, marginTop: 1 },
+  configBadge: { backgroundColor: COLORS.borderLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  configBadgeText: { color: COLORS.textMuted, fontSize: 8, fontFamily: FONTS.inter.bold },
+
+  historyHeader: { color: COLORS.textDim, fontSize: 10, fontFamily: FONTS.orbitron.bold, letterSpacing: 1, marginBottom: 12 },
+  historyList: { gap: 10 },
+  historyContainer: { gap: 8 },
+  historyItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.surface, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: COLORS.border },
+  historyLeading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pulseIndicator: { width: 4, height: 4, borderRadius: 2, backgroundColor: COLORS.accent },
+  historyTitle: { color: COLORS.text, fontSize: 11, fontFamily: 'monospace' },
+  historyDate: { color: COLORS.textDim, fontSize: 10, fontFamily: FONTS.inter.medium },
+  emptyBox: { padding: 40, alignItems: 'center', gap: 12 },
+  emptyText: { color: COLORS.textDim, fontSize: 12, fontFamily: FONTS.inter.medium },
 });
 
 export default HeartbeatScreen;

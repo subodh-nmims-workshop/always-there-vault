@@ -56,8 +56,8 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'starter',
     name: 'Starter',
     mode: 'centralized',
-    price: 9.99,
-    yearlyPrice: 99.99,
+    price: 4.99,
+    yearlyPrice: 49.90,
     features: [
       '50 assets',
       '5 beneficiaries',
@@ -79,8 +79,8 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'professional',
     name: 'Professional',
     mode: 'centralized',
-    price: 29.99,
-    yearlyPrice: 299.99,
+    price: 14.99,
+    yearlyPrice: 149.90,
     popular: true,
     features: [
       'Unlimited assets',
@@ -105,8 +105,8 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'enterprise',
     name: 'Enterprise',
     mode: 'centralized',
-    price: 99.99,
-    yearlyPrice: 999.99,
+    price: 49.99,
+    yearlyPrice: 499.90,
     features: [
       'Everything in Professional',
       'Dedicated support',
@@ -133,8 +133,8 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'freedom',
     name: 'Freedom',
     mode: 'decentralized',
-    price: 19.99,
-    yearlyPrice: 199.99,
+    price: 4.99,
+    yearlyPrice: 49.90,
     features: [
       'Unlimited assets (on-chain)',
       'Unlimited beneficiaries',
@@ -157,8 +157,8 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'sovereign',
     name: 'Sovereign',
     mode: 'decentralized',
-    price: 49.99,
-    yearlyPrice: 499.99,
+    price: 19.99,
+    yearlyPrice: 199.90,
     popular: true,
     features: [
       'Everything in Freedom',
@@ -182,8 +182,8 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'immortal',
     name: 'Immortal',
     mode: 'decentralized',
-    price: 149.99,
-    yearlyPrice: 1499.99,
+    price: 99.00,
+    yearlyPrice: 99.00, // One-Time Lifetime Fee equivalent
     features: [
       'Everything in Sovereign',
       'Lifetime Arweave storage',

@@ -19,7 +19,7 @@ async function main() {
   // Deploy DigitalWillCore
   console.log("\n📦 Deploying DigitalWillCore...");
   const DigitalWillCore = await ethers.getContractFactory("DigitalWillCore");
-  const digitalWillCore = await DigitalWillCore.deploy(heartbeatAddress);
+  const digitalWillCore = await DigitalWillCore.deploy();
   await digitalWillCore.waitForDeployment();
   const coreAddress = await digitalWillCore.getAddress();
   console.log("✅ DigitalWillCore deployed to:", coreAddress);
@@ -34,7 +34,7 @@ async function main() {
   // Save deployment info
   const deploymentInfo = {
     network: (await ethers.provider.getNetwork()).name,
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    chainId: (await ethers.provider.getNetwork()).chainId.toString(),
     deployer: deployer.address,
     contracts: {
       HeartbeatTracker: heartbeatAddress,

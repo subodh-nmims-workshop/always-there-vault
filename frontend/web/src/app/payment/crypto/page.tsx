@@ -2,54 +2,126 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { Wallet, Copy, Check, ArrowRight, AlertCircle, Coins, Loader2 } from 'lucide-react'
+import { Wallet, Check, ArrowRight, AlertCircle, Coins, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { ethers } from 'ethers'
+import { toast } from 'sonner'
 
 export const dynamic = 'force-dynamic'
 
+// Contract addresses (update after deployment)
+const SUBSCRIPTION_CONTRACT = process.env.NEXT_PUBLIC_SUBSCRIPTION_CONTRACT || ''
+const USDC_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Polygon USDC
+
+// Plan mapping
+const PLAN_IDS: Record<string, number> = {
+  starter: 0,
+  guardian: 1,
+  legacy: 2,
+  immortal: 3
+}
+
+// Pricing in USDC (6 decimals)
+const PRICING = {
+  starter: { monthly: '9.99', yearly: '99' },
+  guardian: { monthly: '24.99', yearly: '249' },
+  legacy: { monthly: '49.99', yearly: '499' },
+  immortal: { monthly: '99.99', yearly: '999' }
+}
+
 function CryptoPaymentContent() {
   const searchParams = useSearchParams()
-  const plan = searchParams?.get('plan') || 'professional'
+  const plan = searchParams?.get('plan') || 'starter'
   const billing = searchParams?.get('billing') || 'monthly'
 
-  const [paymentAddress] = useState('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb')
-  const [copied, setCopied] = useState(false)
+  const [walletAddress, setWalletAddress] = useState<string>('')
+  const [isProcessing, setIsProcessing] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
 
-  // Crypto pricing (example)
-  const pricing = {
-    starter: { monthly: 0, yearly: 0 },
-    professional: { monthly: 0.01, yearly: 0.1 },
-    enterprise: { monthly: 0.05, yearly: 0.5 }
-  }
+  const amount = PRICING[plan as keyof typeof PRICING]?.[billing as 'monthly' | 'yearly'] || '9.99'
+  const planId = PLAN_IDS[plan] || 0
 
-  const amount = pricing[plan as keyof typeof pricing]?.[billing as 'monthly' | 'yearly'] || 0.01
-
-  const copyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(paymentAddress)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
-      console.error('Failed to copy:', error)
+  useEffect(() => {
+    const address = localStorage.getItem('dwp_wallet_address')
+    if (address) {
+      setWalletAddress(address)
     }
-  }
+  }, [])
 
-  const verifyPayment = async () => {
-    setIsVerifying(true)
+  const handlePayment = async () => {
+    if (!walletAddress) {
+      toast.error('Wallet not connected')
+      return
+    }
 
-    // Simulate payment verification
-    setTimeout(() => {
-      setIsVerifying(false)
+    if (!SUBSCRIPTION_CONTRACT) {
+      toast.error('Contract not deployed yet', {
+        description: 'Please deploy contracts first'
+      })
+      return
+    }
+
+    setIsProcessing(true)
+
+    try {
+      // Connect to wallet
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask')
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+
+      // USDC Contract ABI (minimal)
+      const usdcAbi = [
+        'function approve(address spender, uint256 amount) returns (bool)',
+        'function allowance(address owner, address spender) view returns (uint256)'
+      ]
+
+      // Subscription Contract ABI (minimal)
+      const subscriptionAbi = [
+        'function subscribeMonthly(uint8 plan, address token)',
+        'function subscribeYearly(uint8 plan, address token)'
+      ]
+
+      const usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer)
+      const subscriptionContract = new ethers.Contract(SUBSCRIPTION_CONTRACT, subscriptionAbi, signer)
+
+      // Parse amount (USDC has 6 decimals)
+      const amountWei = ethers.parseUnits(amount, 6)
+
+      // Step 1: Approve USDC
+      toast.info('Approving USDC...', { description: 'Please confirm in your wallet' })
+      const approveTx = await usdcContract.approve(SUBSCRIPTION_CONTRACT, amountWei)
+      await approveTx.wait()
+
+      // Step 2: Subscribe
+      toast.info('Processing subscription...', { description: 'Please confirm in your wallet' })
+      const subscribeTx = billing === 'yearly'
+        ? await subscriptionContract.subscribeYearly(planId, USDC_ADDRESS)
+        : await subscriptionContract.subscribeMonthly(planId, USDC_ADDRESS)
+
+      await subscribeTx.wait()
+
       setIsPaid(true)
+      toast.success('Payment successful!', {
+        description: 'Your subscription is now active'
+      })
 
-      // Redirect to success page after 2 seconds
+      // Redirect after 2 seconds
       setTimeout(() => {
         window.location.href = '/payment/success?crypto=true'
       }, 2000)
-    }, 3000)
+
+    } catch (error: any) {
+      console.error('Payment error:', error)
+      toast.error('Payment failed', {
+        description: error.message || 'Please try again'
+      })
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (
@@ -59,7 +131,6 @@ function CryptoPaymentContent() {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-2xl w-full"
       >
-        {/* Payment Card */}
         <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl">
           {/* Header */}
           <div className="text-center mb-8">
@@ -70,7 +141,7 @@ function CryptoPaymentContent() {
               Crypto Payment
             </h1>
             <p className="text-slate-400">
-              Pay with Ethereum for {plan} plan ({billing})
+              Pay with USDC for {plan} plan ({billing})
             </p>
           </div>
 
@@ -79,55 +150,26 @@ function CryptoPaymentContent() {
             <div className="text-center">
               <p className="text-slate-400 text-sm mb-2">Amount to Pay</p>
               <p className="text-4xl font-bold text-white mb-1">
-                {amount} ETH
+                ${amount}
               </p>
               <p className="text-slate-500 text-sm">
-                ≈ ${(amount * 2000).toFixed(2)} USD
+                USDC on Polygon Network
               </p>
             </div>
           </div>
 
-          {/* Payment Address */}
-          <div className="mb-6">
-            <label className="block text-slate-400 text-sm mb-2">
-              Send ETH to this address:
-            </label>
-            <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 flex items-center gap-3">
-              <Wallet className="w-5 h-5 text-slate-500 flex-shrink-0" />
-              <input
-                type="text"
-                value={paymentAddress}
-                readOnly
-                className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
-              />
-              <button
-                onClick={copyAddress}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-400" />
-                    <span className="text-green-400 text-sm font-semibold">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-400 text-sm font-semibold">Copy</span>
-                  </>
-                )}
-              </button>
+          {/* Wallet Info */}
+          {walletAddress && (
+            <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
+              <Wallet className="w-5 h-5 text-slate-500" />
+              <div className="flex-1">
+                <p className="text-slate-400 text-xs mb-1">Connected Wallet</p>
+                <p className="text-white font-mono text-sm">
+                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* QR Code Placeholder */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
-            <div className="w-48 h-48 bg-white rounded-xl mx-auto flex items-center justify-center">
-              <p className="text-slate-900 text-sm font-semibold">QR Code</p>
-            </div>
-            <p className="text-center text-slate-400 text-sm mt-4">
-              Scan with your crypto wallet
-            </p>
-          </div>
+          )}
 
           {/* Instructions */}
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6">
@@ -136,34 +178,30 @@ function CryptoPaymentContent() {
               <div className="text-sm text-slate-300">
                 <p className="font-semibold text-blue-300 mb-2">Payment Instructions:</p>
                 <ol className="space-y-1 list-decimal list-inside">
-                  <li>Send exactly {amount} ETH to the address above</li>
-                  <li>Wait for blockchain confirmation (1-3 minutes)</li>
-                  <li>Click "Verify Payment" to activate your subscription</li>
-                  <li>Do not close this page until payment is verified</li>
+                  <li>Make sure you have ${amount} USDC in your wallet</li>
+                  <li>You'll need to approve 2 transactions</li>
+                  <li>First: Approve USDC spending</li>
+                  <li>Second: Complete subscription payment</li>
                 </ol>
               </div>
             </div>
           </div>
 
-          {/* Verify Button */}
+          {/* Pay Button */}
           {!isPaid && (
             <button
-              onClick={verifyPayment}
-              disabled={isVerifying}
+              onClick={handlePayment}
+              disabled={isProcessing || !walletAddress}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
             >
-              {isVerifying ? (
+              {isProcessing ? (
                 <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                  />
-                  Verifying Payment...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Processing...
                 </>
               ) : (
                 <>
-                  Verify Payment
+                  Pay ${amount} USDC
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -180,7 +218,7 @@ function CryptoPaymentContent() {
               <div className="flex items-center gap-3 text-green-400">
                 <Check className="w-6 h-6" />
                 <div>
-                  <p className="font-semibold">Payment Verified!</p>
+                  <p className="font-semibold">Payment Successful!</p>
                   <p className="text-sm text-green-300">Redirecting to dashboard...</p>
                 </div>
               </div>
@@ -199,10 +237,10 @@ function CryptoPaymentContent() {
         {/* Network Info */}
         <div className="mt-6 text-center">
           <p className="text-slate-500 text-sm">
-            Network: <span className="text-slate-400 font-semibold">Ethereum Mainnet</span>
+            Network: <span className="text-slate-400 font-semibold">Polygon Mainnet</span>
           </p>
           <p className="text-slate-500 text-xs mt-2">
-            Make sure you're sending from the correct network
+            Make sure you're connected to Polygon network
           </p>
         </div>
       </motion.div>
@@ -212,7 +250,11 @@ function CryptoPaymentContent() {
 
 export default function CryptoPaymentPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-950 text-white"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    }>
       <CryptoPaymentContent />
     </Suspense>
   )

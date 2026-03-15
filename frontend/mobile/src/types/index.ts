@@ -4,6 +4,7 @@
 
 // Navigation Types
 export type RootStackParamList = {
+  Login: undefined;
   Home: undefined;
   Assets: undefined;
   Beneficiaries: undefined;
@@ -16,6 +17,7 @@ export type RootStackParamList = {
   BiometricSetup: undefined;
   SecuritySettings: undefined;
 };
+
 
 // Asset Types
 export type AssetType = 

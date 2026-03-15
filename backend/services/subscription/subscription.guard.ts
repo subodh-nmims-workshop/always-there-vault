@@ -109,7 +109,7 @@ export class StorageLimitGuard implements CanActivate {
 
     const limits = await this.subscriptionService.checkLimits(userId);
 
-    if (!limits.canUploadFile) {
+    if (!limits.canUploadCentralized && !limits.canUploadDecentralized) {
       throw new ForbiddenException(
         'Storage limit reached. Upgrade your plan for more storage.',
       );

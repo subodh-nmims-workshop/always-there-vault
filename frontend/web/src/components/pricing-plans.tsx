@@ -18,41 +18,22 @@ export function PricingPlans() {
     try {
       console.log('🎯 Selected plan:', planId, 'Mode:', selectedMode)
 
-      // For decentralized mode, use crypto payment
-      if (selectedMode === 'decentralized') {
-        // Redirect to crypto payment page
-        window.location.href = `/payment/crypto?plan=${planId}&billing=${billingCycle}`
+      // Check if wallet is connected
+      const walletAddress = localStorage.getItem('dwp_wallet_address')
+      if (!walletAddress) {
+        toast.error('Wallet not connected', {
+          description: 'Please connect your wallet first to subscribe.'
+        })
         return
       }
 
-      // For centralized mode, create Stripe checkout session
-      const userId = localStorage.getItem('dwp_wallet_address') || 'user_' + Date.now()
-
-      const response = await fetch('http://localhost:7001/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          planType: planId,
-          mode: selectedMode,
-          successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${window.location.origin}/pricing?cancelled=true`
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session')
-      }
-
-      const { url } = await response.json()
-
-      // Redirect to Stripe checkout
-      window.location.href = url
+      // Redirect to crypto payment page for both modes
+      window.location.href = `/payment/crypto?plan=${planId}&billing=${billingCycle}&mode=${selectedMode}`
 
     } catch (error) {
       console.error('❌ Failed to select plan:', error)
       toast.error('Payment initiation failed', {
-        description: 'Please ensure the backend is running and Stripe is configured.'
+        description: 'Please connect your wallet and try again.'
       })
     }
   }

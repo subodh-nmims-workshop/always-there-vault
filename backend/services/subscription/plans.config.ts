@@ -8,144 +8,99 @@ export interface PlanConfig {
   limits: {
     assets: number;
     beneficiaries: number;
-    storageGB: number;
+    centralizedStorageMB: number;
+    decentralizedStorageMB: number;
   };
   features: string[];
   stripePriceId?: string;
 }
 
 export const PLANS: Record<PlanType, PlanConfig> = {
-  // CENTRALIZED PLANS
+  // LITE PLAN (FREE)
   [PlanType.STARTER]: {
-    name: 'Starter',
-    price: 9.99,
+    name: 'Vault Lite',
+    price: 0,
     interval: 'month',
     mode: ServiceMode.CENTRALIZED,
     limits: {
-      assets: 50,
-      beneficiaries: 5,
-      storageGB: 10,
+      assets: 20,
+      beneficiaries: 1,
+      centralizedStorageMB: 500,
+      decentralizedStorageMB: 500,
     },
     features: [
-      '50 assets',
-      '5 beneficiaries',
-      '10 GB storage',
-      'Email support',
-      'Auto-backup daily',
-      'Mobile app access',
-      '2FA security',
+      '500 MB Secure Cloud',
+      '500 MB Protocol IPFS',
+      '1 Nominee / Beneficiary',
+      'Centralized Primary Backup',
+      'Standard Heartbeat',
     ],
   },
+  // PRO PLAN
   [PlanType.PROFESSIONAL]: {
-    name: 'Professional',
-    price: 29.99,
-    interval: 'month',
-    mode: ServiceMode.CENTRALIZED,
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storageGB: 100,
-    },
-    features: [
-      'Unlimited assets',
-      'Unlimited beneficiaries',
-      '100 GB storage',
-      'Priority support',
-      'Hourly backups',
-      'API access',
-      'Advanced analytics',
-      'Multi-device sync',
-      'Custom domains',
-    ],
-  },
-  [PlanType.ENTERPRISE]: {
-    name: 'Enterprise',
-    price: 99.99,
-    interval: 'month',
-    mode: ServiceMode.CENTRALIZED,
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storageGB: 1000,
-    },
-    features: [
-      'Everything in Professional',
-      'Dedicated support',
-      '1 TB storage',
-      'White-label option',
-      'SLA guarantee',
-      'Custom integrations',
-      'Team management',
-      'Audit logs',
-      'Compliance reports',
-    ],
-  },
-
-  // DECENTRALIZED PLANS
-  [PlanType.FREEDOM]: {
-    name: 'Freedom',
-    price: 19.99,
+    name: 'Vault Pro',
+    price: 9.99,
     interval: 'month',
     mode: ServiceMode.DECENTRALIZED,
     limits: {
       assets: Infinity,
-      beneficiaries: Infinity,
-      storageGB: Infinity,
+      beneficiaries: 5,
+      centralizedStorageMB: 50000, // 50 GB
+      decentralizedStorageMB: 50000, // 50 GB
     },
     features: [
-      'Unlimited assets (on-chain)',
-      'Unlimited beneficiaries',
-      'IPFS storage (unlimited)',
-      'Community support',
-      'No data custody',
-      'True ownership',
-      'Censorship resistant',
-      '+ Gas fees (user pays)',
+      '50 GB Encrypted Storage',
+      '5 Nominees / Quorum',
+      'Full IPFS Sharding (SSS)',
+      'Priority Relayer Service',
+      'Decentralized Redundancy',
     ],
   },
-  [PlanType.SOVEREIGN]: {
-    name: 'Sovereign',
+  // ENTERPRISE PLAN
+  [PlanType.ENTERPRISE]: {
+    name: 'Vault Enterprise',
     price: 49.99,
     interval: 'month',
     mode: ServiceMode.DECENTRALIZED,
     limits: {
       assets: Infinity,
       beneficiaries: Infinity,
-      storageGB: Infinity,
+      centralizedStorageMB: Infinity,
+      decentralizedStorageMB: Infinity,
     },
     features: [
-      'Everything in Freedom',
-      'Arweave permanent storage',
-      'Multi-chain support (ETH, Polygon, BSC, Arbitrum)',
-      'Advanced smart contracts',
-      'Priority gas optimization',
-      'Hardware wallet support',
-      'Multi-sig support',
-      '+ Gas fees (user pays)',
+      'Unlimited Cloud Storage',
+      'Unlimited IPFS Storage',
+      'Unlimited Nominees',
+      'Institutional Relayer Nodes',
+      'Legal Verification Layer',
     ],
+  },
+  // Keep other plans for backward compatibility or as hidden tiers
+  [PlanType.FREEDOM]: {
+     name: 'Freedom (Legacy)',
+     price: 19.99,
+     interval: 'month',
+     mode: ServiceMode.DECENTRALIZED,
+     limits: { assets: Infinity, beneficiaries: Infinity, centralizedStorageMB: 1000, decentralizedStorageMB: Infinity },
+     features: ['IPFS Focused']
+  },
+  [PlanType.SOVEREIGN]: {
+     name: 'Sovereign (Legacy)',
+     price: 49.99,
+     interval: 'month',
+     mode: ServiceMode.DECENTRALIZED,
+     limits: { assets: Infinity, beneficiaries: Infinity, centralizedStorageMB: 10000, decentralizedStorageMB: Infinity },
+     features: ['Arweave Focused']
   },
   [PlanType.IMMORTAL]: {
-    name: 'Immortal',
-    price: 149.99,
-    interval: 'month',
-    mode: ServiceMode.DECENTRALIZED,
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storageGB: Infinity,
-    },
-    features: [
-      'Everything in Sovereign',
-      'Lifetime Arweave storage',
-      'All chains supported',
-      'Zero-knowledge proofs',
-      'Quantum-resistant encryption',
-      'Dedicated IPFS node',
-      'Custom smart contracts',
-      'Legal document templates',
-      '+ Gas fees (user pays)',
-    ],
-  },
+     name: 'Immortal (Legacy)',
+     price: 149.99,
+     interval: 'month',
+     mode: ServiceMode.DECENTRALIZED,
+     limits: { assets: Infinity, beneficiaries: Infinity, centralizedStorageMB: Infinity, decentralizedStorageMB: Infinity },
+     features: ['Quantum Resistant']
+  }
 };
 
 export const TRIAL_CONFIG = {
@@ -153,16 +108,14 @@ export const TRIAL_CONFIG = {
   limits: {
     assets: 10,
     beneficiaries: 3,
-    storageGB: 1,
+    centralizedStorageMB: 1024,
+    decentralizedStorageMB: 1024,
   },
   features: [
-    'All features unlocked',
-    'Up to 10 assets',
-    '3 beneficiaries',
-    '1 GB storage',
-    'Basic support',
-    'Can switch between modes',
+    'Trial Mode Access',
+    '1 GB Mixed Storage',
+    '3 Beneficiaries',
   ],
 };
 
-export const MODE_MIGRATION_FEE = 9.99;
+export const MODE_MIGRATION_FEE = 0; // Free migration for better UX

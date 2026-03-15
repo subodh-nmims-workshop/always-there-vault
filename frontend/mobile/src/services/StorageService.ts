@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import RNFS from 'react-native-fs';
+import * as FileSystem from 'expo-file-system';
 import CryptoService from './CryptoService';
 
 export interface StorageResult<T = any> {
@@ -44,8 +44,8 @@ class StorageService {
 
   constructor() {
     this.cryptoService = CryptoService.getInstance();
-    this.documentsPath = RNFS.DocumentDirectoryPath;
-    this.assetsPath = `${this.documentsPath}/assets`;
+    this.documentsPath = (FileSystem as any).documentDirectory || '';
+    this.assetsPath = `${this.documentsPath}assets`;
     this.initializeDirectories();
   }
 
@@ -61,9 +61,9 @@ class StorageService {
    */
   private async initializeDirectories(): Promise<void> {
     try {
-      const assetsExists = await RNFS.exists(this.assetsPath);
-      if (!assetsExists) {
-        await RNFS.mkdir(this.assetsPath);
+      const assetsExists = await FileSystem.getInfoAsync(this.assetsPath);
+      if (!assetsExists.exists) {
+        await FileSystem.makeDirectoryAsync(this.assetsPath, { intermediates: true });
       }
     } catch (error) {
       console.error('Failed to initialize directories:', error);
@@ -168,15 +168,15 @@ class StorageService {
         dataToWrite = fileData;
       }
       
-      await RNFS.writeFile(filePath, dataToWrite, 'utf8');
+      await (FileSystem as any).writeAsStringAsync(filePath, dataToWrite, { encoding: (FileSystem as any).EncodingType.UTF8 });
       
-      const fileStats = await RNFS.stat(filePath);
+      const fileStats = await FileSystem.getInfoAsync(filePath);
       const hash = this.cryptoService.generateHash(dataToWrite);
       
       const fileMetadata: FileMetadata = {
         id: fileId,
         name: fileName,
-        size: fileStats.size,
+        size: fileStats.exists ? fileStats.size : 0,
         type: metadata.type || 'unknown',
         path: filePath,
         encrypted: isEncrypted,
@@ -210,13 +210,13 @@ class StorageService {
       }
       
       const metadata = metadataResult.data;
-      const fileExists = await RNFS.exists(metadata.path);
+      const fileExists = await FileSystem.getInfoAsync(metadata.path);
       
-      if (!fileExists) {
+      if (!fileExists.exists) {
         return { success: false, error: 'File not found' };
       }
       
-      const fileData = await RNFS.readFile(metadata.path, 'utf8');
+      const fileData = await (FileSystem as any).readAsStringAsync(metadata.path, { encoding: (FileSystem as any).EncodingType.UTF8 });
       
       let processedData: string;
       
@@ -254,9 +254,9 @@ class StorageService {
       const metadataResult = await this.getData<FileMetadata>(`file_metadata_${fileId}`);
       
       if (metadataResult.success && metadataResult.data) {
-        const fileExists = await RNFS.exists(metadataResult.data.path);
-        if (fileExists) {
-          await RNFS.unlink(metadataResult.data.path);
+        const fileExists = await FileSystem.getInfoAsync(metadataResult.data.path);
+        if (fileExists.exists) {
+          await FileSystem.deleteAsync(metadataResult.data.path);
         }
       }
       
@@ -345,11 +345,11 @@ class StorageService {
       await AsyncStorage.clear();
       
       // Clear files directory
-      const filesExist = await RNFS.exists(this.assetsPath);
-      if (filesExist) {
-        const files = await RNFS.readDir(this.assetsPath);
+      const filesExist = await FileSystem.getInfoAsync(this.assetsPath);
+      if (filesExist.exists) {
+        const files = await FileSystem.readDirectoryAsync(this.assetsPath);
         for (const file of files) {
-          await RNFS.unlink(file.path);
+          await FileSystem.deleteAsync(`${this.assetsPath}/${file}`);
         }
       }
       
@@ -427,7 +427,7 @@ class StorageService {
       const backupData = JSON.stringify(allData);
       const backupPath = `${this.documentsPath}/digital_will_backup_${Date.now()}.json`;
       
-      await RNFS.writeFile(backupPath, backupData, 'utf8');
+      await (FileSystem as any).writeAsStringAsync(backupPath, backupData, { encoding: (FileSystem as any).EncodingType.UTF8 });
       
       return { success: true, data: backupPath };
     } catch (error) {

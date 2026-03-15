@@ -36,29 +36,67 @@ async function main() {
   const assetManagerAddress = await assetManager.getAddress();
   console.log("✅ AssetManager deployed to:", assetManagerAddress);
 
+  // Deploy SubscriptionManager
+  console.log("\n📦 Deploying SubscriptionManager...");
+  const profitWallet = deployer.address; // Change this to your profit wallet
+  const operationalWallet = deployer.address; // Change this to your operational wallet
+  
+  const SubscriptionManager = await ethers.getContractFactory("SubscriptionManager");
+  const subscriptionManager = await SubscriptionManager.deploy(profitWallet, operationalWallet);
+  await subscriptionManager.waitForDeployment();
+  const subscriptionAddress = await subscriptionManager.getAddress();
+  console.log("✅ SubscriptionManager deployed to:", subscriptionAddress);
+
+  // Add supported tokens (Polygon Mumbai Testnet)
+  console.log("\n🪙 Adding supported payment tokens...");
+  const network = await ethers.provider.getNetwork();
+  
+  if (network.chainId === 80001n) {
+    // Mumbai Testnet USDC
+    const usdcMumbai = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23";
+    await subscriptionManager.addSupportedToken(usdcMumbai);
+    console.log("✅ Added USDC (Mumbai):", usdcMumbai);
+  } else if (network.chainId === 137n) {
+    // Polygon Mainnet
+    const usdcPolygon = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+    const usdtPolygon = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+    const daiPolygon = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063";
+    
+    await subscriptionManager.addSupportedToken(usdcPolygon);
+    await subscriptionManager.addSupportedToken(usdtPolygon);
+    await subscriptionManager.addSupportedToken(daiPolygon);
+    
+    console.log("✅ Added USDC (Polygon):", usdcPolygon);
+    console.log("✅ Added USDT (Polygon):", usdtPolygon);
+    console.log("✅ Added DAI (Polygon):", daiPolygon);
+  }
+
   // Summary
   console.log("\n" + "=".repeat(60));
   console.log("🎉 DEPLOYMENT COMPLETE!");
   console.log("=".repeat(60));
   console.log("\n📋 Contract Addresses:");
-  console.log("   HeartbeatTracker:", heartbeatAddress);
-  console.log("   DigitalWill:     ", digitalWillAddress);
-  console.log("   AssetManager:    ", assetManagerAddress);
+  console.log("   HeartbeatTracker:     ", heartbeatAddress);
+  console.log("   DigitalWill:          ", digitalWillAddress);
+  console.log("   AssetManager:         ", assetManagerAddress);
+  console.log("   SubscriptionManager:  ", subscriptionAddress);
 
   console.log("\n📝 Next Steps:");
-  console.log("   1. Update frontend/web/src/config/contracts.ts with these addresses");
-  console.log("   2. Copy ABIs from artifacts/ to frontend/web/src/contracts/");
-  console.log("   3. Verify contracts on PolygonScan (optional)");
+  console.log("   1. Update frontend config with these addresses");
+  console.log("   2. Copy ABIs from artifacts/ to frontend");
+  console.log("   3. Verify contracts on PolygonScan");
 
   console.log("\n🔍 Verify Commands:");
   console.log(`   npx hardhat verify --network mumbai ${heartbeatAddress}`);
   console.log(`   npx hardhat verify --network mumbai ${digitalWillAddress}`);
   console.log(`   npx hardhat verify --network mumbai ${assetManagerAddress}`);
+  console.log(`   npx hardhat verify --network mumbai ${subscriptionAddress} ${profitWallet} ${operationalWallet}`);
 
-  console.log("\n💾 Save these addresses to .env:");
+  console.log("\n💾 Environment Variables:");
   console.log(`   NEXT_PUBLIC_HEARTBEAT_CONTRACT=${heartbeatAddress}`);
   console.log(`   NEXT_PUBLIC_DIGITAL_WILL_CONTRACT=${digitalWillAddress}`);
   console.log(`   NEXT_PUBLIC_ASSET_MANAGER_CONTRACT=${assetManagerAddress}`);
+  console.log(`   NEXT_PUBLIC_SUBSCRIPTION_CONTRACT=${subscriptionAddress}`);
 
   // Automate the environment variable update securely!
   try {
@@ -73,6 +111,7 @@ async function main() {
         NEXT_PUBLIC_HEARTBEAT_CONTRACT: heartbeatAddress,
         NEXT_PUBLIC_DIGITAL_WILL_CONTRACT: digitalWillAddress,
         NEXT_PUBLIC_ASSET_MANAGER_CONTRACT: assetManagerAddress,
+        NEXT_PUBLIC_SUBSCRIPTION_CONTRACT: subscriptionAddress,
       };
 
       if (isLocalhost) {

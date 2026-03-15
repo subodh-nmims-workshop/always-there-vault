@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title SubscriptionManager
  * @dev Manages on-chain subscriptions for decentralized mode
  */
 contract SubscriptionManager is Ownable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
     
     enum PlanType { FREEDOM, SOVEREIGN, IMMORTAL }
     
@@ -45,26 +47,26 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
     event PlanUpdated(PlanType plan, uint256 pricePerMonth, uint256 pricePerYear);
     event PaymentReceived(address indexed user, uint256 amount, address token);
     
-    constructor() {
+    constructor() Ownable(msg.sender) {
         // Initialize plans (prices in USD with 6 decimals for USDC/USDT)
         plans[PlanType.FREEDOM] = Plan({
             name: "Freedom",
-            pricePerMonth: 19_990000, // $19.99
-            pricePerYear: 191_904000, // $191.90 (20% discount)
+            pricePerMonth: 4_990000, // $4.99
+            pricePerYear: 49_900000, // $49.90 (~2 months free)
             active: true
         });
         
         plans[PlanType.SOVEREIGN] = Plan({
             name: "Sovereign",
-            pricePerMonth: 49_990000, // $49.99
-            pricePerYear: 479_904000, // $479.90 (20% discount)
+            pricePerMonth: 19_990000, // $19.99
+            pricePerYear: 199_900000, // $199.90 (~2 months free)
             active: true
         });
         
         plans[PlanType.IMMORTAL] = Plan({
             name: "Immortal",
-            pricePerMonth: 149_990000, // $149.99
-            pricePerYear: 1439_904000, // $1439.90 (20% discount)
+            pricePerMonth: 99_000000, // $99.00 (One-Time / Lifetime base equivalent calculation)
+            pricePerYear: 99_000000, // $99.00 (Same fee for consistency as it's meant to be one-time)
             active: true
         });
     }
@@ -73,70 +75,72 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
      * @dev Subscribe to a plan with monthly payment
      */
     function subscribeMonthly(
-        PlanType _plan,
-        address _paymentToken
+        PlanType planType,
+        address paymentToken
     ) external nonReentrant {
-        require(supportedTokens[_paymentToken], "Payment token not supported");
-        require(plans[_plan].active, "Plan not active");
+        require(supportedTokens[paymentToken], "Payment token not supported");
+        require(plans[planType].active, "Plan not active");
         require(!subscriptions[msg.sender].active, "Already subscribed");
         
-        Plan memory plan = plans[_plan];
+        Plan memory plan = plans[planType];
         
-        // Transfer payment
-        IERC20(_paymentToken).transferFrom(
-            msg.sender,
-            address(this),
-            plan.pricePerMonth
-        );
-        
-        // Create subscription
+        // Effects (Update state before interaction)
         uint256 endTime = block.timestamp + 30 days;
         subscriptions[msg.sender] = Subscription({
             user: msg.sender,
-            plan: _plan,
+            plan: planType,
             startTime: block.timestamp,
             endTime: endTime,
             active: true,
             autoRenew: false
         });
         
-        emit SubscriptionCreated(msg.sender, _plan, endTime);
-        emit PaymentReceived(msg.sender, plan.pricePerMonth, _paymentToken);
+        // Interactions
+        uint256 amount = plan.pricePerMonth;
+        uint256 ownerShare = amount / 2;
+        uint256 contractShare = amount - ownerShare;
+        
+        IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), contractShare);
+        IERC20(paymentToken).safeTransferFrom(msg.sender, owner(), ownerShare);
+        
+        emit SubscriptionCreated(msg.sender, planType, endTime);
+        emit PaymentReceived(msg.sender, amount, paymentToken);
     }
     
     /**
      * @dev Subscribe to a plan with yearly payment (20% discount)
      */
     function subscribeYearly(
-        PlanType _plan,
-        address _paymentToken
+        PlanType planType,
+        address paymentToken
     ) external nonReentrant {
-        require(supportedTokens[_paymentToken], "Payment token not supported");
-        require(plans[_plan].active, "Plan not active");
+        require(supportedTokens[paymentToken], "Payment token not supported");
+        require(plans[planType].active, "Plan not active");
         require(!subscriptions[msg.sender].active, "Already subscribed");
         
-        Plan memory plan = plans[_plan];
+        Plan memory plan = plans[planType];
         
-        // Transfer payment
-        IERC20(_paymentToken).transferFrom(
-            msg.sender,
-            address(this),
-            plan.pricePerYear
-        );
-        
-        // Create subscription
+        // Effects
         uint256 endTime = block.timestamp + 365 days;
         subscriptions[msg.sender] = Subscription({
             user: msg.sender,
-            plan: _plan,
+            plan: planType,
             startTime: block.timestamp,
             endTime: endTime,
             active: true,
             autoRenew: false
         });
         
-        emit SubscriptionCreated(msg.sender, _plan, endTime);
-        emit PaymentReceived(msg.sender, plan.pricePerYear, _paymentToken);
+        // Interactions
+        uint256 amount = plan.pricePerYear;
+        uint256 ownerShare = amount / 2;
+        uint256 contractShare = amount - ownerShare;
+        
+        IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), contractShare);
+        IERC20(paymentToken).safeTransferFrom(msg.sender, owner(), ownerShare);
+        
+        emit SubscriptionCreated(msg.sender, planType, endTime);
+        emit PaymentReceived(msg.sender, amount, paymentToken);
     }
     
     /**
@@ -144,9 +148,9 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
      */
     function renewSubscription(
         bool yearly,
-        address _paymentToken
+        address paymentToken
     ) external nonReentrant {
-        require(supportedTokens[_paymentToken], "Payment token not supported");
+        require(supportedTokens[paymentToken], "Payment token not supported");
         
         Subscription storage sub = subscriptions[msg.sender];
         require(sub.user == msg.sender, "No subscription found");
@@ -155,26 +159,24 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
         uint256 price = yearly ? plan.pricePerYear : plan.pricePerMonth;
         uint256 duration = yearly ? 365 days : 30 days;
         
-        // Transfer payment
-        IERC20(_paymentToken).transferFrom(
-            msg.sender,
-            address(this),
-            price
-        );
-        
-        // Extend subscription
+        // Effects
         if (sub.active && sub.endTime > block.timestamp) {
-            // Extend from current end time
             sub.endTime += duration;
         } else {
-            // Restart from now
             sub.startTime = block.timestamp;
             sub.endTime = block.timestamp + duration;
             sub.active = true;
         }
         
+        // Interactions
+        uint256 ownerShare = price / 2;
+        uint256 contractShare = price - ownerShare;
+        
+        IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), contractShare);
+        IERC20(paymentToken).safeTransferFrom(msg.sender, owner(), ownerShare);
+        
         emit SubscriptionRenewed(msg.sender, sub.endTime);
-        emit PaymentReceived(msg.sender, price, _paymentToken);
+        emit PaymentReceived(msg.sender, price, paymentToken);
     }
     
     /**
@@ -194,22 +196,22 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
     /**
      * @dev Check if user has active subscription
      */
-    function hasActiveSubscription(address _user) external view returns (bool) {
-        Subscription memory sub = subscriptions[_user];
+    function hasActiveSubscription(address user) external view returns (bool) {
+        Subscription memory sub = subscriptions[user];
         return sub.active && sub.endTime > block.timestamp;
     }
     
     /**
      * @dev Get subscription details
      */
-    function getSubscription(address _user) external view returns (
+    function getSubscription(address user) external view returns (
         PlanType plan,
         uint256 startTime,
         uint256 endTime,
         bool active,
         uint256 daysRemaining
     ) {
-        Subscription memory sub = subscriptions[_user];
+        Subscription memory sub = subscriptions[user];
         uint256 remaining = 0;
         
         if (sub.active && sub.endTime > block.timestamp) {
@@ -229,40 +231,41 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
      * @dev Update plan pricing (owner only)
      */
     function updatePlan(
-        PlanType _plan,
-        uint256 _pricePerMonth,
-        uint256 _pricePerYear,
-        bool _active
+        PlanType planType,
+        uint256 pricePerMonth,
+        uint256 pricePerYear,
+        bool active
     ) external onlyOwner {
-        plans[_plan].pricePerMonth = _pricePerMonth;
-        plans[_plan].pricePerYear = _pricePerYear;
-        plans[_plan].active = _active;
+        plans[planType].pricePerMonth = pricePerMonth;
+        plans[planType].pricePerYear = pricePerYear;
+        plans[planType].active = active;
         
-        emit PlanUpdated(_plan, _pricePerMonth, _pricePerYear);
+        emit PlanUpdated(planType, pricePerMonth, pricePerYear);
     }
     
     /**
      * @dev Add supported payment token (owner only)
      */
-    function addSupportedToken(address _token) external onlyOwner {
-        supportedTokens[_token] = true;
+    function addSupportedToken(address token) external onlyOwner {
+        supportedTokens[token] = true;
     }
     
     /**
      * @dev Remove supported payment token (owner only)
      */
-    function removeSupportedToken(address _token) external onlyOwner {
-        supportedTokens[_token] = false;
+    function removeSupportedToken(address token) external onlyOwner {
+        supportedTokens[token] = false;
     }
     
     /**
      * @dev Withdraw collected payments (owner only)
      */
-    function withdraw(address _token, uint256 _amount) external onlyOwner {
-        if (_token == address(0)) {
-            payable(owner()).transfer(_amount);
+    function withdraw(address token, uint256 amount) external onlyOwner {
+        if (token == address(0)) {
+            (bool success, ) = payable(owner()).call{value: amount}("");
+            require(success, "ETH transfer failed");
         } else {
-            IERC20(_token).transfer(owner(), _amount);
+            IERC20(token).safeTransfer(owner(), amount);
         }
     }
     

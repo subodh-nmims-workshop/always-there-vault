@@ -1,8 +1,3 @@
-/**
- * Professional Button Component
- * Customizable button with multiple variants and states
- */
-
 import React from 'react';
 import {
   TouchableOpacity,
@@ -11,8 +6,9 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  View
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { COLORS, FONTS, RADIUS, SHADOWS } from '../theme';
 
 interface ButtonProps {
   title: string;
@@ -21,7 +17,7 @@ interface ButtonProps {
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   loading?: boolean;
-  icon?: string;
+  icon?: any;
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
   style?: ViewStyle;
@@ -35,7 +31,7 @@ const Button: React.FC<ButtonProps> = ({
   size = 'md',
   disabled = false,
   loading = false,
-  icon,
+  icon: IconComp,
   iconPosition = 'left',
   fullWidth = false,
   style,
@@ -49,18 +45,12 @@ const Button: React.FC<ButtonProps> = ({
     };
 
     switch (variant) {
-      case 'primary':
-        return { ...baseStyle, ...styles.primaryButton };
-      case 'secondary':
-        return { ...baseStyle, ...styles.secondaryButton };
-      case 'outline':
-        return { ...baseStyle, ...styles.outlineButton };
-      case 'ghost':
-        return { ...baseStyle, ...styles.ghostButton };
-      case 'danger':
-        return { ...baseStyle, ...styles.dangerButton };
-      default:
-        return { ...baseStyle, ...styles.primaryButton };
+      case 'primary': return { ...baseStyle, ...styles.primaryButton };
+      case 'secondary': return { ...baseStyle, ...styles.secondaryButton };
+      case 'outline': return { ...baseStyle, ...styles.outlineButton };
+      case 'ghost': return { ...baseStyle, ...styles.ghostButton };
+      case 'danger': return { ...baseStyle, ...styles.dangerButton };
+      default: return { ...baseStyle, ...styles.primaryButton };
     }
   };
 
@@ -71,18 +61,12 @@ const Button: React.FC<ButtonProps> = ({
     };
 
     switch (variant) {
-      case 'primary':
-        return { ...baseStyle, ...styles.primaryButtonText };
-      case 'secondary':
-        return { ...baseStyle, ...styles.secondaryButtonText };
-      case 'outline':
-        return { ...baseStyle, ...styles.outlineButtonText };
-      case 'ghost':
-        return { ...baseStyle, ...styles.ghostButtonText };
-      case 'danger':
-        return { ...baseStyle, ...styles.dangerButtonText };
-      default:
-        return { ...baseStyle, ...styles.primaryButtonText };
+      case 'primary': return { ...baseStyle, ...styles.primaryButtonText };
+      case 'secondary': return { ...baseStyle, ...styles.secondaryButtonText };
+      case 'outline': return { ...baseStyle, ...styles.outlineButtonText };
+      case 'ghost': return { ...baseStyle, ...styles.ghostButtonText };
+      case 'danger': return { ...baseStyle, ...styles.dangerButtonText };
+      default: return { ...baseStyle, ...styles.primaryButtonText };
     }
   };
 
@@ -97,31 +81,25 @@ const Button: React.FC<ButtonProps> = ({
       ]}
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' || variant === 'danger' ? '#ffffff' : '#3b82f6'}
+          color={variant === 'outline' || variant === 'ghost' ? COLORS.primary : '#ffffff'}
         />
       ) : (
         <>
-          {icon && iconPosition === 'left' && (
-            <Icon
-              name={icon}
-              size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20}
-              color={getTextStyle().color}
-              style={styles.iconLeft}
-            />
+          {IconComp && iconPosition === 'left' && (
+            <View style={styles.iconLeft}>
+              <IconComp size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} color={getTextStyle().color} />
+            </View>
           )}
           <Text style={[getTextStyle(), textStyle]}>{title}</Text>
-          {icon && iconPosition === 'right' && (
-            <Icon
-              name={icon}
-              size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20}
-              color={getTextStyle().color}
-              style={styles.iconRight}
-            />
+          {IconComp && iconPosition === 'right' && (
+            <View style={styles.iconRight}>
+              <IconComp size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} color={getTextStyle().color} />
+            </View>
           )}
         </>
       )}
@@ -134,7 +112,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -142,83 +120,66 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     minHeight: 36,
+    borderRadius: RADIUS.md,
   },
   button_md: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 44,
+    paddingVertical: 14,
+    minHeight: 48,
   },
   button_lg: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    minHeight: 52,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    minHeight: 56,
+    borderRadius: RADIUS.xl,
   },
   fullWidth: {
     width: '100%',
   },
   buttonText: {
-    fontWeight: '600',
+    fontFamily: FONTS.orbitron.bold,
     textAlign: 'center',
+    letterSpacing: 1,
   },
-  buttonText_sm: {
-    fontSize: 14,
-  },
-  buttonText_md: {
-    fontSize: 16,
-  },
-  buttonText_lg: {
-    fontSize: 18,
-  },
-  iconLeft: {
-    marginRight: 8,
-  },
-  iconRight: {
-    marginLeft: 8,
-  },
-  // Primary Button
+  buttonText_sm: { fontSize: 11 },
+  buttonText_md: { fontSize: 13 },
+  buttonText_lg: { fontSize: 15 },
+  iconLeft: { marginRight: 8 },
+  iconRight: { marginLeft: 8 },
+  
+  // Variants
   primaryButton: {
-    backgroundColor: '#1152d4',
-    borderColor: '#1152d4',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    ...SHADOWS.blue,
   },
-  primaryButtonText: {
-    color: '#ffffff',
-  },
-  // Secondary Button
+  primaryButtonText: { color: '#ffffff' },
+  
   secondaryButton: {
-    backgroundColor: '#1e293b',
-    borderColor: '#1e293b',
+    backgroundColor: COLORS.surfaceLight,
+    borderColor: COLORS.borderLight,
   },
-  secondaryButtonText: {
-    color: '#e5e7eb',
-  },
-  // Outline Button
+  secondaryButtonText: { color: COLORS.text },
+  
   outlineButton: {
     backgroundColor: 'transparent',
-    borderColor: '#1152d4',
+    borderColor: COLORS.primary,
   },
-  outlineButtonText: {
-    color: '#1152d4',
-  },
-  // Ghost Button
+  outlineButtonText: { color: COLORS.primary },
+  
   ghostButton: {
     backgroundColor: 'transparent',
     borderColor: 'transparent',
   },
-  ghostButtonText: {
-    color: '#e5e7eb',
-  },
-  // Danger Button
+  ghostButtonText: { color: COLORS.textMuted },
+  
   dangerButton: {
-    backgroundColor: '#ef4444',
-    borderColor: '#ef4444',
+    backgroundColor: COLORS.error,
+    borderColor: COLORS.error,
   },
-  dangerButtonText: {
-    color: '#ffffff',
-  },
-  // Disabled Button
-  disabledButton: {
-    opacity: 0.5,
-  },
+  dangerButtonText: { color: '#ffffff' },
+  
+  disabledButton: { opacity: 0.5 },
 });
 
 export default Button;

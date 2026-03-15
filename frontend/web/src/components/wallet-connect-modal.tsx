@@ -5,7 +5,7 @@ import { X, Wallet, Shield, CheckCircle } from 'lucide-react'
 interface WalletConnectModalProps {
   isOpen: boolean
   onClose: () => void
-  onConnect: () => void
+  onConnect: (address: string) => void
   isConnecting: boolean
 }
 
@@ -45,7 +45,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
 
           <div className="space-y-3">
             <button
-              onClick={onConnect}
+              onClick={() => onConnect('0x742d13f0cc6634c051a85e4db8d3d92828b4b3')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -62,9 +62,24 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
                 )}
               </div>
             </button>
+            <button
+              onClick={() => onConnect('0x387affcb2e6462c051a85e4db8d3d92828b4b8')}
+              disabled={isConnecting}
+              className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <span className="text-2xl">🌈</span>
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="font-bold text-slate-200">Rainbow</h3>
+                  <p className="text-xs text-slate-400">Connect with Rainbow</p>
+                </div>
+              </div>
+            </button>
 
             <button
-              onClick={onConnect}
+              onClick={() => onConnect('0xcba42d13f0cc6634c051a85e4db8d3d92828b4c0')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -80,7 +95,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
             </button>
 
             <button
-              onClick={onConnect}
+              onClick={() => onConnect('0x9d2828b4b3742d13f0cc6634c051a85e4db8d3d')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >

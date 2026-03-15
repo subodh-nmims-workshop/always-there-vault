@@ -8,6 +8,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthModule } from '../services/auth/auth.module';
 import { AssetsModule } from '../services/assets/assets.module';
 import { BeneficiariesModule } from '../services/beneficiaries/beneficiaries.module';
@@ -37,6 +38,7 @@ import { LoggerModule } from '../services/logger/logger.module';
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
+    PrometheusModule.register(),
     LoggerModule,
     CacheModule,
     AuthModule,

@@ -4,9 +4,9 @@
  */
 
 import CryptoJS from 'react-native-crypto-js';
-import { getRandomValues } from 'react-native-get-random-values';
+import * as Crypto from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Keychain from 'react-native-keychain';
+import * as SecureStore from 'expo-secure-store';
 
 export interface EncryptionResult {
   encryptedData: string;
@@ -46,7 +46,7 @@ class CryptoService {
    */
   generateEncryptionKey(): string {
     const array = new Uint8Array(32); // 256 bits
-    getRandomValues(array);
+    Crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 
@@ -173,7 +173,7 @@ class CryptoService {
    */
   async storeSecureData(key: string, data: string): Promise<void> {
     try {
-      await Keychain.setInternetCredentials(key, 'user', data);
+      await SecureStore.setItemAsync(key, data);
     } catch (error) {
       // Fallback to AsyncStorage with encryption
       const encrypted = await this.encryptData(data);
@@ -186,9 +186,9 @@ class CryptoService {
    */
   async getSecureData(key: string): Promise<string | null> {
     try {
-      const credentials = await Keychain.getInternetCredentials(key);
+      const credentials = await SecureStore.getItemAsync(key);
       if (credentials) {
-        return credentials.password;
+        return credentials;
       }
     } catch (error) {
       // Fallback to AsyncStorage

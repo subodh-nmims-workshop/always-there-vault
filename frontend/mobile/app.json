@@ -1,4 +1,40 @@
 {
-  "name": "DigitalWill",
-  "displayName": "Digital Will Protocol"
+  "expo": {
+    "name": "Digital Will Protocol",
+    "slug": "digital-will-protocol",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.digitalwill.protocol"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.digitalwill.protocol"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:7001",
+      "blockchainUrl": "http://localhost:8545"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-secure-store"
+    ]
+  }
 }

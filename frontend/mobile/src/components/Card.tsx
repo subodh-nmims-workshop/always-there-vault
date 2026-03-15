@@ -1,8 +1,3 @@
-/**
- * Professional Card Component
- * Reusable card component with consistent styling
- */
-
 import React from 'react';
 import {
   View,
@@ -10,15 +5,13 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
+import { COLORS, RADIUS, SHADOWS, GAPS } from '../theme';
 
 interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   onPress?: () => void;
   disabled?: boolean;
-  elevation?: number;
-  borderRadius?: number;
-  padding?: number;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -26,19 +19,9 @@ const Card: React.FC<CardProps> = ({
   style,
   onPress,
   disabled = false,
-  elevation = 3,
-  borderRadius = 12,
-  padding = 16,
 }) => {
   const cardStyle = [
     styles.card,
-    {
-      elevation,
-      borderRadius,
-      padding,
-      shadowOpacity: elevation * 0.05,
-      shadowRadius: elevation * 2,
-    },
     style,
   ];
 
@@ -60,17 +43,12 @@ const Card: React.FC<CardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#020617',
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.25)',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.xl,
+    padding: GAPS.lg,
+    ...SHADOWS.blue,
   },
 });
 

@@ -66,13 +66,17 @@ export class Subscription {
   beneficiariesCount: number;
 
   @Prop({ type: Number, default: 0 })
-  storageUsedGB: number;
+  centralizedStorageUsedMB: number;
+
+  @Prop({ type: Number, default: 0 })
+  decentralizedStorageUsedMB: number;
 
   @Prop({ type: Object })
   limits: {
     assets: number;
     beneficiaries: number;
-    storageGB: number;
+    centralizedStorageMB: number;
+    decentralizedStorageMB: number;
   };
 
   @Prop({ type: [String], default: [] })
