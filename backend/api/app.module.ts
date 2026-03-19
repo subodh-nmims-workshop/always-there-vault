@@ -21,9 +21,11 @@ import { StripeModule } from '../services/stripe/stripe.module';
 import { EmailModule } from '../services/email/email.module';
 import { CacheModule } from '../services/cache/cache.module';
 import { LoggerModule } from '../services/logger/logger.module';
+import { DrizzleModule } from '../src/db/drizzle.module';
 
 @Module({
   imports: [
+    DrizzleModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',

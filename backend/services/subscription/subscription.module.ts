@@ -4,12 +4,11 @@ import { SubscriptionController } from './subscription.controller';
 import { SubscriptionService } from './subscription.service';
 import { PricingService } from './pricing.service';
 import { Subscription, SubscriptionSchema } from './subscription.schema';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Subscription.name, schema: SubscriptionSchema },
-    ]),
+    UsersModule,
   ],
   controllers: [SubscriptionController],
   providers: [SubscriptionService, PricingService],

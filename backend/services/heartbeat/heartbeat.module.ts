@@ -10,7 +10,6 @@ import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: HeartbeatLog.name, schema: HeartbeatLogSchema }]),
     UsersModule,
     BlockchainModule,
     EmailModule

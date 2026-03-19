@@ -1,50 +1,58 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CreateBeneficiaryDto, UpdateBeneficiaryDto, BeneficiaryDto } from './dto/beneficiary.dto';
-import { Beneficiary, BeneficiaryDocument } from './schemas/beneficiary.schema';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { eq, and } from 'drizzle-orm';
+import { beneficiaries, type Beneficiary, type NewBeneficiary } from '../../src/db/schema/beneficiaries';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
-    @InjectModel(Beneficiary.name) private beneficiaryModel: Model<BeneficiaryDocument>,
+    @Inject('DRIZZLE_DB') private db: any,
+    private usersService: UsersService,
   ) { }
 
-  async createBeneficiary(createBeneficiaryDto: any): Promise<Beneficiary> {
-    const newBeneficiary = new this.beneficiaryModel({
-      nomineeId: this.generateId(),
-      ...createBeneficiaryDto,
-    });
-    return newBeneficiary.save();
+  async createBeneficiary(createData: any): Promise<Beneficiary> {
+    const user = await this.usersService.findUserByWallet(createData.ownerWallet);
+    const [beneficiary] = await this.db.insert(beneficiaries).values({
+      userId: user.id,
+      walletAddress: createData.walletAddress,
+      email: createData.email,
+      name: createData.name,
+      sharePercentage: createData.sharePercentage || 0,
+      relationship: createData.relationship,
+    } as NewBeneficiary).returning();
+    return beneficiary;
   }
 
   async getAllBeneficiaries(ownerWallet: string): Promise<Beneficiary[]> {
-    return this.beneficiaryModel.find({ ownerWallet }).exec();
+    const user = await this.usersService.findUserByWallet(ownerWallet);
+    return this.db.query.beneficiaries.findMany({
+      where: eq(beneficiaries.userId, user.id),
+    });
   }
 
-  async getBeneficiary(nomineeId: string): Promise<Beneficiary> {
-    const beneficiary = await this.beneficiaryModel.findOne({ nomineeId }).exec();
+  async getBeneficiary(id: string): Promise<Beneficiary> {
+    const beneficiary = await this.db.query.beneficiaries.findFirst({
+      where: eq(beneficiaries.id, id),
+    });
     if (!beneficiary) {
-      throw new NotFoundException(`Beneficiary with ID ${nomineeId} not found`);
+      throw new NotFoundException(`Beneficiary with ID ${id} not found`);
     }
     return beneficiary;
   }
 
-  async updateBeneficiary(nomineeId: string, updateData: any): Promise<Beneficiary> {
-    const updated = await this.beneficiaryModel.findOneAndUpdate(
-      { nomineeId },
-      { $set: updateData },
-      { new: true }
-    ).exec();
+  async updateBeneficiary(id: string, updateData: any): Promise<Beneficiary> {
+    const [updated] = await this.db.update(beneficiaries)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(beneficiaries.id, id))
+      .returning();
     if (!updated) throw new NotFoundException('Beneficiary not found');
     return updated;
   }
 
-  async deleteBeneficiary(nomineeId: string): Promise<void> {
-    await this.beneficiaryModel.findOneAndDelete({ nomineeId }).exec();
-  }
-
-  private generateId(): string {
-    return `beneficiary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  async deleteBeneficiary(id: string): Promise<void> {
+    await this.db.delete(beneficiaries).where(eq(beneficiaries.id, id));
   }
 }

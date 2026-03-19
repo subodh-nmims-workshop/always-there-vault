@@ -9,10 +9,6 @@ import { Asset, AssetSchema } from './schemas/asset.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Asset.name, schema: AssetSchema },
-      { name: Folder.name, schema: FolderSchema },
-    ]),
     UsersModule,
   ],
   controllers: [AssetsController],

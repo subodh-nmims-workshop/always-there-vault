@@ -1,0 +1,30 @@
+import { pgTable, uuid, varchar, bigint, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { users } from './users';
+import { folders } from './folders';
+
+export const files = pgTable('files', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar('name', { length: 255 }).notNull(),
+  size: bigint('size', { mode: 'number' }).notNull(),
+  mimeType: varchar('mime_type', { length: 100 }),
+  
+  // Storage info
+  cid: varchar('cid', { length: 255 }), // IPFS CID
+  location: varchar('location', { length: 255 }), // Local path or IPFS CID
+  isIpfs: boolean('is_ipfs').notNull().default(false),
+  encrypted: boolean('encrypted').notNull().default(true),
+  
+  // Metadata
+  metadata: jsonb('metadata').default({}),
+  
+  // Relations
+  folderId: uuid('folder_id').references(() => folders.id, { onDelete: 'set null' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type File = typeof files.$inferSelect;
+export type NewFile = typeof files.$inferInsert;

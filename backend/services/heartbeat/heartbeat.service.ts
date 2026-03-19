@@ -1,133 +1,79 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { RecordHeartbeatDto, HeartbeatDto, HeartbeatStatusDto, HeartbeatSettingsDto } from './dto/heartbeat.dto';
-import { HeartbeatLog, HeartbeatLogDocument } from './schemas/heartbeat.schema';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { eq, sql } from 'drizzle-orm';
+import { users } from '../../src/db/schema/users';
+import { heartbeatConfigs, type HeartbeatConfig, type NewHeartbeatConfig } from '../../src/db/schema/heartbeat';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class HeartbeatService {
   constructor(
-    @InjectModel(HeartbeatLog.name) private heartbeatModel: Model<HeartbeatLogDocument>,
+    @Inject('DRIZZLE_DB') private db: any,
     private usersService: UsersService,
   ) { }
 
-  private readonly DEFAULT_INTERVAL_DAYS = 30;
-  private readonly DEFAULT_GRACE_PERIOD_DAYS = 14;
+  async recordHeartbeat(walletAddress: string, method: string = 'dashboard'): Promise<any> {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    
+    // Update config
+    await this.db.update(heartbeatConfigs)
+      .set({
+        lastHeartbeat: new Date(),
+        missedCount: 0,
+        updatedAt: new Date(),
+      })
+      .where(eq(heartbeatConfigs.userId, user.id));
 
-  async recordHeartbeat(recordHeartbeatDto: RecordHeartbeatDto): Promise<HeartbeatLog> {
-    const log = new this.heartbeatModel({
-      userWallet: recordHeartbeatDto.walletAddress,
-      lastPingTime: new Date(),
-      method: recordHeartbeatDto.method,
+    // Update user last active
+    await this.usersService.updateLastActive(walletAddress);
+
+    return { success: true };
+  }
+
+  async getHeartbeatStatus(walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    
+    const config = await this.db.query.heartbeatConfigs.findFirst({
+      where: eq(heartbeatConfigs.userId, user.id),
     });
-    // Reset missed heartbeats buffer on successful activity
-    await this.usersService.resetMissedHeartbeats(recordHeartbeatDto.walletAddress);
-    return log.save();
-  }
 
-  async getHeartbeatSettings(walletAddress: string): Promise<HeartbeatSettingsDto> {
-    try {
-      const user = await this.usersService.findUserByWallet(walletAddress);
-      return {
-        interval: user.heartbeatInterval || this.DEFAULT_INTERVAL_DAYS,
-        gracePeriod: user.gracePeriod || this.DEFAULT_GRACE_PERIOD_DAYS,
-      };
-    } catch (e) {
-      if (e instanceof NotFoundException) {
-        return {
-          interval: this.DEFAULT_INTERVAL_DAYS,
-          gracePeriod: this.DEFAULT_GRACE_PERIOD_DAYS,
-        };
-      }
-      throw e;
-    }
-  }
-
-  async updateHeartbeatSettings(walletAddress: string, settingsDto: HeartbeatSettingsDto): Promise<HeartbeatSettingsDto> {
-    const user = await this.usersService.updateHeartbeatSettings(
-      walletAddress,
-      settingsDto.interval,
-      settingsDto.gracePeriod,
-    );
-    return {
-      interval: user.heartbeatInterval,
-      gracePeriod: user.gracePeriod,
-    };
-  }
-
-  async getHeartbeatStatus(walletAddress: string): Promise<HeartbeatStatusDto> {
-    const logs = await this.heartbeatModel
-      .find({ userWallet: walletAddress })
-      .sort({ lastPingTime: -1 })
-      .limit(1)
-      .exec();
-
-    const settings = await this.getHeartbeatSettings(walletAddress);
-    const intervalDays = settings.interval;
-    const gracePeriodDays = settings.gracePeriod;
-
-    if (!logs || logs.length === 0) {
-      return {
-        status: 'inactive',
-        lastHeartbeat: null,
-        nextHeartbeatDue: null,
-        daysUntilDue: intervalDays,
-        isOverdue: false,
-        gracePeriodRemaining: 0,
-        interval: intervalDays,
-        gracePeriod: gracePeriodDays,
-      };
+    if (!config) {
+      return { status: 'active', daysUntilDue: 999 }; // Default or unconfigured
     }
 
-    const lastHeartbeat = logs[0];
+    const lastCheck = config.lastHeartbeat || config.createdAt;
     const now = new Date();
-    const daysSinceLastHeartbeat = this.daysBetween(lastHeartbeat.lastPingTime, now);
+    const diffDays = Math.floor((now.getTime() - lastCheck.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const interval = config.intervalDays;
+    const grace = config.gracePeriodDays;
 
-    const nextHeartbeatDue = new Date(lastHeartbeat.lastPingTime);
-    nextHeartbeatDue.setDate(nextHeartbeatDue.getDate() + intervalDays);
-
-    const daysUntilDue = this.daysBetween(now, nextHeartbeatDue);
-    const isOverdue = daysUntilDue < 0;
-    const gracePeriodRemaining = isOverdue
-      ? Math.max(0, gracePeriodDays + daysUntilDue)
-      : gracePeriodDays;
-
-    let status: 'active' | 'grace_period' | 'overdue' | 'inactive';
-    if (daysSinceLastHeartbeat <= intervalDays) {
-      status = 'active';
-    } else if (daysSinceLastHeartbeat <= intervalDays + gracePeriodDays) {
-      status = 'grace_period';
+    if (diffDays > interval + grace) {
+      return { status: 'overdue', daysUntilDue: interval + grace - diffDays };
+    } else if (diffDays > interval) {
+      return { status: 'grace_period', daysUntilDue: interval + grace - diffDays };
     } else {
-      status = 'overdue';
+      return { status: 'active', daysUntilDue: interval - diffDays };
     }
-
-    return {
-      status,
-      lastHeartbeat: lastHeartbeat.lastPingTime,
-      nextHeartbeatDue,
-      daysUntilDue: Math.max(0, daysUntilDue),
-      isOverdue,
-      gracePeriodRemaining,
-      interval: intervalDays,
-      gracePeriod: gracePeriodDays,
-    };
   }
 
-  async getHeartbeatHistory(walletAddress: string): Promise<HeartbeatLog[]> {
-    return this.heartbeatModel.find({ userWallet: walletAddress }).sort({ lastPingTime: -1 }).exec();
-  }
+  async updateConfig(walletAddress: string, interval: number, grace: number, buffer: number) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    
+    const [config] = await this.db.insert(heartbeatConfigs).values({
+      userId: user.id,
+      intervalDays: interval,
+      gracePeriodDays: grace,
+      bufferMisses: buffer,
+    } as NewHeartbeatConfig).onConflictDoUpdate({
+      target: [heartbeatConfigs.userId],
+      set: {
+        intervalDays: interval,
+        gracePeriodDays: grace,
+        bufferMisses: buffer,
+        updatedAt: new Date(),
+      },
+    }).returning();
 
-  async checkHeartbeatRequired(walletAddress: string): Promise<{ required: boolean; daysUntilDue: number }> {
-    const status = await this.getHeartbeatStatus(walletAddress);
-    return {
-      required: status.daysUntilDue <= 7 || status.isOverdue,
-      daysUntilDue: status.daysUntilDue,
-    };
-  }
-
-  private daysBetween(date1: Date, date2: Date): number {
-    const oneDay = 24 * 60 * 60 * 1000;
-    return Math.round((date2.getTime() - date1.getTime()) / oneDay);
+    return config;
   }
 }

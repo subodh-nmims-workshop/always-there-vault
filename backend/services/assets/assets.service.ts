@@ -1,150 +1,120 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CreateAssetDto, UpdateAssetDto, AssetMetadataDto } from './dto/asset.dto';
-import { Asset, AssetDocument } from './schemas/asset.schema';
-import { Folder, FolderDocument } from './schemas/folder.schema';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { eq, and, isNull, or, sql } from 'drizzle-orm';
+import { users } from '../../src/db/schema/users';
+import { folders, type NewFolder } from '../../src/db/schema/folders';
+import { files, type NewFile } from '../../src/db/schema/files';
+import { sharedAccess, type NewSharedAccess } from '../../src/db/schema/sharing';
 import { IpfsService } from './ipfs.service';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AssetsService {
   constructor(
-    @InjectModel(Asset.name) private assetModel: Model<AssetDocument>,
-    @InjectModel(Folder.name) private folderModel: Model<FolderDocument>,
+    @Inject('DRIZZLE_DB') private db: any,
     private usersService: UsersService,
     private ipfsService: IpfsService,
   ) { }
 
-  async createFolder(name: string, ownerWallet: string, parentId?: string): Promise<Folder> {
-    const parent = parentId ? await this.folderModel.findById(parentId) : null;
-    const newFolder = new this.folderModel({
-      name,
-      ownerWallet,
-      parentId: parent ? parent._id : null
-    });
-    return newFolder.save();
-  }
-
-  async getFolderContents(ownerWallet: string, folderId?: string): Promise<{ folders: Folder[], assets: Asset[] }> {
-    const folders = await this.folderModel.find({ 
-      ownerWallet, 
-      parentId: folderId || null 
-    }).exec();
+  async createFolder(name: string, walletAddress: string, parentId?: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
     
-    const assets = await this.assetModel.find({ 
-      ownerWallet, 
-      parentFolderId: folderId || null 
-    }).exec();
+    const [folder] = await this.db.insert(folders).values({
+      name,
+      userId: user.id,
+      parentId: parentId || null,
+    } as NewFolder).returning();
 
-    return { folders, assets };
+    return folder;
   }
 
-  async shareFolder(folderId: string, walletToShareWith: string, permission: string = 'READ'): Promise<Folder> {
-    return this.folderModel.findByIdAndUpdate(
-      folderId,
-      { $addToSet: { sharedWith: { walletAddress: walletToShareWith, permission } } },
-      { new: true }
-    ).exec();
+  async getFolderContents(walletAddress: string, folderId?: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+
+    const folderList = await this.db.query.folders.findMany({
+      where: and(
+        eq(folders.userId, user.id),
+        folderId ? eq(folders.parentId, folderId) : isNull(folders.parentId)
+      ),
+    });
+
+    const fileList = await this.db.query.files.findMany({
+      where: and(
+        eq(files.userId, user.id),
+        folderId ? eq(files.folderId, folderId) : isNull(files.folderId)
+      ),
+    });
+
+    return { folders: folderList, assets: fileList };
   }
 
-  async uploadFile(file: Express.Multer.File, walletAddress: string): Promise<{ ipfsHash: string }> {
-    // Check quota before uploading
+  async uploadFile(file: Express.Multer.File, walletAddress: string, folderId?: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+
+    // Check quota
     const hasSpace = await this.usersService.checkAndIncrementStorage(walletAddress, file.size);
     if (!hasSpace) {
-      throw new Error('Storage quota exceeded. Please upgrade to a premium plan.');
+      throw new Error('Storage quota exceeded');
     }
 
-    try {
-      const ipfsHash = await this.ipfsService.uploadFile(file);
-      return { ipfsHash };
-    } catch (error) {
-      // Rollback storage used if upload fails
-      await this.usersService.decrementStorage(walletAddress, file.size);
-      throw error;
-    }
+    // Upload to IPFS (using existing service logic)
+    const ipfsResult = await this.ipfsService.uploadFile(file);
+
+    // Create file record
+    const [fileRecord] = await this.db.insert(files).values({
+      name: file.originalname,
+      size: file.size,
+      mimeType: file.mimetype,
+      cid: ipfsResult.cid,
+      location: ipfsResult.cid,
+      isIpfs: true,
+      userId: user.id,
+      folderId: folderId || null,
+    } as NewFile).returning();
+
+    return fileRecord;
   }
 
-  async createAsset(createAssetDto: any): Promise<Asset> {
-    const newAsset = new this.assetModel({
-      assetId: this.generateId(),
-      ...createAssetDto,
+  async shareFolder(folderId: string, walletToShareWith: string, permission: string = 'READ') {
+    const targetUser = await this.usersService.findUserByWallet(walletToShareWith);
+    
+    const [share] = await this.db.insert(sharedAccess).values({
+      folderId,
+      userId: targetUser.id,
+      permission,
+    } as NewSharedAccess).returning();
+
+    return share;
+  }
+
+  async getAllAssets(walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    return this.db.query.files.findMany({
+      where: eq(files.userId, user.id),
     });
-    return newAsset.save();
   }
 
-  async getAllAssets(ownerWallet: string): Promise<Asset[]> {
-    return this.assetModel.find({ ownerWallet }).exec();
-  }
+  async deleteAsset(id: string) {
+    const file = await this.db.query.files.findFirst({
+      where: eq(files.id, id),
+    });
 
-  async getAsset(assetId: string): Promise<Asset> {
-    const asset = await this.assetModel.findOne({ assetId }).exec();
-    if (!asset) {
-      throw new NotFoundException(`Asset with ID ${assetId} not found`);
+    if (!file) throw new NotFoundException('Asset not found');
+
+    await this.db.delete(files).where(eq(files.id, id));
+    
+    // Decrement storage
+    const user = await this.db.query.users.findFirst({
+        where: eq(users.id, file.userId)
+    });
+    if (user) {
+        await this.usersService.decrementStorage(user.walletAddress, file.size);
     }
-    return asset;
+
+    return { success: true };
   }
 
-  async updateAsset(assetId: string, updateData: any): Promise<Asset> {
-    const updated = await this.assetModel.findOneAndUpdate(
-      { assetId },
-      { $set: updateData },
-      { new: true }
-    ).exec();
-    if (!updated) throw new NotFoundException('Asset not found');
-    return updated;
-  }
-
-  async deleteAsset(assetId: string): Promise<void> {
-    const asset = await this.getAsset(assetId);
-    if (asset && asset.size) {
-      await this.usersService.decrementStorage(asset.ownerWallet, asset.size);
-    }
-    await this.assetModel.findOneAndDelete({ assetId }).exec();
-  }
-
-  async assignNominee(assetId: string, nomineeId: string): Promise<Asset> {
-    return this.updateAsset(assetId, { $addToSet: { nomineeIds: nomineeId } });
-  }
-
-  // Hierarchical resolution: Get all assets for a nominee, inherited from parent folders
-  async getAssetsVisibleToNominee(nomineeId: string): Promise<Asset[]> {
-    const allAssets = await this.assetModel.find().exec();
-    const visibleAssets: Asset[] = [];
-
-    // Helper to check if any ancestor is explicitly assigned to this nominee
-    const isNomineeInherited = (asset: Asset): boolean => {
-      if (asset.nomineeIds && asset.nomineeIds.includes(nomineeId)) return true;
-      if (!asset.parentFolderId) return false;
-      const parent = allAssets.find(a => a.assetId === asset.parentFolderId);
-      if (!parent) return false;
-      // If parent has specific overrides but nominee is not included, it's blocked.
-      // If parent has no overrides, recursively check its parent.
-      if (parent.nomineeIds && parent.nomineeIds.length > 0) {
-        return parent.nomineeIds.includes(nomineeId);
-      }
-      return isNomineeInherited(parent);
-    };
-
-    for (const asset of allAssets) {
-      if (isNomineeInherited(asset)) {
-        visibleAssets.push(asset);
-      }
-    }
-    return visibleAssets;
-  }
-
-  async getReleaseStatus(assetId: string): Promise<{ canRelease: boolean; reason: string }> {
-    const asset = await this.getAsset(assetId);
-    return {
-      canRelease: asset.status === 'active',
-      reason: asset.status === 'active'
-        ? 'Asset is active and ready for release'
-        : 'Asset is not in releasable state',
-    };
-  }
-
-  private generateId(): string {
-    return `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  async getReleaseStatus(id: string): Promise<{ canRelease: boolean; reason: string }> {
+    // Basic logic for now
+    return { canRelease: false, reason: 'Manual trigger only for now' };
   }
 }
