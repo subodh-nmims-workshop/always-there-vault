@@ -48,6 +48,51 @@ export class UsersService {
         ).exec();
     }
 
+    async checkAndIncrementStorage(walletAddress: string, additionalBytes: number): Promise<boolean> {
+        const user = await this.userModel.findOne({ walletAddress }).exec();
+        if (!user) {
+            // If user doesn't exist, they are on FREE plan with 500MB
+            const newUser = await this.createOrUpdateUser(walletAddress);
+            if (additionalBytes > newUser.storageQuota) return false;
+            await this.userModel.findOneAndUpdate(
+                { walletAddress },
+                { $inc: { storageUsed: additionalBytes } }
+            ).exec();
+            return true;
+        }
+
+        if (user.storageUsed + additionalBytes > user.storageQuota) {
+            return false;
+        }
+
+        await this.userModel.findOneAndUpdate(
+            { walletAddress },
+            { $inc: { storageUsed: additionalBytes } }
+        ).exec();
+        return true;
+    }
+
+    async decrementStorage(walletAddress: string, bytes: number): Promise<void> {
+        await this.userModel.findOneAndUpdate(
+            { walletAddress },
+            { $inc: { storageUsed: -bytes } }
+        ).exec();
+    }
+
+    async incrementMissedHeartbeats(walletAddress: string): Promise<void> {
+        await this.userModel.findOneAndUpdate(
+            { walletAddress },
+            { $inc: { missedHeartbeats: 1 } }
+        ).exec();
+    }
+
+    async resetMissedHeartbeats(walletAddress: string): Promise<void> {
+        await this.userModel.findOneAndUpdate(
+            { walletAddress },
+            { $set: { missedHeartbeats: 0 } }
+        ).exec();
+    }
+
     async getAllUsers(): Promise<User[]> {
         return this.userModel.find().exec();
     }

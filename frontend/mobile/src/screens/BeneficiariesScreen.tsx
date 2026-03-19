@@ -27,6 +27,7 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import DashboardHeader from '../components/DashboardHeader';
 import ProtocolModal from '../components/ProtocolModal';
+import ApiService from '../services/ApiService';
 import { COLORS, FONTS, RADIUS, SHADOWS, GAPS } from '../theme';
 
 const { width } = Dimensions.get('window');
@@ -47,9 +48,17 @@ const BeneficiariesScreen = ({ navigation }: any) => {
   );
 
   const loadData = async () => {
-    const saved = await AsyncStorage.getItem('dwp_beneficiaries');
+    const api = ApiService.getInstance();
+    const res = await api.getBeneficiaries();
+    if (res.success && res.data) {
+      setBeneficiaries(res.data);
+    } else {
+      // Fallback to local if backend fails but we have cached data
+      const saved = await AsyncStorage.getItem('dwp_beneficiaries');
+      if (saved) setBeneficiaries(JSON.parse(saved));
+    }
+    
     const w = await AsyncStorage.getItem('dwp_wallet_address');
-    if (saved) setBeneficiaries(JSON.parse(saved));
     if (w) setWallet(w);
   };
 
@@ -57,23 +66,23 @@ const BeneficiariesScreen = ({ navigation }: any) => {
     if (!newName || !newAddr) return;
     setIsProcessing(true);
     
-    // Simulate chain-verified sharding
-    setTimeout(async () => {
-      const newNode = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: newName,
-        walletAddress: newAddr,
-        allocation: parseInt(allocation)
-      };
-      const updated = [...beneficiaries, newNode];
-      setBeneficiaries(updated);
-      await AsyncStorage.setItem('dwp_beneficiaries', JSON.stringify(updated));
-      
+    const api = ApiService.getInstance();
+    const res = await api.addBeneficiary({
+      name: newName,
+      walletAddress: newAddr,
+      allocation: parseInt(allocation)
+    });
+
+    if (res.success) {
+      // Refresh list from server
+      await loadData();
       setNewName('');
       setNewAddr('');
-      setIsProcessing(false);
       setShowAdd(false);
-    }, 1500);
+    } else {
+      alert(res.error || 'Failed to authorize node');
+    }
+    setIsProcessing(false);
   };
 
   const totalAllocation = beneficiaries.reduce((acc, b) => acc + (b.allocation || 0), 0);

@@ -20,6 +20,9 @@ export class Asset {
     @Prop({ type: Object })
     encryptedKeyShares: Record<string, string>; // Role -> Encrypted Share
 
+    @Prop({ default: 0 })
+    size: number; // in bytes
+
     @Prop([String])
     nomineeIds: string[]; // Array of assigned nominee IDs
 

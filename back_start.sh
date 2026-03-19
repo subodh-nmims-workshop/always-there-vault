@@ -120,7 +120,7 @@ start_services() {
             npm install --legacy-peer-deps > /dev/null 2>&1
         fi
         
-        npx hardhat node > ../hardhat-node.log 2>&1 &
+        npx hardhat node > ../logs/hardhat-node.log 2>&1 &
         PIDS+=($!)
         cd ..
         
@@ -128,11 +128,11 @@ start_services() {
             # Deploy contracts
             print_info "Deploying smart contracts..."
             cd backend-full-decentralised
-            npx hardhat run scripts/deploy.ts --network localhost > ../deploy.log 2>&1 && print_status "Contracts deployed" || print_warning "Contract deployment failed (check deploy.log)"
+            npx hardhat run scripts/deploy.ts --network localhost > ../logs/deploy.log 2>&1 && print_status "Contracts deployed" || print_warning "Contract deployment failed (check logs/deploy.log)"
             cd ..
         else
-            print_error "Blockchain failed to start. Check hardhat-node.log"
-            cat hardhat-node.log | tail -20
+            print_error "Blockchain failed to start. Check logs/hardhat-node.log"
+            cat logs/hardhat-node.log | tail -20
             cleanup
         fi
     else
@@ -151,13 +151,13 @@ start_services() {
             npm install > /dev/null 2>&1
         fi
         
-        npm run start:dev > ../backend.log 2>&1 &
+        npm run start:dev > ../logs/backend.log 2>&1 &
         PIDS+=($!)
         cd ..
         
         if ! wait_port 7001 "Backend API"; then
-            print_error "Backend failed to start. Check backend.log"
-            cat backend.log | tail -20
+            print_error "Backend failed to start. Check logs/backend.log"
+            cat logs/backend.log | tail -20
         fi
     else
         print_warning "backend directory not found, skipping backend"
@@ -178,13 +178,13 @@ start_services() {
         # Clear Next.js cache
         rm -rf .next 2>/dev/null || true
         
-        npm run dev > ../../web.log 2>&1 &
+        npm run dev > ../../logs/web.log 2>&1 &
         PIDS+=($!)
         cd ../..
         
         if ! wait_port 7000 "Web Frontend"; then
-            print_error "Web Frontend failed to start. Check web.log"
-            cat web.log | tail -20
+            print_error "Web Frontend failed to start. Check logs/web.log"
+            cat logs/web.log | tail -20
         fi
     else
         print_warning "frontend/web directory not found, skipping web"

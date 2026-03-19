@@ -54,9 +54,9 @@ export class AssetsController {
       }),
     )
     file: Express.Multer.File,
+    @Query('walletAddress') walletAddress: string,
   ): Promise<{ ipfsHash: string }> {
-    const ipfsHash = await this.ipfsService.uploadFile(file);
-    return { ipfsHash };
+    return this.assetsService.uploadFile(file, walletAddress);
   }
 
   @Post()
@@ -100,6 +100,35 @@ export class AssetsController {
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async deleteAsset(@Param('id') id: string): Promise<void> {
     return this.assetsService.deleteAsset(id);
+  }
+
+  @Post('folders')
+  @ApiOperation({ summary: 'Create a new folder' })
+  async createFolder(
+    @Body('name') name: string,
+    @Body('walletAddress') wallet: string,
+    @Body('parentId') parentId?: string
+  ) {
+    return this.assetsService.createFolder(name, wallet, parentId);
+  }
+
+  @Get('contents')
+  @ApiOperation({ summary: 'Get folder contents (subfolders and assets)' })
+  async getContents(
+    @Query('walletAddress') wallet: string,
+    @Query('folderId') folderId?: string
+  ) {
+    return this.assetsService.getFolderContents(wallet, folderId);
+  }
+
+  @Post('folders/:id/share')
+  @ApiOperation({ summary: 'Share a folder with another wallet' })
+  async shareFolder(
+    @Param('id') id: string,
+    @Body('walletToShareWith') wallet: string,
+    @Body('permission') permission?: string
+  ) {
+    return this.assetsService.shareFolder(id, wallet, permission);
   }
 
   @Get(':id/release-status')

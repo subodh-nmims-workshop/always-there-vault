@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import Svg, { Circle, Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import DashboardHeader from '../components/DashboardHeader';
+import ApiService from '../services/ApiService';
 import { COLORS, FONTS, RADIUS, SHADOWS, GAPS } from '../theme';
 
 const { width } = Dimensions.get('window');
@@ -72,18 +73,17 @@ const HomeScreen = ({ navigation }: any) => {
   };
   const signPulse = async () => {
     try {
-      const history = await AsyncStorage.getItem('dwp_heartbeat_history');
-      const logs = history ? JSON.parse(history) : [];
-      const newLog = {
-        id: Math.random().toString(36).substr(2, 9),
-        timestamp: new Date().toISOString(),
-        status: 'VERIFIED',
-        type: 'HEARTBEAT_PULSE'
-      };
-      const updated = [newLog, ...logs];
-      await AsyncStorage.setItem('dwp_heartbeat_history', JSON.stringify(updated));
-      loadData();
-    } catch (e) {}
+      const api = ApiService.getInstance();
+      const success = await api.recordHeartbeat('manual_dashboard_sign');
+      if (success) {
+        // Refresh local data to show updated ping count/stats
+        loadData();
+      } else {
+        alert('Protocol Synchronization Failed. Check Network.');
+      }
+    } catch (e) {
+      console.error('Pulse emission error:', e);
+    }
   };
 
   return (

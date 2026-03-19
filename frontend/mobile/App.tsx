@@ -107,20 +107,18 @@ export default function App() {
           'Inter_900Black': Inter_900Black,
         });
         
-        const wallet = await AsyncStorage.getItem('dwp_wallet_address');
+        // 1. Initial State Handling
+        const savedWallet = await AsyncStorage.getItem('dwp_wallet_address');
         const setupDone = await AsyncStorage.getItem('dwp_setup_complete');
         
-        // Artificial delay for premium system initialization feel
-        setTimeout(() => {
-          if (wallet && setupDone) {
-            setAppState('unlock');
-          } else if (wallet && !setupDone) {
-            setAppState('setup_security');
-          } else {
-            setAppState('landing');
-          }
-          setFontsLoaded(true);
-        }, 1800);
+        if (savedWallet && setupDone) {
+          setAppState('unlock');
+        } else if (savedWallet && !setupDone) {
+          setAppState('setup_security');
+        } else {
+          setAppState('landing');
+        }
+        setFontsLoaded(true);
       } catch (e) {
         console.warn('Protocol bootstrap warning:', e);
         setFontsLoaded(true);

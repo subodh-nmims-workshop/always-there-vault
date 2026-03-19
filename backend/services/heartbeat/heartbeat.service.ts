@@ -21,6 +21,8 @@ export class HeartbeatService {
       lastPingTime: new Date(),
       method: recordHeartbeatDto.method,
     });
+    // Reset missed heartbeats buffer on successful activity
+    await this.usersService.resetMissedHeartbeats(recordHeartbeatDto.walletAddress);
     return log.save();
   }
 

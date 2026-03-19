@@ -28,27 +28,51 @@ export class HeartbeatCronService {
                 const status = await this.heartbeatService.getHeartbeatStatus(user.walletAddress);
 
                 if (status.status === 'overdue') {
-                    this.logger.warn(`User ${user.walletAddress} has MISSED heartbeat. Triggering deadman switch...`);
-                    try {
-                        await this.blockchainService.triggerDeadman(user.walletAddress);
-                        this.logger.log(`Successfully triggered on-chain deadman protocol for ${user.walletAddress}`);
+                    const currentMisses = user.missedHeartbeats || 0;
+                    const maxBuffer = user.heartbeatBuffer || 1;
+
+                    if (currentMisses < maxBuffer) {
+                        await this.usersService.incrementMissedHeartbeats(user.walletAddress);
+                        this.logger.warn(`User ${user.walletAddress} MISSED heartbeat. Buffer used: ${currentMisses + 1}/${maxBuffer}`);
 
                         if (user.email) {
                             await this.emailService.sendEmail({
                                 to: user.email,
-                                subject: '🚨 DeadMan Protocol Triggered - Final Notice',
+                                subject: `⚠️ Heartbeat Missed - Notice ${currentMisses + 1}/${maxBuffer}`,
                                 html: `
                                     <div style="font-family: Arial; color: #333;">
-                                        <h1 style="color: #dc2626;">Protocol Activation Notice</h1>
+                                        <h2 style="color: #f59e0b;">Action Required: Heartbeat Missed</h2>
                                         <p>Hello,</p>
-                                        <p>Since no heartbeat has been detected within the interval and grace period, the DeadMan Protocol for <b>${user.walletAddress}</b> has been activated.</p>
-                                        <p>Your designated beneficiaries are being notified of their access to the encrypted shards.</p>
+                                        <p>We noticed you haven't checked in for your DeadMan Protocol. This is <b>notice ${currentMisses + 1} of ${maxBuffer}</b>.</p>
+                                        <p>You have <b>${status.daysUntilDue}</b> days remaining in your current grace period cycle.</p>
+                                        <p>Please log in to your dashboard to reset your heartbeat and secure your vault.</p>
                                     </div>
                                 `
                             });
                         }
-                    } catch (e) {
-                        this.logger.error(`Failed to trigger on-chain deadman for ${user.walletAddress}: ${e.message}`);
+                    } else {
+                        this.logger.error(`User ${user.walletAddress} has exhausted all buffer heartbeats. Final trigger!`);
+                        try {
+                            await this.blockchainService.triggerDeadman(user.walletAddress);
+                            this.logger.log(`Successfully triggered on-chain deadman protocol for ${user.walletAddress}`);
+
+                            if (user.email) {
+                                await this.emailService.sendEmail({
+                                    to: user.email,
+                                    subject: '🚨 DeadMan Protocol Triggered - Final Notice',
+                                    html: `
+                                        <div style="font-family: Arial; color: #333;">
+                                            <h1 style="color: #dc2626;">Protocol Activation Notice</h1>
+                                            <p>Hello,</p>
+                                            <p>Since no heartbeat has been detected and all buffers have been exhausted for <b>${user.walletAddress}</b>, the DeadMan Protocol has been activated.</p>
+                                            <p>Your designated beneficiaries are being notified of their access to the encrypted shards.</p>
+                                        </div>
+                                    `
+                                });
+                            }
+                        } catch (e) {
+                            this.logger.error(`Failed to trigger on-chain deadman for ${user.walletAddress}: ${e.message}`);
+                        }
                     }
                 } else if (status.status === 'grace_period' || (status.status === 'active' && status.daysUntilDue <= 3)) {
                     this.logger.warn(`User ${user.walletAddress} heartbeat is decaying. ${status.daysUntilDue} days left!`);

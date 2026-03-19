@@ -128,7 +128,7 @@ do_start() {
 
     cd "$CHAIN_DIR"
     info "Running blockchain node in $CHAIN_DIR..."
-    npx hardhat node > "$ROOT/hardhat.log" 2>&1 &
+    npx hardhat node > "$ROOT/logs/hardhat.log" 2>&1 &
     
     if wait_for_port 8545 "Blockchain"; then
         info "Deploying Smart Contracts..."
@@ -137,17 +137,17 @@ do_start() {
         [ ! -f "$SCRIPT" ] && SCRIPT="./blockchain/scripts/deploy.ts"
         
         info "Using deployment script: $SCRIPT"
-        npx hardhat run "$SCRIPT" --network localhost > "$ROOT/deploy.log" 2>&1
+        npx hardhat run "$SCRIPT" --network localhost > "$ROOT/logs/deploy.log" 2>&1
         if [ $? -eq 0 ]; then
             ok "Blockchain & Contracts READY."
         else
-            warn "Contract deployment had issues. Check deploy.log"
-            tail -n 5 "$ROOT/deploy.log"
+            warn "Contract deployment had issues. Check logs/deploy.log"
+            tail -n 5 "$ROOT/logs/deploy.log"
         fi
     else
         err "Blockchain ignition failed. Port 8545 not responding."
-        echo -e "${YELLOW}Check hardhat.log for details:${NC}"
-        tail -n 10 "$ROOT/hardhat.log"
+        echo -e "${YELLOW}Check logs/hardhat.log for details:${NC}"
+        tail -n 10 "$ROOT/logs/hardhat.log"
         exit 1
     fi
 
@@ -155,11 +155,11 @@ do_start() {
     if [ -d "$ROOT/backend" ]; then
         step "2" "Waking up the Backend..."
         cd "$ROOT/backend"
-        npm run start:dev > "$ROOT/backend.log" 2>&1 &
+        npm run start:dev > "$ROOT/logs/backend.log" 2>&1 &
         if wait_for_port 7001 "Backend"; then
             ok "Backend HEARTBEAT detected."
         else
-            warn "Backend is taking longer than usual. Check backend.log"
+            warn "Backend is taking longer than usual. Check logs/backend.log"
         fi
     fi
 
@@ -167,11 +167,11 @@ do_start() {
     if [ -d "$ROOT/frontend/web" ]; then
         step "3" "Launching Web Control Center..."
         cd "$ROOT/frontend/web"
-        npm run dev > "$ROOT/web.log" 2>&1 &
+        npm run dev > "$ROOT/logs/web.log" 2>&1 &
         if wait_for_port 7000 "Web"; then
             ok "Web Dashboard ACCESS GRANTED."
         else
-            warn "Web dashboard startup issue. Check web.log"
+            warn "Web dashboard startup issue. Check logs/web.log"
         fi
     fi
 
@@ -193,7 +193,7 @@ do_start() {
         npx expo start --tunnel --clear
     else
         warn "Mobile project not found. Monitoring background services..."
-        tail -f "$ROOT/backend.log"
+        tail -f "$ROOT/logs/backend.log"
     fi
 }
 

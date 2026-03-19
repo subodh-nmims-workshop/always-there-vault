@@ -22,6 +22,24 @@ export class User {
 
     @Prop({ type: Date, default: Date.now })
     lastActive: Date;
+
+    @Prop({ default: 0 })
+    storageUsed: number; // in bytes
+
+    @Prop({ default: 524288000 }) // 500MB in bytes
+    storageQuota: number;
+
+    @Prop({ default: 'FREE' })
+    subscriptionPlan: string; // FREE, PREMIUM, PRO
+
+    @Prop({ default: 'MONTHLY' })
+    billingCycle: string; // MONTHLY, QUARTERLY, YEARLY
+
+    @Prop({ default: 0 })
+    missedHeartbeats: number; // current buffer count
+
+    @Prop({ default: 1 })
+    heartbeatBuffer: number; // max allowed missed heartbeats before trigger
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
