@@ -11,18 +11,21 @@ import {
   type CategoryTemplate,
   type CategoryField
 } from '@/lib/category-handlers'
+import { Shield, CheckCircle } from 'lucide-react'
 
 interface CategoryModalProps {
   isOpen: boolean
   onClose: () => void
   category: AssetCategory
-  onSubmit: (data: { name: string; type: string; structuredData: string; file?: File }) => Promise<void>
+  beneficiaries: any[]
+  onSubmit: (data: { name: string; type: string; structuredData: string; file?: File; beneficiaryIds?: string[] }) => Promise<void>
 }
 
-export function CategoryModal({ isOpen, onClose, category, onSubmit }: CategoryModalProps) {
+export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubmit }: CategoryModalProps) {
   const [template, setTemplate] = useState<CategoryTemplate | null>(null)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedBens, setSelectedBens] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
@@ -36,6 +39,7 @@ export function CategoryModal({ isOpen, onClose, category, onSubmit }: CategoryM
         setTemplate(tmpl)
         setFormData({})
         setSelectedFile(null)
+        setSelectedBens([])
         setErrors([])
         setShowSuccess(false)
       } catch (error) {
@@ -85,7 +89,8 @@ export function CategoryModal({ isOpen, onClose, category, onSubmit }: CategoryM
         name: assetName,
         type: category,
         structuredData,
-        file: selectedFile || undefined
+        file: selectedFile || undefined,
+        beneficiaryIds: selectedBens
       })
 
       setShowSuccess(true)
@@ -267,6 +272,56 @@ export function CategoryModal({ isOpen, onClose, category, onSubmit }: CategoryM
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {/* Nominee Selection */}
+              <div className="bg-slate-900/40 border border-white/5 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-emerald-400" />
+                      Assign Nominees
+                    </h4>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                      Who will receive this asset?
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">
+                    {selectedBens.length} selected
+                  </span>
+                </div>
+
+                {beneficiaries.length === 0 ? (
+                  <p className="text-xs text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+                    No nominees configured. Go to 'Beneficiaries' to add them.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+                    {beneficiaries.map(b => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setSelectedBens(prev => 
+                          prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                        )}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${
+                          selectedBens.includes(b.id)
+                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
+                            : 'bg-black/20 border-white/5 text-slate-400 hover:border-white/10'
+                        }`}
+                      >
+                        <span className="text-xs font-semibold truncate flex-1 mr-2">{b.name}</span>
+                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ${
+                          selectedBens.includes(b.id)
+                            ? 'bg-blue-500 border-blue-400'
+                            : 'bg-white/5 border-white/10'
+                        }`}>
+                          {selectedBens.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Dynamic Fields */}

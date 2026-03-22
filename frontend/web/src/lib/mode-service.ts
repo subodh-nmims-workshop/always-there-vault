@@ -126,7 +126,8 @@ class ModeService {
 
       // Also save to backend API
       try {
-        const response = await fetch(`${this.config.apiEndpoint}/api/assets`, {
+        const walletAddress = localStorage.getItem('dwp_wallet_address')
+        const response = await fetch(`${this.config.apiEndpoint}/api/assets?walletAddress=${walletAddress}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -239,7 +240,8 @@ class ModeService {
 
       // Try to load from backend first
       try {
-        const response = await fetch(`${this.config.apiEndpoint}/api/assets`, {
+        const walletAddress = localStorage.getItem('dwp_wallet_address')
+        const response = await fetch(`${this.config.apiEndpoint}/api/assets?walletAddress=${walletAddress}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
           }

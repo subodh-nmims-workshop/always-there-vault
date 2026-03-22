@@ -30,7 +30,12 @@ async function generateIPFSIdentity(walletAddress: string): Promise<string> {
 /**
  * Upload file to IPFS using public gateway
  */
-export async function uploadToIPFS(file: File, walletAddress: string): Promise<string> {
+export async function uploadToIPFS(
+  file: File, 
+  walletAddress: string,
+  keyId?: string,
+  iv?: string
+): Promise<string> {
   try {
     // Generate user-specific identity
     const identity = await generateIPFSIdentity(walletAddress)
@@ -41,7 +46,11 @@ export async function uploadToIPFS(file: File, walletAddress: string): Promise<s
     formData.append('file', file)
     
     // Upload to our backend IPFS bridge
-    const response = await fetch(`${IPFS_API}?walletAddress=${walletAddress}`, {
+    let url = `${IPFS_API}?walletAddress=${walletAddress}`
+    if (keyId) url += `&keyId=${keyId}`
+    if (iv) url += `&iv=${iv}`
+
+    const response = await fetch(url, {
       method: 'POST',
       body: formData
     })
@@ -79,12 +88,14 @@ export async function uploadToIPFS(file: File, walletAddress: string): Promise<s
 export async function uploadEncryptedData(
   encryptedData: ArrayBuffer,
   filename: string,
-  walletAddress: string
+  walletAddress: string,
+  keyId?: string,
+  iv?: string
 ): Promise<string> {
   try {
     const blob = new Blob([encryptedData], { type: 'application/octet-stream' })
     const file = new File([blob], filename)
-    return await uploadToIPFS(file, walletAddress)
+    return await uploadToIPFS(file, walletAddress, keyId, iv)
   } catch (error) {
     console.error('Failed to upload encrypted data:', error)
     throw error

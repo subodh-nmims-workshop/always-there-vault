@@ -96,3 +96,4 @@ export * from './sharing';
 export * from './heartbeat';
 export * from './beneficiaries';
 export * from './subscriptions';
+export * from './keys';

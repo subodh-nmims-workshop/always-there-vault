@@ -55,15 +55,20 @@ export class AssetsController {
     )
     file: Express.Multer.File,
     @Query('walletAddress') walletAddress: string,
+    @Query('folderId') folderId?: string,
+    @Query('keyId') keyId?: string,
+    @Query('iv') iv?: string,
   ): Promise<{ ipfsHash: string }> {
-    return this.assetsService.uploadFile(file, walletAddress);
+    return this.assetsService.uploadFile(file, walletAddress, folderId, keyId, iv);
   }
 
   @Post()
   @ApiOperation({ summary: 'Register asset metadata (encrypted data stored client-side)' })
   @ApiResponse({ status: 201, description: 'Asset metadata registered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  async createAssetMock(): Promise<any> { return null; }
+  async createAsset(@Body() body: any, @Query('walletAddress') walletAddress: string): Promise<any> {
+    return this.assetsService.createAsset(body, walletAddress);
+  }
   
   @Get()
   @ApiOperation({ summary: 'Get all asset metadata for a user' })
@@ -125,5 +130,17 @@ export class AssetsController {
   @ApiResponse({ status: 200, description: 'Release status retrieved successfully' })
   async getReleaseStatus(@Param('id') id: string): Promise<{ canRelease: boolean; reason: string }> {
     return this.assetsService.getReleaseStatus(id);
+  }
+
+  @Post('keys/:id')
+  @ApiOperation({ summary: 'Store key distribution for recovery' })
+  async saveKey(@Param('id') id: string, @Body('shares') shares: any) {
+    return this.assetsService.saveKeyDistribution(id, shares);
+  }
+
+  @Get('keys/:id')
+  @ApiOperation({ summary: 'Retrieve key distribution for decryption' })
+  async getKey(@Param('id') id: string) {
+    return this.assetsService.getKeyDistribution(id);
   }
 }

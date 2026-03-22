@@ -47,7 +47,7 @@ export class AssetsService {
     return { folders: folderList, assets: fileList };
   }
 
-  async uploadFile(file: Express.Multer.File, walletAddress: string, folderId?: string) {
+  async uploadFile(file: Express.Multer.File, walletAddress: string, folderId?: string, keyId?: string, iv?: string) {
     const user = await this.usersService.findUserByWallet(walletAddress);
 
     // Check quota
@@ -67,8 +67,30 @@ export class AssetsService {
       cid: ipfsResult.cid,
       location: ipfsResult.cid,
       isIpfs: true,
+      encryptionKeyId: keyId || null,
+      encryptionIv: iv || null,
       userId: user.id,
       folderId: folderId || null,
+    } as NewFile).returning();
+
+    return fileRecord;
+  }
+
+  async createAsset(data: any, walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+
+    const [fileRecord] = await this.db.insert(files).values({
+      name: data.name,
+      size: data.size || 0,
+      mimeType: data.mimeType || 'application/json',
+      cid: data.ipfsHash || null,
+      location: data.ipfsHash || 'local',
+      encryptionKeyId: data.keyId || null,
+      encryptionIv: data.iv || null,
+      isIpfs: !!data.ipfsHash,
+      metadata: data.metadata || {},
+      userId: user.id,
+      folderId: data.folderId || null,
     } as NewFile).returning();
 
     return fileRecord;
@@ -116,5 +138,25 @@ export class AssetsService {
   async getReleaseStatus(id: string): Promise<{ canRelease: boolean; reason: string }> {
     // Basic logic for now
     return { canRelease: false, reason: 'Manual trigger only for now' };
+  }
+
+  async saveKeyDistribution(keyId: string, shares: any) {
+    const { keyDistributions } = await import('../../src/db/schema/keys');
+    return this.db.insert(keyDistributions).values({
+      keyId,
+      shares,
+    }).onConflictDoUpdate({
+      target: keyDistributions.keyId,
+      set: { shares }
+    }).returning();
+  }
+
+  async getKeyDistribution(keyId: string) {
+    const { keyDistributions } = await import('../../src/db/schema/keys');
+    const result = await this.db.query.keyDistributions.findFirst({
+      where: eq(keyDistributions.keyId, keyId),
+    });
+    if (!result) throw new NotFoundException('Key distribution not found');
+    return result;
   }
 }

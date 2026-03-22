@@ -14,6 +14,8 @@ export const files = pgTable('files', {
   location: varchar('location', { length: 255 }), // Local path or IPFS CID
   isIpfs: boolean('is_ipfs').notNull().default(false),
   encrypted: boolean('encrypted').notNull().default(true),
+  encryptionKeyId: varchar('encryption_key_id', { length: 255 }),
+  encryptionIv: varchar('encryption_iv', { length: 255 }),
   
   // Metadata
   metadata: jsonb('metadata').default({}),

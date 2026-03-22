@@ -36,6 +36,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { Language } from '../utils/i18n';
 
 const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
+  const [wallet, setWallet] = useState('0x0000...0000');
   const [bioEnabled, setBioEnabled] = useState(true);
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [interval, setInterval] = useState(30);
@@ -48,12 +49,35 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
     visible: false, title: '', message: '', type: 'info'
   });
 
+  React.useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    const savedWallet = await AsyncStorage.getItem('dwp_wallet_address');
+    if (savedWallet) setWallet(savedWallet);
+    
+    const settings = await AsyncStorage.getItem('dwp_settings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      setBioEnabled(parsed.bioEnabled ?? true);
+      setNotifEnabled(parsed.notifEnabled ?? true);
+      setInterval(parsed.interval ?? 30);
+    }
+  };
+
+  const saveSettings = async (updates: any) => {
+    const settings = await AsyncStorage.getItem('dwp_settings');
+    const current = settings ? JSON.parse(settings) : {};
+    await AsyncStorage.setItem('dwp_settings', JSON.stringify({ ...current, ...updates }));
+  };
+
   const showAlert = (title: string, message: string, type: 'success'|'error'|'info'|'confirm' = 'info') => {
     setAlert({ visible: true, title, message, type });
   };
 
   const copyWallet = async () => {
-    await Clipboard.setStringAsync('0x742d13103c8e9b36c84b3e89c363c8e9b36c84b3');
+    await Clipboard.setStringAsync(wallet);
     showAlert('IDENTITY COPIED', 'Protocol address saved to local clipboard successfully.', 'success');
   };
 
@@ -115,7 +139,7 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
            <SettingRow 
               icon={Wallet} 
               title="Identity Address" 
-              subtitle="0x742d...3c8e (Copy Hex)" 
+              subtitle={`${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)} (Copy Hex)`} 
               color={COLORS.primary}
               onPress={copyWallet}
            />
@@ -128,7 +152,7 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
               title="Biometric Override" 
               subtitle="Hardware authentication"
               color={COLORS.accent}
-              right={<Switch value={bioEnabled} onValueChange={setBioEnabled} trackColor={{ true: COLORS.accent }} />}
+              right={<Switch value={bioEnabled} onValueChange={(val) => { setBioEnabled(val); saveSettings({ bioEnabled: val }); }} trackColor={{ true: COLORS.accent }} />}
            />
            <SettingRow icon={Lock} title="Rotate Security PIN" color={COLORS.secondary} />
            <SettingRow icon={ShieldCheck} title="Verify Master Keys" color={COLORS.warning} />
@@ -194,7 +218,7 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
               icon={Bell} 
               title="Push Notifications" 
               color={COLORS.secondary}
-              right={<Switch value={notifEnabled} onValueChange={setNotifEnabled} trackColor={{ true: COLORS.secondary }} />}
+              right={<Switch value={notifEnabled} onValueChange={(val) => { setNotifEnabled(val); saveSettings({ notifEnabled: val }); }} trackColor={{ true: COLORS.secondary }} />}
            />
         </SettingCard>
 
@@ -244,7 +268,7 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
           <TouchableOpacity 
             key={val} 
             style={styles.optBtn} 
-            onPress={() => { setInterval(val); setShowIntervalPicker(false); }}
+            onPress={() => { setInterval(val); saveSettings({ interval: val }); setShowIntervalPicker(false); }}
           >
             <Text style={[styles.optText, interval === val && { color: COLORS.primary }]}>{val} DAYS</Text>
             {interval === val && <Check size={20} color={COLORS.primary} />}

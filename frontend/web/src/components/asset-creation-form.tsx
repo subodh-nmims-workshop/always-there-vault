@@ -59,6 +59,7 @@ export function AssetCreationForm() {
     folderId: null,
     folderName: ''
   })
+  const [selectedBeneficiaries, setSelectedBeneficiaries] = useState<string[]>([])
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
@@ -139,6 +140,14 @@ export function AssetCreationForm() {
   const handleCreateAsset = async () => {
     if (!selectedFile || !assetType || !assetName) return
 
+    // Ensure at least one beneficiary is selected
+    if (selectedBeneficiaries.length === 0) {
+      toast.error('No Nominee Selected', {
+        description: 'Please select at least one nominee to receive this asset.'
+      })
+      return
+    }
+
     // Check subscription status
     if (!subscription || subscription.status === 'expired') {
       toast.error('Subscription Expired', {
@@ -168,15 +177,16 @@ export function AssetCreationForm() {
       const fileContent = await readFileAsText(selectedFile)
 
       setUploadProgress(40)
-      const encryptionResult = await crypto.encryptData(fileContent)
+      const encryptionKey = crypto.generateEncryptionKey()
+      const encryptionResult = await crypto.encryptData(fileContent, encryptionKey)
 
       setUploadProgress(60)
-      const keyDistribution = await crypto.splitKey(crypto.generateEncryptionKey())
+      const keyDistribution = await crypto.splitKey(encryptionKey)
 
       setUploadProgress(75)
       // Upload to IPFS with wallet-based identity
       const { uploadToIPFS } = await import('@/lib/ipfs-client')
-      const ipfsCID = await uploadToIPFS(selectedFile, walletAddress)
+      const ipfsCID = await uploadToIPFS(selectedFile, walletAddress, encryptionResult.keyId, encryptionResult.iv)
       console.log('✅ Uploaded to IPFS:', ipfsCID)
 
       setUploadProgress(90)
@@ -189,7 +199,7 @@ export function AssetCreationForm() {
         keyId: encryptionResult.keyId,
         iv: encryptionResult.iv,
         ipfsHash: ipfsCID,
-        beneficiaries: beneficiaries.map((b: any) => b.id),
+        beneficiaries: selectedBeneficiaries,
         createdAt: encryptionResult.timestamp,
         size: selectedFile.size,
         mimeType: selectedFile.type
@@ -198,6 +208,18 @@ export function AssetCreationForm() {
       // Use ModeService to save based on current mode
       const saveResult = await modeService.saveAsset(asset)
       await storage.saveKeyDistribution(keyDistribution)
+
+      // Sync Key to Backend for cloud backup
+      try {
+        await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shares: keyDistribution.shares })
+        })
+        console.log('✅ Key synced to backend for recovery')
+      } catch (syncErr) {
+        console.warn('⚠️ Key sync to cloud failed (Offline mode?)', syncErr)
+      }
 
       setUploadProgress(100)
 
@@ -227,6 +249,7 @@ export function AssetCreationForm() {
     setAssetName('')
     setUploadProgress(0)
     setIsEncrypting(false)
+    setSelectedBeneficiaries([])
   }
 
   const handleDeleteAsset = (assetId: string, assetName: string) => {
@@ -256,11 +279,28 @@ export function AssetCreationForm() {
       console.log('🔓 Decrypting asset:', asset.name)
 
       // Get all key distributions and find the one for this asset
-      const allKeyDists = await storage.getAllKeyDistributions()
-      const keyDist = allKeyDists.find(kd => kd.keyId === asset.keyId)
+      let allKeyDists = await storage.getAllKeyDistributions()
+      let keyDist = allKeyDists.find(kd => kd.keyId === asset.keyId)
+
+      // Self-Healing: If key not found locally, try to fetch from backend
+      if (!keyDist) {
+        console.warn('⚠️ Key not found locally, attempting backend fetch...')
+        try {
+          const response = await fetch(`http://localhost:7001/api/assets/keys/${asset.keyId}`)
+          if (response.ok) {
+            keyDist = await response.json()
+            if (keyDist) {
+              await storage.saveKeyDistribution(keyDist) // Cache locally
+              console.log('✅ Key recovered from backend')
+            }
+          }
+        } catch (fetchErr) {
+          console.error('Failed to fetch key from backend:', fetchErr)
+        }
+      }
 
       if (!keyDist) {
-        throw new Error('Key distribution not found for this asset')
+        throw new Error('Key distribution not found for this asset. If you created this in another browser, ensure sync is complete.')
       }
 
       // Reconstruct the key from shares (using first 3 shares)
@@ -523,12 +563,11 @@ export function AssetCreationForm() {
     try {
       console.log('🔐 Starting category asset encryption...', { name: data.name, type: data.type })
 
-      // Encrypt the structured data
-      const encryptionResult = await crypto.encryptData(data.structuredData)
+      // Generate and split encryption key (using SAME key for encryption and splitting)
+      const encryptionKey = crypto.generateEncryptionKey()
+      const encryptionResult = await crypto.encryptData(data.structuredData, encryptionKey)
       console.log('✅ Data encrypted successfully')
 
-      // Generate and split encryption key
-      const encryptionKey = crypto.generateEncryptionKey()
       const keyDistribution = await crypto.splitKey(encryptionKey)
       console.log('✅ Key split into shares')
 
@@ -545,12 +584,15 @@ export function AssetCreationForm() {
       }
 
       // Get beneficiary IDs
-      const beneficiaryIds = beneficiaries.length > 0
-        ? beneficiaries.map((b: any) => b.id)
+      const beneficiaryIds = selectedBeneficiaries.length > 0
+        ? selectedBeneficiaries
         : []
 
       if (beneficiaryIds.length === 0) {
-        console.warn('⚠️ No beneficiaries configured. Asset will be saved without beneficiary assignment.')
+        toast.error('No Nominee Selected', {
+          description: 'Please select at least one nominee for this asset.'
+        })
+        throw new Error('No nominee selected')
       }
 
       const asset: StoredAsset = {
@@ -573,6 +615,19 @@ export function AssetCreationForm() {
       const saveResult = await modeService.saveAsset(asset)
       console.log('💾 Saving key distribution...', keyDistribution.keyId)
       await storage.saveKeyDistribution(keyDistribution)
+
+      // Sync Key to Backend for cloud backup (CRITICAL for multi-device support)
+      try {
+        await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shares: keyDistribution.shares })
+        })
+        console.log('✅ Key synced to backend for recovery')
+      } catch (syncErr) {
+        console.warn('⚠️ Key sync to cloud failed (Offline mode?)', syncErr)
+      }
+
       console.log('✅ Asset saved successfully!')
 
       await loadAssets()
@@ -618,7 +673,8 @@ export function AssetCreationForm() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white/[0.03] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg"
+        onClick={() => handleViewAsset(asset)}
+        className="bg-white/[0.03] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg cursor-pointer"
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-40 transition-opacity"></div>
 
@@ -667,6 +723,7 @@ export function AssetCreationForm() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
+        onClick={() => handleViewAsset(asset)}
         className="group flex items-center bg-white/[0.03] border border-white/5 hover:border-blue-500/30 backdrop-blur-md rounded-xl p-3 transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden"
       >
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-purple-600 opacity-0 group-hover:opacity-40 transition-opacity"></div>
@@ -1111,6 +1168,45 @@ export function AssetCreationForm() {
                         <div className="absolute right-4 top-3.5 pointer-events-none text-slate-500">▼</div>
                       </div>
                     </div>
+
+                    {/* Nominee Selection */}
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 flex justify-between">
+                        <span>Assign Nominees</span>
+                        <span className="text-blue-500">{selectedBeneficiaries.length} selected</span>
+                      </label>
+                      {beneficiaries.length === 0 ? (
+                        <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-center">
+                          <p className="text-xs text-red-400">No nominees found. Go to Beneficiaries tab first!</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                          {beneficiaries.map(b => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBeneficiaries(prev =>
+                                  prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                                )
+                              }}
+                              className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-left transition-all ${selectedBeneficiaries.includes(b.id)
+                                  ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
+                                  : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/10'
+                                }`}
+                            >
+                              <span className="text-xs font-semibold truncate">{b.name}</span>
+                              <div className={`w-4 h-4 rounded-md border flex items-center justify-center ${selectedBeneficiaries.includes(b.id)
+                                  ? 'bg-blue-500 border-blue-400'
+                                  : 'bg-white/5 border-white/10'
+                                }`}>
+                                {selectedBeneficiaries.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Progress Bar */}
@@ -1490,6 +1586,7 @@ export function AssetCreationForm() {
             setSelectedCategory(null)
           }}
           category={selectedCategory}
+          beneficiaries={beneficiaries}
           onSubmit={handleCategorySubmit}
         />
       )}
@@ -1563,23 +1660,44 @@ export function AssetCreationForm() {
                     {/* Decrypted Content */}
                     <div className="bg-black/40 border border-white/10 rounded-xl p-4">
                       <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-3 flex items-center gap-2">
-                        <Lock className="w-3 h-3 text-green-400" />
-                        Decrypted Content
+                        <Lock className={`w-3 h-3 ${decryptedContent?.includes('Failed') ? 'text-red-400' : 'text-green-400'}`} />
+                        {decryptedContent?.includes('Failed') ? 'Decryption Failed' : 'Decrypted Content'}
                       </p>
-                      <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto">
-                        {decryptedContent}
-                      </pre>
+                      
+                      {decryptedContent?.includes('Key distribution not found') ? (
+                        <div className="py-8 px-4 text-center">
+                          <Shield className="w-12 h-12 text-slate-600 mx-auto mb-4 opacity-50" />
+                          <p className="text-slate-400 text-sm leading-relaxed mb-4">
+                            Encryption key for this asset is not found in local storage or cloud backup.
+                          </p>
+                          <div className="inline-block p-1 rounded-lg bg-yellow-400/10 border border-yellow-400/20">
+                             <p className="text-[10px] font-bold text-yellow-400 px-3 uppercase">Recommendation: Delete and re-upload this asset</p>
+                          </div>
+                        </div>
+                      ) : (viewingAsset.type === 'photo' || viewingAsset.mimeType?.startsWith('image/')) && !decryptedContent?.includes('Failed') ? (
+                        <div className="flex justify-center bg-slate-900/40 rounded-lg p-2 overflow-hidden min-h-[200px] items-center">
+                          <img 
+                            src={decryptedContent.startsWith('data:image') ? decryptedContent : `data:${viewingAsset.mimeType || 'image/png'};base64,${decryptedContent}`} 
+                            alt={viewingAsset.name}
+                            className="max-h-[50vh] object-contain rounded-md shadow-2xl"
+                          />
+                        </div>
+                      ) : (
+                        <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto">
+                          {decryptedContent}
+                        </pre>
+                      )}
                     </div>
 
                     {/* Metadata */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
                         <p className="text-xs text-slate-500 mb-1">Type</p>
-                        <p className="text-sm text-white font-medium">{viewingAsset.type}</p>
+                        <p className="text-sm text-white font-medium uppercase tracking-tighter">{viewingAsset.type.replace('_', ' ')}</p>
                       </div>
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                        <p className="text-xs text-slate-500 mb-1">IPFS Hash</p>
-                        <p className="text-xs text-white font-mono truncate">{viewingAsset.ipfsHash || 'N/A'}</p>
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
+                        <p className="text-xs text-slate-500 mb-1">IPFS CID</p>
+                        <p className="text-[10px] text-blue-400 font-mono truncate">{viewingAsset.ipfsHash || 'Qm...fallback (Cloud Copy Active)'}</p>
                       </div>
                     </div>
                   </div>
