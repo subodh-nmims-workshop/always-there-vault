@@ -12,7 +12,7 @@ export class ReleaseService {
     ) { }
 
     async requestAssetRelease(assetId: string, requestorWallet: string) {
-        const asset = await this.assetsService.getAsset(assetId);
+        const asset: any = await (this.assetsService as any).getAsset(assetId);
         if (!asset) {
             throw new NotFoundException('Asset not found');
         }
@@ -26,7 +26,7 @@ export class ReleaseService {
         const beneficiaries = await this.beneficiariesService.getAllBeneficiaries(asset.ownerWallet);
         const requestor = beneficiaries.find(b => b.walletAddress.toLowerCase() === requestorWallet.toLowerCase());
 
-        if (!requestor || !asset.nomineeIds.includes(requestor.nomineeId)) {
+        if (!requestor || !asset.nomineeIds.includes((requestor as any).id)) {
             throw new UnauthorizedException('You are not an authorized beneficiary for this asset.');
         }
 

@@ -24,17 +24,20 @@ import Svg, { Circle, Path, Defs, LinearGradient as SvgGradient, Stop } from 're
 import DashboardHeader from '../components/DashboardHeader';
 import ApiService from '../services/ApiService';
 import { COLORS, FONTS, RADIUS, SHADOWS, GAPS } from '../theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     assets: 0,
     beneficiaries: 0,
     health: 98,
     wallet: '0x742d13103c8e9b36c84b3e89c...',
     countdown: '03d 12h 45m',
-    totalPings: 12
+    totalPings: 12,
+    lastActivity: null as any
   });
 
   useFocusEffect(
@@ -96,14 +99,14 @@ const HomeScreen = ({ navigation }: any) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.tabTitle}>OVERVIEW</Text>
+        <Text style={styles.tabTitle}>{t('nav_dashboard').toUpperCase()}</Text>
 
         {/* TOP STATS ROW */}
         <View style={styles.topStatsRow}>
           {/* Vault Health */}
           <View style={styles.statCard}>
              <View style={styles.statLabelRow}>
-               <Text style={styles.statLabel}>Vault Health</Text>
+               <Text style={styles.statLabel}>{t('vault_health')}</Text>
              </View>
              <View style={styles.healthScoreRow}>
                 <View>
@@ -206,7 +209,7 @@ const HomeScreen = ({ navigation }: any) => {
 
                  <TouchableOpacity style={styles.signButton} onPress={signPulse}>
                     <Fingerprint size={20} color="#fff" />
-                    <Text style={styles.signButtonText}>Sign Heartbeat Now</Text>
+                    <Text style={styles.signButtonText}>{t('hero_cta')}</Text>
                  </TouchableOpacity>
 
                  <TouchableOpacity style={styles.editButton}>
@@ -266,6 +269,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: COLORS.border 
   },
+  statLabelRow: { marginBottom: 8 },
   statCardSmall: { 
     flex: 1, 
     backgroundColor: COLORS.surface, 

@@ -25,6 +25,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const loadSubscription = async () => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001';
     try {
       const address = localStorage.getItem('dwp_wallet_address');
       if (!address) {
@@ -33,7 +34,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
 
       // 1. Try to fetch from backend
-      const response = await fetch(`http://localhost:7001/subscription/${address}`);
+      const response = await fetch(`${API_URL}/subscription/${address}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -48,7 +49,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('dwp_subscription', JSON.stringify(formatted));
       } else {
         // 2. If not found, create trial
-        const createRes = await fetch('http://localhost:7001/subscription/trial', {
+        const createRes = await fetch(`${API_URL}/subscription/trial`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: address, mode: 'centralized' })
@@ -82,6 +83,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001';
+
   const isTrialActive = !!(subscription?.status === 'trial' &&
     subscription.trialEndsAt &&
     subscription.trialEndsAt > new Date())
@@ -100,7 +103,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     if (!subscription) return
 
     try {
-      const response = await fetch(`http://localhost:7001/subscription/${subscription.userId}/switch-mode`, {
+      const response = await fetch(`${API_URL}/subscription/${subscription.userId}/switch-mode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: newMode })
@@ -140,7 +143,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     if (!subscription) return
 
     try {
-      const response = await fetch(`http://localhost:7001/subscription/${subscription.userId}/cancel`, {
+      const response = await fetch(`${API_URL}/subscription/${subscription.userId}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: 'User requested via dashboard' })

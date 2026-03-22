@@ -22,6 +22,7 @@ import { EmailModule } from '../services/email/email.module';
 import { CacheModule } from '../services/cache/cache.module';
 import { LoggerModule } from '../services/logger/logger.module';
 import { DrizzleModule } from '../src/db/drizzle.module';
+import { CryptoModule } from '../services/crypto/crypto.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { DrizzleModule } from '../src/db/drizzle.module';
     SubscriptionModule,
     StripeModule,
     EmailModule,
+    CryptoModule,
   ],
   controllers: [],
   providers: [],

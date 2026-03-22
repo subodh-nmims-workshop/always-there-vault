@@ -17,15 +17,17 @@ import {
   ArrowRight,
   Github,
   Twitter,
-  MessageCircle
+  MessageCircle,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface LandingHeroProps {
   onGetStarted: () => void
 }
 
 export function LandingHero({ onGetStarted }: LandingHeroProps) {
+  const { t } = useTranslation()
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -46,19 +48,17 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
           <div className="text-center space-y-8 slide-up">
             <Badge variant="secondary" className="px-4 py-2 text-sm">
               <Zap className="h-3 w-3 mr-2 inline" />
-              Powered by Blockchain & Zero-Knowledge Cryptography
+              {t('hero_badge')}
             </Badge>
 
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              <span className="gradient-text">Secure Your</span>
+              <span className="gradient-text">{t('hero_title')}</span>
               <br />
-              <span className="text-gray-900 dark:text-white">Digital Legacy</span>
+              <span className="text-gray-900 dark:text-white">{t('hero_title_accent')}</span>
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              A decentralized, non-custodial system that encrypts your digital life and
-              automatically releases only what you choose, only to whom you choose,
-              only when you are no longer active.
+              {t('hero_subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -67,7 +67,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
                 className="gradient-bg-blue text-white px-8 py-6 text-lg"
                 onClick={onGetStarted}
               >
-                Get Started Free
+                {t('hero_cta')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button

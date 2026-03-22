@@ -1,12 +1,12 @@
 (globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
     script: typeof document === "object" ? document.currentScript : undefined,
     chunks: [
-  "static/chunks/2ef0b_ethers_lib_esm_index_5d06a2a5.js",
+  "static/chunks/2ef0b_ethers_lib_esm_index_fbf123a5.js",
   "static/chunks/8139b_DeadMan Protocol_frontend_web_src_components_asset-creation-form_tsx_227af447._.js",
   "static/chunks/8139b_DeadMan Protocol_frontend_web_src_components_heartbeat-monitor_tsx_d476f6bd._.js",
   "static/chunks/Desktop_Nmims_DeadMan Protocol_frontend_web_src_components_977b8914._.js",
   "static/chunks/Desktop_Nmims_DeadMan Protocol_frontend_web_src_app_a2e7eaed._.js",
-  "static/chunks/Desktop_Nmims_DeadMan Protocol_frontend_web_src_0225dd53._.js",
+  "static/chunks/Desktop_Nmims_DeadMan Protocol_frontend_web_src_e3994153._.js",
   "static/chunks/2ef0b_motion-dom_dist_es_141d43b2._.js",
   "static/chunks/2ef0b_framer-motion_dist_es_5320f256._.js",
   "static/chunks/2ef0b_ethers_lib_esm_utils_56431b59._.js",

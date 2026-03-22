@@ -32,12 +32,17 @@ import * as Clipboard from 'expo-clipboard';
 import { COLORS, FONTS, RADIUS, GAPS, SHADOWS } from '../theme';
 import ProtocolAlert from '../components/ProtocolAlert';
 import ProtocolModal from '../components/ProtocolModal';
+import { useTranslation } from '../hooks/useTranslation';
+import { Language } from '../utils/i18n';
 
 const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
   const [bioEnabled, setBioEnabled] = useState(true);
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [interval, setInterval] = useState(30);
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  
+  const { t, changeLanguage, currentLanguage } = useTranslation();
   
   const [alert, setAlert] = useState<{visible: boolean, title: string, message: string, type: 'success'|'error'|'info'|'confirm'}>({
     visible: false, title: '', message: '', type: 'info'
@@ -133,9 +138,16 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
         <SettingCard title="OPERATIONAL CONFIG">
            <SettingRow 
               icon={Globe} 
+              title={t('settings_language')} 
+              subtitle={currentLanguage.toUpperCase()} 
+              color={COLORS.primary} 
+              onPress={() => setShowLangPicker(true)}
+           />
+           <SettingRow 
+              icon={Zap} 
               title="Heartbeat Frequency" 
               subtitle={`${interval} Day Interval`} 
-              color={COLORS.primary} 
+              color={COLORS.accent} 
               onPress={() => setShowIntervalPicker(true)}
            />
            <SettingRow 
@@ -162,6 +174,25 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
         <Text style={styles.version}>PROTOCOL CORE v2.0.4-STABLE</Text>
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <ProtocolModal
+        visible={showLangPicker}
+        onClose={() => setShowLangPicker(false)}
+        title={t('settings_language').toUpperCase()}
+      >
+        {(['en', 'hi', 'es', 'fr'] as Language[]).map(lang => (
+          <TouchableOpacity 
+            key={lang} 
+            style={styles.optBtn} 
+            onPress={() => { changeLanguage(lang); setShowLangPicker(false); }}
+          >
+            <Text style={[styles.optText, currentLanguage === lang && { color: COLORS.primary }]}>
+              {lang === 'en' ? 'ENGLISH' : lang === 'hi' ? 'हिंदी (HINDI)' : lang === 'es' ? 'ESPAÑOL' : 'FRANÇAIS'}
+            </Text>
+            {currentLanguage === lang && <Check size={20} color={COLORS.primary} />}
+          </TouchableOpacity>
+        ))}
+      </ProtocolModal>
 
       <ProtocolModal
         visible={showIntervalPicker}

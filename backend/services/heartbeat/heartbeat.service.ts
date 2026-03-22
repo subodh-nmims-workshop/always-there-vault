@@ -24,7 +24,7 @@ export class HeartbeatService {
       .where(eq(heartbeatConfigs.userId, user.id));
 
     // Update user last active
-    await this.usersService.updateLastActive(walletAddress);
+    // await this.usersService.updateLastActive(walletAddress);
 
     return { success: true };
   }

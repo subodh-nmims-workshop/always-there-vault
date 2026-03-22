@@ -51,7 +51,7 @@ export function PricingPlans() {
             Start with 30 days free. No credit card required. Cancel anytime.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-full relative z-10 text-sm font-medium text-blue-300">
-            <Zap className="w-4 h-4 text-blue-400" />
+            <Zap className="w-4 h-4 text-blue-400" suppressHydrationWarning />
             Seamlessly map and migrate assets between Centralized and Decentralized nodes anytime.
           </div>
         </div>
@@ -66,7 +66,7 @@ export function PricingPlans() {
                 : 'text-slate-400 hover:text-white'
                 }`}
             >
-              <Shield className="inline-block w-5 h-5 mr-2" />
+              <Shield className="inline-block w-5 h-5 mr-2" suppressHydrationWarning />
               Centralized
             </button>
             <button
@@ -76,7 +76,7 @@ export function PricingPlans() {
                 : 'text-slate-400 hover:text-white'
                 }`}
             >
-              <Infinity className="inline-block w-5 h-5 mr-2" />
+              <Infinity className="inline-block w-5 h-5 mr-2" suppressHydrationWarning />
               Decentralized
             </button>
           </div>
@@ -134,7 +134,7 @@ export function PricingPlans() {
 
                 <div className="mb-6">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-blue-400" />
+                    <Icon className="w-6 h-6 text-blue-400" suppressHydrationWarning />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="flex items-baseline gap-2">
@@ -146,7 +146,7 @@ export function PricingPlans() {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3 text-slate-300">
-                      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" suppressHydrationWarning />
                       <span className="text-sm">{feature}</span>
                     </li>
                   ))}

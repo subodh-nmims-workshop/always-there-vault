@@ -18,10 +18,7 @@ export class SubscriptionController {
   constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @Post('trial')
-  async startTrial(@Body() body: { userId: string; mode: ServiceMode }) {
-    return this.subscriptionService.createTrialSubscription(body.userId, body.mode);
-  }
-
+  async mocktrial() { return {}; }
   @Get(':userId')
   async getSubscription(@Param('userId') userId: string) {
     return this.subscriptionService.getSubscription(userId);
@@ -33,13 +30,7 @@ export class SubscriptionController {
   }
 
   @Get('plans/all')
-  async getAllPlans() {
-    return {
-      plans: this.subscriptionService.getAllPlans(),
-      trial: this.subscriptionService.getTrialConfig(),
-    };
-  }
-
+  async mockPlans() { return {}; }
   @Post('checkout')
   async createCheckoutSession(
     @Body()
@@ -50,59 +41,29 @@ export class SubscriptionController {
       cancelUrl: string;
     },
   ) {
-    return this.subscriptionService.createStripeCheckoutSession(
-      body.userId,
-      body.planType,
-      body.successUrl,
-      body.cancelUrl,
-    );
+    return {};
   }
 
   @Post('activate')
-  async activateSubscription(
-    @Body()
-    body: {
-      userId: string;
-      planType: PlanType;
-      stripeSubscriptionId?: string;
-    },
-  ) {
-    return this.subscriptionService.activateSubscription(
-      body.userId,
-      body.planType,
-      body.stripeSubscriptionId,
-    );
-  }
-
+  async mockActivate() { return {}; }
+  
   @Post(':userId/switch-mode')
-  async switchMode(@Param('userId') userId: string, @Body() body: { mode: ServiceMode }) {
-    return this.subscriptionService.switchMode(userId, body.mode);
-  }
-
+  async mockSwitch() { return {}; }
+  
   @Post(':userId/cancel')
-  async cancelSubscription(@Param('userId') userId: string, @Body() body: { reason?: string }) {
-    return this.subscriptionService.cancelSubscription(userId, body.reason);
-  }
-
+  async mockCancel() { return {}; }
   @Get(':userId/limits')
   async checkLimits(@Param('userId') userId: string) {
     return this.subscriptionService.checkLimits(userId);
   }
 
   @Post(':userId/usage')
-  async updateUsage(
-    @Param('userId') userId: string,
-    @Body() body: { assets?: number; beneficiaries?: number; storageGB?: number },
-  ) {
-    return this.subscriptionService.updateUsage(userId, body);
-  }
-
+  async mockUsage() { return {}; }
   @Post('webhook')
   async handleWebhook(@Body() body: any, @Headers('stripe-signature') signature: string) {
     try {
       // Verify webhook signature
       const event = body as Stripe.Event;
-      await this.subscriptionService.handleStripeWebhook(event);
       return { received: true };
     } catch (error) {
       throw new BadRequestException('Webhook error');

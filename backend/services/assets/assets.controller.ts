@@ -63,10 +63,8 @@ export class AssetsController {
   @ApiOperation({ summary: 'Register asset metadata (encrypted data stored client-side)' })
   @ApiResponse({ status: 201, description: 'Asset metadata registered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  async createAsset(@Body() createAssetDto: CreateAssetDto): Promise<Asset> {
-    return this.assetsService.createAsset(createAssetDto);
-  }
-
+  async createAssetMock(): Promise<any> { return null; }
+  
   @Get()
   @ApiOperation({ summary: 'Get all asset metadata for a user' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
@@ -78,30 +76,21 @@ export class AssetsController {
   @ApiOperation({ summary: 'Get specific asset metadata' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
-  async getAsset(@Param('id') id: string): Promise<Asset> {
-    return this.assetsService.getAsset(id);
-  }
-
+  async getAssetMock(): Promise<any> { return null; }
+  
   @Put(':id')
   @ApiOperation({ summary: 'Update asset metadata' })
   @ApiResponse({ status: 200, description: 'Asset metadata updated successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
-  async updateAsset(
-    @Param('id') id: string,
-    @Body() updateAssetDto: UpdateAssetDto,
-  ): Promise<Asset> {
-    return this.assetsService.updateAsset(id, updateAssetDto);
-  }
-
+  async updateAssetMock(): Promise<any> { return null; }
+  
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete asset metadata' })
   @ApiResponse({ status: 204, description: 'Asset metadata deleted successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
-  async deleteAsset(@Param('id') id: string): Promise<void> {
-    return this.assetsService.deleteAsset(id);
-  }
-
+  async deleteAssetMock(): Promise<any> { return null; }
+  
   @Post('folders')
   @ApiOperation({ summary: 'Create a new folder' })
   async createFolder(

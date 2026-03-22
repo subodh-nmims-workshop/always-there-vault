@@ -19,7 +19,7 @@ export default function ContactPage() {
             <nav className="sticky top-0 z-50 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Shield className="w-8 h-8" />
+                        <Shield className="w-8 h-8" suppressHydrationWarning />
                     </div>
                     <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
                 </Link>
@@ -38,7 +38,7 @@ export default function ContactPage() {
                 {/* Header */}
                 <div className="text-center mb-16">
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={defaultTransition} className="inline-flex items-center justify-center p-4 rounded-full bg-white/[0.03] border border-white/10 mb-6">
-                        <MessageSquare className="w-8 h-8 text-[#1152d4]" />
+                        <MessageSquare className="w-8 h-8 text-[#1152d4]" suppressHydrationWarning />
                     </motion.div>
                     <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white">
                         Get in <span className="text-[#1152d4]">Touch</span>
@@ -53,7 +53,7 @@ export default function ContactPage() {
 
                     <motion.a href="mailto:security@deadman.xyz" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-md rounded-2xl p-8 border border-white/10 flex items-center gap-6 group transition-all">
                         <div className="w-12 h-12 rounded-xl bg-[#1152d4]/10 border border-[#1152d4]/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                            <Mail className="text-[#1152d4] w-6 h-6" />
+                            <Mail className="text-[#1152d4] w-6 h-6" suppressHydrationWarning />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold mb-1 text-white">Email Us</h3>
@@ -63,7 +63,7 @@ export default function ContactPage() {
 
                     <motion.a href="https://discord.gg/deadmanprotocol" target="_blank" rel="noopener noreferrer" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.4 }} className="bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-md rounded-2xl p-8 border border-white/10 flex items-center gap-6 group transition-all">
                         <div className="w-12 h-12 rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                            <MessageCircle className="text-[#8b5cf6] w-6 h-6" />
+                            <MessageCircle className="text-[#8b5cf6] w-6 h-6" suppressHydrationWarning />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold mb-1 text-white">Discord</h3>
@@ -81,11 +81,11 @@ export default function ContactPage() {
                         <form className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Name / Pseudonym</label>
-                                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors" placeholder="Satoshi Nakamoto" />
+                                <input type="text" suppressHydrationWarning className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors" placeholder="Satoshi Nakamoto" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Email <span className="text-red-500">*</span></label>
-                                <input type="email" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors" placeholder="satoshi@protonmail.com" />
+                                <input type="email" suppressHydrationWarning required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1152d4] transition-colors" placeholder="satoshi@protonmail.com" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Inquiry Type</label>

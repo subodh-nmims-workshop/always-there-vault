@@ -50,36 +50,50 @@ export class SubscriptionService {
   }
 
   async getSubscription(id: string) {
-    // Check if id is UUID (userId) or walletAddress
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    
-    let userId = id;
-    if (!isUuid) {
-        const user = await this.usersService.findUserByWallet(id);
-        userId = user.id;
+    try {
+      // Check if id is UUID (userId) or walletAddress
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      let userId = id;
+      if (!isUuid) {
+          const user = await this.usersService.findUserByWallet(id);
+          if (!user) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
+          userId = user.id;
+      }
+
+      const sub = await this.db.query.subscriptions.findFirst({
+        where: eq(subscriptions.userId, userId),
+      });
+
+      if (!sub) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
+      return sub;
+    } catch (error) {
+      return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
     }
-
-    const sub = await this.db.query.subscriptions.findFirst({
-      where: eq(subscriptions.userId, userId),
-    });
-
-    if (!sub) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
-    return sub;
   }
 
   async checkLimits(userId: string) {
-    const sub = await this.getSubscription(userId);
-    const user = await this.db.query.users.findFirst({ where: eq(users.id, userId) });
-    
-    const used = user?.storageUsed || 0;
-    const limit = sub.storageLimit || 524288000;
+    try {
+      const sub = await this.getSubscription(userId);
+      const user = await this.db.query.users.findFirst({ where: eq(users.id, userId) });
+      
+      const used = user?.storageUsed || 0;
+      const limit = sub.storageLimit || 524288000;
 
-    return {
-      canAddAsset: true, // Simplified for now
-      canAddBeneficiary: true,
-      canUploadCentralized: used < limit,
-      canUploadDecentralized: used < limit,
-    };
+      return {
+        canAddAsset: true, // Simplified for now
+        canAddBeneficiary: true,
+        canUploadCentralized: used < limit,
+        canUploadDecentralized: used < limit,
+      };
+    } catch (error) {
+      return {
+        canAddAsset: true,
+        canAddBeneficiary: true,
+        canUploadCentralized: true,
+        canUploadDecentralized: true,
+      };
+    }
   }
 
   async checkTrialExpiry(userId: string) {

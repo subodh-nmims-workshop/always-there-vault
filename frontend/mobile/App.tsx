@@ -22,18 +22,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Google Fonts Packages ────────────────────────────────────────────────────
 import { 
-  Orbitron_400Regular, 
-  Orbitron_500Medium, 
-  Orbitron_700Bold, 
-  Orbitron_900Black 
-} from '@expo-google-fonts/orbitron';
+  Outfit_400Regular, 
+  Outfit_500Medium, 
+  Outfit_600SemiBold,
+  Outfit_700Bold, 
+  Outfit_900Black 
+} from '@expo-google-fonts/outfit';
 import { 
-  Inter_400Regular, 
-  Inter_500Medium, 
-  Inter_600SemiBold,
-  Inter_700Bold, 
-  Inter_900Black 
-} from '@expo-google-fonts/inter';
+  PlusJakartaSans_400Regular, 
+  PlusJakartaSans_500Medium, 
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold, 
+} from '@expo-google-fonts/plus-jakarta-sans';
 
 import HomeScreen from './src/screens/HomeScreen';
 import AssetsScreen from './src/screens/AssetsScreen';
@@ -43,6 +43,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import LandingScreen from './src/screens/LandingScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { COLORS, FONTS, SHADOWS } from './src/theme';
+import { useTranslation } from './src/hooks/useTranslation';
 
 LogBox.ignoreLogs(['Sending `onAnimatedValueUpdate`']);
 
@@ -96,15 +97,15 @@ export default function App() {
       try {
         // Load fonts directly from installed npm packages to fix "Cannot find module" errors
         await Font.loadAsync({
-          'Orbitron_400Regular': Orbitron_400Regular,
-          'Orbitron_500Medium': Orbitron_500Medium,
-          'Orbitron_700Bold': Orbitron_700Bold,
-          'Orbitron_900Black': Orbitron_900Black,
-          'Inter_400Regular': Inter_400Regular,
-          'Inter_500Medium': Inter_500Medium,
-          'Inter_600SemiBold': Inter_600SemiBold,
-          'Inter_700Bold': Inter_700Bold,
-          'Inter_900Black': Inter_900Black,
+          'Outfit_400Regular': Outfit_400Regular,
+          'Outfit_500Medium': Outfit_500Medium,
+          'Outfit_600SemiBold': Outfit_600SemiBold,
+          'Outfit_700Bold': Outfit_700Bold,
+          'Outfit_900Black': Outfit_900Black,
+          'PlusJakartaSans_400Regular': PlusJakartaSans_400Regular,
+          'PlusJakartaSans_500Medium': PlusJakartaSans_500Medium,
+          'PlusJakartaSans_600SemiBold': PlusJakartaSans_600SemiBold,
+          'PlusJakartaSans_700Bold': PlusJakartaSans_700Bold,
         });
         
         // 1. Initial State Handling
@@ -128,6 +129,8 @@ export default function App() {
 
     prepare();
   }, []);
+
+  const { t } = useTranslation();
 
   if (!fontsLoaded || appState === 'splash') {
     return (
@@ -203,11 +206,11 @@ export default function App() {
                   },
                 })}
               >
-                <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'OVERVIEW' }} />
-                <Tab.Screen name="Assets" component={AssetsScreen} options={{ title: 'ASSETS' }} />
-                <Tab.Screen name="Beneficiaries" component={BeneficiariesScreen} options={{ title: 'PROTEGE' }} />
-                <Tab.Screen name="Heartbeat" component={HeartbeatScreen} options={{ title: 'PULSE' }} />
-                <Tab.Screen name="Settings" options={{ title: 'CONFIG' }}>
+                <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('nav_home').toUpperCase() }} />
+                <Tab.Screen name="Assets" component={AssetsScreen} options={{ title: t('nav_assets').toUpperCase() }} />
+                <Tab.Screen name="Beneficiaries" component={BeneficiariesScreen} options={{ title: t('nav_beneficiaries').toUpperCase() }} />
+                <Tab.Screen name="Heartbeat" component={HeartbeatScreen} options={{ title: t('nav_pulse').toUpperCase() }} />
+                <Tab.Screen name="Settings" options={{ title: t('nav_settings').toUpperCase() }}>
                   {() => <SettingsScreen onLogout={() => setAppState('landing')} />}
                 </Tab.Screen>
               </Tab.Navigator>

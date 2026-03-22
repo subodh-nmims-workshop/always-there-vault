@@ -17,7 +17,7 @@ export default function PricingPage() {
             <nav className="sticky top-0 z-50 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Shield className="w-8 h-8" />
+                        <Shield className="w-8 h-8" suppressHydrationWarning />
                     </div>
                     <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
                 </Link>

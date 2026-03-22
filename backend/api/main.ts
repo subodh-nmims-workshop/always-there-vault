@@ -21,7 +21,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:7000', 'http://localhost:3000'],
+    origin: (origin, callback) => callback(null, true),
     credentials: true,
   });
 

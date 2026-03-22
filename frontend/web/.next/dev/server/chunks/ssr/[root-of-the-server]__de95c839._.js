@@ -831,6 +831,7 @@ function SubscriptionProvider({ children }) {
         loadSubscription();
     }, []);
     const loadSubscription = async ()=>{
+        const API_URL = ("TURBOPACK compile-time value", "http://localhost:7001") || 'http://localhost:7001';
         try {
             const address = localStorage.getItem('dwp_wallet_address');
             if (!address) {
@@ -838,7 +839,7 @@ function SubscriptionProvider({ children }) {
                 return;
             }
             // 1. Try to fetch from backend
-            const response = await fetch(`http://localhost:7001/subscription/${address}`);
+            const response = await fetch(`${API_URL}/subscription/${address}`);
             if (response.ok) {
                 const data = await response.json();
                 const formatted = {
@@ -852,7 +853,7 @@ function SubscriptionProvider({ children }) {
                 localStorage.setItem('dwp_subscription', JSON.stringify(formatted));
             } else {
                 // 2. If not found, create trial
-                const createRes = await fetch('http://localhost:7001/subscription/trial', {
+                const createRes = await fetch(`${API_URL}/subscription/trial`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -889,6 +890,7 @@ function SubscriptionProvider({ children }) {
             setIsLoading(false);
         }
     };
+    const API_URL = ("TURBOPACK compile-time value", "http://localhost:7001") || 'http://localhost:7001';
     const isTrialActive = !!(subscription?.status === 'trial' && subscription.trialEndsAt && subscription.trialEndsAt > new Date());
     const daysRemaining = subscription?.trialEndsAt ? Math.max(0, Math.ceil((subscription.trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
     const canUseFeature = (feature)=>{
@@ -900,7 +902,7 @@ function SubscriptionProvider({ children }) {
     const switchMode = async (newMode)=>{
         if (!subscription) return;
         try {
-            const response = await fetch(`http://localhost:7001/subscription/${subscription.userId}/switch-mode`, {
+            const response = await fetch(`${API_URL}/subscription/${subscription.userId}/switch-mode`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -938,7 +940,7 @@ function SubscriptionProvider({ children }) {
     const cancelSubscription = async ()=>{
         if (!subscription) return;
         try {
-            const response = await fetch(`http://localhost:7001/subscription/${subscription.userId}/cancel`, {
+            const response = await fetch(`${API_URL}/subscription/${subscription.userId}/cancel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -975,7 +977,7 @@ function SubscriptionProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/Desktop/Nmims/DeadMan Protocol/frontend/web/src/contexts/SubscriptionContext.tsx",
-        lineNumber: 165,
+        lineNumber: 168,
         columnNumber: 5
     }, this);
 }

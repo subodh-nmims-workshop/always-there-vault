@@ -23,14 +23,14 @@ export class BeneficiariesController {
   @Post()
   @ApiOperation({ summary: 'Add a new beneficiary' })
   @ApiResponse({ status: 201, description: 'Beneficiary created successfully' })
-  async createBeneficiary(@Body() createBeneficiaryDto: CreateBeneficiaryDto): Promise<Beneficiary> {
+  async createBeneficiary(@Body() createBeneficiaryDto: CreateBeneficiaryDto): Promise<any> {
     return this.beneficiariesService.createBeneficiary(createBeneficiaryDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all beneficiaries for a user' })
   @ApiResponse({ status: 200, description: 'Beneficiaries retrieved successfully' })
-  async getAllBeneficiaries(@Query('ownerAddress') ownerAddress: string): Promise<Beneficiary[]> {
+  async getAllBeneficiaries(@Query('ownerAddress') ownerAddress: string): Promise<any[]> {
     return this.beneficiariesService.getAllBeneficiaries(ownerAddress);
   }
 
@@ -38,7 +38,7 @@ export class BeneficiariesController {
   @ApiOperation({ summary: 'Get specific beneficiary' })
   @ApiResponse({ status: 200, description: 'Beneficiary retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Beneficiary not found' })
-  async getBeneficiary(@Param('id') id: string): Promise<Beneficiary> {
+  async getBeneficiary(@Param('id') id: string): Promise<any> {
     return this.beneficiariesService.getBeneficiary(id);
   }
 
@@ -48,7 +48,7 @@ export class BeneficiariesController {
   async updateBeneficiary(
     @Param('id') id: string,
     @Body() updateBeneficiaryDto: UpdateBeneficiaryDto,
-  ): Promise<Beneficiary> {
+  ): Promise<any> {
     return this.beneficiariesService.updateBeneficiary(id, updateBeneficiaryDto);
   }
 

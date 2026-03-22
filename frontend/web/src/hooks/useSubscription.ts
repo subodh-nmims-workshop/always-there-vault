@@ -40,7 +40,7 @@ export function useSubscription(userId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = 'http://localhost:7001'; // Secondary backend (NestJS)
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'; // Secondary backend (NestJS)
 
   useEffect(() => {
     if (userId) {
@@ -53,10 +53,11 @@ export function useSubscription(userId: string | null) {
 
     try {
       setLoading(true);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001';
       const [subRes, trialRes, limitsRes] = await Promise.all([
-        fetch(`${API_BASE}/subscription/${userId}`),
-        fetch(`${API_BASE}/subscription/${userId}/trial-status`),
-        fetch(`${API_BASE}/subscription/${userId}/limits`),
+        fetch(`${API_URL}/subscription/${userId}`),
+        fetch(`${API_URL}/subscription/${userId}/trial-status`),
+        fetch(`${API_URL}/subscription/${userId}/limits`),
       ]);
 
       if (!subRes.ok) throw new Error('Failed to fetch subscription');
@@ -80,7 +81,8 @@ export function useSubscription(userId: string | null) {
     if (!userId) return;
 
     try {
-      const response = await fetch(`${API_BASE}/subscription/trial`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001';
+      const response = await fetch(`${API_URL}/subscription/trial`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, mode }),
@@ -100,7 +102,8 @@ export function useSubscription(userId: string | null) {
     if (!userId) return null;
 
     try {
-      const response = await fetch(`${API_BASE}/subscription/checkout`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001';
+      const response = await fetch(`${API_URL}/subscription/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

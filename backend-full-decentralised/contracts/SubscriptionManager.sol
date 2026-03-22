@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  */
 contract SubscriptionManager is Ownable, ReentrancyGuard {
     
-    enum PlanType { FREEDOM, SOVEREIGN, IMMORTAL }
+    enum PlanType { STARTER, PROFESSIONAL, ENTERPRISE, FREEDOM, SOVEREIGN, IMMORTAL }
     
     struct Plan {
         string name;
@@ -47,26 +47,12 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
     
     constructor() Ownable(msg.sender) {
         // Initialize plans (prices in USD with 6 decimals for USDC/USDT)
-        plans[PlanType.FREEDOM] = Plan({
-            name: "Freedom",
-            pricePerMonth: 19_990000, // $19.99
-            pricePerYear: 191_904000, // $191.90 (20% discount)
-            active: true
-        });
-        
-        plans[PlanType.SOVEREIGN] = Plan({
-            name: "Sovereign",
-            pricePerMonth: 49_990000, // $49.99
-            pricePerYear: 479_904000, // $479.90 (20% discount)
-            active: true
-        });
-        
-        plans[PlanType.IMMORTAL] = Plan({
-            name: "Immortal",
-            pricePerMonth: 149_990000, // $149.99
-            pricePerYear: 1439_904000, // $1439.90 (20% discount)
-            active: true
-        });
+        plans[PlanType.STARTER] = Plan({ name: "Starter", pricePerMonth: 4_990000, pricePerYear: 49_900000, active: true });
+        plans[PlanType.PROFESSIONAL] = Plan({ name: "Professional", pricePerMonth: 14_990000, pricePerYear: 149_900000, active: true });
+        plans[PlanType.ENTERPRISE] = Plan({ name: "Enterprise", pricePerMonth: 49_990000, pricePerYear: 499_900000, active: true });
+        plans[PlanType.FREEDOM] = Plan({ name: "Freedom", pricePerMonth: 9_990000, pricePerYear: 99_900000, active: true });
+        plans[PlanType.SOVEREIGN] = Plan({ name: "Sovereign", pricePerMonth: 29_990000, pricePerYear: 299_900000, active: true });
+        plans[PlanType.IMMORTAL] = Plan({ name: "Immortal", pricePerMonth: 149_000000, pricePerYear: 1499_000000, active: true });
     }
     
     /**

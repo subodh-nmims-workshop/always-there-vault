@@ -25,6 +25,7 @@ import {
   ArrowRight
 } from 'lucide-react-native';
 import { COLORS, FONTS, RADIUS, SHADOWS, GAPS, LAYOUT } from '../theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width, height } = Dimensions.get('window');
 
@@ -59,6 +60,7 @@ const SECTIONS = [
 
 const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
   const [activeDetail, setActiveDetail] = useState<typeof SECTIONS[0] | null>(null);
+  const { t } = useTranslation();
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -90,14 +92,14 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
         {/* ── HERO ────────────────────────────────────────── */}
         <Animated.View style={[styles.hero, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>BETA v2.0 LIVE ON SEPOLIA</Text>
+            <Text style={styles.badgeText}>{t('landing_badge')}</Text>
           </View>
           
-          <Text style={styles.heroTitle}>Your Digital</Text>
-          <Text style={styles.heroTitleAccent}>Future-Proofed.</Text>
+          <Text style={styles.heroTitle}>{t('landing_title1')}</Text>
+          <Text style={styles.heroTitleAccent}>{t('landing_title2')}</Text>
           
           <Text style={styles.heroSubtitle}>
-            The first trustless, decentralized fail-safe for the digital age. Secure your crypto assets for your loved ones with chain-verified certainty.
+            {t('landing_subtitle')}
           </Text>
           
           <TouchableOpacity 
@@ -111,7 +113,7 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
             >
-              <Text style={styles.ctaText}>SECURE YOUR VAULT</Text>
+              <Text style={styles.ctaText}>{t('landing_cta')}</Text>
               <ArrowRight size={20} color="#fff" />
             </LinearGradient>
           </TouchableOpacity>
@@ -206,63 +208,63 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background },
   bgGlow: { 
-    position: 'absolute', top: -100, right: -100, 
-    width: 300, height: 300, borderRadius: 150, 
-    backgroundColor: COLORS.primary + '15', filter: 'blur(80px)' 
+    position: 'absolute', top: -150, right: -50, 
+    width: 400, height: 400, borderRadius: 200, 
+    backgroundColor: COLORS.primary + '10', // Changed to blur on web, just a soft color on mobile
   },
   scrollContent: { padding: GAPS.lg },
 
-  header: { alignItems: 'center', marginTop: 50, marginBottom: 60 },
-  headerLogoText: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 13, letterSpacing: 3, marginTop: 10 },
+  header: { alignItems: 'center', marginTop: 60, marginBottom: 50 },
+  headerLogoText: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 14, letterSpacing: 4, marginTop: 14 },
 
   hero: { alignItems: 'center', marginBottom: GAPS.xl },
   badge: { 
-    backgroundColor: COLORS.surface, 
-    paddingHorizontal: 12, paddingVertical: 6, 
-    borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.border,
-    marginBottom: GAPS.lg
+    backgroundColor: COLORS.primary + '15', 
+    paddingHorizontal: 16, paddingVertical: 8, 
+    borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.primary + '30',
+    marginBottom: GAPS.xl
   },
-  badgeText: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 9, letterSpacing: 1 },
-  heroTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 32, textAlign: 'center', lineHeight: 42 },
-  heroTitleAccent: { color: COLORS.primary, fontFamily: FONTS.orbitron.black, fontSize: 32, textAlign: 'center', lineHeight: 42 },
-  heroSubtitle: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 15, textAlign: 'center', lineHeight: 22, marginTop: GAPS.lg, marginBottom: 40, paddingHorizontal: GAPS.md },
+  badgeText: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' },
+  heroTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 40, textAlign: 'center', lineHeight: 48 },
+  heroTitleAccent: { color: COLORS.primary, fontFamily: FONTS.orbitron.black, fontSize: 40, textAlign: 'center', lineHeight: 48, marginBottom: 10 },
+  heroSubtitle: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 16, textAlign: 'center', lineHeight: 24, paddingHorizontal: GAPS.sm, marginBottom: 40 },
 
-  ctaButton: { width: '100%', borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOWS.blue },
-  ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 12 },
-  ctaText: { color: '#fff', fontFamily: FONTS.orbitron.black, fontSize: 16, letterSpacing: 1 },
+  ctaButton: { width: '100%', borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.blue },
+  ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 22, gap: 12 },
+  ctaText: { color: '#ffffff', fontFamily: FONTS.orbitron.bold, fontSize: 16, letterSpacing: 1.5 },
 
   featuresRow: { gap: GAPS.md, marginBottom: GAPS.xl },
   featureCard: { 
     flexDirection: 'row', alignItems: 'center', 
-    backgroundColor: COLORS.surface, padding: GAPS.md, 
-    borderRadius: RADIUS.xl, borderWidth: 1, borderColor: COLORS.border 
+    backgroundColor: COLORS.surface, padding: GAPS.lg, 
+    borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.glassBorder 
   },
-  iconContainer: { width: 48, height: 48, borderRadius: RADIUS.lg, justifyContent: 'center', alignItems: 'center', marginRight: GAPS.md },
-  featureTitle: { flex: 1, color: COLORS.text, fontFamily: FONTS.orbitron.bold, fontSize: 12, letterSpacing: 1 },
+  iconContainer: { width: 52, height: 52, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', marginRight: GAPS.md },
+  featureTitle: { flex: 1, color: COLORS.text, fontFamily: FONTS.orbitron.semibold, fontSize: 14, letterSpacing: 1 },
 
-  trustBar: { flexDirection: 'row', justifyContent: 'center', gap: 15, marginBottom: 60 },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  trustText: { color: COLORS.accent, fontFamily: FONTS.inter.bold, fontSize: 9, letterSpacing: 1 },
+  trustBar: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 70, flexWrap: 'wrap' },
+  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  trustText: { color: COLORS.textMuted, fontFamily: FONTS.inter.bold, fontSize: 10, letterSpacing: 1.2 },
 
-  footer: { alignItems: 'center' },
-  footerText: { color: COLORS.textDim, fontFamily: FONTS.orbitron.bold, fontSize: 9, letterSpacing: 1 },
-  footerSubText: { color: COLORS.textDim, fontFamily: FONTS.inter.medium, fontSize: 9, marginTop: 6 },
+  footer: { alignItems: 'center', opacity: 0.6 },
+  footerText: { color: COLORS.textMuted, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 2 },
+  footerSubText: { color: COLORS.textDim, fontFamily: FONTS.inter.medium, fontSize: 10, marginTop: 8 },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: COLORS.surface, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, padding: GAPS.lg, maxHeight: height * 0.8 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#111318', borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, padding: GAPS.lg, paddingBottom: 40, maxHeight: height * 0.85, borderWidth: 1, borderColor: COLORS.glassBorder, borderBottomWidth: 0 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: GAPS.xl },
-  modalTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 20, letterSpacing: 1 },
+  modalTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 24, letterSpacing: 0.5 },
   modalScroll: { marginBottom: GAPS.xl },
-  detailItem: { flexDirection: 'row', marginBottom: GAPS.lg, gap: GAPS.md },
-  detailBullet: { width: 4, height: 40, borderRadius: 2 },
-  detailTitle: { color: COLORS.text, fontFamily: FONTS.inter.bold, fontSize: 16, marginBottom: 4 },
-  detailDesc: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 13, lineHeight: 18 },
-  techProof: { backgroundColor: COLORS.background, padding: GAPS.md, borderRadius: RADIUS.lg, marginTop: GAPS.md },
-  techProofTitle: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 14, marginBottom: 6 },
-  techProofText: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 12, lineHeight: 18 },
-  modalCta: { paddingVertical: 18, borderRadius: RADIUS.lg, alignItems: 'center' },
-  modalCtaText: { color: '#fff', fontFamily: FONTS.orbitron.black, fontSize: 14, letterSpacing: 1 },
+  detailItem: { flexDirection: 'row', marginBottom: GAPS.xl, gap: GAPS.md },
+  detailBullet: { width: 5, height: '100%', borderRadius: 3 },
+  detailTitle: { color: COLORS.text, fontFamily: FONTS.inter.bold, fontSize: 18, marginBottom: 6 },
+  detailDesc: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 14, lineHeight: 22 },
+  techProof: { backgroundColor: 'rgba(255,255,255,0.03)', padding: GAPS.lg, borderRadius: RADIUS.lg, marginTop: GAPS.sm, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  techProofTitle: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 15, marginBottom: 8 },
+  techProofText: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 13, lineHeight: 20 },
+  modalCta: { paddingVertical: 20, borderRadius: RADIUS.xl, alignItems: 'center' },
+  modalCtaText: { color: '#fff', fontFamily: FONTS.orbitron.bold, fontSize: 15, letterSpacing: 1.5 },
 });
 
 export default LandingScreen;

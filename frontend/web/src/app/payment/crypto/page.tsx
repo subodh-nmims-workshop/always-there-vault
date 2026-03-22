@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { Wallet, Check, ArrowRight, AlertCircle, Coins, Loader2 } from 'lucide-react'
+import { Wallet, Check, ArrowRight, AlertCircle, Coins, Loader2, ChevronDown, Settings, ArrowDownUp, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ethers } from 'ethers'
@@ -17,17 +17,21 @@ const USDC_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Polygon USD
 // Plan mapping
 const PLAN_IDS: Record<string, number> = {
   starter: 0,
-  guardian: 1,
-  legacy: 2,
-  immortal: 3
+  professional: 1,
+  enterprise: 2,
+  freedom: 3,
+  sovereign: 4,
+  immortal: 5
 }
 
 // Pricing in USDC (6 decimals)
-const PRICING = {
-  starter: { monthly: '9.99', yearly: '99' },
-  guardian: { monthly: '24.99', yearly: '249' },
-  legacy: { monthly: '49.99', yearly: '499' },
-  immortal: { monthly: '99.99', yearly: '999' }
+const PRICING: Record<string, any> = {
+  starter: { monthly: '4.99', yearly: '49.90' },
+  professional: { monthly: '14.99', yearly: '149.90' },
+  enterprise: { monthly: '49.99', yearly: '499.90' },
+  freedom: { monthly: '9.99', yearly: '99.90' },
+  sovereign: { monthly: '29.99', yearly: '299.90' },
+  immortal: { monthly: '149.00', yearly: '1499.00' }
 }
 
 function CryptoPaymentContent() {
@@ -125,125 +129,105 @@ function CryptoPaymentContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0a0c10] flex flex-col items-center justify-center p-4 font-sans selection:bg-purple-500/30">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl w-full"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="bg-[#141414] border border-white/5 rounded-[2rem] p-6 w-full max-w-[420px] shadow-2xl relative overflow-hidden"
       >
-        <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(168,85,247,0.4)]">
-              <Coins className="w-8 h-8 text-white" />
+        {/* Top Navbar */}
+        <div className="flex items-center justify-between mb-8 relative z-10">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] hover:bg-white/10 text-slate-300 text-sm font-medium transition-colors border border-white/5">
+            USDC <ChevronDown className="w-4 h-4 text-slate-500" suppressHydrationWarning />
+          </button>
+          
+          <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] hover:bg-white/10 text-white text-sm font-medium transition-colors border border-white/5">
+            <div className="w-5 h-5 bg-[#8247e5] rounded-full flex items-center justify-center shadow-inner">
+              <svg viewBox="0 0 38.4 33.5" className="w-2.5 h-2.5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M29.1 10.2L19.2 4.5l-9.9 5.7v11.4l9.9 5.7 9.9-5.7V10.2zM19.2 24.5l-6.8-4V12.7l6.8-4 6.8 4v7.8l-6.8 4z"/></svg>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Crypto Payment
-            </h1>
-            <p className="text-slate-400">
-              Pay with USDC for {plan} plan ({billing})
-            </p>
-          </div>
+            Polygon <ChevronDown className="w-4 h-4 text-slate-500" suppressHydrationWarning />
+          </button>
 
-          {/* Amount */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
-            <div className="text-center">
-              <p className="text-slate-400 text-sm mb-2">Amount to Pay</p>
-              <p className="text-4xl font-bold text-white mb-1">
-                ${amount}
-              </p>
-              <p className="text-slate-500 text-sm">
-                USDC on Polygon Network
-              </p>
-            </div>
-          </div>
-
-          {/* Wallet Info */}
-          {walletAddress && (
-            <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 mb-6 flex items-center gap-3">
-              <Wallet className="w-5 h-5 text-slate-500" />
-              <div className="flex-1">
-                <p className="text-slate-400 text-xs mb-1">Connected Wallet</p>
-                <p className="text-white font-mono text-sm">
-                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Instructions */}
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-slate-300">
-                <p className="font-semibold text-blue-300 mb-2">Payment Instructions:</p>
-                <ol className="space-y-1 list-decimal list-inside">
-                  <li>Make sure you have ${amount} USDC in your wallet</li>
-                  <li>You'll need to approve 2 transactions</li>
-                  <li>First: Approve USDC spending</li>
-                  <li>Second: Complete subscription payment</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-
-          {/* Pay Button */}
-          {!isPaid && (
-            <button
-              onClick={handlePayment}
-              disabled={isProcessing || !walletAddress}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  Pay ${amount} USDC
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          )}
-
-          {/* Success Message */}
-          {isPaid && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 mb-4"
-            >
-              <div className="flex items-center gap-3 text-green-400">
-                <Check className="w-6 h-6" />
-                <div>
-                  <p className="font-semibold">Payment Successful!</p>
-                  <p className="text-sm text-green-300">Redirecting to dashboard...</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Cancel Link */}
-          <Link
-            href="/pricing"
-            className="block text-center text-slate-400 hover:text-white transition-colors text-sm"
-          >
-            Cancel and go back
-          </Link>
+          <button className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors text-slate-400">
+            <Settings className="w-4 h-4" suppressHydrationWarning />
+          </button>
         </div>
 
-        {/* Network Info */}
-        <div className="mt-6 text-center">
-          <p className="text-slate-500 text-sm">
-            Network: <span className="text-slate-400 font-semibold">Polygon Mainnet</span>
-          </p>
-          <p className="text-slate-500 text-xs mt-2">
-            Make sure you're connected to Polygon network
-          </p>
+        {/* Central Amount Display */}
+        <div className="text-center mb-10 relative z-10">
+          <div className="flex items-start justify-center text-white mb-2 tracking-tight">
+            <span className="text-3xl mt-2 text-slate-500 font-medium mr-1 select-none">$</span>
+            <span className="text-7xl font-bold bg-gradient-to-br from-white to-slate-300 bg-clip-text text-transparent">{amount.split('.')[0]}</span>
+            <span className="text-3xl mt-2 text-slate-400 font-bold">.{amount.split('.')[1] || '00'}</span>
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 text-sm text-slate-400 font-medium bg-black/20 w-fit mx-auto px-3 py-1 rounded-full border border-white/5">
+            <ArrowDownUp className="w-3 h-3 text-slate-500" suppressHydrationWarning />
+            {amount} USDC
+          </div>
+        </div>
+
+        {/* Info Pills */}
+        <div className="flex justify-center gap-2 mb-8 relative z-10">
+          {['Plan: ' + plan.charAt(0).toUpperCase() + plan.slice(1), billing === 'yearly' ? 'Yearly' : 'Monthly'].map((lbl, i) => (
+            <div key={i} className="px-5 py-2.5 bg-[#1c1c1e] hover:bg-[#242426] cursor-default rounded-full text-sm font-semibold text-slate-300 border border-white/5 transition-colors">
+              {lbl}
+            </div>
+          ))}
+        </div>
+
+        {/* Connected Wallet Info */}
+        <div className="flex items-center justify-between text-xs px-2 mb-4 text-slate-500 font-medium">
+          <span>Connected Wallet</span>
+          <span className="text-slate-400">
+            {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Not Connected'}
+          </span>
+        </div>
+
+        {/* Action Button */}
+        {isPaid ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full bg-green-500/10 border border-green-500/20 text-green-400 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.1)] relative z-10"
+          >
+            <Check className="w-5 h-5" suppressHydrationWarning />
+            Payment Successful!
+          </motion.div>
+        ) : (
+          <button
+            onClick={handlePayment}
+            disabled={isProcessing || !walletAddress}
+            className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] active:scale-[0.98] text-white py-4 rounded-2xl font-semibold text-[15px] transition-all shadow-[0_0_20px_rgba(124,58,237,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative z-10"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" suppressHydrationWarning />
+                {billing === 'monthly' ? 'Approving & Subscribing...' : 'Processing Payment...'}
+              </>
+            ) : (
+              'Continue with Polygon'
+            )}
+          </button>
+        )}
+
+        {/* Footer Brand */}
+        <div className="mt-6 text-center text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1.5 relative z-10">
+          Powered by 
+          <span className="text-slate-300 flex items-center gap-1">
+            <Shield className="w-3 h-3 text-slate-400" suppressHydrationWarning /> 
+            DeadMan Rails
+          </span>
         </div>
       </motion.div>
+      
+      <Link
+        href="/pricing"
+        className="mt-8 text-slate-500 hover:text-white font-medium text-sm transition-colors py-2 px-4 rounded-full hover:bg-white/5"
+      >
+        Cancel and go back
+      </Link>
     </div>
   )
 }
@@ -252,7 +236,7 @@ export default function CryptoPaymentPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin" suppressHydrationWarning />
       </div>
     }>
       <CryptoPaymentContent />

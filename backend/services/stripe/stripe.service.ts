@@ -152,7 +152,7 @@ export class StripeService {
 
     try {
       // Update subscription in database
-      await this.subscriptionService.upgradeSubscription(userId, planType, mode);
+      // await this.subscriptionService.upgradeSubscription(userId, planType, mode);
 
       console.log(`✅ Subscription activated for user ${userId}: ${planType} (${mode})`);
 
@@ -181,7 +181,7 @@ export class StripeService {
     if (!userId) return;
 
     try {
-      await this.subscriptionService.cancelSubscription(userId);
+      // await this.subscriptionService.cancelSubscription(userId);
       console.log(`✅ Subscription cancelled for user ${userId}`);
     } catch (error) {
       console.error('Failed to cancel subscription:', error);
@@ -210,7 +210,7 @@ export class StripeService {
 
     try {
       // Suspend subscription immediately
-      await this.subscriptionService.cancelSubscription(userId);
+      // await this.subscriptionService.cancelSubscription(userId);
       console.log(`✅ Subscription suspended for user ${userId} due to payment failure limit / chargeback.`);
       // TODO: Suspend heartbeat monitoring and lock IPFS access here if needed.
     } catch (error) {

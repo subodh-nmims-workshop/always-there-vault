@@ -1,0 +1,366 @@
+# DeadMan Protocol - Full Kubernetes Deployment
+# Contains: Namespace, Configs, Databases, API, Web, Blockchain Node, Ingress
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: deadman-protocol
+
+---
+# 1. ConfigMaps and Secrets
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deadman-config
+  namespace: deadman-protocol
+data:
+  NODE_ENV: "production"
+  POSTGRES_DB: "digitalwill"
+  POSTGRES_USER: "admin"
+  DATABASE_URL: "postgresql://admin:supersecurepassword123@postgres-service:5432/digitalwill"
+  MONGODB_URI: "mongodb://admin:supersecurepassword123@mongodb-service:27017/digital-will?authSource=admin"
+  REDIS_URL: "redis://redis-service:6379"
+  PORT: "7001"
+  NEXT_PUBLIC_API_URL: "https://api.deadman.xyz"
+  NEXT_PUBLIC_NETWORK: "mainnet"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: deadman-secrets
+  namespace: deadman-protocol
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "supersecurepassword123"
+  MONGO_INITDB_ROOT_PASSWORD: "supersecurepassword123"
+  JWT_SECRET: "k8s-production-jwt-secret-key-32chars"
+  STRIPE_SECRET_KEY: "sk_live_replace_me"
+
+---
+# 2. PostgreSQL (Drizzle Primary)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: deadman-protocol
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: deadman-protocol
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          envFrom:
+            - configMapRef:
+                name: deadman-config
+            - secretRef:
+                name: deadman-secrets
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pg-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: pg-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+# 3. Redis (Cache & Sessions)
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: deadman-protocol
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: deadman-protocol
+spec:
+  serviceName: redis-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 2Gi
+
+---
+# 4. MongoDB (Legacy Support)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  namespace: deadman-protocol
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: deadman-protocol
+spec:
+  serviceName: mongodb-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7.0
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: deadman-config
+                  key: POSTGRES_USER
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: deadman-secrets
+                  key: MONGO_INITDB_ROOT_PASSWORD
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+# 5. Hardhat Node (Local EVM)
+apiVersion: v1
+kind: Service
+metadata:
+  name: hardhat-service
+  namespace: deadman-protocol
+spec:
+  selector:
+    app: hardhat
+  ports:
+    - port: 8545
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hardhat
+  namespace: deadman-protocol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hardhat
+  template:
+    metadata:
+      labels:
+        app: hardhat
+    spec:
+      containers:
+        - name: hardhat
+          image: deadman-hardhat:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8545
+
+---
+# 6. Backend API (NestJS)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: deadman-protocol
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 7001
+      targetPort: 7001
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: deadman-protocol
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: deadman-backend:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: deadman-config
+            - secretRef:
+                name: deadman-secrets
+          ports:
+            - containerPort: 7001
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+# 7. Frontend Web (Next.js)
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: deadman-protocol
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 7000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: deadman-protocol
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: deadman-frontend:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: deadman-config
+          ports:
+            - containerPort: 7000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+
+---
+# 8. Ingress Controller Hub
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: deadman-ingress
+  namespace: deadman-protocol
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - app.deadman.xyz
+    - api.deadman.xyz
+    secretName: deadman-tls-secret
+  rules:
+  - host: app.deadman.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+  - host: api.deadman.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 7001
