@@ -81,14 +81,24 @@ services:
 
   # 5. MongoDB (For legacy services)
   mongodb:
-    image: mongo:7.0-alpine
+    image: mongo:7.0
     container_name: lastwish_mongodb
-    ports:
-      - "27017:27017"
+    # Removed host port mapping to avoid 27017 conflict with existing smarttech-mongodb
+    expose:
+      - "27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: digital-will
+    networks:
+      - protocol_net
+
+  # 6. Redis (For Caching/Pulse logs)
+  redis:
+    image: redis:7-alpine
+    container_name: lastwish_redis
+    ports:
+      - "6379:6379"
     networks:
       - protocol_net
 
