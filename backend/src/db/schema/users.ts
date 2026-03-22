@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, bigint, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, bigint, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -10,6 +10,10 @@ export const users = pgTable('users', {
   // Storage quota (500MB default = 524288000 bytes)
   storageQuota: bigint('storage_quota', { mode: 'number' }).notNull().default(524288000),
   storageUsed: bigint('storage_used', { mode: 'number' }).notNull().default(0),
+  
+  // Storage Engine
+  storageEngine: varchar('storage_engine', { length: 20 }).notNull().default('cloud'),
+  isMigrating: boolean('is_migrating').notNull().default(false),
   
   // Preferences
   preferences: jsonb('preferences').default({}),

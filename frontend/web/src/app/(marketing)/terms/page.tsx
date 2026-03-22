@@ -24,7 +24,7 @@ export default function TermsPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -94,7 +94,7 @@ export default function TermsPage() {
                                 1. Acceptance of Terms
                             </h2>
                             <p className="text-lg">
-                                By accessing or using the DeadMan Protocol (the "Protocol") directly via our smart contracts, through the official web interface, or any third-party interface, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not interact with our smart contracts or web interfaces. These terms constitute a binding legal agreement between you and the protocol maintainers.
+                                By accessing or using the LASTWISH (the "Protocol") directly via our smart contracts, through the official web interface, or any third-party interface, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not interact with our smart contracts or web interfaces. These terms constitute a binding legal agreement between you and the protocol maintainers.
                             </p>
                         </div>
 
@@ -136,7 +136,7 @@ export default function TermsPage() {
                                 3. Smart Contract Mechanics
                             </h2>
                             <p className="text-lg mb-4">
-                                The core logic of the DeadMan Protocol is deployed to the Polygon blockchain (and other EVM-compatible networks) as immutable smart contracts.
+                                The core logic of the LASTWISH is deployed to the Polygon blockchain (and other EVM-compatible networks) as immutable smart contracts.
                             </p>
                             <p className="text-lg">
                                 By interacting with these contracts, you acknowledge that blockchain transactions are irreversible. The execution of the contract logic—specifically the decay timer and the release of key shards to beneficiaries—happens deterministically based on network consensus, not by manual intervention from the protocol maintainers. We are not responsible for edge cases caused by network outages, high gas fees preventing heartbeat pings, or validator delays.
@@ -149,7 +149,7 @@ export default function TermsPage() {
                                 4. Protocol Disclaimer
                             </h2>
                             <p className="text-lg">
-                                The DeadMan Protocol and all associated software are provided "as is" and "as available" without any warranty of any kind, either express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, or non-infringement. While our smart contracts undergo rigorous audits, interacting with experimental decentralized technologies carries inherent risks such as undiscovered vulnerabilities. You acknowledge these risks and agree to bear full responsibility for your interactions.
+                                The LASTWISH and all associated software are provided "as is" and "as available" without any warranty of any kind, either express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, or non-infringement. While our smart contracts undergo rigorous audits, interacting with experimental decentralized technologies carries inherent risks such as undiscovered vulnerabilities. You acknowledge these risks and agree to bear full responsibility for your interactions.
                             </p>
                         </div>
 
@@ -159,7 +159,7 @@ export default function TermsPage() {
                                 5. Limitation of Liability
                             </h2>
                             <p className="text-lg">
-                                To the maximum extent permitted by applicable law, under no circumstances shall the maintainers, developers, contributors, or affiliates of the DeadMan Protocol be liable for any direct, indirect, incidental, special, consequential, or exemplary damages, including but not limited to, damages for loss of profits, goodwill, use, data, digital assets, or other intangible losses, resulting from:
+                                To the maximum extent permitted by applicable law, under no circumstances shall the maintainers, developers, contributors, or affiliates of the LASTWISH be liable for any direct, indirect, incidental, special, consequential, or exemplary damages, including but not limited to, damages for loss of profits, goodwill, use, data, digital assets, or other intangible losses, resulting from:
                                 <br /><br />
                                 (i) the use or the inability to use the service;<br />
                                 (ii) unauthorized access to or alteration of your transmissions or data;<br />

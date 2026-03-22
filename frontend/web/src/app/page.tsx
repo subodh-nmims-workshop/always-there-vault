@@ -36,6 +36,7 @@ import { SubscriptionDashboard } from '@/components/subscription-dashboard'
 import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import { ModeIndicator } from '@/components/mode-indicator'
 import { TrialBanner } from '@/components/trial-banner'
+import { SettingsDashboard } from '@/components/settings-dashboard'
 import WebStorageService, { AppState } from '@/lib/storage'
 import Link from 'next/link'
 import { SharedFooter } from '@/components/shared-footer'
@@ -171,7 +172,7 @@ export default function HomePage() {
             <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
               <Shield className="w-8 h-8" />
             </div>
-            <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+            <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
           </Link>
           <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
             <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -301,7 +302,7 @@ export default function HomePage() {
 
               <div className="max-w-2xl space-y-6 relative z-10">
                 <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Secure Your Future Today</h2>
-                <p className="text-xl text-slate-400 leading-relaxed">Join users who trust DeadMan Protocol to secure their digital legacy on-chain.</p>
+                <p className="text-xl text-slate-400 leading-relaxed">Join users who trust LASTWISH to secure their digital legacy on-chain.</p>
 
                 <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <button onClick={handleConnect} className="w-full sm:w-auto px-8 py-4 bg-white text-[#080a0f] rounded-full font-bold text-lg hover:scale-105 transition-transform flex items-center justify-center">
@@ -334,7 +335,7 @@ export default function HomePage() {
           <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
             <Shield className="w-8 h-8" />
           </div>
-          <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+          <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
         </Link>
         <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
           <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -379,8 +380,8 @@ export default function HomePage() {
 
         {/* Dashboard Content */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-6 gap-1 shadow-lg backdrop-blur-md">
-            {['overview', 'assets', 'beneficiaries', 'heartbeat', 'subscription', 'status'].map((tab) => (
+          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-7 gap-1 shadow-lg backdrop-blur-md">
+            {['overview', 'assets', 'beneficiaries', 'heartbeat', 'subscription', 'status', 'settings'].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
@@ -435,6 +436,10 @@ export default function HomePage() {
 
           <TabsContent value="status" className="mt-6">
             <StatusDashboard />
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <SettingsDashboard />
           </TabsContent>
         </Tabs>
       </main>

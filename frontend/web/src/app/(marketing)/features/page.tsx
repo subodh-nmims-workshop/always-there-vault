@@ -23,7 +23,7 @@ export default function FeaturesPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-white transition-colors text-sm font-medium">Features</Link>
@@ -189,7 +189,7 @@ export default function FeaturesPage() {
                     <section className="mt-32 border-t border-white/10 pt-20">
                         <div className="max-w-4xl mx-auto space-y-12">
                             <div className="text-center space-y-4">
-                                <h2 className="text-4xl font-bold tracking-tight text-white">How DeadMan Protocol Actually Works</h2>
+                                <h2 className="text-4xl font-bold tracking-tight text-white">How LASTWISH Actually Works</h2>
                                 <p className="text-xl text-slate-400">A deep dive into the decentralized architecture securing your digital legacy.</p>
                             </div>
 

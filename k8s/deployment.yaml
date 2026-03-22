@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lastwish-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lastwish-backend
+  template:
+    metadata:
+      labels:
+        app: lastwish-backend
+    spec:
+      containers:
+      - name: backend
+        image: subodh40/lastwish-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7001
+        env:
+        - name: DATABASE_URL
+          value: "postgres://postgres:postgres@lastwish-db:5432/lastwish"
+        - name: RPC_URL
+          value: "http://lastwish-blockchain:8545"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lastwish-backend
+spec:
+  selector:
+    app: lastwish-backend
+  ports:
+    - protocol: TCP
+      port: 7001
+      targetPort: 7001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lastwish-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lastwish-web
+  template:
+    metadata:
+      labels:
+        app: lastwish-web
+    spec:
+      containers:
+      - name: web
+        image: subodh40/lastwish-web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7000
+        env:
+        - name: NEXT_PUBLIC_BACKEND_URL
+          value: "http://lastwish-backend:7001"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lastwish-web
+spec:
+  selector:
+    app: lastwish-web
+  ports:
+    - protocol: TCP
+      port: 7000
+      targetPort: 7000
+      nodePort: 30007 # Access through minikube
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lastwish-blockchain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lastwish-blockchain
+  template:
+    metadata:
+      labels:
+        app: lastwish-blockchain
+    spec:
+      containers:
+      - name: blockchain
+        image: subodh40/lastwish-blockchain:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8545
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lastwish-blockchain
+spec:
+  selector:
+    app: lastwish-blockchain
+  ports:
+    - protocol: TCP
+      port: 8545
+      targetPort: 8545
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lastwish-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lastwish-db
+  template:
+    metadata:
+      labels:
+        app: lastwish-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: lastwish
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lastwish-db
+spec:
+  selector:
+    app: lastwish-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

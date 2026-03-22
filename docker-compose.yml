@@ -1,177 +1,100 @@
 version: '3.8'
 
 services:
-  # MongoDB Database (Legacy/Keep for backward compatibility)
-  mongodb:
-    image: mongo:7.0
-    container_name: deadman-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
-      MONGO_INITDB_DATABASE: digital-will
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
-    networks:
-      - deadman-network
-
-  # PostgreSQL Database (Primary Drizzle DB)
-  postgres:
-    image: postgres:15
-    container_name: deadman-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: digitalwill
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - deadman-network
-
-  # Redis (Cache + Sessions)
-  redis:
-    image: redis:7
-    container_name: deadman-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - deadman-network
-
-  # NestJS Backend
-  backend:
+  # 1. Local Blockchain Node (Hardhat) - Mostly for Staging/Testing
+  blockchain:
+    image: subodh40/lastwish-blockchain:latest
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: deadman-backend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: 7001
-      DATABASE_URL: postgresql://admin:${DB_PASSWORD:-password}@postgres:5432/digitalwill
-      MONGODB_URI: mongodb://admin:${MONGO_PASSWORD:-password}@mongodb:27017/digital-will?authSource=admin
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-secret}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-    ports:
-      - "7001:7001"
-    depends_on:
-      - postgres
-      - mongodb
-      - redis
-    networks:
-      - deadman-network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-
-  # Hardhat Node
-  hardhat:
-    build:
-      context: ./backend-full-decentralised
-      dockerfile: Dockerfile
-    container_name: deadman-hardhat
-    restart: unless-stopped
+      context: ./
+      dockerfile: Dockerfile.hardhat
+      network: host
+    container_name: lastwish_blockchain
     ports:
       - "8545:8545"
+    volumes:
+      - ./contracts:/app/contracts
+      - ./scripts:/app/scripts
+      - ./test:/app/test
+      - ./hardhat.config.ts:/app/hardhat.config.ts
+    environment:
+      - NODE_ENV=development
     networks:
-      - deadman-network
+      - protocol_net
 
-  # Frontend (Next.js)
-  frontend:
+  # 2. Next.js Web Dashboard
+  web:
+    image: subodh40/lastwish-web:latest
     build:
       context: ./frontend/web
       dockerfile: Dockerfile
-    container_name: deadman-frontend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:7001}
+      network: host
+    container_name: lastwish_web
     ports:
       - "7000:7000"
-    depends_on:
-      - backend
-    networks:
-      - deadman-network
-    volumes:
-      - ./frontend/web:/app
-      - /app/node_modules
-      - /app/.next
-
-  # n8n Automation Engine
-  n8n:
-    image: docker.n8n.io/n8nio/n8n
-    container_name: deadman-n8n
-    restart: unless-stopped
-    ports:
-      - "5678:5678"
     environment:
-      - N8N_HOST=n8n.local
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:7001
+      - NEXT_PUBLIC_CHAIN_ID=31337
+      - NEXT_PUBLIC_RPC_URL=http://blockchain:8545
       - NODE_ENV=production
-    networks:
-      - deadman-network
-    volumes:
-      - n8n_data:/home/node/.n8n
-
-  # Prometheus Monitoring
-  prometheus:
-    image: prom/prometheus
-    container_name: deadman-prometheus
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
-    networks:
-      - deadman-network
-
-  # Grafana Dashboard
-  grafana:
-    image: grafana/grafana
-    container_name: deadman-grafana
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    networks:
-      - deadman-network
-    volumes:
-      - grafana_data:/var/lib/grafana
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: deadman-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
-      - frontend
       - backend
+      - blockchain
     networks:
-      - deadman-network
+      - protocol_net
+
+  # 3. NestJS Backend API
+  backend:
+    image: subodh40/lastwish-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      network: host
+    container_name: lastwish_backend
+    ports:
+      - "7001:7001"
+    environment:
+      - NODE_ENV=production
+      - PORT=7001
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/lastwish}
+      - RPC_URL=http://blockchain:8545
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    depends_on:
+      - postgres
+      - blockchain
+    networks:
+      - protocol_net
+
+  # 4. PostgreSQL Database (For Drizzle ORM)
+  postgres:
+    image: postgres:15-alpine
+    container_name: lastwish_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lastwish
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - protocol_net
+
+  # 5. MongoDB (For legacy services)
+  mongodb:
+    image: mongo:7.0-alpine
+    container_name: lastwish_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: digital-will
+    networks:
+      - protocol_net
 
 networks:
-  deadman-network:
+  protocol_net:
     driver: bridge
 
 volumes:
-  mongodb_data:
-  mongodb_config:
   postgres_data:
-  n8n_data:
-  prometheus_data:
-  grafana_data:

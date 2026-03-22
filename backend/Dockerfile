@@ -1,5 +1,5 @@
 # ─── STAGE 1: Dependencies ────────────────────────────────────────────────────────
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Check if libc6-compat is needed for alpine
@@ -7,10 +7,10 @@ RUN apk add --no-cache libc6-compat
 
 COPY package*.json ./
 # Install ALL dependencies (including devDeps) so we can build
-RUN npm ci
+RUN npm install
 
 # ─── STAGE 2: Builder ─────────────────────────────────────────────────────────────
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -22,7 +22,7 @@ RUN npm run build
 RUN npm prune --production
 
 # ─── STAGE 3: Production Runner ──────────────────────────────────────────────────
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -45,4 +45,4 @@ EXPOSE 7001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:7001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["node", "dist/api/main.js"]
+CMD ["node", "dist/main.js"]

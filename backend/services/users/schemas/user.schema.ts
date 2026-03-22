@@ -40,6 +40,13 @@ export class User {
 
     @Prop({ default: 1 })
     heartbeatBuffer: number; // max allowed missed heartbeats before trigger
+
+    // --- Smart Storage Engine Tracking ---
+    @Prop({ type: String, enum: ['cloud', 'web3'], default: 'cloud' })
+    storagePreference: string;
+
+    @Prop({ default: false })
+    isMigrating: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

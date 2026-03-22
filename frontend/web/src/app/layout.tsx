@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Toaster } from 'sonner'
 import Script from 'next/script'
 
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Decentralized Digital Will Protocol',
@@ -44,7 +42,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${inter.className} bg-slate-950 text-slate-50`}>
+      <body className="font-sans bg-slate-950 text-slate-50">
         <Providers>
           <div className="min-h-screen bg-slate-950 dark:bg-slate-950">
             {children}

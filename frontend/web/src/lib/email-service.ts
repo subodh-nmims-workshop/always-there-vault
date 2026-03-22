@@ -59,7 +59,7 @@ export async function sendBeneficiaryEmail(
         3. Use your encrypted share to decrypt: ${encryptedShare.substring(0, 20)}...
         4. Contact other beneficiaries to combine shares
       `,
-      message: `Dear ${beneficiaryName},\n\nYou have been designated as a beneficiary in ${ownerName}'s Digital Will.\n\nYour encrypted assets are now accessible on IPFS.\n\nIPFS CID: ${ipfsCID}\nDirect Link: https://ipfs.io/ipfs/${ipfsCID}\n\nYour Encrypted Share: ${encryptedShare}\n\nPlease store this information securely.\n\nBest regards,\nDeadMan Protocol`
+      message: `Dear ${beneficiaryName},\n\nYou have been designated as a beneficiary in ${ownerName}'s Digital Will.\n\nYour encrypted assets are now accessible on IPFS.\n\nIPFS CID: ${ipfsCID}\nDirect Link: https://ipfs.io/ipfs/${ipfsCID}\n\nYour Encrypted Share: ${encryptedShare}\n\nPlease store this information securely.\n\nBest regards,\nLASTWISH`
     }
     
     const response = await (window as any).emailjs.send(
@@ -132,7 +132,7 @@ export async function notifyBeneficiaries(
       beneficiary.email,
       beneficiary.name,
       'Digital Will Activated - Action Required',
-      `Dear ${beneficiary.name},\n\nThe Digital Will of ${ownerName} has been activated.\n\nYour assets are now accessible on IPFS:\n${ipfsCID}\n\nPlease log in to the DeadMan Protocol to access your inheritance.\n\nBest regards,\nDeadMan Protocol`
+      `Dear ${beneficiary.name},\n\nThe Digital Will of ${ownerName} has been activated.\n\nYour assets are now accessible on IPFS:\n${ipfsCID}\n\nPlease log in to the LASTWISH to access your inheritance.\n\nBest regards,\nLASTWISH`
     )
     
     if (sent) {
@@ -156,8 +156,8 @@ export async function testEmailService(testEmail: string): Promise<boolean> {
     return await sendNotificationEmail(
       testEmail,
       'Test User',
-      'DeadMan Protocol - Email Test',
-      'This is a test email from DeadMan Protocol. If you received this, email service is working correctly!'
+      'LASTWISH - Email Test',
+      'This is a test email from LASTWISH. If you received this, email service is working correctly!'
     )
   } catch (error) {
     console.error('Email test failed:', error)

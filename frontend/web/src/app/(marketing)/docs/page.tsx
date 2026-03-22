@@ -22,7 +22,7 @@ export default function DocsPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -179,7 +179,7 @@ await vault.initialize({
                             <div className="space-y-6">
                                 <h3 className="text-xl font-bold text-white">Zero-Trust Pipeline</h3>
                                 <p className="text-slate-400 leading-relaxed text-sm">
-                                    The DeadMan Protocol architecture is designed explicitly so that the backend—whether ours or a decentralized relayer's—never has access to the raw payload or the complete decryption keys.
+                                    The LASTWISH architecture is designed explicitly so that the backend—whether ours or a decentralized relayer's—never has access to the raw payload or the complete decryption keys.
                                 </p>
                                 <ul className="space-y-4">
                                     <li className="flex gap-3 items-start">

@@ -34,7 +34,7 @@ import { CryptoModule } from '../services/crypto/crypto.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const uri = 'mongodb://admin:password@127.0.0.1:27017/digital-will?authSource=admin';
+        const uri = 'mongodb://admin:password@mongodb:27017/digital-will?authSource=admin';
         console.log('🔍 MongoDB URI:', uri);
         return { uri };
       },

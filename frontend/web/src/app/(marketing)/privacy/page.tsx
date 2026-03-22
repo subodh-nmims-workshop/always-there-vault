@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -85,7 +85,7 @@ export default function PrivacyPolicyPage() {
                                 1. Introduction
                             </h2>
                             <p className="text-lg">
-                                DeadMan Protocol is built on the fundamental principle that privacy is a human right. Our architecture is explicitly designed to protect your digital legacy without ever compromising your identity or sensitive credentials. This policy outlines how we minimize data collection while maintaining the protocol's integrity and liveness.
+                                LASTWISH is built on the fundamental principle that privacy is a human right. Our architecture is explicitly designed to protect your digital legacy without ever compromising your identity or sensitive credentials. This policy outlines how we minimize data collection while maintaining the protocol's integrity and liveness.
                             </p>
                         </div>
 
@@ -111,7 +111,7 @@ export default function PrivacyPolicyPage() {
                                 2. Data We Process
                             </h2>
                             <p className="mb-6 text-lg">
-                                We actively avoid collecting Personally Identifiable Information (PII) such as your name, physical address, or IP address logs. The DeadMan Protocol only interacts with the following technical data:
+                                We actively avoid collecting Personally Identifiable Information (PII) such as your name, physical address, or IP address logs. The LASTWISH only interacts with the following technical data:
                             </p>
                             <ul className="space-y-4">
                                 <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
@@ -144,7 +144,7 @@ export default function PrivacyPolicyPage() {
                                 3. Cryptography Standards
                             </h2>
                             <p className="text-lg">
-                                All data stored via the DeadMan Protocol UI is secured using AES-256-GCM encryption in the browser prior to transmission. Secrets are sharded using Shamir's Secret Sharing (SSS) before they are sent to the relayer network. Because the decryption keys are never transmitted whole, even a complete database compromise of an indexing node yields no actionable intelligence to an attacker.
+                                All data stored via the LASTWISH UI is secured using AES-256-GCM encryption in the browser prior to transmission. Secrets are sharded using Shamir's Secret Sharing (SSS) before they are sent to the relayer network. Because the decryption keys are never transmitted whole, even a complete database compromise of an indexing node yields no actionable intelligence to an attacker.
                             </p>
                         </div>
 

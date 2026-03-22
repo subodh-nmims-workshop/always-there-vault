@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy Hardhat configuration and minimal required files
+COPY hardhat.config.ts tsconfig.json ./
+# Will mount volumes for contracts, scripts, tests through docker-compose
+
+EXPOSE 8545
+
+# Start the hardhat node natively
+CMD ["npx", "hardhat", "node"]

@@ -86,7 +86,7 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
         {/* ── TOP LOGO ────────────────────────────────────── */}
         <View style={styles.header}>
            <Shield size={32} color={COLORS.primary} />
-           <Text style={styles.headerLogoText}>DEADMAN PROTOCOL</Text>
+           <Text style={styles.headerLogoText}>LASTWISH</Text>
         </View>
 
         {/* ── HERO ────────────────────────────────────────── */}
@@ -95,11 +95,11 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
             <Text style={styles.badgeText}>{t('landing_badge')}</Text>
           </View>
           
-          <Text style={styles.heroTitle}>{t('landing_title1')}</Text>
-          <Text style={styles.heroTitleAccent}>{t('landing_title2')}</Text>
+          <Text style={styles.heroTitle}>LASTWISH</Text>
+          <Text style={styles.heroTitleAccent}></Text>
           
           <Text style={styles.heroSubtitle}>
-            {t('landing_subtitle')}
+            Your final word, secured. Ensure your crypto assets and digital life are passed on securely. Decentralized, encrypted, and triggered by your status.
           </Text>
           
           <TouchableOpacity 
@@ -155,7 +155,7 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
         {/* ── FOOTER ────────────────────────────────────── */}
         <View style={styles.footer}>
            <Text style={styles.footerText}>PROTOCOL NODE CONNECTED</Text>
-           <Text style={styles.footerSubText}>© 2026 DECENTRALIZED DIGITAL WILL PROTOCOL</Text>
+           <Text style={styles.footerSubText}>© 2026 LASTWISH</Text>
         </View>
 
         <View style={{ height: 60 }} />

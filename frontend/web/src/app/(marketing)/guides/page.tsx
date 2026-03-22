@@ -136,7 +136,7 @@ export default function GuidesPage() {
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">Setting up a Heartbeat Relayer</h2>
                             <p className="text-xl text-slate-400 mb-10 leading-relaxed font-normal">
-                                To ensure true zero-knowledge and gasless operations for the end-user, the DeadMan Protocol relies on a network of automated relayers to ping the Liveness Oracle. Here is how to run a dockerized node to monitor addresses and automate L2 signatures.
+                                To ensure true zero-knowledge and gasless operations for the end-user, the LASTWISH relies on a network of automated relayers to ping the Liveness Oracle. Here is how to run a dockerized node to monitor addresses and automate L2 signatures.
                             </p>
 
                             <div className="prose prose-invert prose-blue max-w-none text-slate-300">
@@ -278,7 +278,7 @@ export function EncryptAssetComponent({ file }) {
                                     A theoretical breakdown of distributing AES decryption keys across an M-of-N validator network using Shamir's Secret Sharing.
                                 </p>
                                 <div className="prose prose-invert max-w-none text-slate-300">
-                                    <p>Our core cryptographic guarantee is that no single party—not even DeadMan Protocol engineers—can arbitrarily decrypt a user's digital will without consensus. To achieve this, we harness Shamir's Secret Sharing (SSS) algorithm across a distributed operator network.</p>
+                                    <p>Our core cryptographic guarantee is that no single party—not even LASTWISH engineers—can arbitrarily decrypt a user's digital will without consensus. To achieve this, we harness Shamir's Secret Sharing (SSS) algorithm across a distributed operator network.</p>
                                     <p>When a user encrypts a file locally in their browser, an AES-256-GCM symmetric key is generated. This master key is immediately divided into exactly `N` independent mathematical shards. A threshold requirement `M` is defined (e.g. 5 of 9 shards). Only when the Polygon Smart Contract registers a missed heartbeat event will the network nodes release their encrypted shards to the designated beneficiaries.</p>
                                 </div>
                             </section>

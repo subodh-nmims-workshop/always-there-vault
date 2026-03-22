@@ -134,6 +134,46 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
            <SettingRow icon={ShieldCheck} title="Verify Master Keys" color={COLORS.warning} />
         </SettingCard>
 
+        {/* ── STORAGE ALLOCATION & SMART ENGINE ────────────── */}
+        <SettingCard title={t('settings_storage').toUpperCase()}>
+           <View style={{ padding: GAPS.lg, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight + '20' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={{ color: COLORS.text, fontFamily: FONTS.inter.bold, fontSize: 13 }}>500MB SHARED QUOTA</Text>
+                <Text style={{ color: COLORS.primary, fontFamily: FONTS.inter.bold, fontSize: 13 }}>245MB USED</Text>
+              </View>
+              {/* Progress Bar Background */}
+              <View style={{ height: 6, backgroundColor: COLORS.border, borderRadius: 3, overflow: 'hidden' }}>
+                 {/* Progress Bar Fill */}
+                 <View style={{ width: '49%', height: '100%', backgroundColor: COLORS.primary, borderRadius: 3 }} />
+              </View>
+              <Text style={{ color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 11, marginTop: 8 }}>
+                {t('settings_storage_desc')}
+              </Text>
+           </View>
+           
+           <SettingRow 
+              icon={Globe} 
+              title={t('settings_cloud')} 
+              subtitle={t('settings_cloud_desc')}
+              color={COLORS.secondary}
+              right={<View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.secondary }} />}
+           />
+           <SettingRow 
+              icon={Wallet} 
+              title={t('settings_web3')} 
+              subtitle={t('settings_web3_desc')}
+              color={COLORS.accent}
+              right={<View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: COLORS.accent }} />}
+           />
+           
+           <TouchableOpacity 
+             style={{ margin: GAPS.lg, padding: 12, borderRadius: RADIUS.md, backgroundColor: COLORS.primary + '15', alignItems: 'center', borderColor: COLORS.primary + '30', borderWidth: 1 }}
+             onPress={() => showAlert('MIGRATION INITIATED', 'Triggering migration check to Web3 Vault...', 'confirm')}
+           >
+             <Text style={{ color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 12 }}>SWITCH STORAGE ENGINE</Text>
+           </TouchableOpacity>
+        </SettingCard>
+
         {/* ── CONFIG ──────────────────────────────────────── */}
         <SettingCard title="OPERATIONAL CONFIG">
            <SettingRow 

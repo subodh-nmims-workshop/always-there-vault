@@ -34,14 +34,19 @@ export class UsersService {
         return newUser;
     }
 
-    async findUserByWallet(walletAddress: string): Promise<User> {
+    async findUserByWallet(walletAddress: string): Promise<User & { isPremium: boolean }> {
         const user = await this.db.query.users.findFirst({
             where: eq(users.walletAddress, walletAddress),
         });
         if (!user) {
             throw new NotFoundException(`User with wallet ${walletAddress} not found`);
         }
-        return user;
+
+        const subResult = await this.db.select().from(require('../../src/db/schema/subscriptions').subscriptions).where(eq(require('../../src/db/schema/subscriptions').subscriptions.userId, user.id));
+        const subscription = subResult[0];
+        const isPremium = subscription && subscription.status === 'ACTIVE' && subscription.planId !== 'free';
+
+        return { ...user, isPremium: !!isPremium };
     }
 
     async checkAndIncrementStorage(walletAddress: string, additionalBytes: number): Promise<boolean> {
@@ -65,5 +70,38 @@ export class UsersService {
 
     async getAllUsers(): Promise<User[]> {
         return this.db.query.users.findMany();
+    }
+
+    async updateStorageEngine(walletAddress: string, targetEngine: 'cloud' | 'web3'): Promise<{ success: boolean; message: string }> {
+        const user = await this.findUserByWallet(walletAddress);
+        
+        // Check subscription
+        const subResult = await this.db.select().from(require('../../src/db/schema/subscriptions').subscriptions).where(eq(require('../../src/db/schema/subscriptions').subscriptions.userId, user.id));
+        const subscription = subResult[0];
+        
+        const isPremium = subscription && subscription.status === 'ACTIVE' && subscription.planId !== 'free';
+
+        if (targetEngine === 'web3' && !isPremium) {
+            return { success: false, message: 'Web3 storage is locked to premium plans during trial/free mode.' };
+        }
+        
+        if (user.storageEngine === targetEngine) {
+            return { success: true, message: `Already on ${targetEngine} engine.` };
+        }
+        
+        // Update DB to isMigrating = true
+        await this.db.update(users)
+            .set({ isMigrating: true })
+            .where(eq(users.id, user.id));
+            
+        // Wait for mock migration (simulation of transfer of files)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Set new engine and end migration
+        await this.db.update(users)
+            .set({ storageEngine: targetEngine, isMigrating: false })
+            .where(eq(users.id, user.id));
+            
+        return { success: true, message: `Successfully migrated Vault to ${targetEngine.toUpperCase()} engine.` };
     }
 }

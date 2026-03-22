@@ -1,16 +1,6 @@
 {
-  "app": {
-    "[project]/Desktop/Nmims/DeadMan Protocol/frontend/web/src/app/(marketing)/pricing/page": [
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ],
-    "[project]/Desktop/Nmims/DeadMan Protocol/frontend/web/src/app/page": [
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ],
-    "[project]/Desktop/Nmims/DeadMan Protocol/frontend/web/src/app/payment/crypto/page": [
-      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
-    ]
-  },
-  "appUsingSizeAdjust": true,
+  "app": {},
+  "appUsingSizeAdjust": false,
   "pages": {},
   "pagesUsingSizeAdjust": false
 }

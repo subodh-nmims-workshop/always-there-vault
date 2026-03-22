@@ -19,7 +19,7 @@ export default function PricingPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" suppressHydrationWarning />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan Protocol</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>

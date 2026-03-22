@@ -26,7 +26,7 @@ const DOCS_CONTENT = [
   {
     title: 'PROTOCOL ARCHITECTURE',
     icon: Network,
-    content: 'DeadMan Protocol operates as a decentralized fail-safe. It uses Polygon-based smart contracts to monitor user heartbeats and automate asset transfer upon inactivity timeout.'
+    content: 'LASTWISH operates as a decentralized fail-safe. It uses Polygon-based smart contracts to monitor user heartbeats and automate asset transfer upon inactivity timeout.'
   },
   {
     title: 'ENCRYPTION STANDARDS',
@@ -41,7 +41,7 @@ const DOCS_CONTENT = [
   {
     title: 'SMART CONTRACT SAFETY',
     icon: ShieldCheck,
-    content: 'The core logic is immutable. No developer, including the creators of DeadMan Protocol, can access your encrypted vault or alter the beneficiary list once the timer starts.'
+    content: 'The core logic is immutable. No developer, including the creators of LASTWISH, can access your encrypted vault or alter the beneficiary list once the timer starts.'
   },
   {
     title: 'RECOVERY MECHANISM',

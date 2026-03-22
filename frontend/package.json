@@ -7,5 +7,10 @@
         "start:web": "cd web && npm run dev",
         "start:mobile": "cd mobile && npm start",
         "setup": "cd web && npm install && cd ../mobile && npm install"
+    },
+    "dependencies": {
+        "@wagmi/core": "^3.4.0",
+        "viem": "^2.47.6",
+        "wagmi": "^3.5.0"
     }
 }
