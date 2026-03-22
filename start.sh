@@ -180,8 +180,8 @@ do_start() {
 
     # 4. Mobile (Expo - TUNNEL MODE)
     if [ -d "$ROOT/frontend/mobile" ]; then
-        step "4" "Launching Mobile App with EXPO DEDICATED LAN..."
-        warn "Mobile is starting in LAN mode for stable local access (Ngrok Tunnel Disabled)."
+        step "4" "Launching Mobile App with EXPO DEDICATED TUNNEL..."
+        warn "Mobile is starting in Tunnel mode for stable remote access."
         cd "$ROOT/frontend/mobile"
         
         # Clean metro cache to prevent stale builds
@@ -189,8 +189,8 @@ do_start() {
         rm -rf node_modules/.cache/metro 2>/dev/null || true
         
         # Explicitly removed tunnel as Ngrok is failing due to IPv6 routing issues. Using default LAN.
-        info "Initializing Expo LAN Server..."
-        npx expo start --clear
+        info "Initializing Expo Tunnel Server..."
+        npx expo start --tunnel --clear
     else
         warn "Mobile project not found. Monitoring background services..."
         tail -f "$ROOT/logs/backend.log"
