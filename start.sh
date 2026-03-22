@@ -91,6 +91,8 @@ do_status() {
     port_in_use 7001 && echo -e "⚙️  Backend API    : ${GREEN}ONLINE (7001)${NC}" || echo -e "⚙️  Backend API    : ${RED}OFFLINE${NC}"
     port_in_use 8545 && echo -e "⛓️  Local Chain    : ${GREEN}ONLINE (8545)${NC}" || echo -e "⛓️  Local Chain    : ${RED}OFFLINE${NC}"
     port_in_use 8081 && echo -e "📱 Metro Bundler  : ${GREEN}ONLINE (8081)${NC}" || echo -e "📱 Metro Bundler  : ${RED}OFFLINE${NC}"
+    port_in_use 3001 && echo -e "📊 Grafana Dashboard: ${GREEN}ONLINE (3001)${NC}" || echo -e "📊 Grafana Dashboard: ${RED}OFFLINE${NC}"
+    port_in_use 9090 && echo -e "📈 Prometheus      : ${GREEN}ONLINE (9090)${NC}" || echo -e "📈 Prometheus      : ${RED}OFFLINE${NC}"
     echo -e "------------------------------------------------\n"
 }
 
@@ -177,6 +179,15 @@ do_start() {
 
     echo -e "\n${GREEN}${BOLD}✨ CORE SERVICES ARE LIVE ✨${NC}"
     do_status
+
+    echo -e "${BOLD}${MAGENTA}🔗 USEFUL ACCESS LINKS:${NC}"
+    echo -e "${CYAN}🌍 Web Dashboard   :${NC} http://localhost:7000"
+    echo -e "${CYAN}📜 API Docs (Swagger):${NC} http://localhost:7001/api/docs"
+    echo -e "${CYAN}📊 Grafana Analytics:${NC} http://localhost:3001"
+    echo -e "${CYAN}📈 Prometheus Nodes :${NC} http://localhost:9090"
+    echo -e "${CYAN}⛓️  Local RPC Node   :${NC} http://localhost:8545"
+    echo -e "${CYAN}🐳 Container Health :${NC} http://localhost:9000 (Portainer)"
+    echo -e "------------------------------------------------"
 
     # 4. Mobile (Expo - TUNNEL MODE)
     if [ -d "$ROOT/frontend/mobile" ]; then
