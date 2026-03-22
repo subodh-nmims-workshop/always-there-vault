@@ -4,8 +4,7 @@
 # 💀 DEADMAN PROTOCOL - ULTIMATE STARTUP ENGINE
 # ==============================================================================
 # Optimized for: Parrot OS / Ubuntu / Debian / macOS
-# Version: 3.1.0
-# Description: Starts Blockchain, Backend, Web, and Mobile (Tunnel Mode)
+# Version: 3.2.0 (Monitoring & Docker Ready)
 # ==============================================================================
 
 COMMAND="${1:-start}"
@@ -63,16 +62,16 @@ wait_for_port() {
 
 # --- Service Operations ---
 do_stop() {
-    echo -e "\n${ORANGE}${BOLD}🛑 TERMINATING SERVICES...${NC}"
-    local PORTS=(7000 7001 8545 8081 8082 19000 19001 19002)
+    echo -e "\n${ORANGE}${BOLD}🛑 TERMINATING LOCAL SERVICES...${NC}"
+    local PORTS=(7000 7001 8545 8081 8082 19000 19001 19002 9090 3001)
     for p in "${PORTS[@]}"; do
         if port_in_use "$p"; then
-            info "Port $p is active. Killing..."
-            kill_port "$p"
+            info "Port $p is active. Cleaning up..."
+            # kill_port "$p" # We don't necessarily want to kill Docker containers here
         fi
     done
 
-    # Force kill by name for stubborn processes
+    # Force kill only native dev processes
     pkill -9 -f "hardhat" 2>/dev/null || true
     pkill -9 -f "next-server" 2>/dev/null || true
     pkill -9 -f "nest" 2>/dev/null || true
@@ -87,20 +86,18 @@ do_status() {
     print_banner
     echo -e "${BOLD}${CYAN}📊 SYSTEM BRAIN STATUS${NC}"
     echo -e "------------------------------------------------"
-    port_in_use 7000 && echo -e "🌐 Web Dashboard  : ${GREEN}ONLINE (7000)${NC}" || echo -e "🌐 Web Dashboard  : ${RED}OFFLINE${NC}"
-    port_in_use 7001 && echo -e "⚙️  Backend API    : ${GREEN}ONLINE (7001)${NC}" || echo -e "⚙️  Backend API    : ${RED}OFFLINE${NC}"
-    port_in_use 8545 && echo -e "⛓️  Local Chain    : ${GREEN}ONLINE (8545)${NC}" || echo -e "⛓️  Local Chain    : ${RED}OFFLINE${NC}"
-    port_in_use 8081 && echo -e "📱 Metro Bundler  : ${GREEN}ONLINE (8081)${NC}" || echo -e "📱 Metro Bundler  : ${RED}OFFLINE${NC}"
-    port_in_use 3001 && echo -e "📊 Grafana Dashboard: ${GREEN}ONLINE (3001)${NC}" || echo -e "📊 Grafana Dashboard: ${RED}OFFLINE${NC}"
-    port_in_use 9090 && echo -e "📈 Prometheus      : ${GREEN}ONLINE (9090)${NC}" || echo -e "📈 Prometheus      : ${RED}OFFLINE${NC}"
+    port_in_use 7000 && echo -e "🌐 Web Dashboard    : ${GREEN}ONLINE (7000)${NC}" || echo -e "🌐 Web Dashboard    : ${RED}OFFLINE${NC}"
+    port_in_use 7001 && echo -e "⚙️  Backend API      : ${GREEN}ONLINE (7001)${NC}" || echo -e "⚙️  Backend API      : ${RED}OFFLINE${NC}"
+    port_in_use 8545 && echo -e "⛓️  Local Chain      : ${GREEN}ONLINE (8545)${NC}" || echo -e "⛓️  Local Chain      : ${RED}OFFLINE${NC}"
+    port_in_use 8081 && echo -e "📱 Metro Bundler    : ${GREEN}ONLINE (8081)${NC}" || echo -e "📱 Metro Bundler    : ${RED}OFFLINE${NC}"
+    port_in_use 3001 && echo -e "📊 Grafana Analytics: ${GREEN}ONLINE (3001)${NC}" || echo -e "📊 Grafana Analytics: ${RED}OFFLINE${NC}"
+    port_in_use 9090 && echo -e "📈 Prometheus       : ${GREEN}ONLINE (9090)${NC}" || echo -e "📈 Prometheus       : ${RED}OFFLINE${NC}"
     echo -e "------------------------------------------------\n"
 }
 
 do_install() {
     print_banner
     info "Starting full ecosystem dependency installation..."
-    # Root (Blockchain)
-    step "INSTALL" "Processing Root (Blockchain)..."
     cd "$ROOT" && npm install --legacy-peer-deps
     
     local DIRS=("backend" "frontend/web" "frontend/mobile")
@@ -118,80 +115,34 @@ do_start() {
     print_banner
     
     # 0. Cleanup
-    step "0" "Cleaning up previous sessions..."
+    step "0" "Checking for conflicting local processes..."
     do_stop
 
-    # 1. Blockchain (Hardhat) - Try Root first, then blockchain/
-    step "1" "Igniting Local Blockchain..."
-    local CHAIN_DIR="$ROOT"
-    if [ ! -f "$ROOT/hardhat.config.ts" ] && [ -d "$ROOT/blockchain" ]; then
-        CHAIN_DIR="$ROOT/blockchain"
-    fi
-
-    cd "$CHAIN_DIR"
-    info "Running blockchain node in $CHAIN_DIR..."
-    npx hardhat node > "$ROOT/logs/hardhat.log" 2>&1 &
+    # 1. Start Docker Ecosystem (Background)
+    step "1" "Initialising Docker Core Services..."
+    sudo docker compose up -d
     
-    if wait_for_port 8545 "Blockchain"; then
-        info "Deploying Smart Contracts..."
-        # Find where the contracts/scripts are
-        local SCRIPT="./scripts/deploy.ts"
-        [ ! -f "$SCRIPT" ] && SCRIPT="./blockchain/scripts/deploy.ts"
-        
-        info "Using deployment script: $SCRIPT"
-        npx hardhat run "$SCRIPT" --network localhost > "$ROOT/logs/deploy.log" 2>&1
-        if [ $? -eq 0 ]; then
-            ok "Blockchain & Contracts READY."
-        else
-            warn "Contract deployment had issues. Check logs/deploy.log"
-            tail -n 5 "$ROOT/logs/deploy.log"
-        fi
+    if wait_for_port 8545 "Blockchain (Docker)"; then
+        ok "Docker Backend & Blockchain READY."
     else
-        err "Blockchain ignition failed. Port 8545 not responding."
-        echo -e "${YELLOW}Check logs/hardhat.log for details:${NC}"
-        tail -n 10 "$ROOT/logs/hardhat.log"
-        exit 1
+        err "Docker ignition check timed out. Port 8545 not responding."
     fi
 
-    # 2. Backend (NestJS)
-    if [ -d "$ROOT/backend" ]; then
-        step "2" "Waking up the Backend..."
-        cd "$ROOT/backend"
-        npm run start:dev > "$ROOT/logs/backend.log" 2>&1 &
-        if wait_for_port 7001 "Backend"; then
-            ok "Backend HEARTBEAT detected."
-        else
-            warn "Backend is taking longer than usual. Check logs/backend.log"
-        fi
-    fi
-
-    # 3. Web (Next.js)
-    if [ -d "$ROOT/frontend/web" ]; then
-        step "3" "Launching Web Control Center..."
-        cd "$ROOT/frontend/web"
-        npm run dev > "$ROOT/logs/web.log" 2>&1 &
-        if wait_for_port 7000 "Web"; then
-            ok "Web Dashboard ACCESS GRANTED."
-        else
-            warn "Web dashboard startup issue. Check logs/web.log"
-        fi
-    fi
-
-    echo -e "\n${GREEN}${BOLD}✨ CORE SERVICES ARE LIVE ✨${NC}"
+    # Display Dashboard immediately
     do_status
 
     echo -e "${BOLD}${MAGENTA}🔗 USEFUL ACCESS LINKS:${NC}"
-    echo -e "${CYAN}🌍 Web Dashboard   :${NC} http://localhost:7000"
-    echo -e "${CYAN}📜 API Docs (Swagger):${NC} http://localhost:7001/api/docs"
-    echo -e "${CYAN}📊 Grafana Analytics:${NC} http://localhost:3001"
-    echo -e "${CYAN}📈 Prometheus Nodes :${NC} http://localhost:9090"
-    echo -e "${CYAN}⛓️  Local RPC Node   :${NC} http://localhost:8545"
-    echo -e "${CYAN}🐳 Container Health :${NC} http://localhost:9000 (Portainer)"
+    echo -e "${CYAN}🌍 Web Dashboard     :${NC} http://localhost:7000"
+    echo -e "${CYAN}📜 API Docs (Swagger) :${NC} http://localhost:7001/api/docs"
+    echo -e "${CYAN}📊 Grafana Analytics  :${NC} http://localhost:3001"
+    echo -e "${CYAN}📈 Prometheus Server  :${NC} http://localhost:9090"
+    echo -e "${CYAN}⛓️  Local RPC Node     :${NC} http://localhost:8545"
+    echo -e "${CYAN}🐳 Container Health   :${NC} http://localhost:9000 (Portainer)"
     echo -e "------------------------------------------------"
 
-    # 4. Mobile (Expo - TUNNEL MODE)
+    # 2. Start Mobile (Local Host via Tunnel)
     if [ -d "$ROOT/frontend/mobile" ]; then
-        step "4" "Launching Mobile App with EXPO DEDICATED TUNNEL..."
+        step "2" "Launching Mobile App with EXPO DEDICATED TUNNEL..."
         warn "Mobile is starting in Tunnel mode for stable remote access."
         cd "$ROOT/frontend/mobile"
         
@@ -199,7 +150,6 @@ do_start() {
         info "Purging Metro cache..."
         rm -rf node_modules/.cache/metro 2>/dev/null || true
         
-        # Explicitly removed tunnel as Ngrok is failing due to IPv6 routing issues. Using default LAN.
         info "Initializing Expo Tunnel Server..."
         npx expo start --tunnel --clear
     else
@@ -215,7 +165,7 @@ case "$COMMAND" in
     status)  do_status  ;;
     install) do_install ;;
     *) 
-        echo -e "Usage: $0 {${CYAN}start${NC}|${RED}stop${NC}|${BLUE}status${NC}|${YELLOW}install${NC}}"
+        echo -e "Usage: $0 {start|stop|status|install}"
         exit 1 
         ;;
 esac
