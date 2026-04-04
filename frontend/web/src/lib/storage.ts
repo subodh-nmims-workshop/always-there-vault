@@ -9,6 +9,7 @@ import WebCryptoService, { EncryptionResult, KeyDistribution } from './crypto';
 export interface StoredFolder {
   id: string;
   name: string;
+  type?: string; // Optional category type (photo, document, etc.)
   parentId: string | null; // null = root folder
   color?: string;
   icon?: string;
@@ -75,10 +76,11 @@ class WebStorageService {
   private dbName = 'digital-will-db';
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
+  private dbInitPromise: Promise<void> | null = null;
 
   private constructor() {
     this.crypto = WebCryptoService.getInstance();
-    this.initIndexedDB();
+    this.dbInitPromise = this.initIndexedDB();
   }
 
   public static getInstance(): WebStorageService {
@@ -322,8 +324,12 @@ class WebStorageService {
    * Utility Methods
    */
   private async ensureDB(): Promise<void> {
-    if (!this.db) {
-      await this.initIndexedDB();
+    if (this.db) return;
+    if (this.dbInitPromise) {
+      await this.dbInitPromise;
+    } else {
+      this.dbInitPromise = this.initIndexedDB();
+      await this.dbInitPromise;
     }
   }
 
@@ -346,7 +352,10 @@ class WebStorageService {
    * Generate unique IDs
    */
   generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : ((r & 0x3) | 0x8);
+      return v.toString(16);
+    });
   }
 
   /**
@@ -420,13 +429,14 @@ class WebStorageService {
   /**
    * Create a new folder
    */
-  async createFolder(name: string, parentId: string | null = null, beneficiaries: string[] = []): Promise<StoredFolder> {
+  async createFolder(name: string, parentId: string | null = null, beneficiaries: string[] = [], type?: string): Promise<StoredFolder> {
     await this.ensureDB();
 
     const folder: StoredFolder = {
       id: this.generateId(),
       name,
       parentId,
+      type: type || WebStorageService.getFolderType(name),
       beneficiaries,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -434,12 +444,38 @@ class WebStorageService {
       icon: this.getFolderIcon(name)
     };
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const transaction = this.db!.transaction(['folders'], 'readwrite');
       const store = transaction.objectStore('folders');
       const request = store.add(folder);
 
-      request.onsuccess = () => resolve(folder);
+      request.onsuccess = async () => {
+        // Also sync to backend API if centralized mode
+        try {
+          const mode = localStorage.getItem('dwp_mode') || 'centralized'
+          const walletAddress = localStorage.getItem('dwp_wallet_address')
+          if (mode === 'centralized' && walletAddress) {
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+            await fetch(`${apiEndpoint}/api/assets/folders`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+              },
+              body: JSON.stringify({
+                name: folder.name,
+                walletAddress,
+                parentId: folder.parentId,
+                id: folder.id,
+                beneficiaries: folder.beneficiaries
+              })
+            })
+          }
+        } catch (e) {
+          console.warn('⚠️ Could not sync folder to backend', e)
+        }
+        resolve(folder);
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -497,7 +533,31 @@ class WebStorageService {
       const store = transaction.objectStore('folders');
       const request = store.put(updated);
 
-      request.onsuccess = () => resolve();
+      request.onsuccess = async () => {
+        // Also sync to backend API if centralized mode
+        try {
+          const mode = localStorage.getItem('dwp_mode') || 'centralized'
+          const walletAddress = localStorage.getItem('dwp_wallet_address')
+          if (mode === 'centralized' && walletAddress) {
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+            await fetch(`${apiEndpoint}/api/assets/folders/${id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+              },
+              body: JSON.stringify({
+                name: updated.name,
+                parentId: updated.parentId,
+                beneficiaries: updated.beneficiaries
+              })
+            })
+          }
+        } catch (e) {
+          console.warn('⚠️ Could not sync folder update to backend', e)
+        }
+        resolve();
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -564,6 +624,36 @@ class WebStorageService {
       // For assets inside this folder, align with the folder's beneficiary set
       await this.updateAsset(asset.id, { beneficiaries: updatedBeneficiaries });
     }
+    
+    try {
+      const mode = localStorage.getItem('dwp_mode') || 'centralized'
+      if (mode === 'centralized') {
+        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+        for (const ben of updatedBeneficiaries) {
+          // Sync with centralized node per beneficiary
+          await fetch(`${apiEndpoint}/api/assets/folders/${folderId}/share`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+            },
+            body: JSON.stringify({
+              walletToShareWith: ben,
+              permission: 'READ'
+            })
+          })
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Could not sync folder share mapping to backend', e)
+    }
+  }
+
+  /**
+   * Share asset with beneficiaries
+   */
+  async updateAssetBeneficiaries(assetId: string, beneficiaryIds: string[]): Promise<void> {
+    return this.updateAsset(assetId, { beneficiaries: beneficiaryIds });
   }
 
   /**
@@ -604,6 +694,23 @@ class WebStorageService {
     if (lowerName.includes('music') || lowerName.includes('audio')) return 'music';
     if (lowerName.includes('key') || lowerName.includes('password')) return 'key';
     return 'folder';
+  }
+
+  /**
+   * Helper: Get folder type based on name
+   */
+  /**
+   * Helper: Get folder type based on name
+   */
+  public static getFolderType(name: string): string {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('doc') || lowerName.includes('file')) return 'document';
+    if (lowerName.includes('photo') || lowerName.includes('image')) return 'photo';
+    if (lowerName.includes('bank') || lowerName.includes('finan') || lowerName.includes('money')) return 'bank_account';
+    if (lowerName.includes('wallet') || lowerName.includes('crypto')) return 'self_custody_crypto';
+    if (lowerName.includes('exchange')) return 'exchange_account';
+    if (lowerName.includes('secret')) return 'business_secret';
+    return 'all';
   }
 
   /**
