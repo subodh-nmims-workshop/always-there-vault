@@ -21,84 +21,93 @@ interface HeartbeatAlertEmailParams {
 }
 
 function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
-    const urgencyColor = p.isFinalWarning ? '#dc2626' : p.missCount === 1 ? '#f59e0b' : '#ea580c';
+    const urgencyColor = p.isFinalWarning ? '#ef4444' : p.missCount === 1 ? '#eab308' : '#f97316';
+    const glowColor = p.isFinalWarning ? 'rgba(239, 68, 68, 0.4)' : p.missCount === 1 ? 'rgba(234, 179, 8, 0.4)' : 'rgba(249, 115, 22, 0.4)';
     const stageLabel = `Stage ${p.missCount} of ${p.maxBuffer}`;
     const progressPct = Math.round((p.missCount / p.maxBuffer) * 100);
 
     return `
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb; padding: 24px; border-radius: 12px;">
-  <div style="background: ${urgencyColor}; color: white; padding: 20px 24px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 22px;">
-      ${p.isFinalWarning ? '🚨 Final Warning' : '⚠️ Heartbeat Alert'} — ${stageLabel}
-    </h1>
-  </div>
-
-  <div style="background: white; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb;">
-    <p style="font-size: 16px;">Hi <strong>${p.name}</strong>,</p>
-    <p>Your DeadMan Protocol heartbeat has been missed. ${p.isFinalWarning
-        ? '<strong>This is your final warning before the protocol is triggered.</strong>'
-        : 'Please sign a heartbeat transaction immediately to prevent asset distribution.'
-    }</p>
-
-    <!-- Status Summary -->
-    <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 20px 0;">
-      <h3 style="margin: 0 0 12px 0; color: #374151;">📊 Heartbeat Status</h3>
-      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Wallet Address</td>
-          <td style="padding: 6px 0; font-family: monospace; color: #111827; word-break: break-all;">${p.walletAddress}</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Status</td>
-          <td style="padding: 6px 0; color: ${urgencyColor}; font-weight: bold;">OVERDUE — ${stageLabel}</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Last Heartbeat</td>
-          <td style="padding: 6px 0; color: #111827;">${p.lastHeartbeat}</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Check Interval</td>
-          <td style="padding: 6px 0; color: #111827;">${p.intervalDays} day(s)</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Grace Period</td>
-          <td style="padding: 6px 0; color: #111827;">${p.gracePeriodDays} day(s)</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Missed Count</td>
-          <td style="padding: 6px 0; color: ${urgencyColor}; font-weight: bold;">${p.missCount} / ${p.maxBuffer}</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 0; color: #6b7280;">Checked At</td>
-          <td style="padding: 6px 0; color: #111827;">${p.checkedAt}</td>
-        </tr>
-      </table>
+<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
+  
+  <!-- Premium Card Container -->
+  <div style="background: #1e293b; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px ${glowColor}; overflow: hidden;">
+    
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 2px solid ${urgencyColor}; padding: 30px; text-align: center;">
+      <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid ${urgencyColor}; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px ${glowColor};">
+        ${p.isFinalWarning ? '💀' : '⏳'}
+      </div>
+      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">
+        ${p.isFinalWarning ? 'PROTOCOL TRIGGER IMMINENT' : 'HEARTBEAT OVERDUE'}
+      </h1>
+      <p style="margin: 10px 0 0 0; color: #94a3b8; font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px;">
+        ${stageLabel}
+      </p>
     </div>
 
-    <!-- Progress Bar -->
-    <div style="margin: 16px 0;">
-      <p style="margin: 0 0 6px 0; font-size: 13px; color: #6b7280;">Buffer exhausted: ${progressPct}%</p>
-      <div style="background: #e5e7eb; border-radius: 999px; height: 10px;">
-        <div style="background: ${urgencyColor}; width: ${progressPct}%; height: 10px; border-radius: 999px;"></div>
+    <!-- Body -->
+    <div style="padding: 35px 30px;">
+      <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Commander <strong>${p.name}</strong>,</p>
+      <p style="color: #cbd5e1; font-size: 15px;">
+        Your cryptographic heartbeat has been missed. ${p.isFinalWarning
+        ? '<span style="color: #ef4444; font-weight: bold;">This is your absolute final warning.</span> If you do not check in, the DeadMan Protocol will irreversibly distribute your assigned assets.'
+        : 'Please sign a proof-of-life heartbeat transaction immediately to halt asset distribution sequences.'}
+      </p>
+
+      <!-- Status Dashboard -->
+      <div style="background: #0f172a; border-radius: 12px; padding: 20px; margin: 30px 0; border: 1px solid #334155; position: relative;">
+        <h3 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center;">
+          <span style="display:inline-block; width:8px; height:8px; background:${urgencyColor}; border-radius:50%; margin-right:8px; box-shadow: 0 0 10px ${urgencyColor};"></span>
+          System Telemetry
+        </h3>
+        
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 10px 0; color: #94a3b8; border-bottom: 1px solid #1e293b;">Wallet Address</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; font-family: 'Courier New', Courier, monospace; color: #38bdf8; word-break: break-all; text-align: right;">${p.walletAddress}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #94a3b8; border-bottom: 1px solid #1e293b;">Last Heartbeat</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; color: #f1f5f9; text-align: right;">${p.lastHeartbeat}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #94a3b8; border-bottom: 1px solid #1e293b;">Interval / Grace</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; color: #f1f5f9; text-align: right;">${p.intervalDays}d / ${p.gracePeriodDays}d</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #94a3b8;">Missed Count</td>
+            <td style="padding: 10px 0; color: ${urgencyColor}; font-weight: bold; text-align: right;">${p.missCount} / ${p.maxBuffer}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Cyber Progress Bar -->
+      <div style="margin: 25px 0 35px 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Time Buffer Exhaustion</span>
+          <span style="font-size: 12px; font-weight: bold; color: ${urgencyColor};">${progressPct}%</span>
+        </div>
+        <div style="background: #0f172a; border-radius: 4px; height: 12px; border: 1px solid #334155; overflow: hidden; padding: 2px;">
+          <div style="background: linear-gradient(90deg, ${urgencyColor}40, ${urgencyColor}); width: ${progressPct}%; height: 100%; border-radius: 2px; box-shadow: 0 0 10px ${urgencyColor};"></div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div style="text-align: center;">
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard"
+           style="display: inline-block; background: linear-gradient(135deg, ${urgencyColor}, #991b1b); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px ${glowColor}; transition: all 0.3s ease;">
+          Authenticate Heartbeat
+        </a>
       </div>
     </div>
 
-    ${p.isFinalWarning ? `
-    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 14px; margin: 20px 0; border-radius: 4px;">
-      <p style="margin: 0; color: #991b1b; font-weight: bold;">
-        🚨 If you do not submit a heartbeat immediately, the DeadMan Protocol will be triggered and your assets will be distributed to your beneficiaries.
+    <!-- Footer -->
+    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
+      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+        Secured by DeadMan Protocol<br/>
+        End-to-End Encrypted Web3 Inheritance
       </p>
-    </div>` : ''}
-
-    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard"
-       style="display: inline-block; background: ${urgencyColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin: 16px 0;">
-      ✅ Submit Heartbeat Now
-    </a>
-
-    <p style="color: #9ca3af; font-size: 12px; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
-      This is an automated alert from DeadMan Protocol. Do not reply to this email.<br/>
-      If you believe this is an error, please contact support immediately.
-    </p>
+    </div>
   </div>
 </div>`;
 }
@@ -220,7 +229,25 @@ export class HeartbeatCronService {
                                 await this.emailService.sendEmail({
                                     to: user.email,
                                     subject: '🚨 DeadMan Protocol Activated',
-                                    html: `<p>DeadMan Protocol for ${user.walletAddress} has been activated as all heartbeat buffers were exhausted.</p><p>Assets and Key Shares will now be distributed according to your smart contract instructions.</p>`
+                                    html: `
+<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
+  <!-- Premium Card -->
+  <div style="background: #1e293b; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(220, 38, 38, 0.2); overflow: hidden;">
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 2px solid #ef4444; padding: 30px; text-align: center;">
+      <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid #ef4444; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);">🚨</div>
+      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">PROTOCOL ACTIVATED</h1>
+    </div>
+    <div style="padding: 35px 30px;">
+      <p style="font-size: 16px; color: #cbd5e1;">All heartbeat time buffers for wallet <br/><strong style="color: #38bdf8; word-break: break-all;">${user.walletAddress}</strong><br/> have been completely exhausted.</p>
+      <div style="background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444; padding: 16px; margin: 25px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #fecaca; font-size: 14.5px;">Assets and Cryptographic Key Shares are now being irreversibly distributed to your authorized beneficiaries according to your Smart Contract instructions.</p>
+      </div>
+    </div>
+    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
+      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase;">Your legacy has been secured.<br/>DeadMan Protocol</p>
+    </div>
+  </div>
+</div>`
                                 });
                             }
 

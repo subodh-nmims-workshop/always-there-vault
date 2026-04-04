@@ -41,12 +41,32 @@ export class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     const user = this.configService.get<string>('EMAIL_USER');
-    if (!user || user === 'your-email@gmail.com') {
-      console.log('📧 [MOCK EMAIL]');
-      console.log('TO:', options.to);
-      console.log('SUBJECT:', options.subject);
-      console.log('CONTENT:', options.text || 'HTML Content');
-      return true;
+    
+    // If no real email provided, use Ethereal for a REAL preview without credentials
+    if (!user || user.includes('your-email') || user.includes('paste-your-16-digit')) {
+       try {
+         const testAccount = await nodemailer.createTestAccount();
+         const testTransporter = nodemailer.createTransport({
+           host: 'smtp.ethereal.email',
+           port: 587,
+           secure: false,
+           auth: { user: testAccount.user, pass: testAccount.pass }
+         });
+
+         const info = await testTransporter.sendMail({
+           from: `"DeadMan Protocol Test" <${user}>`,
+           to: options.to,
+           subject: options.subject,
+           html: options.html,
+         });
+
+         console.log('📬 REAL TEST MAIL SENT!');
+         console.log('🔗 VIEW PREVIEW HERE:', nodemailer.getTestMessageUrl(info));
+         return true;
+       } catch (err) {
+         console.error('Test account creation failed:', err);
+         return false;
+       }
     }
 
     try {
@@ -182,23 +202,62 @@ export class EmailService {
       to: email,
       subject: 'Assets Released - Action Required',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1152d4;">Assets Released 🔓</h1>
-          <p>Hi ${name},</p>
-          <p>The heartbeat for <strong>${ownerName}</strong> has not been detected within the specified timeframe.</p>
-          <p>As a designated beneficiary, you now have access to <strong>${assetCount} digital asset(s)</strong>.</p>
-          <div style="background: #dbeafe; border-left: 4px solid #1152d4; padding: 16px; margin: 20px 0;">
-            <p style="margin: 0; color: #1e40af;">
-              <strong>Next Steps:</strong> Log in to your account to view and access the released assets.
-            </p>
-          </div>
-          <a href="https://deadmanprotocol.com/beneficiary/assets" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-            Access Assets
-          </a>
-          <p style="color: #666; font-size: 12px; margin-top: 40px;">
-            All assets are encrypted. You'll need the decryption keys provided by the owner.
-          </p>
-        </div>
+<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
+  
+  <!-- Premium Card Container -->
+  <div style="background: #1e293b; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(56, 189, 248, 0.2); overflow: hidden;">
+    
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 2px solid #38bdf8; padding: 30px; text-align: center;">
+      <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid #38bdf8; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);">
+        💎
+      </div>
+      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">
+        VAULT UNLOCKED
+      </h1>
+      <p style="margin: 10px 0 0 0; color: #38bdf8; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+        Assets Released Successfully
+      </p>
+    </div>
+
+    <!-- Body -->
+    <div style="padding: 35px 30px;">
+      <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Greetings <strong>${name}</strong>,</p>
+      <p style="color: #cbd5e1; font-size: 15px;">
+        The DeadMan Protocol heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
+      </p>
+
+      <div style="background: #0f172a; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #334155; text-align: center;">
+        <h3 style="margin: 0 0 10px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Inheritance Granted</h3>
+        <p style="margin: 0; font-size: 28px; font-weight: bold; color: #38bdf8;">
+          ${assetCount} <span style="font-size: 18px; color: #64748b;">Digital Asset(s)</span>
+        </p>
+      </div>
+
+      <div style="background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 16px; margin: 25px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #e0f2fe; font-size: 14.5px;">
+          <strong style="color: #38bdf8;">Authorization Required:</strong> You now hold cryptographic clearance. Access your secure dashboard to decipher and claim the allocated assets.
+        </p>
+      </div>
+
+      <!-- Action Button -->
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/beneficiary/assets"
+           style="display: inline-block; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px rgba(56, 189, 248, 0.3); transition: all 0.3s ease;">
+          Claim Digital Assets
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
+      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+        Secured by DeadMan Protocol<br/>
+        End-to-End Encrypted Proof-of-Trust Distribution
+      </p>
+    </div>
+  </div>
+</div>
       `,
       text: `Hi ${name}, assets from ${ownerName} have been released. You have access to ${assetCount} digital asset(s). Log in to view them.`,
     });

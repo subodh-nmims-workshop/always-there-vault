@@ -15,6 +15,7 @@ export function HeartbeatMonitor() {
   const [heartbeats, setHeartbeats] = useState<any[]>([])
   const [statusInfo, setStatusInfo] = useState<{ status: string; daysUntilDue: number; isOverdue: boolean } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [currentTime, setCurrentTime] = useState(Date.now())
   const { refreshState, state } = useApp()
 
   const [settings, setSettings] = useState({
@@ -33,6 +34,11 @@ export function HeartbeatMonitor() {
     } else {
       setIsLoading(false)
     }
+
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 1000)
+    return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -185,7 +191,7 @@ export function HeartbeatMonitor() {
 
   const getDaysUntilDueDisplay = (): { value: number; unit: string } => {
     const nextDue = getNextHeartbeatDue()
-    const diffMs = nextDue.getTime() - Date.now()
+    const diffMs = nextDue.getTime() - currentTime
     const isDemo = settings.heartbeatInterval < 7
 
     if (isDemo) {
@@ -202,7 +208,7 @@ export function HeartbeatMonitor() {
     const isDemo = settings.heartbeatInterval < 7
     const graceMs = (isDemo ? settings.gracePeriod * 60 : settings.gracePeriod * 24 * 60 * 60) * 1000
     const graceDue = nextDue.getTime() + graceMs
-    const diffMs = graceDue - Date.now()
+    const diffMs = graceDue - currentTime
 
     if (isDemo) {
       const seconds = Math.max(0, Math.ceil(diffMs / 1000))
@@ -220,7 +226,7 @@ export function HeartbeatMonitor() {
       : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
 
     const nextDue = getNextHeartbeatDue()
-    const msLeft = nextDue.getTime() - Date.now()
+    const msLeft = nextDue.getTime() - currentTime
 
     if (msLeft < 0) return 100;
     const progress = ((intervalMs - msLeft) / intervalMs) * 100;
