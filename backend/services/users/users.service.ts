@@ -104,4 +104,12 @@ export class UsersService {
             
         return { success: true, message: `Successfully migrated Vault to ${targetEngine.toUpperCase()} engine.` };
     }
+
+    async lockAccount(userId: string): Promise<void> {
+        await this.db.update(users).set({ isLocked: true }).where(eq(users.id, userId));
+    }
+
+    async unlockAccount(userId: string): Promise<void> {
+        await this.db.update(users).set({ isLocked: false }).where(eq(users.id, userId));
+    }
 }

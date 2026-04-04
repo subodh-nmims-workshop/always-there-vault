@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 
@@ -23,5 +23,11 @@ export class UsersController {
     @ApiOperation({ summary: 'Get user profile and storage usage' })
     async getProfile(@Query('walletAddress') walletAddress: string) {
         return this.usersService.findUserByWallet(walletAddress);
+    }
+
+    @Post('profile')
+    @ApiOperation({ summary: 'Create or update user profile' })
+    async createProfile(@Query('walletAddress') walletAddress: string, @Body('email') email?: string) {
+        return this.usersService.createOrUpdateUser(walletAddress, email);
     }
 }

@@ -76,22 +76,36 @@ export function HeartbeatMonitor() {
     setIsRecording(true)
 
     try {
-      // DECENTRALIZED SMART CONTRACT EXECUTION
-      const chainResponse = await submitHeartbeat()
-
-      if (!chainResponse.success) {
-        throw new Error(chainResponse.error || 'Smart Contract execution reverted')
+      // DECENTRALIZED SMART CONTRACT EXECUTION (Attempt)
+      try {
+        const chainResponse = await submitHeartbeat()
+        if (chainResponse.success) {
+          toast.success('On-chain Heartbeat Logged', {
+            description: `Tx: ${chainResponse.txHash?.substring(0, 10)}...`
+          })
+        } else {
+          // Blockchain failed but we still want to record for demo/email purposes
+          console.warn('Blockchain log failed, falling back to centralized mode:', chainResponse.error)
+          toast.info('Blockchain Sync Error', {
+            description: 'Network fee issue. Recording proof via Protocol matrix instead.'
+          })
+        }
+      } catch (e) {
+        console.warn('Blockchain exception:', e)
       }
 
+      // ALWAYS RECORD ON CENTRALIZED DATABASE for Email/Cron monitoring 
+      // This ensures the demo still works even if the wallet has 0 ETH
       const payload: HeartbeatPayload = {
-        walletAddress,
+        walletAddress: walletAddress || '0x0000000000000000000000000000000000000000',
         method: 'wallet_signature',
-        signature: chainResponse.txHash || '0x' + Array.from({ length: 128 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+        signature: 'manual_override_demo',
         ipAddress: '127.0.0.1'
       }
-      const response = await recordHeartbeat(payload)
 
-      if (response.success) {
+      const res = await recordHeartbeat(payload)
+
+      if (res.success) {
         await fetchLiveStatus()
         await refreshState()
         loadHeartbeatHistory() // Reload history
@@ -161,24 +175,55 @@ export function HeartbeatMonitor() {
   }
 
   const getNextHeartbeatDue = (): Date => {
-    if (!lastHeartbeat) return new Date(Date.now() + settings.heartbeatInterval * 24 * 60 * 60 * 1000)
-    return new Date(lastHeartbeat.getTime() + settings.heartbeatInterval * 24 * 60 * 60 * 1000)
+    const isDemo = settings.heartbeatInterval < 7;
+    const ms = isDemo
+      ? settings.heartbeatInterval * 60 * 1000
+      : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
+    if (!lastHeartbeat) return new Date(Date.now() + ms);
+    return new Date(lastHeartbeat.getTime() + ms);
   }
 
-  const getDaysUntilDueDisplay = (): number => {
-    if (statusInfo && typeof statusInfo.daysUntilDue === 'number' && !isNaN(statusInfo.daysUntilDue)) {
-      return statusInfo.daysUntilDue
-    }
+  const getDaysUntilDueDisplay = (): { value: number; unit: string } => {
     const nextDue = getNextHeartbeatDue()
-    const days = Math.ceil((nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    return isNaN(days) ? 0 : days
+    const diffMs = nextDue.getTime() - Date.now()
+    const isDemo = settings.heartbeatInterval < 7
+
+    if (isDemo) {
+      const seconds = Math.max(0, Math.ceil(diffMs / 1000))
+      return { value: seconds, unit: 'Seconds' }
+    }
+
+    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+    return { value: days, unit: 'Days' }
+  }
+
+  const getGracePeriodLeft = (): { value: number; unit: string } => {
+    const nextDue = getNextHeartbeatDue()
+    const isDemo = settings.heartbeatInterval < 7
+    const graceMs = (isDemo ? settings.gracePeriod * 60 : settings.gracePeriod * 24 * 60 * 60) * 1000
+    const graceDue = nextDue.getTime() + graceMs
+    const diffMs = graceDue - Date.now()
+
+    if (isDemo) {
+      const seconds = Math.max(0, Math.ceil(diffMs / 1000))
+      return { value: seconds, unit: 'Seconds' }
+    }
+
+    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+    return { value: days, unit: 'Days' }
   }
 
   const calculateProgress = () => {
-    const totalDays = settings.heartbeatInterval;
-    const daysLeft = getDaysUntilDueDisplay();
-    if (daysLeft < 0) return 100;
-    const progress = ((totalDays - daysLeft) / totalDays) * 100;
+    const isDemo = settings.heartbeatInterval < 7;
+    const intervalMs = isDemo
+      ? settings.heartbeatInterval * 60 * 1000
+      : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
+
+    const nextDue = getNextHeartbeatDue()
+    const msLeft = nextDue.getTime() - Date.now()
+
+    if (msLeft < 0) return 100;
+    const progress = ((intervalMs - msLeft) / intervalMs) * 100;
     return Math.min(Math.max(progress, 0), 100);
   }
 
@@ -192,8 +237,12 @@ export function HeartbeatMonitor() {
   }
 
   const heartbeatDisplay = getHeartbeatDisplayState()
-  const daysUntilDue = getDaysUntilDueDisplay()
+  const dueInfo = getDaysUntilDueDisplay()
+  const graceInfo = getGracePeriodLeft()
+  const daysUntilDue = dueInfo.value
+  const gracePeriodLeft = graceInfo.value
   const progress = calculateProgress()
+  const isDemo = settings.heartbeatInterval < 7
 
   return (
     <div className="space-y-6 w-full max-w-4xl mx-auto font-sans">
@@ -241,7 +290,7 @@ export function HeartbeatMonitor() {
               </div>
               <div className="flex-1">
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Interval</p>
-                <p className="text-white font-bold text-lg">{settings.heartbeatInterval}D Recurrence</p>
+                <p className="text-white font-bold text-lg">{settings.heartbeatInterval} {settings.heartbeatInterval < 7 ? 'Min' : 'D'} Recurrence</p>
               </div>
             </div>
 
@@ -255,7 +304,9 @@ export function HeartbeatMonitor() {
                 <p className="text-white font-bold text-lg">{lastHeartbeat ? lastHeartbeat.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}</p>
                 {lastHeartbeat && (
                   <p className="text-slate-500 text-xs mt-1">
-                    Next due: {new Date(lastHeartbeat.getTime() + settings.heartbeatInterval * 24 * 60 * 60 * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    Next due: {settings.heartbeatInterval < 7
+                      ? new Date(lastHeartbeat.getTime() + settings.heartbeatInterval * 60 * 1000).toLocaleTimeString()
+                      : new Date(lastHeartbeat.getTime() + settings.heartbeatInterval * 24 * 60 * 60 * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </p>
                 )}
               </div>
@@ -286,8 +337,8 @@ export function HeartbeatMonitor() {
               </svg>
 
               <div className="text-center z-10 relative">
-                <p className={`text-6xl font-black text-white drop-shadow-[0_0_10px_theme(colors.${heartbeatDisplay.color}.500/50)] tracking-tighter`}>{Math.max(0, daysUntilDue)}</p>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Days Until Next</p>
+                <p className={`text-6xl font-black text-white drop-shadow-[0_0_10px_theme(colors.${heartbeatDisplay.color}.500/50)] tracking-tighter`}>{dueInfo.value}</p>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{dueInfo.unit} Until Next</p>
                 <p className="text-slate-500 text-[10px] font-medium mt-0.5">Heartbeat Due</p>
               </div>
             </div>
@@ -295,24 +346,40 @@ export function HeartbeatMonitor() {
         </div>
 
         <AnimatePresence>
-          {daysUntilDue <= 7 && daysUntilDue > 0 && (
+          {daysUntilDue <= (isDemo ? 60 : 7) && daysUntilDue > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
                 <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_theme(colors.amber.500/30)] animate-pulse">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
                 </div>
-                <p className="text-sm font-medium text-amber-100">Protocol requires signature in <span className="text-amber-400 font-bold underline">{daysUntilDue} days</span>.</p>
+                <p className="text-sm font-medium text-amber-100">Protocol requires signature in <span className="text-amber-400 font-bold underline">{dueInfo.value} {dueInfo.unit.toLowerCase()}</span>.</p>
               </div>
             </motion.div>
           )}
 
-          {daysUntilDue <= 0 && (
+          {daysUntilDue <= 0 && gracePeriodLeft > 0 && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
+              <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
+                <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_theme(colors.amber.500/30)] animate-pulse">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-amber-100 uppercase tracking-tight">Rescue Window (Grace Period) Active</p>
+                  <p className="text-xs font-medium text-amber-200 mt-1">
+                    Protocol trigger in <span className="text-amber-400 font-bold text-base underline">{graceInfo.value} {graceInfo.unit.toLowerCase()}</span>. Sign now to abort.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {daysUntilDue <= 0 && gracePeriodLeft <= 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
                 <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_theme(colors.red.500/30)] animate-pulse">
                   <ShieldAlert className="w-5 h-5 text-red-500" />
                 </div>
-                <p className="text-sm font-medium text-red-100">Critical: Heartbeat Overdue. Sign immediately to prevent protocol trigger.</p>
+                <p className="text-sm font-medium text-red-100 italic">DeadMan Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
               </div>
             </motion.div>
           )}
@@ -454,6 +521,20 @@ export function HeartbeatMonitor() {
 
               <div className="space-y-6 mb-8">
                 <div className="space-y-3">
+                  <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Alert Notification Email</label>
+                  <p className="text-xs text-slate-500">Protocol warnings will be sent here.</p>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    defaultValue={typeof window !== 'undefined' ? localStorage.getItem('dwp_user_email') || '' : ''}
+                    onChange={(e) => {
+                      if (typeof window !== 'undefined') localStorage.setItem('dwp_user_email', e.target.value)
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-3">
                   <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Heartbeat Interval</label>
                   <p className="text-xs text-slate-500">How frequently you must check in.</p>
                   <select
@@ -461,11 +542,18 @@ export function HeartbeatMonitor() {
                     value={settings.heartbeatInterval}
                     onChange={(e) => setSettings(prev => ({ ...prev, heartbeatInterval: parseInt(e.target.value) }))}
                   >
-                    <option value={7}>7 days (Weekly)</option>
-                    <option value={14}>14 days (Bi-weekly)</option>
-                    <option value={30}>30 days (Monthly)</option>
-                    <option value={60}>60 days (Bi-monthly)</option>
-                    <option value={90}>90 days (Quarterly)</option>
+                    <optgroup label="── Demo / Testing ──">
+                      <option value={1}>⚡ 1 Minute (Demo)</option>
+                      <option value={2}>⚡ 2 Minutes (Demo)</option>
+                      <option value={5}>⚡ 5 Minutes (Demo) </option>
+                    </optgroup>
+                    <optgroup label="── Production ──">
+                      <option value={7}>7 days (Weekly)</option>
+                      <option value={14}>14 days (Bi-weekly)</option>
+                      <option value={30}>30 days (Monthly)</option>
+                      <option value={60}>60 days (Bi-monthly)</option>
+                      <option value={90}>90 days (Quarterly)</option>
+                    </optgroup>
                   </select>
                 </div>
 
@@ -477,10 +565,17 @@ export function HeartbeatMonitor() {
                     value={settings.gracePeriod}
                     onChange={(e) => setSettings(prev => ({ ...prev, gracePeriod: parseInt(e.target.value) }))}
                   >
-                    <option value={7}>7 days Rescue Window</option>
-                    <option value={14}>14 days Rescue Window</option>
-                    <option value={30}>30 days Rescue Window</option>
-                    <option value={60}>60 days Rescue Window</option>
+                    <optgroup label="── Demo / Testing ──">
+                      <option value={1}>1 Minute Rescue Window (Demo)</option>
+                      <option value={2}>2 Minute Rescue Window (Demo)</option>
+                      <option value={3}>3 Minute Rescue Window (Demo)</option>
+                    </optgroup>
+                    <optgroup label="── Production ──">
+                      <option value={7}>7 days Rescue Window</option>
+                      <option value={14}>14 days Rescue Window</option>
+                      <option value={30}>30 days Rescue Window</option>
+                      <option value={60}>60 days Rescue Window</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>

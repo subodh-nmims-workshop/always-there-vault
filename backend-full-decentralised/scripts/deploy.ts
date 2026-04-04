@@ -42,7 +42,7 @@ async function main() {
   const operationalWallet = deployer.address; // Change this to your operational wallet
   
   const SubscriptionManager = await ethers.getContractFactory("SubscriptionManager");
-  const subscriptionManager = await SubscriptionManager.deploy(profitWallet, operationalWallet);
+  const subscriptionManager = await SubscriptionManager.deploy();
   await subscriptionManager.waitForDeployment();
   const subscriptionAddress = await subscriptionManager.getAddress();
   console.log("✅ SubscriptionManager deployed to:", subscriptionAddress);

@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { LoggerService } from '../services/logger/logger.service';
 import { RateLimitMiddleware } from '../middleware/rate-limit.middleware';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -19,10 +20,52 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // Security Headers using Helmet for Best-In-Class protection
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'", "https://api.deadman-protocol.com", "http://localhost:*"],
+      },
+    },
+    xFrameOptions: { action: "deny" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  }));
+
+  // Extra hardening headers
+  app.use((req, res, next) => {
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    next();
+  });
+
+  // CORS with strict origins
+  const allowedOrigins = [
+    'https://app.deadman-protocol.com',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:7000',
+    'http://localhost:8081',
+    process.env.FRONTEND_URL,
+    process.env.MOBILE_URL,
+    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : []),
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: (origin, callback) => callback(null, true),
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.some(ao => origin.includes(ao) || ao === '*')) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked request from origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+    maxAge: 86400 // 24 hours
   });
 
   // Rate limiting

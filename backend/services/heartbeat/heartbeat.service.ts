@@ -12,7 +12,7 @@ export class HeartbeatService {
   ) { }
 
   async recordHeartbeat(walletAddress: string, method: string = 'dashboard'): Promise<any> {
-    const user = await this.usersService.findUserByWallet(walletAddress);
+    const user = await this.usersService.createOrUpdateUser(walletAddress);
     
     // Update config
     await this.db.update(heartbeatConfigs)
@@ -37,27 +37,58 @@ export class HeartbeatService {
     });
 
     if (!config) {
-      return { status: 'active', daysUntilDue: 999 }; // Default or unconfigured
+      return { 
+        status: 'active', 
+        daysUntilDue: 999, 
+        minutesUntilDue: 0,
+        interval: 30,
+        gracePeriod: 7,
+        lastHeartbeat: null
+      };
     }
 
     const lastCheck = config.lastHeartbeat || config.createdAt;
     const now = new Date();
-    const diffDays = Math.floor((now.getTime() - lastCheck.getTime()) / (1000 * 60 * 60 * 24));
+    const isDemo = config.intervalDays < 7;
+    const timeUnit = isDemo ? (1000 * 60) : (1000 * 60 * 60 * 24);
+    
+    const diff = Math.floor((now.getTime() - lastCheck.getTime()) / timeUnit);
     
     const interval = config.intervalDays;
     const grace = config.gracePeriodDays;
 
-    if (diffDays > interval + grace) {
-      return { status: 'overdue', daysUntilDue: interval + grace - diffDays };
-    } else if (diffDays > interval) {
-      return { status: 'grace_period', daysUntilDue: interval + grace - diffDays };
+    const common = {
+      interval,
+      gracePeriod: grace,
+      lastHeartbeat: config.lastHeartbeat
+    };
+
+    if (diff > interval + grace) {
+      return { 
+        status: 'overdue', 
+        daysUntilDue: isDemo ? 0 : interval + grace - diff,
+        minutesUntilDue: isDemo ? interval + grace - diff : 0,
+        ...common
+      };
+    } else if (diff > interval) {
+      return { 
+        status: 'grace_period', 
+        daysUntilDue: isDemo ? 0 : interval + grace - diff,
+        minutesUntilDue: isDemo ? interval + grace - diff : 0,
+        ...common
+      };
     } else {
-      return { status: 'active', daysUntilDue: interval - diffDays };
+      return { 
+        status: 'active', 
+        daysUntilDue: isDemo ? 0 : interval - diff,
+        minutesUntilDue: isDemo ? interval - diff : 0,
+        ...common
+      };
     }
   }
 
   async updateConfig(walletAddress: string, interval: number, grace: number, buffer: number) {
-    const user = await this.usersService.findUserByWallet(walletAddress);
+    const user = await this.usersService.createOrUpdateUser(walletAddress);
     
     const [config] = await this.db.insert(heartbeatConfigs).values({
       userId: user.id,

@@ -13,6 +13,7 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
+  Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
@@ -56,10 +57,8 @@ export class AssetsController {
     file: Express.Multer.File,
     @Query('walletAddress') walletAddress: string,
     @Query('folderId') folderId?: string,
-    @Query('keyId') keyId?: string,
-    @Query('iv') iv?: string,
-  ): Promise<{ ipfsHash: string }> {
-    return this.assetsService.uploadFile(file, walletAddress, folderId, keyId, iv);
+  ): Promise<any> {
+    return this.assetsService.uploadFile(file, walletAddress, folderId);
   }
 
   @Post()
@@ -101,9 +100,11 @@ export class AssetsController {
   async createFolder(
     @Body('name') name: string,
     @Body('walletAddress') wallet: string,
-    @Body('parentId') parentId?: string
+    @Body('parentId') parentId?: string,
+    @Body('id') id?: string,
+    @Body('beneficiaries') beneficiaries?: string[]
   ) {
-    return this.assetsService.createFolder(name, wallet, parentId);
+    return this.assetsService.createFolder(name, wallet, parentId, id, beneficiaries);
   }
 
   @Get('contents')
@@ -142,5 +143,15 @@ export class AssetsController {
   @ApiOperation({ summary: 'Retrieve key distribution for decryption' })
   async getKey(@Param('id') id: string) {
     return this.assetsService.getKeyDistribution(id);
+  }
+  @Patch('folders/:id')
+  @ApiOperation({ summary: 'Update folder details (rename, move, etc)' })
+  async updateFolder(
+    @Param('id') id: string,
+    @Body('name') name?: string,
+    @Body('parentId') parentId?: string,
+    @Body('beneficiaries') beneficiaries?: string[]
+  ) {
+    return this.assetsService.updateFolder(id, { name, parentId, beneficiaries });
   }
 }

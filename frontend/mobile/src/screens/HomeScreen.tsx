@@ -8,6 +8,7 @@ import {
   StatusBar,
   Dimensions,
 } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -99,12 +100,12 @@ const HomeScreen = ({ navigation }: any) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.tabTitle}>{t('nav_dashboard').toUpperCase()}</Text>
+        <Animated.Text entering={FadeInDown.delay(100).duration(800)} style={styles.tabTitle}>{t('nav_dashboard').toUpperCase()}</Animated.Text>
 
         {/* TOP STATS ROW */}
         <View style={styles.topStatsRow}>
           {/* Vault Health */}
-          <View style={styles.statCard}>
+          <Animated.View entering={FadeInUp.delay(300).duration(800)} style={styles.statCard}>
              <View style={styles.statLabelRow}>
                <Text style={styles.statLabel}>{t('vault_health')}</Text>
              </View>
@@ -132,10 +133,10 @@ const HomeScreen = ({ navigation }: any) => {
                    </View>
                 </View>
              </View>
-          </View>
+          </Animated.View>
 
           {/* Asset Stat Card */}
-          <View style={styles.statCardSmall}>
+          <Animated.View entering={FadeInUp.delay(500).duration(800)} style={styles.statCardSmall}>
              <Text style={styles.statLabel}>Encrypted Assets</Text>
              <View style={styles.statValueRow}>
                <Text style={styles.statValueLarge}>{stats.assets}</Text>
@@ -145,7 +146,7 @@ const HomeScreen = ({ navigation }: any) => {
                   ))}
                </View>
              </View>
-          </View>
+          </Animated.View>
         </View>
 
         {/* TIMELINE SECTION */}

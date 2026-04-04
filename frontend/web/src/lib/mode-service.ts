@@ -134,6 +134,7 @@ class ModeService {
             'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
           },
           body: JSON.stringify({
+            id: asset.id,
             name: asset.name,
             type: asset.type,
             encryptedData: asset.encryptedData,
@@ -142,7 +143,8 @@ class ModeService {
             ipfsHash: asset.ipfsHash,
             beneficiaries: asset.beneficiaries,
             size: asset.size,
-            mimeType: asset.mimeType
+            mimeType: asset.mimeType,
+            folderId: asset.folderId
           })
         })
 

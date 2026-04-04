@@ -22,4 +22,12 @@ export class AuthController {
     async verifySignature(@Body() dto: VerifySignatureDto) {
         return this.authService.verifySignature(dto.walletAddress, dto.message, dto.signature);
     }
+
+    @Post('mfa/verify')
+    @ApiOperation({ summary: 'Verify MFA code after signature' })
+    @ApiResponse({ status: 200, description: 'MFA verified successfully' })
+    @ApiResponse({ status: 401, description: 'MFA failed' })
+    async verifyMFA(@Body() dto: { mfaToken: string; code: string }) {
+        return this.authService.verifyMFA(dto.mfaToken, dto.code);
+    }
 }

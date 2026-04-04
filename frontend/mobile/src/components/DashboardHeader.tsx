@@ -7,21 +7,27 @@ interface DashboardHeaderProps {
   walletAddress: string;
 }
 
+import { LinearGradient } from 'expo-linear-gradient';
+
 const DashboardHeader = ({ walletAddress }: DashboardHeaderProps) => {
   const shortAddress = walletAddress 
-    ? `${walletAddress.slice(0, 18)}...${walletAddress.slice(-4)}` 
+    ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}` 
     : '0x...';
 
   return (
     <View style={styles.container}>
       {/* Account Badge */}
       <View style={styles.card}>
+        <LinearGradient 
+          colors={['rgba(255,255,255,0.05)', 'transparent']} 
+          style={StyleSheet.absoluteFill} 
+        />
         <View style={styles.accountRow}>
           <View style={styles.iconBox}>
-            <Key size={14} color={COLORS.primary} />
+            <Key size={14} color={COLORS.primary} strokeWidth={2.5} />
           </View>
           <View>
-            <Text style={styles.label}>ENCRYPTED VAULT INSTANCE</Text>
+            <Text style={styles.label}>KERNEL INSTANCE</Text>
             <View style={styles.addressRow}>
               <Text style={styles.address}>{shortAddress}</Text>
             </View>
@@ -31,16 +37,19 @@ const DashboardHeader = ({ walletAddress }: DashboardHeaderProps) => {
 
       {/* Storage Tier Badge */}
       <TouchableOpacity style={styles.nodeCard}>
+        <LinearGradient 
+          colors={['rgba(16, 185, 129, 0.05)', 'transparent']} 
+          style={StyleSheet.absoluteFill} 
+        />
         <View style={styles.nodeIconBox}>
-          <Shield size={16} color={COLORS.primary} />
+          <Shield size={16} color={COLORS.accent} strokeWidth={2.5} />
         </View>
         <View style={styles.nodeInfo}>
-          <View style={styles.tierRow}>
-            <Text style={styles.tierLabel}>STORAGE TIER</Text>
-            <View style={styles.activeDot} />
-            <Text style={styles.activeLabel}>ACTIVE</Text>
-          </View>
-          <Text style={styles.nodeType}>Centralized Node</Text>
+            <Text style={styles.tierLabel}>NETWORK STATUS</Text>
+            <View style={styles.statusRow}>
+                <View style={[styles.activeDot, { backgroundColor: COLORS.accent }]} />
+                <Text style={styles.nodeType}>ENCRYPTED</Text>
+            </View>
         </View>
         <ChevronDown size={14} color={COLORS.textDim} />
       </TouchableOpacity>
@@ -122,10 +131,11 @@ const styles = StyleSheet.create({
   nodeInfo: {
     flex: 1,
   },
-  tierRow: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginTop: 2,
   },
   tierLabel: {
     color: COLORS.textDim,
@@ -133,15 +143,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.inter.bold,
   },
   activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: COLORS.accent,
-  },
-  activeLabel: {
-    color: COLORS.accent,
-    fontSize: 7,
-    fontFamily: FONTS.inter.bold,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   nodeType: {
     color: COLORS.text,

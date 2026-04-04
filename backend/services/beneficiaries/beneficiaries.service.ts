@@ -2,12 +2,14 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { beneficiaries, type Beneficiary, type NewBeneficiary } from '../../src/db/schema/beneficiaries';
 import { UsersService } from '../users/users.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class BeneficiariesService {
   constructor(
     @Inject('DRIZZLE_DB') private db: any,
     private usersService: UsersService,
+    private emailService: EmailService,
   ) { }
 
   async createBeneficiary(createData: any): Promise<Beneficiary> {
@@ -20,6 +22,16 @@ export class BeneficiariesService {
       sharePercentage: createData.sharePercentage || 0,
       relationship: createData.relationship,
     } as NewBeneficiary).returning();
+
+    // Notify beneficiary via email
+    if (beneficiary.email) {
+      this.emailService.sendBeneficiaryAddedEmail(
+        beneficiary.email,
+        beneficiary.name,
+        user.name || 'A user'
+      ).catch(err => console.error('Failed to send beneficiary email:', err));
+    }
+
     return beneficiary;
   }
 

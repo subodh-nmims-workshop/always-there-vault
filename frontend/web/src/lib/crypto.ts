@@ -75,20 +75,18 @@ class WebCryptoService {
   }
 
   /**
-   * Encrypt data using native AES-256-GCM
+   * Encrypt binary data (Uint8Array) using native AES-256-GCM
    */
-  async encryptData(data: string, key?: string): Promise<EncryptionResult> {
+  async encryptBinary(data: Uint8Array, key?: string): Promise<EncryptionResult> {
     try {
       const encryptionKeyHex = key || this.generateEncryptionKey();
       const cryptoKey = await this.getCryptoKey(encryptionKeyHex);
 
-      const iv = crypto.getRandomValues(new Uint8Array(12)); // 96 bits IV for GCM
-      const encodedData = new TextEncoder().encode(data);
-
+      const iv = crypto.getRandomValues(new Uint8Array(12));
       const encryptedBuffer = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv },
         cryptoKey,
-        encodedData
+        data.buffer as ArrayBuffer
       );
 
       const encryptedDataHex = this.uint8ArrayToHex(encryptedBuffer);
@@ -102,8 +100,16 @@ class WebCryptoService {
         timestamp: Date.now()
       };
     } catch (error) {
-      throw new Error(`Encryption failed: ${error}`);
+      throw new Error(`Binary encryption failed: ${error}`);
     }
+  }
+
+  /**
+   * Encrypt data using native AES-256-GCM
+   */
+  async encryptData(data: string, key?: string): Promise<EncryptionResult> {
+    const encodedData = new TextEncoder().encode(data);
+    return this.encryptBinary(encodedData, key);
   }
 
   /**
@@ -121,9 +127,32 @@ class WebCryptoService {
         encryptedData as any
       );
 
-      return new TextDecoder().decode(decryptedBuffer);
+      try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(decryptedBuffer);
+      } catch (e) {
+        return this.uint8ArrayToHex(decryptedBuffer);
+      }
     } catch (error) {
       throw new Error(`Decryption failed: ${error}`);
+    }
+  }
+
+  /**
+   * Decrypt binary data — returns raw ArrayBuffer (for images, files)
+   */
+  async decryptBinary(encryptedDataHex: string, key: string, ivHex: string): Promise<ArrayBuffer> {
+    try {
+      const cryptoKey = await this.getCryptoKey(key);
+      const iv = this.hexToUint8Array(ivHex);
+      const encryptedData = this.hexToUint8Array(encryptedDataHex);
+
+      return await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv as any },
+        cryptoKey,
+        encryptedData as any
+      );
+    } catch (error) {
+      throw new Error(`Binary decryption failed: ${error}`);
     }
   }
 

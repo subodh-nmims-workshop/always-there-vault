@@ -59,4 +59,33 @@ export class IpfsService {
             throw new InternalServerErrorException('Failed to upload encrypted asset to decentralized storage.');
         }
     }
+
+    async uploadBuffer(buffer: Buffer, filename: string): Promise<{ cid: string; size: number }> {
+        if (!this.pinataApiKey || !this.pinataSecretApiKey) {
+            this.logger.warn('Mock IPFS Upload: returning a simulated CID.');
+            const cid = `bafybei_buffer_${Math.random().toString(36).substring(2, 12)}`;
+            return { cid, size: buffer.length };
+        }
+
+        try {
+            this.logger.log(`Uploading buffer ${filename} to IPFS...`);
+            const formData = new FormData();
+            formData.append('file', buffer, { filename });
+            
+            const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+                headers: {
+                    'pinata_api_key': this.pinataApiKey,
+                    'pinata_secret_api_key': this.pinataSecretApiKey,
+                    ...formData.getHeaders(),
+                },
+                maxBodyLength: Infinity,
+            });
+
+            const cid = response.data.IpfsHash;
+            return { cid, size: response.data.PinSize || buffer.length };
+        } catch (error) {
+            this.logger.error('Failed to upload buffer to IPFS', error.message);
+            throw new InternalServerErrorException('Failed to upload encrypted buffer to IPFS.');
+        }
+    }
 }

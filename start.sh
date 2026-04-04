@@ -43,9 +43,18 @@ port_in_use() { (echo > /dev/tcp/127.0.0.1/"$1") >/dev/null 2>&1; }
 do_stop() {
     echo -e "\n${YELLOW}${BOLD}🛑 CLEANING ENVIRONMENT...${NC}"
     sudo pkill -9 -f "ngrok" 2>/dev/null || true
+    sudo pkill -9 -f "localtunnel" 2>/dev/null || true
     pkill -9 -f "ngrok" 2>/dev/null || true
+    pkill -9 -f "localtunnel" 2>/dev/null || true
     pkill -9 -f "expo" 2>/dev/null || true
     pkill -9 -f "metro" 2>/dev/null || true
+    pkill -9 -f "next-dev" 2>/dev/null || true
+    pkill -9 -f "nest" 2>/dev/null || true
+    pkill -9 -f "hardhat" 2>/dev/null || true
+    pkill -9 -p $(lsof -t -i :7000) 2>/dev/null || true
+    pkill -9 -p $(lsof -t -i :7001) 2>/dev/null || true
+    pkill -9 -p $(lsof -t -i :8545) 2>/dev/null || true
+    sudo docker compose down 2>/dev/null || true
 }
 
 do_status() {
@@ -71,8 +80,12 @@ do_start() {
     trap 'do_stop; exit' SIGINT SIGTERM
     print_banner
     
-    # Load .env
-    [ -f "$ROOT/.env" ] && export $(grep -v '^#' "$ROOT/.env" | xargs)
+    # Load .env safely (handling spaces in values)
+    if [ -f "$ROOT/.env" ]; then
+        set -a
+        source "$ROOT/.env"
+        set +a
+    fi
 
     step "1" "Igniting Docker Core Services..."
     sudo docker compose up -d
@@ -89,19 +102,31 @@ do_start() {
         pkill -9 -f "ngrok" 2>/dev/null || true
         sleep 2
         
+        # Try Ngrok
         info "Spawning Ngrok Agent..."
         ngrok http 8081 --log=stdout --authtoken "$NGROK_AUTHTOKEN" > "$ROOT/logs/ngrok.log" 2>&1 &
-        sleep 8
+        sleep 5
         
         # Get Tunnel URL (Safe extraction)
         TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o 'https://[^"]*ngrok-free.app' | head -n 1)
         
         if [ ! -z "$TUNNEL_URL" ]; then
-            ok "GLOBAL TUNNEL ACTIVE: $TUNNEL_URL"
+            ok "GLOBAL TUNNEL ACTIVE (NGROK): $TUNNEL_URL"
             EXPO_PACKAGER_PROXY_URL="$TUNNEL_URL" npx expo start --localhost --clear
         else
-            warn "Bypass failed. Falling back to default tunnel..."
-            npx expo start --tunnel --clear
+            warn "Ngrok is blocked or failed. Trying Localtunnel..."
+            # Use specific subdomain to keep consistent across restarts
+            npx -y localtunnel --port 8081 > "$ROOT/logs/lt.log" 2>&1 &
+            sleep 8
+            LT_URL=$(grep -o 'https://[^ ]*' "$ROOT/logs/lt.log" | head -n 1)
+            
+            if [ ! -z "$LT_URL" ]; then
+                ok "GLOBAL TUNNEL ACTIVE (LT): $LT_URL"
+                EXPO_PACKAGER_PROXY_URL="$LT_URL" npx expo start --localhost --clear
+            else
+                warn "All Tunnels FAILED. Switching to LAN Mode..."
+                npx expo start --host lan --clear
+            fi
         fi
     else
         tail -f "$ROOT/logs/backend.log"

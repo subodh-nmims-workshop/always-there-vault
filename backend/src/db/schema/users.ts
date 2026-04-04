@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, bigint, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, bigint, timestamp, jsonb, boolean, text } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -14,7 +14,20 @@ export const users = pgTable('users', {
   // Storage Engine
   storageEngine: varchar('storage_engine', { length: 20 }).notNull().default('cloud'),
   isMigrating: boolean('is_migrating').notNull().default(false),
+  isLocked: boolean('is_locked').notNull().default(false),
   
+  // Security
+  mfaSecret: varchar('mfa_secret', { length: 255 }),
+  mfaEnabled: boolean('mfa_enabled').notNull().default(false),
+  
+  // Advanced Security (2FA + Encryption At Rest)
+  twoFactorSecret: text('two_factor_secret'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  recoveryCodes: text('recovery_codes'), // Encrypted JSON array
+  
+  encryptedEmail: text('encrypted_email'),
+  encryptedWallet: text('encrypted_wallet'),
+
   // Preferences
   preferences: jsonb('preferences').default({}),
   

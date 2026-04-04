@@ -31,7 +31,7 @@ services:
     ports:
       - "7000:7000"
     environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://backend:7001
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:7001
       - NEXT_PUBLIC_CHAIN_ID=31337
       - NEXT_PUBLIC_RPC_URL=http://blockchain:8545
       - NODE_ENV=production
@@ -57,9 +57,17 @@ services:
       - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/lastwish}
       - RPC_URL=http://blockchain:8545
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_SECURE=${EMAIL_SECURE:-false}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - SMTP_FROM=${SMTP_FROM}
+      - MONGO_URI=mongodb://admin:password@mongodb:27017/digital-will?authSource=admin
     depends_on:
       - postgres
       - blockchain
+      - mongodb
     networks:
       - protocol_net
 

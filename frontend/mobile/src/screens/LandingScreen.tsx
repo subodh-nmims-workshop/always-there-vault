@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Dimensions,
   ScrollView,
   StatusBar,
@@ -16,14 +15,26 @@ import {
   Shield, 
   Zap, 
   Lock, 
-  Globe, 
   ChevronRight, 
   CheckCircle, 
   X,
   Cpu,
-  Fingerprint,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  Disc,
+  Fingerprint
 } from 'lucide-react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withRepeat, 
+  withTiming, 
+  withSequence,
+  withDelay,
+  Easing,
+  FadeInDown,
+  FadeInUp
+} from 'react-native-reanimated';
 import { COLORS, FONTS, RADIUS, SHADOWS, GAPS, LAYOUT } from '../theme';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -38,7 +49,7 @@ const SECTIONS = [
     id: 'features',
     title: 'CORE PROTOCOL',
     icon: Zap,
-    color: COLORS.primary,
+    color: '#3b82f6',
     items: [
       { t: 'Trustless Recovery', d: 'Automated transfer logic triggered by chain-verified inactivity.' },
       { t: 'Decentralized Vault', d: 'Encrypted payloads sharded across global Storacha nodes.' },
@@ -49,7 +60,7 @@ const SECTIONS = [
     id: 'security',
     title: 'CRYPTO SECURITY',
     icon: Lock,
-    color: COLORS.accent,
+    color: '#10b981',
     items: [
       { t: 'AES-256-GCM', d: 'Military-grade encryption before any byte leaves your local buffer.' },
       { t: 'Shamir Threshold', d: 'Your master keys are shattered into shards stored independently.' },
@@ -58,107 +69,163 @@ const SECTIONS = [
   }
 ];
 
+const GridBackground = () => {
+    return (
+        <View style={StyleSheet.absoluteFill}>
+            <View style={styles.gridContainer}>
+                {Array.from({ length: 15 }).map((_, i) => (
+                    <View key={`v-${i}`} style={styles.verticalLine} />
+                ))}
+                {Array.from({ length: 25 }).map((_, i) => (
+                    <View key={`h-${i}`} style={styles.horizontalLine} />
+                ))}
+            </View>
+            <LinearGradient 
+                colors={[COLORS.background, 'transparent', COLORS.background]} 
+                style={StyleSheet.absoluteFill} 
+            />
+        </View>
+    );
+};
+
+const PulsingShield = () => {
+    const scale = useSharedValue(1);
+    const opacity = useSharedValue(0.5);
+
+    useEffect(() => {
+        scale.value = withRepeat(withTiming(1.1, { duration: 2000, easing: Easing.inOut(Easing.ease) }), -1, true);
+        opacity.value = withRepeat(withTiming(0.8, { duration: 2000, easing: Easing.inOut(Easing.ease) }), -1, true);
+    }, []);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+        opacity: opacity.value,
+    }));
+
+    return (
+        <View style={styles.shieldWrapper}>
+            <Animated.View style={[styles.shieldOuter, animatedStyle]}>
+                <View style={styles.shieldInner} />
+            </Animated.View>
+            <Shield size={42} color={COLORS.primary} strokeWidth={2.5} />
+        </View>
+    );
+}
+
 const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
   const [activeDetail, setActiveDetail] = useState<typeof SECTIONS[0] | null>(null);
   const { t } = useTranslation();
   
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const scanPos = useSharedValue(-100);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 1200, useNativeDriver: true }),
-    ]).start();
+    scanPos.value = withRepeat(
+        withSequence(
+            withTiming(height * 0.4, { duration: 3000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+            withTiming(-100, { duration: 0 })
+        ),
+        -1,
+        false
+    );
   }, []);
+
+  const scanStyle = useAnimatedStyle(() => ({
+    top: scanPos.value,
+  }));
 
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
+      <GridBackground />
       
-      {/* ── BACKGROUND ACCENT ────────────────────────────── */}
-      <View style={styles.bgGlow} />
+      <Animated.View style={[styles.scanningLine, scanStyle]} />
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── TOP LOGO ────────────────────────────────────── */}
-        <View style={styles.header}>
-           <Shield size={32} color={COLORS.primary} />
-           <Text style={styles.headerLogoText}>LASTWISH</Text>
-        </View>
-
-        {/* ── HERO ────────────────────────────────────────── */}
-        <Animated.View style={[styles.hero, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{t('landing_badge')}</Text>
-          </View>
-          
-          <Text style={styles.heroTitle}>LASTWISH</Text>
-          <Text style={styles.heroTitleAccent}></Text>
-          
-          <Text style={styles.heroSubtitle}>
-            Your final word, secured. Ensure your crypto assets and digital life are passed on securely. Decentralized, encrypted, and triggered by your status.
-          </Text>
-          
-          <TouchableOpacity 
-            style={styles.ctaButton} 
-            onPress={onConnectWallet}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={[COLORS.primary, '#2563eb']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.ctaGradient}
-            >
-              <Text style={styles.ctaText}>{t('landing_cta')}</Text>
-              <ArrowRight size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
+        {/* LOGO SECTION */}
+        <Animated.View entering={FadeInUp.delay(300).duration(800)} style={styles.header}>
+            <PulsingShield />
+            <Text style={styles.headerLogoText}>LASTWISH PROTOCOL</Text>
+            <View style={styles.versionBadge}>
+                <Text style={styles.versionText}>V2.4.0 ENCRYPTED</Text>
+            </View>
         </Animated.View>
 
-        {/* ── FEATURES GRID ─────────────────────────────── */}
+        {/* HERO SECTION */}
+        <View style={styles.hero}>
+          <Animated.View entering={FadeInDown.delay(500).duration(1000)} style={styles.badge}>
+            <Disc size={12} color={COLORS.accent} style={{ marginRight: 6 }} />
+            <Text style={styles.badgeText}>MAINNET NODE ACTIVE</Text>
+          </Animated.View>
+          
+          <Animated.Text entering={FadeInDown.delay(700).duration(1000)} style={styles.heroTitle}>
+            SECURE YOUR{"\n"}
+            <Text style={{ color: COLORS.primary }}>DIGITAL WILL</Text>
+          </Animated.Text>
+          
+          <Animated.Text entering={FadeInDown.delay(900).duration(1000)} style={styles.heroSubtitle}>
+            The zero-trust protocol for decentralized asset inheritance. Locked by your life, triggered by your silence.
+          </Animated.Text>
+          
+          <Animated.View entering={FadeInDown.delay(1100).duration(1000)} style={{ width: '100%' }}>
+            <TouchableOpacity 
+                style={styles.ctaButton} 
+                onPress={onConnectWallet}
+                activeOpacity={0.8}
+            >
+                <LinearGradient
+                colors={['#1e40af', '#1d4ed8']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.ctaGradient}
+                >
+                <Fingerprint size={22} color="#fff" />
+                <Text style={styles.ctaText}>INITIALIZE KERNEL</Text>
+                </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+
+        {/* FEATURES GRID */}
         <View style={styles.featuresRow}>
-           {SECTIONS.map(section => (
-             <TouchableOpacity 
-               key={section.id} 
-               style={styles.featureCard}
-               onPress={() => setActiveDetail(section)}
+           {SECTIONS.map((section, idx) => (
+             <Animated.View 
+                key={section.id} 
+                entering={FadeInUp.delay(1300 + (idx * 200)).duration(800)}
              >
-                <View style={[styles.iconContainer, { backgroundColor: section.color + '15' }]}>
-                   <section.icon size={24} color={section.color} />
-                </View>
-                <Text style={styles.featureTitle}>{section.title}</Text>
-                <ChevronRight size={16} color={COLORS.textDim} />
-             </TouchableOpacity>
+                <TouchableOpacity 
+                    style={styles.featureCard}
+                    onPress={() => setActiveDetail(section)}
+                    activeOpacity={0.7}
+                >
+                    <View style={[styles.iconContainer, { backgroundColor: section.color + '20' }]}>
+                        <section.icon size={22} color={section.color} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.featureTitle}>{section.title}</Text>
+                        <Text style={styles.featureSub}>{section.items[0].t}</Text>
+                    </View>
+                    <View style={styles.arrowBox}>
+                        <ArrowRight size={14} color={COLORS.textDim} />
+                    </View>
+                </TouchableOpacity>
+             </Animated.View>
            ))}
         </View>
 
-        {/* ── TRUST BAR ─────────────────────────────────── */}
-        <View style={styles.trustBar}>
-           <View style={styles.trustItem}>
-              <CheckCircle size={14} color={COLORS.accent} />
-              <Text style={styles.trustText}>IPFS ENCRYPTED</Text>
-           </View>
-           <View style={styles.trustItem}>
-              <CheckCircle size={14} color={COLORS.accent} />
-              <Text style={styles.trustText}>AUDITED LOGIC</Text>
-           </View>
-           <View style={styles.trustItem}>
-              <CheckCircle size={14} color={COLORS.accent} />
-              <Text style={styles.trustText}>ZERO-KNOWLEDGE</Text>
-           </View>
-        </View>
+        {/* TRUST INDICATORS */}
+        <Animated.View entering={FadeInUp.delay(1800)} style={styles.trustBar}>
+           {['AES-256', 'Web3 Storage', 'Audited'].map((label, i) => (
+               <View key={i} style={styles.trustItem}>
+                  <ShieldCheck size={12} color={COLORS.accent} />
+                  <Text style={styles.trustText}>{label.toUpperCase()}</Text>
+               </View>
+           ))}
+        </Animated.View>
 
-        {/* ── FOOTER ────────────────────────────────────── */}
-        <View style={styles.footer}>
-           <Text style={styles.footerText}>PROTOCOL NODE CONNECTED</Text>
-           <Text style={styles.footerSubText}>© 2026 LASTWISH</Text>
-        </View>
-
-        <View style={{ height: 60 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
 
       {/* ── DETAIL MODAL ────────────────────────────────── */}
@@ -207,48 +274,62 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background },
-  bgGlow: { 
-    position: 'absolute', top: -150, right: -50, 
-    width: 400, height: 400, borderRadius: 200, 
-    backgroundColor: COLORS.primary + '10', // Changed to blur on web, just a soft color on mobile
+  gridContainer: { ...StyleSheet.absoluteFillObject, opacity: 0.15 },
+  verticalLine: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: COLORS.primaryGlow, left: (width / 15) * 5, marginLeft: -0.5 },
+  horizontalLine: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: COLORS.primaryGlow, top: (height / 25) * 5, marginTop: -0.5 },
+  scanningLine: { 
+    position: 'absolute', left: 0, right: 0, height: 2, 
+    backgroundColor: COLORS.primary, opacity: 0.3, zIndex: 10,
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1, shadowRadius: 10, elevation: 10
   },
+  
   scrollContent: { padding: GAPS.lg },
 
   header: { alignItems: 'center', marginTop: 60, marginBottom: 50 },
-  headerLogoText: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 14, letterSpacing: 4, marginTop: 14 },
+  shieldWrapper: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  shieldOuter: { position: 'absolute', width: 80, height: 80, borderRadius: 40, backgroundColor: COLORS.primaryGlow, borderWidth: 1, borderColor: COLORS.primary },
+  shieldInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.primaryGlow, opacity: 0.5 },
+  headerLogoText: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 16, letterSpacing: 3, textAlign: 'center' },
+  versionBadge: { backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, marginTop: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  versionText: { color: COLORS.textDim, fontSize: 8, fontFamily: FONTS.orbitron.bold, letterSpacing: 1 },
 
-  hero: { alignItems: 'center', marginBottom: GAPS.xl },
+  hero: { alignItems: 'center', marginBottom: GAPS.xl, marginTop: 10 },
   badge: { 
-    backgroundColor: COLORS.primary + '15', 
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.accent + '15', 
     paddingHorizontal: 16, paddingVertical: 8, 
-    borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.primary + '30',
+    borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.accent + '30',
     marginBottom: GAPS.xl
   },
-  badgeText: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' },
-  heroTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 40, textAlign: 'center', lineHeight: 48 },
-  heroTitleAccent: { color: COLORS.primary, fontFamily: FONTS.orbitron.black, fontSize: 40, textAlign: 'center', lineHeight: 48, marginBottom: 10 },
-  heroSubtitle: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 16, textAlign: 'center', lineHeight: 24, paddingHorizontal: GAPS.sm, marginBottom: 40 },
+  badgeText: { color: COLORS.accent, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 1.5 },
+  heroTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 40, textAlign: 'center', lineHeight: 48, letterSpacing: -1 },
+  heroSubtitle: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 15, textAlign: 'center', lineHeight: 24, paddingHorizontal: 10, marginBottom: 40, marginTop: 15 },
 
-  ctaButton: { width: '100%', borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.blue },
-  ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 22, gap: 12 },
-  ctaText: { color: '#ffffff', fontFamily: FONTS.orbitron.bold, fontSize: 16, letterSpacing: 1.5 },
+  ctaButton: { width: '100%', borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOWS.blue },
+  ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 12 },
+  ctaText: { color: '#ffffff', fontFamily: FONTS.orbitron.bold, fontSize: 15, letterSpacing: 2 },
 
   featuresRow: { gap: GAPS.md, marginBottom: GAPS.xl },
   featureCard: { 
     flexDirection: 'row', alignItems: 'center', 
-    backgroundColor: COLORS.surface, padding: GAPS.lg, 
-    borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.glassBorder 
+    backgroundColor: 'rgba(255,255,255,0.03)', padding: GAPS.lg, 
+    borderRadius: RADIUS.xl, borderWidth: 1, borderColor: COLORS.glassBorder 
   },
-  iconContainer: { width: 52, height: 52, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', marginRight: GAPS.md },
-  featureTitle: { flex: 1, color: COLORS.text, fontFamily: FONTS.orbitron.semibold, fontSize: 14, letterSpacing: 1 },
+  iconContainer: { width: 48, height: 48, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', marginRight: GAPS.md },
+  featureTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.semibold, fontSize: 13, letterSpacing: 0.5 },
+  featureSub: { color: COLORS.textDim, fontSize: 10, fontFamily: FONTS.inter.bold, marginTop: 4 },
+  arrowBox: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
 
-  trustBar: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 70, flexWrap: 'wrap' },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  trustText: { color: COLORS.textMuted, fontFamily: FONTS.inter.bold, fontSize: 10, letterSpacing: 1.2 },
+  trustBar: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 40, opacity: 0.6 },
+  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  trustText: { color: COLORS.textMuted, fontFamily: FONTS.orbitron.bold, fontSize: 9, letterSpacing: 1 },
 
-  footer: { alignItems: 'center', opacity: 0.6 },
-  footerText: { color: COLORS.textMuted, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 2 },
-  footerSubText: { color: COLORS.textDim, fontFamily: FONTS.inter.medium, fontSize: 10, marginTop: 8 },
+  footer: { alignItems: 'center', opacity: 0.5, marginBottom: 20 },
+  footerText: { color: COLORS.textMuted, fontFamily: FONTS.orbitron.bold, fontSize: 9, letterSpacing: 2 },
+  footerSubText: { color: COLORS.textDim, fontFamily: FONTS.inter.medium, fontSize: 10, marginTop: 6 },
+
+  // Modal Remaining...
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'flex-end' },

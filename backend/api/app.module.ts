@@ -4,7 +4,8 @@
  * Zero-Trust Backend - Never sees raw data or keys
  */
 
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { HoneypotMiddleware } from '../middleware/honeypot.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -23,6 +24,9 @@ import { CacheModule } from '../services/cache/cache.module';
 import { LoggerModule } from '../services/logger/logger.module';
 import { DrizzleModule } from '../src/db/drizzle.module';
 import { CryptoModule } from '../services/crypto/crypto.module';
+import { AuditModule } from '../services/audit/audit.module';
+import { AppController } from './app.controller';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -34,7 +38,7 @@ import { CryptoModule } from '../services/crypto/crypto.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const uri = 'mongodb://admin:password@mongodb:27017/digital-will?authSource=admin';
+        const uri = configService.get<string>('MONGO_URI') || 'mongodb://admin:password@127.0.0.1:27017/digital-will?authSource=admin';
         console.log('🔍 MongoDB URI:', uri);
         return { uri };
       },
@@ -55,8 +59,15 @@ import { CryptoModule } from '../services/crypto/crypto.module';
     StripeModule,
     EmailModule,
     CryptoModule,
+    AuditModule,
   ],
-  controllers: [],
+  controllers: [AppController, HealthController],
   providers: [],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(HoneypotMiddleware)
+      .forRoutes('*');
+  }
+}

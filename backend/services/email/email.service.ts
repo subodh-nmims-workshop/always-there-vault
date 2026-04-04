@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
 
 interface EmailOptions {
   to: string;
@@ -10,45 +11,52 @@ interface EmailOptions {
 
 @Injectable()
 export class EmailService {
-  private resendApiKey: string;
+  private transporter: nodemailer.Transporter;
   private fromEmail: string;
 
   constructor(private configService: ConfigService) {
-    this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || '';
-    this.fromEmail = this.configService.get<string>('FROM_EMAIL') || 'noreply@deadmanprotocol.com';
-    
-    if (!this.resendApiKey) {
-      console.warn('⚠️  RESEND_API_KEY not configured. Email features will be disabled.');
+    const host = this.configService.get<string>('EMAIL_HOST') || 'smtp.gmail.com';
+    const port = this.configService.get<number>('EMAIL_PORT') || 587;
+    const user = this.configService.get<string>('EMAIL_USER');
+    const pass = this.configService.get<string>('EMAIL_PASSWORD');
+    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"Digital Will Protocol" <${user}>`;
+
+    if (!user || !pass) {
+      console.warn('⚠️  EMAIL_USER or EMAIL_PASSWORD not configured. Email features will be simulated in console.');
     }
+
+    this.transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465, // true for 465, false for other ports
+      auth: {
+        user,
+        pass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!this.resendApiKey) {
-      console.log('📧 Email would be sent (disabled):', options.subject);
-      return false;
+    const user = this.configService.get<string>('EMAIL_USER');
+    if (!user || user === 'your-email@gmail.com') {
+      console.log('📧 [MOCK EMAIL]');
+      console.log('TO:', options.to);
+      console.log('SUBJECT:', options.subject);
+      console.log('CONTENT:', options.text || 'HTML Content');
+      return true;
     }
 
     try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: options.to,
-          subject: options.subject,
-          html: options.html,
-          text: options.text,
-        }),
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
       });
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('Failed to send email:', error);
-        return false;
-      }
 
       console.log('✅ Email sent successfully to:', options.to);
       return true;

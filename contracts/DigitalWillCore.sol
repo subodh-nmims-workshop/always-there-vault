@@ -2,7 +2,8 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
@@ -10,7 +11,7 @@ import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
  * @title DigitalWillCore
  * @dev Core smart contract for Decentralized Digital Will Protocol
  */
-contract DigitalWillCore is ReentrancyGuard, Ownable {
+contract DigitalWillCore is ReentrancyGuard, AccessControl, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
     
@@ -60,6 +61,35 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
     uint256 public constant MAX_GRACE_PERIOD = 180 days;
     uint256 public constant MAX_RELEASE_DELAY = 365 days;
     
+    // Roles
+    bytes32 public constant EMERGENCY_ROLE = keccak256("EMERGENCY_ROLE");
+    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+
+    function pause() external onlyRole(EMERGENCY_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(EMERGENCY_ROLE) {
+        _unpause();
+    }
+    
+    /**
+     * @dev Record a heartbeat for a user via an authorized oracle
+     */
+    function recordHeartbeatByOracle(address user, string memory method) external onlyRole(ORACLE_ROLE) whenNotPaused {
+        require(users[user].exists, "User not registered");
+        require(!users[user].isEmergencyOverride, "Emergency override active");
+        
+        users[user].lastHeartbeat = block.timestamp;
+        
+        // Reset trigger if it was activated
+        if (users[user].triggerTime > 0) {
+            users[user].triggerTime = 0;
+        }
+        
+        emit HeartbeatRecorded(user, block.timestamp, method);
+    }
+    
     // Modifiers
     modifier onlyRegisteredUser() {
         require(users[msg.sender].exists, "User not registered");
@@ -77,7 +107,10 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
         _;
     }
 
-    constructor() Ownable(msg.sender) {}
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(EMERGENCY_ROLE, msg.sender);
+    }
     
     /**
      * @dev Register a new user with heartbeat configuration
@@ -203,7 +236,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
     /**
      * @dev Trigger the system for a user (can be called by anyone)
      */
-    function triggerSystem(address user) external nonReentrant {
+    function triggerSystem(address user) external nonReentrant whenNotPaused {
         (bool shouldTrigger, string memory reason) = this.checkTriggerCondition(user);
         require(shouldTrigger, reason);
         
@@ -250,7 +283,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
         address user,
         string memory assetId,
         uint256 ruleIndex
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         (bool eligible,) = this.isAssetEligibleForRelease(user, assetId, ruleIndex);
         require(eligible, "Asset not eligible for release");
         
