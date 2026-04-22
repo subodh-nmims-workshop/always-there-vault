@@ -54,7 +54,7 @@ export class EmailService {
          });
 
          const info = await testTransporter.sendMail({
-           from: `"DeadMan Protocol Test" <${user}>`,
+           from: `"Last Wish Protocol Test" <${user}>`,
            to: options.to,
            subject: options.subject,
            html: options.html,
@@ -89,12 +89,12 @@ export class EmailService {
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     return this.sendEmail({
       to: email,
-      subject: 'Welcome to DeadMan Protocol',
+      subject: 'Welcome to Last Wish Protocol',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1152d4;">Welcome to DeadMan Protocol! 🎉</h1>
+          <h1 style="color: #1152d4;">Welcome to Last Wish Protocol! 🎉</h1>
           <p>Hi ${name},</p>
-          <p>Thank you for joining DeadMan Protocol. Your digital legacy is now secure.</p>
+          <p>Thank you for joining Last Wish Protocol. Your digital legacy is now secure.</p>
           <h2>What's Next?</h2>
           <ul>
             <li>Upload your first digital asset</li>
@@ -103,7 +103,7 @@ export class EmailService {
             <li>Explore premium features</li>
           </ul>
           <p>You have 30 days of free trial to explore all features!</p>
-          <a href="https://deadmanprotocol.com/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://lastwishprotocol.com/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Go to Dashboard
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -111,7 +111,7 @@ export class EmailService {
           </p>
         </div>
       `,
-      text: `Welcome to DeadMan Protocol! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
+      text: `Welcome to Last Wish Protocol! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
     });
   }
 
@@ -123,7 +123,7 @@ export class EmailService {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1152d4;">You're a Beneficiary 🎁</h1>
           <p>Hi ${name},</p>
-          <p><strong>${ownerName}</strong> has added you as a beneficiary in their DeadMan Protocol account.</p>
+          <p><strong>${ownerName}</strong> has added you as a beneficiary in their Last Wish Protocol account.</p>
           <h2>What does this mean?</h2>
           <p>You will receive access to designated digital assets if the owner's heartbeat is not detected within the specified timeframe.</p>
           <h2>Important Information:</h2>
@@ -133,12 +133,12 @@ export class EmailService {
             <li>All assets are encrypted and secure</li>
             <li>You can create your own account anytime</li>
           </ul>
-          <a href="https://deadmanprotocol.com" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://lastwishprotocol.com" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Learn More
           </a>
         </div>
       `,
-      text: `Hi ${name}, ${ownerName} has added you as a beneficiary in DeadMan Protocol. You'll be notified if action is required.`,
+      text: `Hi ${name}, ${ownerName} has added you as a beneficiary in Last Wish Protocol. You'll be notified if action is required.`,
     });
   }
 
@@ -157,7 +157,7 @@ export class EmailService {
             </p>
           </div>
           <p>If you don't submit a heartbeat within the grace period, your designated assets will be released to your beneficiaries.</p>
-          <a href="https://deadmanprotocol.com/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://lastwishprotocol.com/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Submit Heartbeat Now
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -185,7 +185,7 @@ export class EmailService {
             <p><strong>Status:</strong> Active</p>
           </div>
           <p>You now have access to all premium features!</p>
-          <a href="https://deadmanprotocol.com/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://lastwishprotocol.com/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             View Subscription
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -224,7 +224,7 @@ export class EmailService {
     <div style="padding: 35px 30px;">
       <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Greetings <strong>${name}</strong>,</p>
       <p style="color: #cbd5e1; font-size: 15px;">
-        The DeadMan Protocol heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
+        The Last Wish Protocol heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
       </p>
 
       <div style="background: #0f172a; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #334155; text-align: center;">
@@ -252,7 +252,7 @@ export class EmailService {
     <!-- Footer -->
     <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
       <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-        Secured by DeadMan Protocol<br/>
+        Secured by Last Wish Protocol<br/>
         End-to-End Encrypted Proof-of-Trust Distribution
       </p>
     </div>
@@ -272,7 +272,7 @@ export class EmailService {
           <h1 style="color: #f59e0b;">⏰ Trial Ending Soon</h1>
           <p>Hi ${name},</p>
           <p>Your free trial will end in <strong>${daysRemaining} days</strong>.</p>
-          <p>To continue using DeadMan Protocol and keep your digital legacy secure, please upgrade to a paid plan.</p>
+          <p>To continue using Last Wish Protocol and keep your digital legacy secure, please upgrade to a paid plan.</p>
           <h2>Why Upgrade?</h2>
           <ul>
             <li>Unlimited asset storage</li>
@@ -280,7 +280,7 @@ export class EmailService {
             <li>Priority support</li>
             <li>Automatic heartbeat reminders</li>
           </ul>
-          <a href="https://deadmanprotocol.com/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://lastwishprotocol.com/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             View Plans
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">

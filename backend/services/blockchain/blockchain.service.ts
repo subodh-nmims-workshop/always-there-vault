@@ -6,11 +6,46 @@ export class BlockchainService {
   private readonly contractAddress = process.env.CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
   private readonly networkName = process.env.NETWORK_NAME || 'polygon-mumbai';
 
+  private provider: ethers.JsonRpcProvider;
+  private signer: ethers.Wallet;
+
+  constructor() {
+    const rpcUrl = process.env.RPC_URL || process.env.LOCAL_RPC_URL;
+    const privateKey = process.env.ADMIN_PRIVATE_KEY || process.env.LOCAL_PRIVATE_KEY;
+
+    if (rpcUrl && privateKey) {
+      this.provider = new ethers.JsonRpcProvider(rpcUrl);
+      this.signer = new ethers.Wallet(privateKey, this.provider);
+    }
+  }
+
+  async verifySignature(message: string, signature: string, address: string): Promise<{ isValid: boolean }> {
+    try {
+      const recoveredAddress = ethers.verifyMessage(message, signature);
+      return { isValid: recoveredAddress.toLowerCase() === address.toLowerCase() };
+    } catch (error) {
+      return { isValid: false };
+    }
+  }
+
+  async estimateGas(operation: string): Promise<{ estimatedGas: string, unit: string }> {
+    return { estimatedGas: '0.001', unit: 'MATIC' };
+  }
+
+  async getUserData(walletAddress: string): Promise<any> {
+    return {
+      walletAddress,
+      status: 'active',
+      plan: 'free'
+    };
+  }
+
   async getContractInfo() {
     return {
       address: this.contractAddress,
       network: this.networkName,
       version: '1.0.0',
+      status: this.provider ? 'Connected' : 'Simulation Mode',
       features: [
         'Asset Registration',
         'Heartbeat Tracking',
@@ -21,60 +56,41 @@ export class BlockchainService {
     };
   }
 
-  async getUserData(walletAddress: string) {
-    // Production: Query smart contract via ethers.js
-    // For now, return basic structure connected to active session
-    return {
-      walletAddress,
-      isRegistered: true,
-      assetsCount: 0,
-      beneficiariesCount: 0,
-      lastHeartbeat: new Date(),
-      heartbeatInterval: 30,
-      gracePeriod: 14,
-      status: 'active',
-    };
-  }
+  async triggerLastWish(walletAddress: string): Promise<boolean> {
+    if (!this.signer) {
+        console.warn(`🏗️  Simulating contract trigger for: ${walletAddress}`);
+        return true;
+    }
 
-  async verifySignature(message: string, signature: string, address: string): Promise<{ valid: boolean }> {
     try {
-      const recoveredAddress = ethers.verifyMessage(message, signature);
-      return {
-        valid: recoveredAddress.toLowerCase() === address.toLowerCase(),
-      };
+        const abi = [
+            "function checkAndTrigger(address owner) external",
+            "function wills(address owner) public view returns (uint256, uint256, uint256, bool, bool)"
+        ];
+        const contract = new ethers.Contract(this.contractAddress, abi, this.signer);
+        
+        console.log(`📡 Triggering smart contract for wallet: ${walletAddress}...`);
+        const tx = await contract.checkAndTrigger(walletAddress);
+        await tx.wait();
+        
+        console.log(`✅ Contract trigger successful! TX: ${tx.hash}`);
+        return true;
     } catch (error) {
-      return { valid: false };
+        console.error('❌ Blockchain Trigger Failed:', error.message);
+        throw error;
     }
   }
 
-  async estimateGas(operation: string): Promise<{ operation: string; estimatedGas: string; estimatedCost: string }> {
-    const gasEstimates = {
-      register_user: '150000',
-      register_asset: '200000',
-      record_heartbeat: '100000',
-      add_beneficiary: '120000',
-      release_asset: '250000',
-    };
+  async isLastWishTriggered(walletAddress: string): Promise<boolean> {
+    if (!this.provider) return false;
 
-    const estimatedGas = gasEstimates[operation] || '100000';
-    const gasPrice = '30'; // Gwei
-    const estimatedCost = (parseInt(estimatedGas) * parseInt(gasPrice) / 1e9).toFixed(6);
-
-    return {
-      operation,
-      estimatedGas,
-      estimatedCost: `${estimatedCost} MATIC`,
-    };
-  }
-
-  async triggerDeadman(walletAddress: string): Promise<boolean> {
-    // Calls smart contract `trigger()` method for this wallet.
-    return true;
-  }
-
-  async isDeadmanTriggered(walletAddress: string): Promise<boolean> {
-    // Reads `isTriggered(wallet)` from the smart contract state.
-    // Connected to the core protocol monitoring logic.
-    return false; // Default to false in real world until failure detected.
+    try {
+        const abi = ["function wills(address owner) public view returns (uint256, uint256, uint256, bool, bool)"];
+        const contract = new ethers.Contract(this.contractAddress, abi, this.provider);
+        const will = await contract.wills(walletAddress);
+        return will[3]; // isTriggered is the 4th element (index 3)
+    } catch (error) {
+        return false;
+    }
   }
 }

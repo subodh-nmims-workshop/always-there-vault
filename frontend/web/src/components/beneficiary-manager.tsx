@@ -76,10 +76,32 @@ export function BeneficiaryManager() {
       }
 
       await storage.saveBeneficiary(beneficiary)
-      await refreshState()
+      
+      // Sync to Backend Postgres
+      try {
+        const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
+        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+        const url = editingId 
+          ? `${apiEndpoint}/api/beneficiaries/${editingId}`
+          : `${apiEndpoint}/api/beneficiaries`
+        
+        await fetch(url, {
+          method: editingId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ownerAddress: walletAddress,
+            name: beneficiary.name,
+            email: beneficiary.email,
+            walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
+            relationship: 'nominee'
+          })
+        })
+      } catch (err) {
+        console.error('Failed to sync beneficiary to backend', err)
+      }
 
-      // Step 2: Bridge to traditional Web2 Email Service via Next.js Server Route
-      // This allows the 100% decentralized Web3 backend to still fire emails
+      await refreshState()
+      
       try {
         const emailReq = await fetch('/api/send-email', {
           method: 'POST',
@@ -138,6 +160,17 @@ export function BeneficiaryManager() {
 
     try {
       await storage.deleteBeneficiary(deleteConfirmation.beneficiaryId)
+      
+      // Delete from Backend Postgres
+      try {
+        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+        await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
+          method: 'DELETE'
+        })
+      } catch (err) {
+        console.error('Failed to delete beneficiary from backend', err)
+      }
+
       await refreshState()
       toast.success('Beneficiary deleted successfully')
       setDeleteConfirmation({ isOpen: false, beneficiaryId: null, beneficiaryName: '' })

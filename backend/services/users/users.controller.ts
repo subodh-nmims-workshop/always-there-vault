@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Put, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Body, Query, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('users')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('api/users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
@@ -13,21 +16,24 @@ export class UsersController {
     @ApiResponse({ status: 200, description: 'Storage engine switched successfully' })
     @ApiResponse({ status: 400, description: 'Storage engine switch failed/locked' })
     async switchStorageEngine(
-        @Query('walletAddress') walletAddress: string,
+        @Req() req: any,
         @Body('engine') engine: 'cloud' | 'web3'
     ) {
+        const walletAddress = req.user.walletAddress;
         return this.usersService.updateStorageEngine(walletAddress, engine);
     }
 
     @Get('profile')
     @ApiOperation({ summary: 'Get user profile and storage usage' })
-    async getProfile(@Query('walletAddress') walletAddress: string) {
+    async getProfile(@Req() req: any) {
+        const walletAddress = req.user.walletAddress;
         return this.usersService.findUserByWallet(walletAddress);
     }
 
     @Post('profile')
     @ApiOperation({ summary: 'Create or update user profile' })
-    async createProfile(@Query('walletAddress') walletAddress: string, @Body('email') email?: string) {
+    async createProfile(@Req() req: any, @Body('email') email?: string) {
+        const walletAddress = req.user.walletAddress;
         return this.usersService.createOrUpdateUser(walletAddress, email);
     }
 }

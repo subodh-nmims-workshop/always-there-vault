@@ -1,4 +1,4 @@
-# Run DeadMan Protocol
+# Run Last Wish Protocol
 
 ## Start Everything
 

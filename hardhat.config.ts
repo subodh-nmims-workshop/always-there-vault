@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+dotenv.config({ path: './backend/.env' });
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -24,8 +25,20 @@ const config: HardhatUserConfig = {
       chainId: 1337,
     },
     sepolia: {
-      url: process.env.ALCHEMY_SEPOLIA_URL || "https://eth-sepolia.g.alchemy.com/v2/your-api-key",
-      accounts: process.env.SEPOLIA_PRIVATE_KEY !== undefined ? [process.env.SEPOLIA_PRIVATE_KEY] : [],
+      url: process.env.SEPOLIA_RPC_URL || "https://rpc.sepolia.org",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    mainnet: {
+      url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    polygon: {
+      url: process.env.POLYGON_RPC_URL || "https://polygon-rpc.com",
+      accounts: process.env.ADMIN_PRIVATE_KEY ? [process.env.ADMIN_PRIVATE_KEY] : [],
+    },
+    amoy: {
+      url: "https://polygon-amoy.g.alchemy.com/v2/h1oBaZr0czi6YlNrMN5Ge",
+      accounts: process.env.ADMIN_PRIVATE_KEY ? [process.env.ADMIN_PRIVATE_KEY] : [],
     }
   },
   paths: {

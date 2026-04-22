@@ -1,4 +1,4 @@
-# 🛡️ DeadMan Protocol - Digital Legacy Platform
+# 🛡️ Last Wish Protocol - Digital Legacy Platform
 
 > Secure your digital assets and ensure they reach your loved ones when it matters most.
 
@@ -67,8 +67,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/deadman-protocol.git
-cd deadman-protocol
+git clone https://github.com/yourusername/lastwish-protocol.git
+cd lastwish-protocol
 
 # Run complete setup
 ./setup-complete-system.sh
@@ -87,7 +87,7 @@ cd deadman-protocol
 ## 📁 Project Structure
 
 ```
-deadman-protocol/
+lastwish-protocol/
 ├── backend/                      # NestJS Backend (Secondary)
 │   ├── api/                     # API controllers
 │   ├── services/                # Business logic
@@ -182,7 +182,7 @@ npx ts-node scripts/setup-indexes.ts
 ./backup-database.sh
 
 # Restore database
-./restore-database.sh backups/deadman_backup_20240308_120000.gz
+./restore-database.sh backups/lastwish_backup_20240308_120000.gz
 ```
 
 ## 🐳 Docker Deployment
@@ -218,7 +218,7 @@ curl http://localhost:7001/health
 curl http://localhost:7000
 
 # Database health
-docker exec deadman-mongodb mongosh --eval "db.adminCommand('ping')"
+docker exec lastwish-mongodb mongosh --eval "db.adminCommand('ping')"
 ```
 
 ### Logs
@@ -300,9 +300,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Email**: support@deadmanprotocol.com
-- **Documentation**: [docs.deadmanprotocol.com](https://docs.deadmanprotocol.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/deadman-protocol/issues)
+- **Email**: support@lastwishprotocol.com
+- **Documentation**: [docs.lastwishprotocol.com](https://docs.lastwishprotocol.com)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/lastwish-protocol/issues)
 
 ---
 

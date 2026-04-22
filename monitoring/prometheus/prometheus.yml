@@ -3,7 +3,7 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'deadman_backend'
+  - job_name: 'lastwish_backend'
     metrics_path: '/metrics'
     static_configs:
       - targets: ['backend:7001']

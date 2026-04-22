@@ -172,7 +172,7 @@ export default function FeaturesPage() {
                             <div className="absolute inset-0 bg-gradient-to-r from-[#1152d4]/10 via-transparent to-[#8b5cf6]/10 opacity-50 pointer-events-none"></div>
                             <h2 className="text-4xl font-black mb-6 relative z-10 tracking-tight text-white">Secure Your Legacy</h2>
                             <p className="text-slate-400 text-lg mb-10 max-w-2xl mx-auto relative z-10 leading-relaxed">
-                                Don't leave your digital assets in limbo. Deploy your DeadMan switch today and ensure your wealth reaches the right hands.
+                                Don't leave your digital assets in limbo. Deploy your Last Wish switch today and ensure your wealth reaches the right hands.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
                                 <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all">

@@ -20,7 +20,7 @@ import { Session } from './entities/session.entity';
     TypeOrmModule.forFeature([User, Session]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'fintech-grade-secret-key-change-in-production',
+      secret: process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not defined'); })(),
       signOptions: { 
         expiresIn: '24h',
         algorithm: 'HS256',

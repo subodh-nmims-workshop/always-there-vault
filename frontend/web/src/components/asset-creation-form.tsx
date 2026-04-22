@@ -1176,7 +1176,7 @@ export function AssetCreationForm() {
                     <Coins className="h-10 w-10 text-amber-300 mb-4" />
                     <p className="text-slate-200 font-semibold text-sm mb-1">No crypto wallet blueprints yet</p>
                     <p className="text-slate-400 text-xs max-w-md mb-4">
-                      Save instructions for your BTC / ETH / multi‑chain wallets and optionally link on‑chain tokens for automatic transfer when your DeadMan switch triggers.
+                      Save instructions for your BTC / ETH / multi‑chain wallets and optionally link on‑chain tokens for automatic transfer when your Last Wish switch triggers.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button
@@ -1681,7 +1681,7 @@ export function AssetCreationForm() {
 
                 <p className="text-[11px] text-slate-500 leading-relaxed">
                   Selected beneficiaries will receive decryption rights to assets in this folder{' '}
-                  <span className="text-slate-200 font-semibold">only after your DeadMan heartbeat stops</span>{' '}
+                  <span className="text-slate-200 font-semibold">only after your Last Wish heartbeat stops</span>{' '}
                   and the protocol marks your vault as triggered.
                 </p>
               </div>

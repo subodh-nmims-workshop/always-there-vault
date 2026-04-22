@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 🚀 DeadMan Protocol - Decentralized Backend Setup Script
+# 🚀 Last Wish Protocol - Decentralized Backend Setup Script
 
 echo "=================================================="
-echo "🌐 DeadMan Protocol - Decentralized Backend Setup"
+echo "🌐 Last Wish Protocol - Decentralized Backend Setup"
 echo "=================================================="
 echo ""
 

@@ -16,13 +16,17 @@ import {
   Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AssetsService } from './assets.service';
 import { IpfsService } from './ipfs.service';
 import { CreateAssetDto, UpdateAssetDto } from './dto/asset.dto';
 import { Asset } from './schemas/asset.schema';
+import { UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('assets')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('api/assets')
 export class AssetsController {
   constructor(
@@ -55,9 +59,10 @@ export class AssetsController {
       }),
     )
     file: Express.Multer.File,
-    @Query('walletAddress') walletAddress: string,
+    @Req() req: any,
     @Query('folderId') folderId?: string,
   ): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     return this.assetsService.uploadFile(file, walletAddress, folderId);
   }
 
@@ -65,14 +70,16 @@ export class AssetsController {
   @ApiOperation({ summary: 'Register asset metadata (encrypted data stored client-side)' })
   @ApiResponse({ status: 201, description: 'Asset metadata registered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  async createAsset(@Body() body: any, @Query('walletAddress') walletAddress: string): Promise<any> {
+  async createAsset(@Body() body: any, @Req() req: any): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     return this.assetsService.createAsset(body, walletAddress);
   }
   
   @Get()
   @ApiOperation({ summary: 'Get all asset metadata for a user' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
-  async getAllAssets(@Query('walletAddress') walletAddress: string): Promise<Asset[]> {
+  async getAllAssets(@Req() req: any): Promise<Asset[]> {
+    const walletAddress = req.user.walletAddress;
     return this.assetsService.getAllAssets(walletAddress);
   }
 
@@ -99,20 +106,22 @@ export class AssetsController {
   @ApiOperation({ summary: 'Create a new folder' })
   async createFolder(
     @Body('name') name: string,
-    @Body('walletAddress') wallet: string,
+    @Req() req: any,
     @Body('parentId') parentId?: string,
     @Body('id') id?: string,
     @Body('beneficiaries') beneficiaries?: string[]
   ) {
+    const wallet = req.user.walletAddress;
     return this.assetsService.createFolder(name, wallet, parentId, id, beneficiaries);
   }
 
   @Get('contents')
   @ApiOperation({ summary: 'Get folder contents (subfolders and assets)' })
   async getContents(
-    @Query('walletAddress') wallet: string,
+    @Req() req: any,
     @Query('folderId') folderId?: string
   ) {
+    const wallet = req.user.walletAddress;
     return this.assetsService.getFolderContents(wallet, folderId);
   }
 

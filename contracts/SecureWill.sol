@@ -47,7 +47,7 @@ contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
     event HeartbeatLogged(address indexed owner, uint256 timestamp);
     event NomineeAuthorized(address indexed owner, address indexed nominee);
     event UserPaused(address indexed user, uint256 timestamp);
-    event DeadmanTriggered(address indexed owner, uint256 timestamp);
+    event LastWishTriggered(address indexed owner, uint256 timestamp);
 
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);

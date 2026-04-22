@@ -220,8 +220,8 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                             </div>
                                         )}
 
-                                        {assets.slice(0, 2).map((asset: any) => (
-                                            <div key={asset._id} className="bg-slate-900/40 p-4 rounded-2xl flex items-center justify-between border border-slate-800 hover:border-slate-700 transition-all">
+                                        {assets.slice(0, 2).map((asset: any, index: number) => (
+                                            <div key={asset.id || asset._id || index} className="bg-slate-900/40 p-4 rounded-2xl flex items-center justify-between border border-slate-800 hover:border-slate-700 transition-all">
                                                 <div className="flex items-center gap-4">
                                                     <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
                                                         <ShieldCheckIcon className="h-6 w-6" />

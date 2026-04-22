@@ -12,8 +12,13 @@ import { HeartbeatService } from './heartbeat.service';
 import { HeartbeatCronService } from './heartbeat.cron';
 import { RecordHeartbeatDto, HeartbeatStatusDto, HeartbeatSettingsDto } from './dto/heartbeat.dto';
 import { HeartbeatLog } from './schemas/heartbeat.schema';
+import { UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('heartbeat')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('api/heartbeat')
 export class HeartbeatController {
   constructor(
@@ -21,24 +26,27 @@ export class HeartbeatController {
     private readonly heartbeatCronService: HeartbeatCronService,
   ) { }
 
-  @Post(':walletAddress')
+  @Post()
   @ApiOperation({ summary: 'Record a proof-of-life heartbeat' })
   @ApiResponse({ status: 201, description: 'Heartbeat recorded successfully' })
-  async recordHeartbeat(@Param('walletAddress') walletAddress: string, @Body('method') method?: string): Promise<any> {
+  async recordHeartbeat(@Req() req: any, @Body('method') method?: string): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     return this.heartbeatService.recordHeartbeat(walletAddress, method);
   }
   
-  @Get('status/:walletAddress')
+  @Get('status')
   @ApiOperation({ summary: 'Get heartbeat status for a user' })
   @ApiResponse({ status: 200, description: 'Heartbeat status retrieved successfully' })
-  async getStatus(@Param('walletAddress') walletAddress: string): Promise<any> {
+  async getStatus(@Req() req: any): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     return this.heartbeatService.getHeartbeatStatus(walletAddress);
   }
   
-  @Get('settings/:walletAddress')
+  @Get('settings')
   @ApiOperation({ summary: 'Get user heartbeat settings' })
   @ApiResponse({ status: 200, description: 'Settings retrieved successfully' })
-  async getSettings(@Param('walletAddress') walletAddress: string): Promise<any> {
+  async getSettings(@Req() req: any): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     const status: any = await this.heartbeatService.getHeartbeatStatus(walletAddress);
     return {
       success: true,
@@ -48,23 +56,25 @@ export class HeartbeatController {
     };
   }
   
-  @Put('settings/:walletAddress')
+  @Put('settings')
   @ApiOperation({ summary: 'Update user heartbeat settings' })
   @ApiBody({ type: HeartbeatSettingsDto })
   @ApiResponse({ status: 200, description: 'Settings updated successfully' })
   async updateSettings(
-    @Param('walletAddress') walletAddress: string,
+    @Req() req: any,
     @Body('interval') interval: number,
     @Body('gracePeriod') gracePeriod: number,
     @Body('bufferMisses') bufferMisses: number = 3
   ): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     return this.heartbeatService.updateConfig(walletAddress, interval, gracePeriod, bufferMisses);
   }
 
-  @Get('test-email/:walletAddress')
+  @Get('test-email')
   @ApiOperation({ summary: 'Send a test heartbeat alert email to preview the template' })
   @ApiResponse({ status: 200, description: 'Test email sent' })
-  async sendTestEmail(@Param('walletAddress') walletAddress: string): Promise<any> {
+  async sendTestEmail(@Req() req: any): Promise<any> {
+    const walletAddress = req.user.walletAddress;
     return this.heartbeatCronService.sendTestHeartbeatEmail(walletAddress);
   }
 }

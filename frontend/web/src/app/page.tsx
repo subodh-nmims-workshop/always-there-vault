@@ -40,6 +40,8 @@ import { SettingsDashboard } from '@/components/settings-dashboard'
 import WebStorageService, { AppState } from '@/lib/storage'
 import Link from 'next/link'
 import { SharedFooter } from '@/components/shared-footer'
+import { ethers } from 'ethers'
+import { toast } from 'sonner'
 
 export default function HomePage() {
   const [isConnected, setIsConnected] = useState(false)
@@ -105,22 +107,66 @@ export default function HomePage() {
     setShowWalletModal(true)
   }
 
-  const handleWalletConnect = (walletAddress: string) => {
+  const handleWalletConnect = async (walletAddress: string) => {
     setIsConnecting(true)
-    setTimeout(() => {
-      setIsConnected(true)
-      localStorage.setItem('dwp_wallet_connected', 'true')
-      localStorage.setItem('dwp_wallet_address', walletAddress)
-      setAddress(walletAddress)
+    try {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      
+      // 1. Get Nonce
+      const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
+      const nonceData = await nonceRes.json()
+      const message = nonceData.message
+      
+      // 2. Sign Message
+      if (!window.ethereum) {
+        throw new Error('Web3 wallet (MetaMask/Core) not detected. Please install a wallet to continue.')
+      }
+      
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+      const signature = await signer.signMessage(message)
+      
+      // 3. Verify Signature & Get JWT
+      const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress, message, signature })
+      })
+      
+      const authData = await verifyRes.json()
+      
+      if (authData.token) {
+        setIsConnected(true)
+        localStorage.setItem('dwp_wallet_connected', 'true')
+        localStorage.setItem('dwp_wallet_address', walletAddress)
+        localStorage.setItem('dwp_token', authData.token)
+        setAddress(walletAddress)
+        setShowWalletModal(false)
+        toast.success('Successfully authenticated with protocol quorum.')
+      } else {
+        throw new Error('Authentication failed. No token received.')
+      }
+    } catch (error: any) {
+      console.error('Wallet Authentication Error:', error)
+      toast.error(error.message || 'Failed to authenticate wallet signature')
+      // Fallback for development if backend is not running
+      if (process.env.NODE_ENV === 'development') {
+        setIsConnected(true)
+        localStorage.setItem('dwp_wallet_connected', 'true')
+        localStorage.setItem('dwp_wallet_address', walletAddress)
+        setAddress(walletAddress)
+        setShowWalletModal(false)
+      }
+    } finally {
       setIsConnecting(false)
-      setShowWalletModal(false)
-    }, 2000)
+    }
   }
 
   const handleDisconnect = () => {
     setIsConnected(false)
     localStorage.removeItem('dwp_wallet_connected')
     localStorage.removeItem('dwp_wallet_address')
+    localStorage.removeItem('dwp_token')
   }
 
   const getHeartbeatStatusInfo = () => {

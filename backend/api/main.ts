@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { LoggerService } from '../services/logger/logger.service';
-import { RateLimitMiddleware } from '../middleware/rate-limit.middleware';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -28,7 +28,7 @@ async function bootstrap() {
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'", "https://api.deadman-protocol.com", "http://localhost:*"],
+        connectSrc: ["'self'", "https://api.lastwish-protocol.com", "http://localhost:*"],
       },
     },
     xFrameOptions: { action: "deny" },
@@ -43,7 +43,7 @@ async function bootstrap() {
 
   // CORS with strict origins
   const allowedOrigins = [
-    'https://app.deadman-protocol.com',
+    'https://app.lastwish-protocol.com',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:7000',
@@ -55,7 +55,23 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.some(ao => origin.includes(ao) || ao === '*')) {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      const isAllowed = allowedOrigins.some(ao => {
+        if (ao === '*') return true;
+        try {
+          const allowedUrl = new URL(ao);
+          const originUrl = new URL(origin);
+          return originUrl.hostname === allowedUrl.hostname;
+        } catch {
+          return origin.includes(ao);
+        }
+      });
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         console.warn(`CORS blocked request from origin: ${origin}`);
@@ -68,12 +84,23 @@ async function bootstrap() {
     maxAge: 86400 // 24 hours
   });
 
-  // Rate limiting
-  app.use(new RateLimitMiddleware().use.bind(new RateLimitMiddleware()));
+  // Standard Rate limiting
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // limit each IP to 100 requests per windowMs
+      standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+      legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+      message: {
+        statusCode: 429,
+        message: 'Too many requests, please try again later.',
+      },
+    }),
+  );
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
-    .setTitle('DeadMan Protocol API')
+    .setTitle('Last Wish Protocol API')
     .setDescription('Decentralized Digital Will Protocol - Backend API Documentation')
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
@@ -95,7 +122,7 @@ async function bootstrap() {
 
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🚀 DeadMan Protocol - Backend Server');
+  console.log('🚀 Last Wish Protocol - Backend Server');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
   console.log(`✅ Server running on: http://localhost:${port}`);

@@ -13,7 +13,7 @@ export class BeneficiariesService {
   ) { }
 
   async createBeneficiary(createData: any): Promise<Beneficiary> {
-    const user = await this.usersService.findUserByWallet(createData.ownerWallet);
+    const user = await this.usersService.findUserByWallet(createData.ownerAddress);
     const [beneficiary] = await this.db.insert(beneficiaries).values({
       userId: user.id,
       walletAddress: createData.walletAddress,

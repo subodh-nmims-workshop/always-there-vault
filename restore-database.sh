@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================================
-# DeadMan Protocol - Database Restore Script
+# Last Wish Protocol - Database Restore Script
 # ========================================================
 
 set -e
@@ -10,7 +10,7 @@ if [ -z "$1" ]; then
     echo "Usage: ./restore-database.sh <backup_file>"
     echo ""
     echo "Available backups:"
-    ls -lh ./backups/deadman_backup_*.gz 2>/dev/null || echo "No backups found"
+    ls -lh ./backups/lastwish_backup_*.gz 2>/dev/null || echo "No backups found"
     exit 1
 fi
 
@@ -34,10 +34,10 @@ echo "🗄️  Starting database restore..."
 echo ""
 
 # Copy backup to container
-docker cp "$BACKUP_FILE" deadman-mongodb:/tmp/restore.archive
+docker cp "$BACKUP_FILE" lastwish-mongodb:/tmp/restore.archive
 
 # Restore MongoDB
-docker exec deadman-mongodb mongorestore \
+docker exec lastwish-mongodb mongorestore \
   --username=admin \
   --password="${MONGO_PASSWORD:-password}" \
   --authenticationDatabase=admin \
@@ -46,7 +46,7 @@ docker exec deadman-mongodb mongorestore \
   --drop
 
 # Clean up container
-docker exec deadman-mongodb rm /tmp/restore.archive
+docker exec lastwish-mongodb rm /tmp/restore.archive
 
 echo ""
 echo "✅ Database restored successfully!"

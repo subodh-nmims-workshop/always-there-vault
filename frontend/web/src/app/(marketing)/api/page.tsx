@@ -44,7 +44,7 @@ export default function ApiReferencePage() {
                     <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Terminal className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">DeadMan API</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">Last Wish API</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>

@@ -99,6 +99,57 @@ export class SubscriptionService {
   async checkTrialExpiry(userId: string) {
     return { isExpired: false }; // Simplified for now
   }
+
+  async upgradeSubscription(userId: string, planType: string, mode: string): Promise<any> {
+    // Map plan limits
+    let storageLimit = 524288000; // 500MB
+    if (planType === 'professional') storageLimit = 10 * 1024 * 1024 * 1024;
+    if (planType === 'enterprise') storageLimit = 100 * 1024 * 1024 * 1024;
+
+    const [sub] = await this.db.insert(subscriptions).values({
+      userId,
+      planId: planType,
+      planName: planType.toUpperCase(),
+      storageLimit,
+      billingCycle: 'MONTHLY',
+      price: '0', // Stripe will manage actual billing
+      startDate: new Date(),
+      status: 'ACTIVE',
+    }).onConflictDoUpdate({
+      target: [subscriptions.userId],
+      set: {
+        planId: planType,
+        planName: planType.toUpperCase(),
+        storageLimit,
+        status: 'ACTIVE',
+        updatedAt: new Date(),
+      },
+    }).returning();
+
+    // Update user storage quota
+    await this.db.update(users)
+      .set({ storageQuota: storageLimit })
+      .where(eq(users.id, userId));
+
+    return sub;
+  }
+
+  async cancelSubscription(userId: string): Promise<any> {
+    const [sub] = await this.db.update(subscriptions)
+      .set({ 
+        status: 'CANCELLED',
+        updatedAt: new Date() 
+      })
+      .where(eq(subscriptions.userId, userId))
+      .returning();
+
+    // Reset storage quota to free tier?
+    await this.db.update(users)
+      .set({ storageQuota: 524288000 })
+      .where(eq(users.id, userId));
+
+    return sub;
+  }
 }
 
 export const SubscriptionStatus = {

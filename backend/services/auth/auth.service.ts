@@ -4,6 +4,8 @@ import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { MFAService } from './mfa.service';
 import { CacheService } from '../cache/cache.service';
+import { ConfigService } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -14,13 +16,14 @@ export class AuthService {
     constructor(
         private readonly usersService: UsersService,
         private readonly mfaService: MFAService,
-        private readonly cacheService: CacheService
+        private readonly cacheService: CacheService,
+        private readonly configService: ConfigService
     ) { }
 
     generateNonce(): string {
         const nonce = crypto.randomBytes(32).toString('hex');
         const timestamp = Date.now();
-        const message = `Welcome to DeadMan Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+        const message = `Welcome to Last Wish Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
 
         // Store nonce in cache to prevent replay attacks
         this.cacheService.set(`${this.NONCE_PREFIX}${nonce}`, { walletRequested: true }, this.NONCE_EXPIRY);
@@ -78,9 +81,18 @@ export class AuthService {
 
             // 4. Regular login
             await this.usersService.createOrUpdateUser(walletAddress);
+            
+            // Generate JWT
+            const token = jwt.sign(
+                { walletAddress, userId: user?.id || walletAddress },
+                this.configService.get<string>('JWT_SECRET') || 'secret',
+                { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h' }
+            );
+
             return {
                 authenticated: true,
-                walletAddress
+                walletAddress,
+                token
             };
         } catch (e) {
             this.logger.error(`Authentication failed for ${walletAddress}: ${e.message}`);
@@ -104,9 +116,17 @@ export class AuthService {
         this.cacheService.delete(`mfa_pending:${mfaToken}`);
         await this.usersService.createOrUpdateUser(pending.walletAddress);
 
+        // Generate JWT
+        const token = jwt.sign(
+            { walletAddress: pending.walletAddress, userId: pending.userId },
+            this.configService.get<string>('JWT_SECRET') || 'secret',
+            { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h' }
+        );
+
         return {
             authenticated: true,
-            walletAddress: pending.walletAddress
+            walletAddress: pending.walletAddress,
+            token
         };
     }
 }

@@ -8,6 +8,12 @@ export class UsersService {
         @Inject('DRIZZLE_DB') private db: any,
     ) { }
 
+    async findUserById(id: string): Promise<User | null> {
+        return this.db.query.users.findFirst({
+            where: eq(users.id, id),
+        }) || null;
+    }
+
     async createOrUpdateUser(walletAddress: string, email?: string): Promise<User> {
         const existingUser = await this.db.query.users.findFirst({
             where: eq(users.walletAddress, walletAddress),

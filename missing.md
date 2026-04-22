@@ -1,4 +1,4 @@
-# Missing Features - DeadMan Protocol
+# Missing Features - Last Wish Protocol
 
 Comparison of architecture diagrams vs actual implementation.
 

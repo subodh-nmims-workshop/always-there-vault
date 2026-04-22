@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================================
-# DeadMan Protocol - Complete System Setup
+# Last Wish Protocol - Complete System Setup
 # Sets up both backends, frontend, and all dependencies
 # ========================================================
 
@@ -37,7 +37,7 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-print_header "🚀 DeadMan Protocol - Complete System Setup"
+print_header "🚀 Last Wish Protocol - Complete System Setup"
 echo ""
 
 # Check Node.js

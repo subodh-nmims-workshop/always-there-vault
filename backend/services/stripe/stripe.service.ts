@@ -2,6 +2,8 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { PlanType, ServiceMode } from '../subscription/subscription.schema';
+import { UsersService } from '../users/users.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class StripeService {
@@ -9,6 +11,8 @@ export class StripeService {
 
   constructor(
     private subscriptionService: SubscriptionService,
+    private usersService: UsersService,
+    private emailService: EmailService,
   ) {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey) {
@@ -53,7 +57,7 @@ export class StripeService {
               currency: 'usd',
               product_data: {
                 name: `${params.planType.charAt(0).toUpperCase() + params.planType.slice(1)} Plan`,
-                description: `DeadMan Protocol - ${params.mode === 'centralized' ? 'Centralized' : 'Decentralized'} Mode`,
+                description: `Last Wish Protocol - ${params.mode === 'centralized' ? 'Centralized' : 'Decentralized'} Mode`,
               },
               unit_amount: pricing.monthly * 100, // Convert to cents
               recurring: {
@@ -152,11 +156,21 @@ export class StripeService {
 
     try {
       // Update subscription in database
-      // await this.subscriptionService.upgradeSubscription(userId, planType, mode);
+      await this.subscriptionService.upgradeSubscription(userId, planType, mode);
 
       console.log(`✅ Subscription activated for user ${userId}: ${planType} (${mode})`);
 
-      // TODO: Send confirmation email
+      // Send confirmation email
+      const user = await this.usersService.findUserById(userId);
+      if (user && user.email) {
+          const pricing = this.getPlanPricing(planType, mode);
+          await this.emailService.sendPaymentSuccessEmail(
+              user.email,
+              user.name || 'Commander',
+              `${planType.toUpperCase()} (${mode.toUpperCase()})`,
+              pricing.monthly
+          );
+      }
     } catch (error) {
       console.error('Failed to update subscription after checkout:', error);
     }
@@ -181,7 +195,7 @@ export class StripeService {
     if (!userId) return;
 
     try {
-      // await this.subscriptionService.cancelSubscription(userId);
+      await this.subscriptionService.cancelSubscription(userId);
       console.log(`✅ Subscription cancelled for user ${userId}`);
     } catch (error) {
       console.error('Failed to cancel subscription:', error);
@@ -210,9 +224,26 @@ export class StripeService {
 
     try {
       // Suspend subscription immediately
-      // await this.subscriptionService.cancelSubscription(userId);
+      await this.subscriptionService.cancelSubscription(userId);
       console.log(`✅ Subscription suspended for user ${userId} due to payment failure limit / chargeback.`);
-      // TODO: Suspend heartbeat monitoring and lock IPFS access here if needed.
+      
+      // Notify user about failure
+      const user = await this.usersService.findUserById(userId);
+      if (user && user.email) {
+          await this.emailService.sendEmail({
+              to: user.email,
+              subject: '🚨 Action Required: Payment Failed',
+              html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
+                <h2 style="color: #ef4444;">Payment Failure Detected</h2>
+                <p>Hello ${user.name || 'Commander'},</p>
+                <p>We were unable to process your recent payment for the Last Wish Protocol subscription.</p>
+                <p><strong>Status:</strong> Your account has been moved to the free tier. Heartbeat monitoring and beneficiary alerts may be restricted.</p>
+                <p>Please update your payment method in the dashboard to restore your protocol's protection.</p>
+                <a href="${process.env.FRONTEND_URL}/dashboard" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px;">Update Payment Method</a>
+              </div>`
+          });
+      }
     } catch (error) {
       console.error(`Failed to handle payment failure logic for user ${userId}:`, error);
     }
@@ -269,7 +300,7 @@ export class StripeService {
     // Search for existing customer
     const customers = await this.stripe.customers.list({
       limit: 1,
-      email: `${userId}@deadmanprotocol.com`, // Use user email if available
+      email: `${userId}@lastwishprotocol.com`, // Use user email if available
     });
 
     if (customers.data.length > 0) {

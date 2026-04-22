@@ -77,10 +77,10 @@ export default function DocsPage() {
                                 <div>
                                     <h3 className="text-white font-bold mb-2">2. Initialize the Vault</h3>
                                     <div className="bg-[#0a0c10] border border-white/10 p-4 rounded-xl font-mono text-sm text-slate-300 overflow-x-auto">
-                                        <pre><code>{`import { DeadManVault } from '@deadman/protocol-sdk';
+                                        <pre><code>{`import { Last WishVault } from '@deadman/protocol-sdk';
 
 // Connect with standard Web3 provider
-const vault = new DeadManVault(provider.getSigner());
+const vault = new Last WishVault(provider.getSigner());
 
 // Initialize a new digital will with a 30-day heartbeat
 await vault.initialize({

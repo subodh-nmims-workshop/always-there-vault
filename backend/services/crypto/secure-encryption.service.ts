@@ -42,14 +42,18 @@ export class SecureEncryptionService {
     // Generate Master Key from environment (with KMS integration)
     private async getMasterKey(): Promise<Buffer> {
         try {
-            if (process.env.NODE_ENV === 'development' && !process.env.ENCRYPTION_MASTER_KEY_CIPHER) {
-                // Return a dummy key for local dev if KMS not configured
-                return Buffer.from('01234567890123456789012345678901');
+            if (process.env.ENCRYPTION_MASTER_KEY_CIPHER) {
+                const { Plaintext } = await this.kms.decrypt({
+                    CiphertextBlob: Buffer.from(process.env.ENCRYPTION_MASTER_KEY_CIPHER, 'base64')
+                }).promise();
+                return Plaintext as Buffer;
             }
-            const { Plaintext } = await this.kms.decrypt({
-                CiphertextBlob: Buffer.from(process.env.ENCRYPTION_MASTER_KEY_CIPHER!, 'base64')
-            }).promise();
-            return Plaintext as Buffer;
+            
+            if (process.env.ENCRYPTION_MASTER_KEY) {
+                return Buffer.from(process.env.ENCRYPTION_MASTER_KEY, 'hex');
+            }
+            
+            throw new Error('Encryption master key not provided via ENCRYPTION_MASTER_KEY_CIPHER or ENCRYPTION_MASTER_KEY');
         } catch (error) {
             this.logger.error('Failed to decrypt master key via KMS', error);
             // Fallback for development if needed, but in production this should fail

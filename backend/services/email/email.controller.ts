@@ -45,7 +45,7 @@ export class EmailController {
       success: await this.emailService.sendBeneficiaryAddedEmail(
         body.email,
         'Subodh',
-        'DeadMan Demo'
+        'Last Wish Demo'
       ),
     };
   }

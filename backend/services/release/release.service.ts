@@ -17,9 +17,9 @@ export class ReleaseService {
             throw new NotFoundException('Asset not found');
         }
 
-        const isTriggered = await this.blockchainService.isDeadmanTriggered(asset.ownerWallet);
+        const isTriggered = await this.blockchainService.isLastWishTriggered(asset.ownerWallet);
         if (!isTriggered) {
-            throw new UnauthorizedException('Deadman switch has not been triggered for this owner yet.');
+            throw new UnauthorizedException('Last Wish switch has not been triggered for this owner yet.');
         }
 
         // Check if requestor is an authorized beneficiary for this specific asset

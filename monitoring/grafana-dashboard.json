@@ -1,6 +1,6 @@
 {
   "dashboard": {
-    "title": "DeadMan Protocol - System Monitoring",
+    "title": "Last Wish Protocol - System Monitoring",
     "panels": [
       {
         "title": "API Response Time",

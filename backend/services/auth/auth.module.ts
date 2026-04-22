@@ -4,11 +4,13 @@ import { AuthService } from './auth.service';
 import { MFAService } from './mfa.service';
 import { UsersModule } from '../users/users.module';
 import { CryptoModule } from '../crypto/crypto.module';
+import { ConfigModule } from '@nestjs/config';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Module({
-    imports: [UsersModule, CryptoModule],
+    imports: [UsersModule, CryptoModule, ConfigModule],
     controllers: [AuthController],
-    providers: [AuthService, MFAService],
-    exports: [AuthService, MFAService],
+    providers: [AuthService, MFAService, JwtAuthGuard],
+    exports: [AuthService, MFAService, JwtAuthGuard],
 })
 export class AuthModule { }

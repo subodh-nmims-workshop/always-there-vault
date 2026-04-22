@@ -1,6 +1,7 @@
 'use client'
 
 import { X, Wallet, Shield, CheckCircle } from 'lucide-react'
+import { connectWallet } from '@/lib/blockchain'
 
 interface WalletConnectModalProps {
   isOpen: boolean
@@ -11,6 +12,19 @@ interface WalletConnectModalProps {
 
 export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }: WalletConnectModalProps) {
   if (!isOpen) return null
+
+  const handleWalletSelect = async (type: string) => {
+    try {
+      const result = await connectWallet()
+      if (result.success && result.address) {
+        onConnect(result.address)
+      } else {
+        alert(result.error || 'Failed to connect wallet')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Connection failed')
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -45,7 +59,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
 
           <div className="space-y-3">
             <button
-              onClick={() => onConnect('0x742d13f0cc6634c051a85e4db8d3d92828b4b3')}
+              onClick={() => handleWalletSelect('metamask')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -63,7 +77,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
               </div>
             </button>
             <button
-              onClick={() => onConnect('0x387affcb2e6462c051a85e4db8d3d92828b4b8')}
+              onClick={() => handleWalletSelect('rainbow')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -79,7 +93,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
             </button>
 
             <button
-              onClick={() => onConnect('0xcba42d13f0cc6634c051a85e4db8d3d92828b4c0')}
+              onClick={() => handleWalletSelect('walletconnect')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -95,7 +109,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
             </button>
 
             <button
-              onClick={() => onConnect('0x9d2828b4b3742d13f0cc6634c051a85e4db8d3d')}
+              onClick={() => handleWalletSelect('coinbase')}
               disabled={isConnecting}
               className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >

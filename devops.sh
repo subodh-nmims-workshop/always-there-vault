@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Starting DevOps Workflow for DeadMan Protocol (Account: subodh40)..."
+echo "🚀 Starting DevOps Workflow for Last Wish Protocol (Account: subodh40)..."
 
 # 1. Target the Docker Desktop Engine so images appear in the GUI application
 export DOCKER_HOST=unix:///home/nothing/.docker/desktop/docker.sock

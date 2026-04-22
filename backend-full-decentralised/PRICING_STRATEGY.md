@@ -1,4 +1,4 @@
-# Decentralized Deadman Protocol - Pricing Strategy
+# Decentralized Last Wish Protocol - Pricing Strategy
 
 ## 💰 Subscription Plans (Updated March 2026)
 

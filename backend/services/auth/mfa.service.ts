@@ -17,7 +17,7 @@ export class MFAService {
     // Enable 2FA for user
     async enable2FA(userId: string): Promise<{ secret: string; qrCode: string }> {
         const secret = speakeasy.generateSecret({
-            name: `DeadMan Protocol:${userId}`,
+            name: `Last Wish Protocol:${userId}`,
             length: 20
         });
         

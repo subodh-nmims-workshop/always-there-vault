@@ -10,7 +10,7 @@ export class AppController {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'DeadMan Protocol Backend'
+      service: 'Last Wish Protocol Backend'
     };
   }
 

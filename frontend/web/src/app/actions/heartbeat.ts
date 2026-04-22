@@ -27,9 +27,15 @@ export async function recordHeartbeat(payload: HeartbeatPayload) {
         // SYNC TO BACKEND for email alerts and cron monitoring
         try {
             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
-            await fetch(`${apiEndpoint}/api/heartbeat/${payload.walletAddress}`, {
+            const token = localStorage.getItem('dwp_token')
+            if (!token) throw new Error('No authentication token found')
+
+            await fetch(`${apiEndpoint}/api/heartbeat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ method: payload.method, signature: payload.signature })
             })
             console.log('✅ Heartbeat synced to backend')
@@ -145,18 +151,26 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
         try {
             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
             const email = localStorage.getItem('dwp_user_email') || ''
+            const token = localStorage.getItem('dwp_token')
+            if (!token) throw new Error('No authentication token found')
             
             // First update/create user profile (ensure email is in backend)
-            await fetch(`${apiEndpoint}/api/users/profile?walletAddress=${walletAddress}`, {
+            await fetch(`${apiEndpoint}/api/users/profile`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ email })
             })
 
             // Then update heartbeat config
-            await fetch(`${apiEndpoint}/api/heartbeat/settings/${walletAddress}`, {
+            await fetch(`${apiEndpoint}/api/heartbeat/settings`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ 
                     interval, 
                     gracePeriod,

@@ -1,6 +1,6 @@
-# DeadMan Protocol: Project Architecture
+# Last Wish Protocol: Project Architecture
 
-This document contains the complete architectural breakdown of the DeadMan Protocol.
+This document contains the complete architectural breakdown of the Last Wish Protocol.
 
 ## System Architecture Diagram
 
@@ -76,4 +76,4 @@ graph TD
 | **Infrastructure** | Docker, Nginx, n8n | Ensures scalability, security, and automation. |
 
 ---
-*Created for: DeadMan Protocol Dev Team*
+*Created for: Last Wish Protocol Dev Team*
