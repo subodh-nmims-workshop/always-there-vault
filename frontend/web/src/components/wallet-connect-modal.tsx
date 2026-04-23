@@ -18,11 +18,18 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
       const result = await connectWallet()
       if (result.success && result.address) {
         onConnect(result.address)
+        toast.success('Wallet Secured', {
+          description: `Connected to ${result.address.substring(0, 15)}...`
+        })
       } else {
-        alert(result.error || 'Failed to connect wallet')
+        toast.error('Connection Diverted', {
+          description: result.error || 'The protocol could not handshake with your wallet.'
+        })
       }
     } catch (err: any) {
-      alert(err.message || 'Connection failed')
+      toast.error('Node Communication Failure', {
+        description: err.message || 'Check your internet or wallet provider status.'
+      })
     }
   }
 

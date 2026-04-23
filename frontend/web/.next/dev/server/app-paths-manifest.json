@@ -1,6 +1,6 @@
 {
-  "/(marketing)/docs/page": "app/(marketing)/docs/page.js",
   "/(marketing)/features/page": "app/(marketing)/features/page.js",
-  "/(marketing)/guides/page": "app/(marketing)/guides/page.js",
-  "/page": "app/page.js"
+  "/(marketing)/pricing/page": "app/(marketing)/pricing/page.js",
+  "/page": "app/page.js",
+  "/payment/crypto/page": "app/payment/crypto/page.js"
 }

@@ -37,6 +37,7 @@ import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import { ModeIndicator } from '@/components/mode-indicator'
 import { TrialBanner } from '@/components/trial-banner'
 import { SettingsDashboard } from '@/components/settings-dashboard'
+import { SupportSection } from '@/components/support-section'
 import WebStorageService, { AppState } from '@/lib/storage'
 import Link from 'next/link'
 import { SharedFooter } from '@/components/shared-footer'
@@ -360,6 +361,9 @@ export default function HomePage() {
           </section>
         </main>
 
+        {/* Community Support Section */}
+        <SupportSection />
+
         <SharedFooter />
 
         <WalletConnectModal
@@ -489,6 +493,9 @@ export default function HomePage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Support / Donation Section */}
+      <SupportSection />
 
       <SharedFooter />
 
