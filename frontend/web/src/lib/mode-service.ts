@@ -25,7 +25,7 @@ class ModeService {
 
     this.config = {
       mode: this.currentMode,
-      apiEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+      apiEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001',
       contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
       ipfsGateway: 'https://ipfs.io/ipfs/'
     }
@@ -240,7 +240,12 @@ class ModeService {
     try {
       console.log('📥 Loading assets (Centralized mode)...')
 
-      // Try to load from backend first
+      // Always load local IndexedDB first (has encryptedData for decryption)
+      const storage = WebStorageService.getInstance()
+      const localAssets = await storage.getAllAssets()
+      const localMap = new Map(localAssets.map(a => [a.id, a]))
+
+      // Try to merge with backend (for metadata sync across devices)
       try {
         const walletAddress = localStorage.getItem('dwp_wallet_address')
         const response = await fetch(`${this.config.apiEndpoint}/api/assets?walletAddress=${walletAddress}`, {
@@ -250,17 +255,40 @@ class ModeService {
         })
 
         if (response.ok) {
-          const assets = await response.json()
-          console.log('✅ Loaded from backend:', assets.length, 'assets')
-          return assets
+          const backendAssets = await response.json()
+          console.log('✅ Loaded from backend:', backendAssets.length, 'assets')
+
+          // Map backend fields → frontend StoredAsset shape
+          // Then merge: prefer local copy (has encryptedData) over backend copy
+          const merged: StoredAsset[] = backendAssets.map((b: any) => {
+            const local = localMap.get(b.id)
+            return {
+              id: b.id,
+              name: b.name,
+              type: b.type || b.mimeType?.split('/')[0]?.toUpperCase() || 'FILE',
+              folderId: b.folderId || null,
+              // Critical: use local encryptedData — backend only stores it for notes
+              encryptedData: local?.encryptedData || b.encryptedData || '',
+              keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
+              iv: local?.iv || b.iv || b.fileIv || '',
+              ipfsHash: b.ipfsHash || b.cid || local?.ipfsHash || '',
+              beneficiaries: b.beneficiaries || local?.beneficiaries || [],
+              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
+              size: b.size || local?.size || 0,
+              mimeType: b.mimeType || local?.mimeType || '',
+            } as StoredAsset
+          })
+
+          // Also include local-only assets (not yet synced to backend)
+          const backendIds = new Set(backendAssets.map((b: any) => b.id))
+          const localOnly = localAssets.filter(a => !backendIds.has(a.id))
+
+          return [...merged, ...localOnly]
         }
       } catch (apiError) {
         console.warn('⚠️ Backend unavailable, using local storage')
       }
 
-      // Fallback to IndexedDB
-      const storage = WebStorageService.getInstance()
-      const localAssets = await storage.getAllAssets()
       console.log('✅ Loaded from local storage:', localAssets.length, 'assets')
       return localAssets
 

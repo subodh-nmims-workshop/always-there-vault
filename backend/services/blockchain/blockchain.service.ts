@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
 
 @Injectable()
 export class BlockchainService {
-  private readonly contractAddress = process.env.CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
-  private readonly networkName = process.env.NETWORK_NAME || 'polygon-mumbai';
+  private readonly contractAddress: string;
+  private readonly networkName: string;
 
   private provider: ethers.JsonRpcProvider;
   private signer: ethers.Wallet;
 
-  constructor() {
-    const rpcUrl = process.env.RPC_URL || process.env.LOCAL_RPC_URL;
-    const privateKey = process.env.ADMIN_PRIVATE_KEY || process.env.LOCAL_PRIVATE_KEY;
+  constructor(private configService: ConfigService) {
+    this.contractAddress = this.configService.get<string>('CONTRACT_ADDRESS') || '0x0000000000000000000000000000000000000000';
+    this.networkName = this.configService.get<string>('NETWORK_NAME') || 'polygon-mumbai';
+
+    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL');
+    const privateKey = this.configService.get<string>('KEEPER_PRIVATE_KEY');
 
     if (rpcUrl && privateKey) {
       this.provider = new ethers.JsonRpcProvider(rpcUrl);
@@ -88,7 +92,7 @@ export class BlockchainService {
         const abi = ["function wills(address owner) public view returns (uint256, uint256, uint256, bool, bool)"];
         const contract = new ethers.Contract(this.contractAddress, abi, this.provider);
         const will = await contract.wills(walletAddress);
-        return will[3]; // isTriggered is the 4th element (index 3)
+        return will[2]; // isTriggered is the 3rd element (index 2)
     } catch (error) {
         return false;
     }

@@ -17,8 +17,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('heartbeat')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('api/heartbeat')
 export class HeartbeatController {
   constructor(
@@ -26,6 +24,15 @@ export class HeartbeatController {
     private readonly heartbeatCronService: HeartbeatCronService,
   ) { }
 
+  @Get('public-status/:wallet')
+  @ApiOperation({ summary: 'Get heartbeat status for any user (Public)' })
+  @ApiResponse({ status: 200, description: 'Heartbeat status retrieved successfully' })
+  async getPublicStatus(@Param('wallet') wallet: string): Promise<any> {
+    return this.heartbeatService.getHeartbeatStatus(wallet);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Post()
   @ApiOperation({ summary: 'Record a proof-of-life heartbeat' })
   @ApiResponse({ status: 201, description: 'Heartbeat recorded successfully' })

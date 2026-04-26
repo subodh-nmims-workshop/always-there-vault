@@ -9,6 +9,10 @@ import { UsersService } from '../users/users.service';
 import { AuditService } from '../audit/audit.service';
 import { SecureEncryptionService } from '../crypto/secure-encryption.service';
 import { MalwareScannerService } from './malware-scanner.service';
+import { HeartbeatService } from '../heartbeat/heartbeat.service';
+import { beneficiaries } from '../../src/db/schema/beneficiaries';
+
+import { B2Service } from './b2.service';
 
 @Injectable()
 export class AssetsService {
@@ -16,9 +20,12 @@ export class AssetsService {
     @Inject('DRIZZLE_DB') private db: any,
     private usersService: UsersService,
     private ipfsService: IpfsService,
+    private b2Service: B2Service,
     private auditService: AuditService,
     private encryptionService: SecureEncryptionService,
     private scannerService: MalwareScannerService,
+    private heartbeatService: HeartbeatService,
+    private configService: ConfigService,
   ) { }
 
   async createFolder(name: string, walletAddress: string, parentId?: string, id?: string, beneficiaries?: string[]) {
@@ -89,21 +96,23 @@ export class AssetsService {
     }
 
     // MANDATORY SERVER-SIDE ENCRYPTION
-    // Even if the client already encrypted, we add another layer of protection
-    // controlled by the master key hierarchy.
     const encryptedResult = await this.encryptionService.encryptFile(file.buffer, user.id);
 
-    // Upload ENCRYPTED buffer to IPFS
-    const ipfsResult = await this.ipfsService.uploadBuffer(encryptedResult.encrypted, file.originalname);
+    // Upload to Backblaze B2 (Optimized for Cold Storage)
+    const b2Key = `${walletAddress}/${Date.now()}-${file.originalname}`;
+    const b2Result = await this.b2Service.uploadFile(
+      b2Key,
+      encryptedResult.encrypted, 
+      file.mimetype
+    );
 
     // Create file record with envelope encryption metadata
     const [fileRecord] = await this.db.insert(files).values({
       name: file.originalname,
       size: file.size,
       mimeType: file.mimetype,
-      cid: ipfsResult.cid,
-      location: ipfsResult.cid,
-      isIpfs: true,
+      location: r2Result.key,
+      isIpfs: false,
       encrypted: true,
       
       // Envelope Encryption Metadata
@@ -115,9 +124,16 @@ export class AssetsService {
       
       userId: user.id,
       folderId: folderId || null,
+      metadata: { 
+        storageProvider: 'backblaze-b2',
+        bucket: this.configService.get('B2_BUCKET_NAME')
+      }
     } as NewFile).returning();
 
-    await this.auditService.trackAction(user.id, 'UPLOAD_FILE', 'FILE', fileRecord.id, { name: fileRecord.name });
+    await this.auditService.trackAction(user.id, 'UPLOAD_FILE', 'FILE', fileRecord.id, { 
+      name: fileRecord.name,
+      provider: 'B2'
+    });
 
     return fileRecord;
   }
@@ -149,6 +165,26 @@ export class AssetsService {
     }
 
     return fileRecord;
+  }
+
+  async getDownloadUrl(id: string, walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    const file = await this.db.query.files.findFirst({
+      where: and(eq(files.id, id), eq(files.userId, user.id)),
+    });
+
+    if (!file) throw new NotFoundException('Asset not found');
+
+    if (file.metadata?.storageProvider === 'backblaze-b2') {
+      const url = await this.b2Service.getDownloadUrl(file.location);
+      return { url, provider: 'B2' };
+    }
+
+    if (file.isIpfs) {
+      return { url: `https://ipfs.io/ipfs/${file.cid}`, provider: 'IPFS' };
+    }
+
+    return { url: file.location, provider: 'Local' };
   }
 
   async shareFolder(folderId: string, walletToShareWith: string, permission: string = 'READ') {
@@ -222,12 +258,56 @@ export class AssetsService {
     }).returning();
   }
 
-  async getKeyDistribution(keyId: string) {
+  async getKeyDistribution(keyId: string, requesterWallet: string) {
     const { keyDistributions } = await import('../../src/db/schema/keys');
-    const result = await this.db.query.keyDistributions.findFirst({
-      where: eq(keyDistributions.keyId, keyId),
+    
+    // 1. Find the asset associated with this key to identify the owner
+    const asset = await this.db.query.files.findFirst({
+      where: eq(files.encryptionKeyId, keyId),
     });
-    if (!result) throw new NotFoundException('Key distribution not found');
-    return result;
+
+    if (!asset) {
+        // If no asset found, maybe it's just a raw key store. Check direct ownership if possible.
+        // For now, if we can't find the asset, we can't verify nominee status.
+        throw new NotFoundException('Key distribution or associated asset not found');
+    }
+
+    const owner = await this.db.query.users.findFirst({
+        where: eq(users.id, asset.userId)
+    });
+
+    // 2. If requester is owner, allow access
+    if (owner && owner.walletAddress.toLowerCase() === requesterWallet.toLowerCase()) {
+        const result = await this.db.query.keyDistributions.findFirst({
+            where: eq(keyDistributions.keyId, keyId),
+        });
+        return result;
+    }
+
+    // 3. If requester is a nominee
+    const isNominee = await this.db.query.beneficiaries.findFirst({
+        where: and(
+            eq(beneficiaries.userId, owner.id),
+            eq(beneficiaries.walletAddress, requesterWallet)
+        )
+    });
+
+    if (isNominee) {
+        // CHECK PROTOCOL STATUS
+        const status: any = await this.heartbeatService.getHeartbeatStatus(owner.walletAddress);
+        if (status.status === 'overdue' || status.status === 'grace_period') {
+             const result = await this.db.query.keyDistributions.findFirst({
+                where: eq(keyDistributions.keyId, keyId),
+            });
+            await this.auditService.trackAction(isNominee.id, 'CLAIM_KEY', 'SECURITY', keyId, { owner: owner.walletAddress });
+            return result;
+        } else {
+            throw new BadRequestException('Protocol not yet triggered. Heartbeat is still active.');
+        }
+    }
+
+    // 4. Unauthorized
+    await this.auditService.trackAction(owner.id, 'UNAUTHORIZED_KEY_ACCESS', 'SECURITY', keyId, { requester: requesterWallet });
+    throw new NotFoundException('Key not found or access denied');
   }
 }

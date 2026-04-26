@@ -1,6 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
+import { subscriptions } from '../../src/db/schema/subscriptions';
 import { heartbeatConfigs, type HeartbeatConfig, type NewHeartbeatConfig } from '../../src/db/schema/heartbeat';
 import { UsersService } from '../users/users.service';
 
@@ -13,6 +14,16 @@ export class HeartbeatService {
 
   async recordHeartbeat(walletAddress: string, method: string = 'dashboard'): Promise<any> {
     const user = await this.usersService.createOrUpdateUser(walletAddress);
+    
+    // Check for premium expiry (Software Lock)
+    // Only if user was previously premium. Free users always have 500MB access.
+    const sub = await this.db.query.subscriptions.findFirst({
+        where: eq(subscriptions.userId, user.id),
+    });
+
+    if (sub && sub.status === 'EXPIRED' && new Date() > sub.endDate) {
+        throw new Error('SUBSCRIPTION_EXPIRED: Your premium access has expired. Please upgrade to continue using the software.');
+    }
     
     // Update config
     await this.db.update(heartbeatConfigs)

@@ -1,14 +1,15 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Crown, Shield, Zap, CheckCircle2, ArrowRight } from 'lucide-react'
+import { X, Crown, Shield, Zap, CheckCircle2, ArrowRight, Wallet, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface UpgradeModalProps {
   isOpen: boolean
   onClose: () => void
-  onUpgrade: () => void
+  onUpgrade: (method: 'PAYPAL' | 'CRYPTO') => void
   title?: string
   description?: string
 }
@@ -20,6 +21,16 @@ export function UpgradeModal({
   title = "Unlock Premium Security",
   description = "Web3 storage and advanced vault features are reserved for our premium guardians."
 }: UpgradeModalProps) {
+  const [method, setMethod] = useState<'PAYPAL' | 'CRYPTO' | null>(null)
+
+  const handlePayment = () => {
+    if (!method) {
+        toast.error("Please select a payment method")
+        return
+    }
+    onUpgrade(method)
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -56,7 +67,7 @@ export function UpgradeModal({
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
                   <div className="inline-flex items-center px-2 py-0.5 mt-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400 uppercase tracking-wider">
-                    Premium Feature
+                    Premium Guardian Tier
                   </div>
                 </div>
               </div>
@@ -68,31 +79,52 @@ export function UpgradeModal({
               <div className="space-y-4 mb-8">
                 <FeatureItem 
                   icon={<Shield className="text-blue-400" size={18} />}
-                  text="Decentralized IPFS Web3 Storage"
-                />
-                <FeatureItem 
-                  icon={<Zap className="text-purple-400" size={18} />}
-                  text="Zero-Knowledge Identity Protection"
+                  text="Decentralized IPFS Web3 Storage (5GB)"
                 />
                 <FeatureItem 
                   icon={<CheckCircle2 className="text-emerald-400" size={18} />}
-                  text="Unlimited Nominees & Beneficiaries"
+                  text="Fail-Safe DeadMan Asset Release"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <button
+                    onClick={() => setMethod('PAYPAL')}
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${
+                        method === 'PAYPAL' 
+                        ? 'bg-blue-500/10 border-blue-500 shadow-lg shadow-blue-500/10' 
+                        : 'bg-white/5 border-white/10 hover:border-white/20'
+                    }`}
+                >
+                    <CreditCard className={method === 'PAYPAL' ? 'text-blue-400' : 'text-slate-400'} size={24} />
+                    <span className={`text-xs font-bold mt-2 ${method === 'PAYPAL' ? 'text-white' : 'text-slate-400'}`}>PayPal</span>
+                </button>
+                <button
+                    onClick={() => setMethod('CRYPTO')}
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${
+                        method === 'CRYPTO' 
+                        ? 'bg-purple-500/10 border-purple-500 shadow-lg shadow-purple-500/10' 
+                        : 'bg-white/5 border-white/10 hover:border-white/20'
+                    }`}
+                >
+                    <Wallet className={method === 'CRYPTO' ? 'text-purple-400' : 'text-slate-400'} size={24} />
+                    <span className={`text-xs font-bold mt-2 ${method === 'CRYPTO' ? 'text-white' : 'text-slate-400'}`}>Crypto (ETH/USDT)</span>
+                </button>
               </div>
 
               <div className="flex flex-col gap-3">
                 <Button 
-                  onClick={onUpgrade}
+                  onClick={handlePayment}
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 group transition-all duration-300 transform hover:scale-[1.02]"
                 >
-                  Upgrade Now
+                  Confirm & Pay $49.99
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <button 
                   onClick={onClose}
                   className="w-full h-12 text-slate-400 hover:text-slate-200 text-sm font-medium transition-colors"
                 >
-                  Maybe Later
+                  Cancel
                 </button>
               </div>
             </div>

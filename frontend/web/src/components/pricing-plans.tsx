@@ -1,176 +1,163 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Check, Zap, Shield, Infinity, Crown } from 'lucide-react'
-import { CENTRALIZED_PLANS, DECENTRALIZED_PLANS, type UserMode, type PlanType } from '@/types/subscription'
-import { useSubscription } from '@/contexts/SubscriptionContext'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Check, Zap, Shield, Crown, Cloud, Database, ArrowRight } from 'lucide-react'
+import { CENTRALIZED_PLANS, DECENTRALIZED_PLANS, type UserMode, type BillingCycle } from '@/types/subscription'
 import { toast } from 'sonner'
 
 export function PricingPlans() {
   const [selectedMode, setSelectedMode] = useState<UserMode>('centralized')
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const { subscription, upgradePlan } = useSubscription()
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly')
+  
+  const plans = selectedMode === 'centralized' ? Object.values(CENTRALIZED_PLANS) : Object.values(DECENTRALIZED_PLANS)
 
-  const plans = selectedMode === 'centralized' ? CENTRALIZED_PLANS : DECENTRALIZED_PLANS
-
-  const handleSelectPlan = async (planId: PlanType) => {
-    try {
-      console.log('🎯 Selected plan:', planId, 'Mode:', selectedMode)
-
-      // Check if wallet is connected
-      const walletAddress = localStorage.getItem('dwp_wallet_address')
-      if (!walletAddress) {
-        toast.error('Wallet not connected', {
-          description: 'Please connect your wallet first to subscribe.'
-        })
-        return
-      }
-
-      // Redirect to crypto payment page for both modes
-      window.location.href = `/payment/crypto?plan=${planId}&billing=${billingCycle}&mode=${selectedMode}`
-
-    } catch (error) {
-      console.error('❌ Failed to select plan:', error)
-      toast.error('Payment initiation failed', {
-        description: 'Please connect your wallet and try again.'
-      })
+  const handleSelectPlan = (planId: string) => {
+    const walletAddress = localStorage.getItem('dwp_wallet_address')
+    if (!walletAddress) {
+      toast.error('Identity Not Verified', { description: 'Please connect your wallet to secure a vault.' })
+      return
     }
+    window.location.href = `/payment/crypto?plan=${planId}&billing=${billingCycle}&mode=${selectedMode}`
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-20 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="relative py-24 overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
-        <div className="text-center mb-16 relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
-          <h1 className="text-5xl font-bold text-white mb-4 relative z-10">
-            Choose Your <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Freedom</span>
-          </h1>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto relative z-10">
-            Start with 30 days free. No credit card required. Cancel anytime.
+        <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-8"
+          >
+            <Shield className="w-3 h-3" /> Secure Inheritance Protocol
+          </motion.div>
+          <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 uppercase">
+            Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-500">Vault Capacity</span>
+          </h2>
+          <p className="text-slate-500 max-w-2xl mx-auto font-medium">
+            Granular tiers designed for every stage of your digital life. 
+            From master keys to massive family archives.
           </p>
-          <div className="mt-6 inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-full relative z-10 text-sm font-medium text-blue-300">
-            <Zap className="w-4 h-4 text-blue-400" suppressHydrationWarning />
-            Seamlessly map and migrate assets between Centralized and Decentralized nodes anytime.
-          </div>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-2 inline-flex">
-            <button
-              onClick={() => setSelectedMode('centralized')}
-              className={`px-8 py-3 rounded-xl font-semibold transition-all ${selectedMode === 'centralized'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white'
+        {/* Toggles */}
+        <div className="flex flex-col items-center gap-8 mb-16">
+          <div className="p-1.5 bg-white/5 rounded-2xl border border-white/10 flex gap-2">
+            {[
+              { id: 'centralized', label: 'Cloud Vault', icon: Cloud },
+              { id: 'decentralized', label: 'Web3 Vault', icon: Database }
+            ].map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setSelectedMode(m.id as UserMode)}
+                className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all duration-500 ${
+                  selectedMode === m.id 
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                  : 'text-slate-500 hover:text-slate-300'
                 }`}
-            >
-              <Shield className="inline-block w-5 h-5 mr-2" suppressHydrationWarning />
-              Centralized
-            </button>
-            <button
-              onClick={() => setSelectedMode('decentralized')}
-              className={`px-8 py-3 rounded-xl font-semibold transition-all ${selectedMode === 'decentralized'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white'
-                }`}
-            >
-              <Infinity className="inline-block w-5 h-5 mr-2" suppressHydrationWarning />
-              Decentralized
-            </button>
-          </div>
-        </div>
-
-        {/* Billing Cycle Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-1 inline-flex">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${billingCycle === 'monthly'
-                ? 'bg-white/10 text-white'
-                : 'text-slate-400 hover:text-white'
-                }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${billingCycle === 'yearly'
-                ? 'bg-white/10 text-white'
-                : 'text-slate-400 hover:text-white'
-                }`}
-            >
-              Yearly
-              <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-                Save 20%
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Plans Grid */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {Object.values(plans).map((plan, index) => {
-            const price = billingCycle === 'yearly' ? plan.yearlyPrice || plan.price * 10 : plan.price
-            const Icon = index === 0 ? Zap : index === 1 ? Shield : Crown
-
-            return (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`relative bg-gradient-to-br from-white/5 to-white/[0.02] border rounded-3xl p-8 ${plan.popular
-                  ? 'border-blue-500/50 shadow-[0_0_50px_rgba(59,130,246,0.3)]'
-                  : 'border-white/10'
-                  }`}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                    Most Popular
-                  </div>
-                )}
+                <m.icon className="w-4 h-4" />
+                {m.label}
+              </button>
+            ))}
+          </div>
 
-                <div className="mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-blue-400" suppressHydrationWarning />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-white">${price}</span>
-                    <span className="text-slate-400">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
-                  </div>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-slate-300">
-                      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" suppressHydrationWarning />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => handleSelectPlan(plan.id)}
-                  className={`w-full py-3 rounded-xl font-semibold transition-all ${plan.popular
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-blue-500/20'
-                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
-                    }`}
-                >
-                  {subscription?.status === 'trial' ? 'Start Free Trial' : 'Upgrade Now'}
-                </button>
-              </motion.div>
-            )
-          })}
+          <div className="p-1 bg-white/5 border border-white/10 rounded-xl flex">
+            {(['monthly', 'quarterly', 'yearly'] as BillingCycle[]).map((cycle) => (
+              <button
+                key={cycle}
+                onClick={() => setBillingCycle(cycle)}
+                className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${
+                  billingCycle === cycle ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                {cycle.charAt(0).toUpperCase() + cycle.slice(1)}
+                {cycle === 'yearly' && <span className="ml-1 text-[8px] text-emerald-400">BEST VALUE</span>}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Comparison Note */}
-        <div className="mt-16 text-center">
-          <p className="text-slate-400 text-sm">
-            All plans include 30-day free trial • No credit card required • Cancel anytime
+        {/* Granular Plans Grid */}
+        <div className={`grid grid-cols-1 md:grid-cols-${selectedMode === 'centralized' ? '4' : '3'} gap-6 mb-24`}>
+          <AnimatePresence mode="wait">
+            {plans.map((plan, idx) => {
+              const price = billingCycle === 'yearly' ? plan.yearlyPrice : billingCycle === 'quarterly' ? plan.quarterlyPrice : plan.price
+              const isPopular = plan.popular
+              const isHuge = plan.limits.storageGB >= 500
+
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`group relative p-0.5 rounded-[2rem] transition-all duration-500 ${
+                    isPopular ? 'bg-gradient-to-b from-blue-500 to-purple-600' : 'bg-white/10 hover:bg-white/20'
+                  }`}
+                >
+                  <div className="bg-[#0f1115] rounded-[1.9rem] p-6 h-full flex flex-col relative overflow-hidden">
+                    {isPopular && (
+                      <div className="absolute top-4 right-4 px-2 py-1 bg-blue-600 text-[8px] font-black uppercase tracking-widest text-white rounded-md">
+                        Most Popular
+                      </div>
+                    )}
+                    
+                    <div className="mb-6">
+                      <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{plan.name}</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-white">${price}</span>
+                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 mb-6 text-center">
+                      <div className="text-2xl font-black text-blue-400">{plan.limits.storage}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Vault Space</div>
+                    </div>
+
+                    <div className="space-y-3 mb-8 flex-1">
+                      {plan.features.slice(1).map((f, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <Check size={12} className="text-emerald-500 mt-0.5" />
+                          <span className="text-[11px] font-medium text-slate-400">{f}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handleSelectPlan(plan.id)}
+                      className={`w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                        isPopular 
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30' 
+                        : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+                      }`}
+                    >
+                      {isHuge ? 'Initialize Elite' : 'Select Tier'}
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </AnimatePresence>
+        </div>
+
+        {/* Upsell Footer */}
+        <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-white/10 rounded-[3rem] p-12 text-center">
+          <Crown className="w-12 h-12 text-yellow-500 mx-auto mb-6" />
+          <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Need More than 1TB?</h3>
+          <p className="text-slate-400 max-w-xl mx-auto mb-8 font-medium">
+            For institutional archives, government-grade protection, or massive data estates, 
+            our concierge team can custom-build a shard-distributed vault up to 100TB.
           </p>
+          <button className="px-8 py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all inline-flex items-center gap-2">
+            Contact Concierge <ArrowRight size={16} />
+          </button>
         </div>
       </div>
     </div>

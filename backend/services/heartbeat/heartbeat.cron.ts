@@ -219,6 +219,16 @@ export class HeartbeatCronService {
                             }
                         }
                     } else {
+                        // Already triggered in the past
+                        if (currentMisses > maxBuffer) {
+                            continue;
+                        }
+
+                        // Mark as triggered so it doesn't run again
+                        await this.db.update(heartbeatConfigs)
+                            .set({ missedCount: sql`${heartbeatConfigs.missedCount} + 1` })
+                            .where(eq(heartbeatConfigs.userId, user.id));
+
                         // All buffers exhausted
                         this.logger.error(`Protocol Triggered for ${user.walletAddress}! Buffer completely exhausted after ${maxBuffer} misses.`);
                         try {
@@ -261,6 +271,7 @@ export class HeartbeatCronService {
                                         nominee.email,
                                         nominee.name,
                                         user.name || 'The account owner',
+                                        user.walletAddress,
                                         1 // Default to 1 asset for now (can be expanded)
                                     );
                                 }

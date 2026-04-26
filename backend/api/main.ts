@@ -20,6 +20,10 @@ async function bootstrap() {
     }),
   );
 
+  // Global security exception filter
+  const { AllExceptionsFilter } = await import('../middleware/all-exceptions.filter');
+  app.useGlobalFilters(new AllExceptionsFilter());
+
   // Security Headers using Helmet for Best-In-Class protection
   app.use(helmet({
     contentSecurityPolicy: {
@@ -84,19 +88,27 @@ async function bootstrap() {
     maxAge: 86400 // 24 hours
   });
 
+  // Prevent Large Payload Attacks (DDoS)
+  app.use(require('body-parser').json({ limit: '50mb' }));
+  app.use(require('body-parser').urlencoded({ limit: '50mb', extended: true }));
+
   // Standard Rate limiting
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // limit each IP to 100 requests per windowMs
-      standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-      legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-      message: {
-        statusCode: 429,
-        message: 'Too many requests, please try again later.',
-      },
-    }),
-  );
+  const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { statusCode: 429, message: 'Normal traffic limit exceeded.' },
+  });
+
+  const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // Only 10 login attempts per hour
+    message: { statusCode: 429, message: 'Too many authentication attempts. Please try again in an hour.' },
+  });
+
+  app.use('/api/auth', authLimiter);
+  app.use(generalLimiter);
 
   // Swagger API Documentation
   const config = new DocumentBuilder()

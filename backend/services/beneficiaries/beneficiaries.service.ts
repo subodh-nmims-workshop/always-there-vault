@@ -67,4 +67,26 @@ export class BeneficiariesService {
   async deleteBeneficiary(id: string): Promise<void> {
     await this.db.delete(beneficiaries).where(eq(beneficiaries.id, id));
   }
+
+  async findOwnersForBeneficiary(beneficiaryWallet: string): Promise<any[]> {
+    const results = await this.db.query.beneficiaries.findMany({
+      where: eq(beneficiaries.walletAddress, beneficiaryWallet),
+    });
+
+    const ownerDetails = await Promise.all(
+      results.map(async (b) => {
+        const owner = await this.db.query.users.findFirst({
+          where: eq(beneficiaries.userId, b.userId),
+        });
+        return {
+          ownerName: owner?.name || 'Unknown Owner',
+          ownerAddress: owner?.walletAddress,
+          beneficiaryId: b.id,
+          sharePercentage: b.sharePercentage,
+        };
+      })
+    );
+
+    return ownerDetails;
+  }
 }

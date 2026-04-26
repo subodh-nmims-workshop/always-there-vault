@@ -63,7 +63,14 @@ export class AuthService {
             }
 
             // 3. Check for 2FA
-            const user = await this.usersService.findUserByWallet(walletAddress);
+            let user;
+            try {
+                user = await this.usersService.findUserByWallet(walletAddress);
+            } catch (e) {
+                // User not found is fine for first login, we will create them below
+                user = null;
+            }
+
             if (user && user.isLocked) {
                 this.logger.warn(`LOCKED ACCOUNT ATTEMPTED LOGIN: ${walletAddress}`);
                 throw new UnauthorizedException('Your account has been locked due to suspicious activity. Please contact support.');

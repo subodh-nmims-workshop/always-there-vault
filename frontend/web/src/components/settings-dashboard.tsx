@@ -1,302 +1,645 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { UpgradeModal } from './upgrade-modal'
-import { Globe, Shield, Wallet, Zap, Fingerprint, Lock, ShieldCheck, AlertOctagon, Crown } from 'lucide-react'
+import { 
+    Globe, 
+    Shield, 
+    Wallet, 
+    Zap, 
+    Fingerprint, 
+    Lock, 
+    ShieldCheck, 
+    AlertOctagon, 
+    Crown, 
+    User, 
+    ExternalLink, 
+    Copy, 
+    Check, 
+    LogOut,
+    Eye,
+    Key,
+    Database,
+    HelpCircle,
+    Bell,
+    Clock,
+    Users,
+    Activity,
+    Settings,
+    FileText,
+    Share2,
+    Cpu,
+    Trash2,
+    ChevronRight,
+    RefreshCw,
+    MessageSquare,
+    Send,
+    Terminal
+} from 'lucide-react'
 import { translations, Language, getLanguage, setLanguage, subscribeI18n } from '@/utils/i18n'
+import WebStorageService, { AppState } from '@/lib/storage'
+import { UpgradeModal } from '@/components/upgrade-modal'
+import { toast } from 'sonner'
 
 export function SettingsDashboard() {
   const [lang, setLang] = useState<Language>('en')
   const [t, setT] = useState<any>(translations.en)
-  const [bioEnabled, setBioEnabled] = useState(true)
-  const [notifEnabled, setNotifEnabled] = useState(true)
-  const [storagePreference, setStoragePreference] = useState<'cloud' | 'web3'>('cloud')
-  const [isMigrating, setIsMigrating] = useState(false)
-  const [migrationProgress, setMigrationProgress] = useState(0)
-  const [storageUsed, setStorageUsed] = useState(0)
-  const [storageQuota, setStorageQuota] = useState(524288000) // Default 500MB
-  
-  // Subscription verification (mocked for UI context, real logic in backend)
-  const [isPremium, setIsPremium] = useState(false)
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false)
+  const [appState, setAppState] = useState<AppState | null>(null)
+  const [walletAddress, setWalletAddress] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+
+  const storage = WebStorageService.getInstance()
 
   useEffect(() => {
-    // Initial load
     const currentLang = getLanguage()
     setLang(currentLang)
     setT(translations[currentLang] || translations.en)
 
-    // Subscribe to changes
+    const addr = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
+    setWalletAddress(addr)
+
+    const loadState = async () => {
+        const state = await storage.getAppState()
+        setAppState(state)
+    }
+
+    loadState()
+
     const unsubscribe = subscribeI18n(() => {
       const newLang = getLanguage()
       setLang(newLang)
       setT(translations[newLang] || translations.en)
     })
     
-    // Fetch actual storage usage
-    const fetchStorageInfo = async () => {
-        try {
-            const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x742d35Cc6634C0532925a3b8D4C2C4e0C8b83c8e'
-            const res = await fetch(`http://localhost:7001/api/users/profile?walletAddress=${walletAddress}`)
-            if (res.ok) {
-                const data = await res.json()
-                setStorageUsed(data.storageUsed || 0)
-                setStorageQuota(data.storageQuota || 524288000)
-                setStoragePreference(data.storageEngine || 'cloud')
-                setIsPremium(!!data.isPremium)
-            }
-        } catch (error) {
-            console.error('Failed to fetch storage info:', error)
-        }
-    }
-
-    fetchStorageInfo()
-
     return unsubscribe
 }, [])
 
-  const handleLanguageChange = (value: string) => {
-    setLanguage(value as Language)
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(walletAddress)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleStorageSwitch = async (engine: 'cloud' | 'web3') => {
-    if (storagePreference === engine) return
-    
-    if (engine === 'web3' && !isPremium) {
-        setIsUpgradeModalOpen(true)
-        return
-    }
+  const updateSetting = async (key: keyof AppState['settings'], value: any) => {
+    setIsUpdating(true)
+    storage.saveSettings({ [key]: value })
+    const newState = await storage.getAppState()
+    setAppState(newState)
+    setTimeout(() => setIsUpdating(false), 500)
+  }
 
-    setIsMigrating(true)
-    setMigrationProgress(0)
-    
-    // Simulate migration progress
-    const interval = setInterval(() => {
-        setMigrationProgress(prev => {
-            if (prev >= 95) {
-                clearInterval(interval)
-                return prev
-            }
-            return prev + 5
-        })
-    }, 100)
+  const heartbeatDaysLeft = useMemo(() => {
+    if (!appState) return 0
+    const last = appState.stats.lastHeartbeat || Date.now()
+    const interval = appState.settings.heartbeatInterval || 7
+    const nextDue = last + (interval * 24 * 60 * 60 * 1000)
+    const diff = nextDue - Date.now()
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
+  }, [appState])
+
+  const handleUpgrade = async (method: 'PAYPAL' | 'CRYPTO') => {
+    setIsProcessingPayment(true)
+    toast.info(`Processing ${method} payment...`)
     
     try {
-        const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x742d35Cc6634C0532925a3b8D4C2C4e0C8b83c8e'
-        const res = await fetch(`http://localhost:7001/api/users/storage-engine?walletAddress=${walletAddress}`, {
-            method: 'PUT',
+        // Simulate API call to backend
+        const response = await fetch('http://localhost:7001/api/payment/process', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ engine })
+            body: JSON.stringify({
+                walletAddress,
+                method,
+                planId: 'premium',
+                reference: method === 'PAYPAL' ? 'PAY-67890' : '0xabc123...'
+            })
         })
-        
-        await new Promise(r => setTimeout(r, 2000)) // delay for visual effect
-        clearInterval(interval)
-        
-        if (res.ok) {
-            setMigrationProgress(100)
-            setStoragePreference(engine)
-            setTimeout(() => setIsMigrating(false), 500)
+
+        if (response.ok) {
+            toast.success("Payment Successful! Premium Features Unlocked.")
+            setShowUpgradeModal(false)
+            // Reload state
+            const newState = await storage.getAppState()
+            setAppState(newState)
         } else {
-            throw new Error('Migration failed on server')
+            throw new Error("Payment failed")
         }
-    } catch (error) {
-        clearInterval(interval)
-        setIsMigrating(false)
-        setMigrationProgress(0)
-        alert('Storage engine migration failed. Please ensure backend is running.')
+    } catch (e) {
+        toast.error("Payment failed. Please try again.")
+    } finally {
+        setIsProcessingPayment(false)
     }
   }
 
+  if (!appState) return <div className="p-8 text-center text-slate-500 font-mono">INITIALIZING KERNEL...</div>
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-100">{t.settings_title || 'Global Preferences'}</h2>
-        <p className="text-slate-400">Manage protocol settings, storage engines, and security.</p>
+    <div className="max-w-5xl mx-auto space-y-12 p-4 pb-24">
+      {/* -- PAGE HEADER -- */}
+      <div className="space-y-2">
+        <h1 className="text-4xl font-black text-white tracking-tighter flex items-center gap-3">
+            <Settings className="size-8 text-blue-500" />
+            PROTOCOL SETTINGS
+        </h1>
+        <p className="text-slate-500 font-medium">Configure global parameters for the LastWish decentralized digital will protocol.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* -- STORAGE ENGINE -- */}
-        <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center text-slate-100">
-              <ServerIcon className="w-5 h-5 mr-3 text-[#2b52ff]" />
-              {t.settings_storage || 'Smart Storage Engine'}
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              {t.settings_storage_desc || 'Manage your 500MB shared vault allocation and deployment strategy.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-slate-300 uppercase">{(storageQuota / (1024 * 1024)).toFixed(0)}MB SHARED QUOTA</span>
-                    <span className="text-[#2b52ff] uppercase">{(storageUsed / (1024 * 1024)).toFixed(2)}MB USED</span>
+      {/* -- SECTION: ACCOUNT -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <User className="size-5 text-slate-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Account</h2>
+        </div>
+        
+        <Card className="bg-slate-900/50 border-slate-800 shadow-xl overflow-hidden">
+            <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="size-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-500 p-0.5">
+                        <div className="size-full bg-slate-950 rounded-[14px] flex items-center justify-center text-blue-400 font-black">
+                            {walletAddress.substring(2, 4).toUpperCase()}
+                        </div>
+                    </div>
+                    <div className="flex-1 space-y-1 text-center md:text-left">
+                        <div className="flex items-center justify-center md:justify-start gap-2">
+                            <span className="text-white font-mono font-bold">{walletAddress}</span>
+                            <button onClick={copyToClipboard} className="text-slate-500 hover:text-white transition-colors">
+                                {copied ? <Check className="size-4 text-green-500" /> : <Copy className="size-4" />}
+                            </button>
+                        </div>
+                        <div className="flex items-center justify-center md:justify-start gap-3">
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">Ethereum Mainnet</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Protocol Version v1.0.0</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-xs font-bold gap-2">
+                                <Key className="size-3" /> Export Key
+                            </Button>
+                            <Button variant="outline" className="bg-red-500/10 border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-bold gap-2">
+                                <LogOut className="size-3" /> Disconnect
+                            </Button>
+                        </div>
+                        <Button 
+                            onClick={() => setShowUpgradeModal(true)}
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-[10px] uppercase h-9 rounded-xl shadow-lg shadow-blue-500/20"
+                        >
+                            <Crown className="size-3 mr-2" /> Upgrade to Premium Guardian
+                        </Button>
+                    </div>
                 </div>
-                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div 
-                        className="h-full bg-gradient-to-r from-[#2b52ff] to-[#00d2ff] transition-all duration-1000" 
-                        style={{ width: `${Math.min(100, (storageUsed / storageQuota) * 100)}%` }} 
-                    />
-                </div>
-            </div>
+            </CardContent>
+        </Card>
+      </section>
 
-            <div className="flex flex-col md:flex-row gap-4">
-                {/* Cloud Vault */}
-                <div 
-                    onClick={() => !isMigrating && handleStorageSwitch('cloud')}
-                    className={`flex-1 p-6 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center ${storagePreference === 'cloud' ? 'bg-[#2b52ff]/10 border-[#2b52ff]' : 'bg-white/5 border-transparent hover:border-white/20'} ${isMigrating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                    <Globe className={`w-8 h-8 mb-3 ${storagePreference === 'cloud' ? 'text-[#2b52ff]' : 'text-slate-400'}`} />
-                    <h3 className="font-bold text-lg text-slate-200 mb-1">{t.settings_cloud || 'Cloud Vault (Fast)'}</h3>
-                    <p className="text-sm text-slate-400">{t.settings_cloud_desc || 'Centralized, instant access, managed security.'}</p>
-                    
-                    {storagePreference === 'cloud' && (
-                        <div className="mt-4 px-3 py-1 bg-[#2b52ff] text-xs font-bold rounded-full text-white">ACTIVE</div>
+      {/* -- SECTION: SUBSCRIPTION -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <Database className="size-5 text-indigo-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Subscription Status</h2>
+        </div>
+        
+        <Card className="bg-slate-900/40 border-slate-800">
+            <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-black text-white">5.00 GB Total Quota</span>
+                            <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[8px] font-black text-blue-400 uppercase tracking-widest">Premium Active</span>
+                        </div>
+                        <p className="text-xs text-slate-500">Expiring on: **April 26, 2027** (Automatic Fail-Safe Enabled)</p>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-xl font-black text-white">0.00%</div>
+                        <div className="text-[10px] font-bold text-slate-600 uppercase">Usage</div>
+                    </div>
+                </div>
+                <div className="mt-4 w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-[0.5%] h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                </div>
+            </CardContent>
+        </Card>
+      </section>
+
+      {/* -- SECTION: DEADMAN PROTOCOL -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <Activity className="size-5 text-blue-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Deadman Protocol Core</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Clock className="size-4 text-blue-400" />
+                        Heartbeat Parameters
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Heartbeat Interval</label>
+                                <span className="text-blue-400 font-mono font-bold text-sm">{appState.settings.heartbeatInterval} Days</span>
+                            </div>
+                            <input 
+                                type="range" min="1" max="90" 
+                                value={appState.settings.heartbeatInterval}
+                                onChange={(e) => updateSetting('heartbeatInterval', parseInt(e.target.value))}
+                                className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Grace Period</label>
+                                <span className="text-orange-400 font-mono font-bold text-sm">{appState.settings.gracePeriod} Days</span>
+                            </div>
+                            <input 
+                                type="range" min="1" max="60" 
+                                value={appState.settings.gracePeriod}
+                                onChange={(e) => updateSetting('gracePeriod', parseInt(e.target.value))}
+                                className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-orange-500"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-blue-600/10 to-indigo-600/10 border-blue-500/20 shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <Zap className="size-24 -mr-8 -mt-8 text-blue-400" />
+                </div>
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Activity className="size-4 text-blue-400" />
+                        Live Status
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 relative z-10">
+                    <div className="flex items-center justify-between p-4 bg-slate-950/40 rounded-2xl border border-white/5">
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol Integrity</span>
+                            <div className="text-xl font-black text-white">{heartbeatDaysLeft} Days Remaining</div>
+                            <p className="text-[10px] text-slate-500 font-medium">Until beneficiary execution trigger</p>
+                        </div>
+                        <Button className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 h-10 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                            SEND PULSE
+                        </Button>
+                    </div>
+                    <div className="flex justify-between px-2">
+                        <div className="text-center">
+                            <div className="text-xs font-mono font-bold text-slate-400">APR 19, 2026</div>
+                            <div className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Last Heartbeat</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-xs font-mono font-bold text-slate-400">APR 26, 2026</div>
+                            <div className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Next Due</div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      </section>
+
+      {/* -- SECTION: BENEFICIARIES -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <Users className="size-5 text-emerald-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Beneficiary Registry</h2>
+        </div>
+
+        <Card className="bg-white/[0.02] border-white/10">
+            <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <h3 className="text-white font-bold">Distribution Summary</h3>
+                        <p className="text-xs text-slate-500">Currently mapping {appState.stats.totalBeneficiaries} unique addresses.</p>
+                    </div>
+                    <Button variant="ghost" className="text-blue-400 hover:text-blue-300 font-bold text-xs gap-1">
+                        Manage Registry <ChevronRight className="size-3" />
+                    </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {appState.beneficiaries.slice(0, 3).map((ben, idx) => (
+                        <div key={idx} className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
+                            <div className="size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xs font-bold">
+                                {idx + 1}
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <div className="text-white text-xs font-bold truncate">{ben.name}</div>
+                                <div className="text-[10px] text-slate-500 font-mono truncate">{ben.walletAddress}</div>
+                            </div>
+                        </div>
+                    ))}
+                    {appState.beneficiaries.length === 0 && (
+                        <div className="md:col-span-3 p-8 text-center text-slate-600 font-mono text-xs border-2 border-dashed border-white/5 rounded-2xl">
+                            NO BENEFICIARIES MAPPED IN THIS VAULT
+                        </div>
                     )}
                 </div>
+            </CardContent>
+        </Card>
+      </section>
 
-                {/* Web3 Vault */}
-                <div 
-                    onClick={() => !isMigrating && handleStorageSwitch('web3')}
-                    className={`flex-1 p-6 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center text-center ${storagePreference === 'web3' ? 'bg-[#8b5cf6]/10 border-[#8b5cf6]' : 'bg-white/5 border-transparent hover:border-white/20'} ${!isPremium ? 'opacity-80' : ''} ${isMigrating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                    <Wallet className={`w-8 h-8 mb-3 ${storagePreference === 'web3' ? 'text-[#8b5cf6]' : 'text-slate-400'}`} />
-                    <h3 className="font-bold text-lg text-slate-200 mb-1 flex items-center gap-2">
-                        {t.settings_web3 || 'Web3 Vault (IPFS)'}
-                        {!isPremium && <Crown className="w-4 h-4 text-amber-400 animate-pulse" />}
-                    </h3>
-                    <p className="text-sm text-slate-400">{t.settings_web3_desc || 'Decentralized, self-custodial, immutable storage.'}</p>
-                    
-                    {storagePreference === 'web3' && (
-                        <div className="mt-4 px-3 py-1 bg-[#8b5cf6] text-xs font-bold rounded-full text-white">ACTIVE</div>
+      {/* -- SECTION: SECURITY -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <ShieldCheck className="size-5 text-orange-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Security & Trust</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-white/[0.02] border-white/10">
+                <CardContent className="p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                                <Clock className="size-3.5 text-slate-500" />
+                                Execution Time Lock
+                            </div>
+                            <p className="text-[10px] text-slate-500 uppercase font-black">Delay before assets release</p>
+                        </div>
+                        <select 
+                            value={appState.settings.timeLock}
+                            onChange={(e) => updateSetting('timeLock', parseInt(e.target.value))}
+                            className="bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white px-3 py-1.5 outline-none"
+                        >
+                            <option value={0}>Instant</option>
+                            <option value={24}>24 Hours</option>
+                            <option value={48}>48 Hours</option>
+                            <option value={168}>7 Days</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                                <Share2 className="size-3.5 text-slate-500" />
+                                Multi-Sig Distribution
+                            </div>
+                            <p className="text-[10px] text-slate-500 uppercase font-black">Required shares for decryption</p>
+                        </div>
+                        <select 
+                            value={appState.settings.multiSig}
+                            onChange={(e) => updateSetting('multiSig', e.target.value)}
+                            className="bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white px-3 py-1.5 outline-none"
+                        >
+                            <option value="off">Disabled</option>
+                            <option value="2of3">2 of 3 Shards</option>
+                            <option value="3of5">3 of 5 Shards</option>
+                        </select>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-white/[0.02] border-white/10">
+                <CardContent className="p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                                <Fingerprint className="size-3.5 text-slate-500" />
+                                Biometric Verification
+                            </div>
+                        </div>
+                        <div className="w-10 h-5 bg-slate-800 rounded-full p-1 cursor-not-allowed opacity-50">
+                            <div className="size-3 bg-slate-600 rounded-full" />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                                <Lock className="size-3.5 text-slate-500" />
+                                Session Timeout
+                            </div>
+                        </div>
+                        <select 
+                            value={appState.settings.sessionTimeout}
+                            onChange={(e) => updateSetting('sessionTimeout', parseInt(e.target.value))}
+                            className="bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white px-3 py-1.5 outline-none"
+                        >
+                            <option value={15}>15 Mins</option>
+                            <option value={30}>30 Mins</option>
+                            <option value={60}>1 Hour</option>
+                        </select>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      </section>
+
+      {/* -- SECTION: NOTIFICATIONS -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <Bell className="size-5 text-purple-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Notifications</h2>
+        </div>
+
+        <Card className="bg-white/[0.02] border-white/10">
+            <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <MessageSquare className="size-3" /> Email Alerts (Verification Required)
+                            </label>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="email" 
+                                    placeholder="Enter backup email"
+                                    value={appState.settings.emailNotification}
+                                    onChange={(e) => updateSetting('emailNotification', e.target.value)}
+                                    className="flex-1 bg-slate-950 border border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-white outline-none focus:border-blue-500/50 transition-colors"
+                                />
+                                <Button className="bg-white/5 hover:bg-white/10 text-[10px] font-black px-4 h-10 rounded-xl">VERIFY</Button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <Send className="size-3" /> Telegram Bot
+                            </label>
+                            <Button variant="outline" className="w-full bg-slate-950 border-white/5 text-blue-400 text-xs font-bold gap-2 rounded-xl py-5">
+                                CONNECT TO LASTWISH_BOT
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="bg-purple-600/5 rounded-2xl p-6 border border-purple-500/10 space-y-4">
+                        <h4 className="text-xs font-black text-purple-300 uppercase tracking-widest flex items-center gap-2">
+                            <Zap className="size-3" /> Web3 Push (EPNS)
+                        </h4>
+                        <p className="text-[10px] text-purple-200/60 leading-relaxed">
+                            Receive wallet-to-wallet notifications for critical heartbeat warnings and execution alerts via the EPNS protocol.
+                        </p>
+                        <Button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl py-5">
+                            ENABLE PUSH CHANNEL
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </section>
+
+      {/* -- SECTION: STORAGE -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <Database className="size-5 text-indigo-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Decentralized Storage</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div 
+                onClick={() => updateSetting('storageProvider', 'ipfs')}
+                className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex gap-4 ${appState.settings.storageProvider === 'ipfs' ? 'bg-blue-600/10 border-blue-600 shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
+            >
+                <div className={`size-12 rounded-2xl flex items-center justify-center ${appState.settings.storageProvider === 'ipfs' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                    <Globe className="size-6" />
+                </div>
+                <div className="flex-1 space-y-1">
+                    <h3 className="text-white font-black text-sm">IPFS / Filecoin</h3>
+                    <p className="text-[10px] text-slate-500 leading-tight">Distributed content-addressed storage. Fast & resilient.</p>
+                    {appState.settings.storageProvider === 'ipfs' && (
+                        <div className="text-[8px] font-black text-blue-400 uppercase tracking-widest mt-2">ACTIVE PRIMARY</div>
                     )}
                 </div>
             </div>
 
-            {isMigrating && (
-                <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                        <AlertOctagon className="w-5 h-5 text-orange-400 animate-pulse" />
-                        <span className="font-semibold text-orange-200">{t.settings_migrate || 'Migrating Vault Identity...'}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-orange-400 transition-all duration-300" style={{ width: `${migrationProgress}%` }} />
-                    </div>
-                    <span className="text-xs text-orange-300 text-right">{migrationProgress}% Complete</span>
+            <div 
+                onClick={() => updateSetting('storageProvider', 'arweave')}
+                className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex gap-4 ${appState.settings.storageProvider === 'arweave' ? 'bg-amber-600/10 border-amber-600 shadow-[0_0_30px_rgba(217,119,6,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
+            >
+                <div className={`size-12 rounded-2xl flex items-center justify-center ${appState.settings.storageProvider === 'arweave' ? 'bg-amber-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                    <Database className="size-6" />
                 </div>
-            )}
-          </CardContent>
-        </Card>
+                <div className="flex-1 space-y-1">
+                    <h3 className="text-white font-black text-sm">Arweave (Permanent)</h3>
+                    <p className="text-[10px] text-slate-500 leading-tight">Pay once, store forever. Immutable blockchain storage.</p>
+                    {appState.settings.storageProvider === 'arweave' && (
+                        <div className="text-[8px] font-black text-amber-400 uppercase tracking-widest mt-2">ACTIVE PRIMARY</div>
+                    )}
+                </div>
+            </div>
+        </div>
+      </section>
 
-        {/* -- SECURITY -- */}
-        <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center text-slate-100">
-              <Shield className="w-5 h-5 mr-3 text-orange-400" />
-              Vault Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="flex items-center text-slate-200 font-medium whitespace-nowrap"><Fingerprint className="w-4 h-4 mr-2 text-slate-400"/> Biometric Override</div>
-                <div className="text-sm text-slate-400">Hardware auth requirement</div>
-              </div>
-              <div 
-                className={`w-11 h-6 rounded-full p-1 cursor-pointer transition-colors ${bioEnabled ? 'bg-orange-500' : 'bg-slate-700'}`}
-                onClick={() => setBioEnabled(!bioEnabled)}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${bioEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <div className="flex items-center text-slate-200 font-medium"><Lock className="w-4 h-4 mr-2 text-slate-400"/> Rotate Security PIN</div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <div className="flex items-center text-slate-200 font-medium"><ShieldCheck className="w-4 h-4 mr-2 text-slate-400"/> Verify Master Keys</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* -- SECTION: ADVANCED -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+            <Cpu className="size-5 text-slate-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Advanced Engine</h2>
+        </div>
 
-        {/* -- CONFIG -- */}
-        <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center text-slate-100">
-              <Zap className="w-5 h-5 mr-3 text-emerald-400" />
-              Operational Config
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="flex items-center text-slate-200 font-medium"><Globe className="w-4 h-4 mr-2 text-slate-400"/> {t.settings_language || 'Interface Language'}</div>
-              </div>
-              <select 
-                value={lang} 
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                className="bg-white/5 border border-white/10 text-slate-200 text-sm rounded-md px-3 py-2 outline-none focus:border-[#2b52ff]"
-              >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="hi">हिंदी (Hindi)</option>
-              </select>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="flex items-center text-slate-200 font-medium">Push Notifications</div>
-              </div>
-              <div 
-                className={`w-11 h-6 rounded-full p-1 cursor-pointer transition-colors ${notifEnabled ? 'bg-emerald-500' : 'bg-slate-700'}`}
-                onClick={() => setNotifEnabled(!notifEnabled)}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${notifEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-              </div>
-            </div>
-          </CardContent>
+        <Card className="bg-white/[0.02] border-white/10">
+            <CardContent className="p-6 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <div className="text-xs font-bold text-white uppercase tracking-tighter">Gas Settings</div>
+                                <p className="text-[10px] text-slate-500">Auto-calculated execution costs</p>
+                            </div>
+                            <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-white/5">
+                                <button 
+                                    onClick={() => updateSetting('gasPrice', 'auto')}
+                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-colors ${appState.settings.gasPrice === 'auto' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                >
+                                    AUTO
+                                </button>
+                                <button 
+                                    onClick={() => updateSetting('gasPrice', 50)}
+                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-colors ${appState.settings.gasPrice !== 'auto' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                >
+                                    MANUAL
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <div className="text-xs font-bold text-white uppercase tracking-tighter">Testnet Mode</div>
+                                <p className="text-[10px] text-slate-500">Enable Sepolia / Mumbai support</p>
+                            </div>
+                            <div 
+                                className={`w-10 h-5 rounded-full p-1 cursor-pointer transition-colors ${appState.settings.testnetMode ? 'bg-blue-600' : 'bg-slate-800'}`}
+                                onClick={() => updateSetting('testnetMode', !appState.settings.testnetMode)}
+                            >
+                                <div className={`size-3 bg-white rounded-full transition-transform ${appState.settings.testnetMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <Button className="w-full bg-slate-950 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-bold gap-3 rounded-2xl py-6 group">
+                            <Terminal className="size-4 group-hover:scale-110 transition-transform" />
+                            SIMULATE EXECUTION (DRY RUN)
+                        </Button>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button variant="outline" className="bg-white/5 border-white/5 hover:bg-white/10 text-[10px] font-black tracking-widest rounded-xl py-5">
+                                VIEW AUDIT LOG
+                            </Button>
+                            <Button variant="outline" className="bg-white/5 border-white/5 hover:bg-white/10 text-[10px] font-black tracking-widest rounded-xl py-5">
+                                JSON CONFIG
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
         </Card>
-      </div>
+      </section>
+
+      {/* -- SECTION: DANGER ZONE -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-red-500/20 pb-2">
+            <AlertOctagon className="size-5 text-red-500" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-red-400/60">Danger Zone</h2>
+        </div>
+
+        <Card className="bg-red-500/[0.02] border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.05)]">
+            <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-1 text-center md:text-left">
+                        <h3 className="text-red-400 font-black text-base uppercase">Revoke Protocol Instance</h3>
+                        <p className="text-xs text-red-400/40 font-medium">This will permanently delete all encrypted shards and stop the switch switch. This action is irreversible.</p>
+                    </div>
+                    <Button variant="destructive" className="bg-red-600 hover:bg-red-500 text-white font-black text-xs px-8 h-12 rounded-2xl shadow-lg shadow-red-600/20 uppercase tracking-widest">
+                        DELETE WILL
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+      </section>
+
+      {/* -- STICKY SAVE STATUS -- */}
+      <AnimatePresence>
+          {isUpdating && (
+              <motion.div 
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 z-50 border border-blue-400/30"
+              >
+                  <RefreshCw className="size-4 animate-spin" />
+                  <span className="text-xs font-black uppercase tracking-widest">Syncing Kernel Config...</span>
+              </motion.div>
+          )}
+      </AnimatePresence>
 
       <UpgradeModal 
-        isOpen={isUpgradeModalOpen} 
-        onClose={() => setIsUpgradeModalOpen(false)}
-        onUpgrade={() => {
-            // In a real app, this would redirect to stripe or open payment flow
-            console.log("Redirecting to upgrade flow...")
-            setIsUpgradeModalOpen(false)
-            alert("Upgrade flow initiated (Check console)")
-        }}
-        description={t.settings_web3_locked || 'Web3 storage is locked to premium accounts during the trial period. Upgrade your plan to unlock.'}
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={handleUpgrade}
       />
     </div>
-  )
-}
-
-function ServerIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
-      <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
-      <line x1="6" x2="6.01" y1="6" y2="6" />
-      <line x1="6" x2="6.01" y1="18" y2="18" />
-    </svg>
   )
 }

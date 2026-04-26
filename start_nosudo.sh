@@ -46,7 +46,7 @@ do_stop() {
     for port in 7000 7001 8081 8545 19000 19001 19002; do
         PID=$(lsof -t -i :$port 2>/dev/null)
         if [ ! -z "$PID" ]; then
-            kill -9 $PID 2>/dev/null || true
+            kill -9 $PID 2>/dev/null || kill -9 $PID 2>/dev/null
         fi
     done
 

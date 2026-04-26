@@ -59,4 +59,10 @@ export class BeneficiariesController {
   async deleteBeneficiary(@Param('id') id: string): Promise<void> {
     return this.beneficiariesService.deleteBeneficiary(id);
   }
+  @Get('in-wills')
+  @ApiOperation({ summary: 'Get all owners who designated this wallet as beneficiary' })
+  @ApiResponse({ status: 200, description: 'Owners retrieved successfully' })
+  async getOwnersByBeneficiary(@Query('walletAddress') walletAddress: string): Promise<any[]> {
+    return this.beneficiariesService.findOwnersForBeneficiary(walletAddress);
+  }
 }

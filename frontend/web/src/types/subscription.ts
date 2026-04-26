@@ -1,21 +1,17 @@
-/**
- * Subscription & Mode Types for Dual-Mode System
- */
-
 export type UserMode = 'centralized' | 'decentralized'
-
 export type SubscriptionStatus = 'trial' | 'active' | 'expired' | 'cancelled'
+export type BillingCycle = 'monthly' | 'quarterly' | 'yearly'
 
-export type CentralizedPlan = 'starter' | 'professional' | 'enterprise'
-export type DecentralizedPlan = 'freedom' | 'sovereign' | 'immortal'
+export type CentralizedPlan = 'nano' | 'lite' | 'essential' | 'secure' | 'professional' | 'mega' | 'enterprise'
+export type DecentralizedPlan = 'freedom_nano' | 'freedom_lite' | 'freedom_basic' | 'freedom_secure' | 'sovereign_pro' | 'sovereign_mega' | 'immortal_elite'
 
 export type PlanType = CentralizedPlan | DecentralizedPlan
 
 export interface SubscriptionLimits {
-  assets: number // Infinity for unlimited
+  assets: number
   beneficiaries: number
-  storage: string // e.g., "10GB", "unlimited"
-  storageGB?: number // Numerical limit for UI bars
+  storage: string
+  storageGB: number
   support: 'email' | 'priority' | 'dedicated' | 'community'
   backup?: 'daily' | 'hourly' | 'realtime'
   chains?: string[]
@@ -25,190 +21,168 @@ export interface PricingPlan {
   id: PlanType
   name: string
   mode: UserMode
-  price: number // monthly in USD
-  yearlyPrice?: number // annual pricing
+  price: number // monthly
+  quarterlyPrice: number
+  yearlyPrice: number
   features: string[]
   limits: SubscriptionLimits
   popular?: boolean
 }
 
-export interface UserSubscription {
-  userId: string
-  mode: UserMode
-  plan: PlanType
-  status: SubscriptionStatus
-  trialEndsAt: Date | null
-  subscriptionEndsAt: Date | null
-  createdAt: Date
-  updatedAt: Date
-  canSwitchMode: boolean
-  stripeCustomerId?: string
-  stripeSubscriptionId?: string
-  assetsCount?: number
-  beneficiariesCount?: number
-  storageUsedGB?: number
-  limits?: SubscriptionLimits
-}
-
-// Pricing Plans
+/**
+ * 65% PROFIT MARGIN MODEL
+ * Prices adjusted to beat the market while ensuring high owner profit.
+ * Centralized prices lowered for volume; Web3 prices optimized for blockchain costs.
+ */
 export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
-  starter: {
-    id: 'starter',
-    name: 'Starter',
+  nano: {
+    id: 'nano',
+    name: 'Nano Vault',
     mode: 'centralized',
-    price: 4.99,
-    yearlyPrice: 49.90,
-    features: [
-      '50 assets',
-      '5 beneficiaries',
-      '10 GB storage',
-      'Email support',
-      'Auto-backup daily',
-      'Mobile app access',
-      '2FA security'
-    ],
-    limits: {
-      assets: 50,
-      beneficiaries: 5,
-      storage: '10GB',
-      support: 'email',
-      backup: 'daily'
-    }
+    price: 1.00,
+    quarterlyPrice: 3.00,
+    yearlyPrice: 5.00,
+    features: ['1 GB Secure Cloud', '2 Beneficiaries', 'Daily Backups', 'Email Support'],
+    limits: { assets: 20, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'email', backup: 'daily' }
+  },
+  lite: {
+    id: 'lite',
+    name: 'Lite Vault',
+    mode: 'centralized',
+    price: 1.99,
+    quarterlyPrice: 4.99,
+    yearlyPrice: 9.99,
+    features: ['5 GB Secure Cloud', '5 Beneficiaries', 'Daily Backups', 'Email Support'],
+    limits: { assets: 100, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'email', backup: 'daily' }
+  },
+  essential: {
+    id: 'essential',
+    name: 'Essential Vault',
+    mode: 'centralized',
+    price: 3.99,
+    quarterlyPrice: 9.99,
+    yearlyPrice: 19.99,
+    features: ['15 GB Secure Cloud', '10 Beneficiaries', 'Daily Backups', 'Standard Support'],
+    limits: { assets: 500, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'email', backup: 'daily' }
+  },
+  secure: {
+    id: 'secure',
+    name: 'Secure Vault',
+    mode: 'centralized',
+    price: 6.99,
+    quarterlyPrice: 16.99,
+    yearlyPrice: 39.99,
+    features: ['50 GB Secure Cloud', 'Unlimited Beneficiaries', 'Daily Backups', 'Priority Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '50GB', storageGB: 50, support: 'priority', backup: 'daily' }
   },
   professional: {
     id: 'professional',
-    name: 'Professional',
+    name: 'Pro Vault',
     mode: 'centralized',
-    price: 14.99,
-    yearlyPrice: 149.90,
+    price: 12.99,
+    quarterlyPrice: 29.99,
+    yearlyPrice: 79.99,
     popular: true,
-    features: [
-      'Unlimited assets',
-      'Unlimited beneficiaries',
-      '100 GB storage',
-      'Priority support',
-      'Hourly backups',
-      'API access',
-      'Advanced analytics',
-      'Multi-device sync',
-      'Custom domains'
-    ],
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storage: '100GB',
-      support: 'priority',
-      backup: 'hourly'
-    }
+    features: ['100 GB Secure Cloud', 'Unlimited Everything', 'Hourly Backups', 'Priority Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '100GB', storageGB: 100, support: 'priority', backup: 'hourly' }
+  },
+  mega: {
+    id: 'mega',
+    name: 'Mega Vault',
+    mode: 'centralized',
+    price: 19.99,
+    quarterlyPrice: 49.99,
+    yearlyPrice: 149.99,
+    features: ['500 GB Secure Cloud', 'Full Family Protection', 'Real-time Backups', 'Priority Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '500GB', storageGB: 500, support: 'priority', backup: 'realtime' }
   },
   enterprise: {
     id: 'enterprise',
-    name: 'Enterprise',
+    name: 'Elite Vault',
     mode: 'centralized',
-    price: 49.99,
-    yearlyPrice: 499.90,
-    features: [
-      'Everything in Professional',
-      'Dedicated support',
-      '1 TB storage',
-      'White-label option',
-      'SLA guarantee',
-      'Custom integrations',
-      'Team management',
-      'Audit logs',
-      'Compliance reports'
-    ],
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storage: '1TB',
-      support: 'dedicated',
-      backup: 'realtime'
-    }
+    price: 34.99,
+    quarterlyPrice: 89.99,
+    yearlyPrice: 299.99,
+    features: ['1 TB Secure Cloud', 'Dedicated Concierge', 'Legacy Counseling', 'SLA Guarantee'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '1TB', storageGB: 1024, support: 'dedicated', backup: 'realtime' }
   }
 }
 
 export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
-  freedom: {
-    id: 'freedom',
-    name: 'Freedom',
+  freedom_nano: {
+    id: 'freedom_nano',
+    name: 'Web3 Nano',
+    mode: 'decentralized',
+    price: 4.99,
+    quarterlyPrice: 12.99,
+    yearlyPrice: 49.99,
+    features: ['1 GB Arweave (Permanent)', 'Censorship Resistant', 'Self-Custody Keys', 'Email Support'],
+    limits: { assets: 20, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'community', chains: ['poly'] }
+  },
+  freedom_lite: {
+    id: 'freedom_lite',
+    name: 'Web3 Lite',
     mode: 'decentralized',
     price: 9.99,
-    yearlyPrice: 99.90,
-    features: [
-      'Unlimited assets (on-chain)',
-      'Unlimited beneficiaries',
-      'IPFS storage (unlimited)',
-      'Community support',
-      'No data custody',
-      'True ownership',
-      'Censorship resistant',
-      '+ Gas fees (user pays)'
-    ],
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storage: 'unlimited',
-      support: 'community',
-      chains: ['ethereum', 'polygon']
-    }
+    quarterlyPrice: 29.99,
+    yearlyPrice: 99.99,
+    features: ['5 GB Arweave (Permanent)', 'True Ownership', 'No Counterparty Risk', 'Email Support'],
+    limits: { assets: 100, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'community', chains: ['poly', 'eth'] }
   },
-  sovereign: {
-    id: 'sovereign',
-    name: 'Sovereign',
+  freedom_basic: {
+    id: 'freedom_basic',
+    name: 'Web3 Basic',
     mode: 'decentralized',
-    price: 29.99,
-    yearlyPrice: 299.90,
+    price: 19.99,
+    quarterlyPrice: 49.99,
+    yearlyPrice: 199.99,
+    features: ['15 GB Arweave (Permanent)', 'Shard-Distributed', 'Quantum Ready', 'Priority Support'],
+    limits: { assets: 500, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'priority', chains: ['poly', 'eth'] }
+  },
+  freedom_secure: {
+    id: 'freedom_secure',
+    name: 'Web3 Secure',
+    mode: 'decentralized',
+    price: 12.99,
+    quarterlyPrice: 34.99,
+    yearlyPrice: 99.99,
+    features: ['50 GB IPFS Storage', 'Decentralized Access', 'Zero Logs Policy', 'Priority Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '50GB', storageGB: 50, support: 'priority', chains: ['all'] }
+  },
+  sovereign_pro: {
+    id: 'sovereign_pro',
+    name: 'Web3 Pro',
+    mode: 'decentralized',
+    price: 19.99,
+    quarterlyPrice: 49.99,
+    yearlyPrice: 149.99,
     popular: true,
-    features: [
-      'Everything in Freedom',
-      'Arweave permanent storage',
-      'Multi-chain support',
-      'Advanced smart contracts',
-      'Priority gas optimization',
-      'Hardware wallet support',
-      'Multi-sig support',
-      '+ Gas fees (user pays)'
-    ],
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storage: 'unlimited',
-      support: 'priority',
-      chains: ['ethereum', 'polygon', 'bsc', 'arbitrum']
-    }
+    features: ['100 GB IPFS Storage', 'Multi-Chain Release', 'Custom Heartbeat', 'Priority Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '100GB', storageGB: 100, support: 'priority', chains: ['all'] }
   },
-  immortal: {
-    id: 'immortal',
-    name: 'Immortal',
+  sovereign_mega: {
+    id: 'sovereign_mega',
+    name: 'Web3 Mega',
     mode: 'decentralized',
-    price: 149.00,
-    yearlyPrice: 1499.00, // One-Time Lifetime Fee equivalent
-    features: [
-      'Everything in Sovereign',
-      'Lifetime Arweave storage',
-      'All chains supported',
-      'Zero-knowledge proofs',
-      'Quantum-resistant encryption',
-      'Dedicated IPFS node',
-      'Custom smart contracts',
-      'Legal document templates',
-      '+ Gas fees (user pays)'
-    ],
-    limits: {
-      assets: Infinity,
-      beneficiaries: Infinity,
-      storage: 'permanent',
-      support: 'dedicated',
-      chains: ['all']
-    }
+    price: 49.99,
+    quarterlyPrice: 129.99,
+    yearlyPrice: 499.99,
+    features: ['500 GB IPFS Storage', 'Family Node Access', 'Hardware Key Support', 'Dedicated Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '500GB', storageGB: 500, support: 'dedicated', chains: ['all'] }
+  },
+  immortal_elite: {
+    id: 'immortal_elite',
+    name: 'Web3 Immortal',
+    mode: 'decentralized',
+    price: 89.99,
+    quarterlyPrice: 199.99,
+    yearlyPrice: 899.99,
+    features: ['1 TB IPFS Storage', 'Quantum Guard Vault', 'Multi-Sig Handover', 'Dedicated Support'],
+    limits: { assets: Infinity, beneficiaries: Infinity, storage: '1TB', storageGB: 1024, support: 'dedicated', chains: ['all'] }
   }
 }
 
-export const ALL_PLANS = {
+export const ALL_PLANS: Record<PlanType, PricingPlan> = {
   ...CENTRALIZED_PLANS,
   ...DECENTRALIZED_PLANS
 }
-
-export const TRIAL_DURATION_DAYS = 30
-export const MIGRATION_FEE = 9.99

@@ -105,6 +105,32 @@ contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
         onChainPayloads[msg.sender] = payload;
     }
 
+    function authorizeNominee(address nominee) external whenNotPaused {
+        require(wills[msg.sender].isActive, "No active will");
+        require(nominee != msg.sender, "Self-nomination not allowed");
+        nominees[msg.sender][nominee] = true;
+        emit NomineeAuthorized(msg.sender, nominee);
+    }
+
+    function revokeNominee(address nominee) external {
+        nominees[msg.sender][nominee] = false;
+    }
+
+    function checkAndTrigger(address owner) external onlyRole(ORACLE_ROLE) {
+        WillCondition storage userWill = wills[owner];
+        require(userWill.isActive, "Will not active");
+        require(!userWill.isTriggered, "Already triggered");
+        
+        // Check if heartbeat is expired
+        require(
+            block.timestamp > userWill.lastHeartbeat + userWill.heartbeatInterval,
+            "Heartbeat still active"
+        );
+        
+        userWill.isTriggered = true;
+        emit LastWishTriggered(owner, block.timestamp);
+    }
+
     function claimPayload(address owner) external nonReentrant returns (string memory) {
         require(wills[owner].isTriggered, "Not triggered");
         require(nominees[owner][msg.sender], "Not authorized");

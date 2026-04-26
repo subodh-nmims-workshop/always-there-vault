@@ -20,63 +20,63 @@ services:
     networks:
       - protocol_net
 
-  # 2. Next.js Web Dashboard
-  web:
-    image: subodh40/lastwish-web:latest
-    build:
-      context: ./frontend/web
-      dockerfile: Dockerfile
-      network: host
-    container_name: lastwish_web
-    ports:
-      - "7000:7000"
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:7001
-      - NEXT_PUBLIC_CHAIN_ID=31337
-      - NEXT_PUBLIC_RPC_URL=http://blockchain:8545
-      - NODE_ENV=production
-    depends_on:
-      - backend
-      - blockchain
-    networks:
-      - protocol_net
+  # 2. Next.js Web Dashboard (Disabled to allow local dev server)
+  # web:
+  #   image: subodh40/lastwish-web:latest
+  #   build:
+  #     context: ./frontend/web
+  #     dockerfile: Dockerfile
+  #     network: host
+  #   container_name: lastwish_web
+  #   ports:
+  #     - "7000:7000"
+  #   environment:
+  #     - NEXT_PUBLIC_BACKEND_URL=http://localhost:7001
+  #     - NEXT_PUBLIC_CHAIN_ID=137
+  #     - NEXT_PUBLIC_RPC_URL=https://polygon-rpc.com
+  #     - NODE_ENV=production
+  #   depends_on:
+  #     - backend
+  #     - blockchain
+  #   networks:
+  #     - protocol_net
 
-  # 3. NestJS Backend API
-  backend:
-    image: subodh40/lastwish-backend:latest
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      network: host
-    container_name: lastwish_backend
-    ports:
-      - "7001:7001"
-    environment:
-      - NODE_ENV=production
-      - PORT=7001
-      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/lastwish}
-      - RPC_URL=http://blockchain:8545
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
-      - EMAIL_PORT=${EMAIL_PORT:-587}
-      - EMAIL_SECURE=${EMAIL_SECURE:-false}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - SMTP_FROM=${SMTP_FROM}
-      - MONGO_URI=mongodb://admin:password@mongodb:27017/digital-will?authSource=admin
-    depends_on:
-      - postgres
-      - blockchain
-      - mongodb
-    networks:
-      - protocol_net
+  # 3. NestJS Backend API (Disabled to allow local dev server)
+  # backend:
+  #   image: subodh40/lastwish-backend:latest
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #     network: host
+  #   container_name: lastwish_backend
+  #   ports:
+  #     - "7001:7001"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=7001
+  #     - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/lastwish}
+  #     - RPC_URL=http://blockchain:8545
+  #     - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+  #     - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
+  #     - EMAIL_PORT=${EMAIL_PORT:-587}
+  #     - EMAIL_SECURE=${EMAIL_SECURE:-false}
+  #     - EMAIL_USER=${EMAIL_USER}
+  #     - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+  #     - SMTP_FROM=${SMTP_FROM}
+  #     - MONGO_URI=mongodb://admin:password@mongodb:27017/digital-will?authSource=admin
+  #   depends_on:
+  #     - postgres
+  #     - blockchain
+  #     - mongodb
+  #   networks:
+  #     - protocol_net
 
   # 4. PostgreSQL Database (For Drizzle ORM)
   postgres:
     image: postgres:15-alpine
     container_name: lastwish_db
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -90,7 +90,8 @@ services:
   mongodb:
     image: mongo:7.0
     container_name: lastwish_mongodb
-    # Removed host port mapping to avoid 27017 conflict with existing smarttech-mongodb
+    ports:
+      - "27018:27017"
     expose:
       - "27017"
     environment:

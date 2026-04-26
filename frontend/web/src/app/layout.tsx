@@ -10,7 +10,11 @@ export const metadata: Metadata = {
   description: 'A decentralized, non-custodial system that encrypts your digital life and automatically releases only what you choose, only to whom you choose, only when you are no longer active.',
   keywords: ['blockchain', 'digital will', 'inheritance', 'crypto', 'decentralized'],
   authors: [{ name: 'Digital Will Protocol Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

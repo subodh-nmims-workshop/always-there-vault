@@ -39,17 +39,17 @@ class WebCryptoService {
     return WebCryptoService.instance;
   }
 
-  // Helper to convert hex to Uint8Array
-  private hexToUint8Array(hex: string): Uint8Array {
-    const match = hex.match(/.{1,2}/g);
-    return new Uint8Array(match ? match.map(byte => parseInt(byte, 16)) : []) as any;
+  private uint8ArrayToHex(arr: Uint8Array | ArrayBuffer): string {
+    const bytes = new Uint8Array(arr as any);
+    return bytes.reduce((acc, byte) => acc + byte.toString(16).padStart(2, '0'), '');
   }
 
-  // Helper to convert Uint8Array to hex
-  private uint8ArrayToHex(arr: Uint8Array | ArrayBuffer): string {
-    return Array.from(new Uint8Array(arr as any))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+  private hexToUint8Array(hex: string): Uint8Array {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    return bytes;
   }
 
   /**

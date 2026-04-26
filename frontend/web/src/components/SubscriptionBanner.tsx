@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 interface TrialStatus {
   isExpired: boolean;
@@ -27,20 +27,24 @@ export default function SubscriptionBanner() {
   }, []);
 
   const fetchSubscriptionStatus = async () => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) return;
+    const userId = localStorage.getItem('userId') || localStorage.getItem('dwp_wallet_address');
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const [trialRes, subRes] = await Promise.all([
-        fetch(`http://localhost:7001/subscription/${userId}/trial-status`),
-        fetch(`http://localhost:7001/subscription/${userId}`),
+        fetch(`${apiEndpoint}/subscription/${userId}/trial-status`),
+        fetch(`${apiEndpoint}/subscription/${userId}`),
       ]);
 
-      const trialData = await trialRes.json();
-      const subData = await subRes.json();
+      const trialData = trialRes.ok ? await trialRes.json() : null;
+      const subData = subRes.ok ? await subRes.json() : null;
 
-      setTrialStatus(trialData);
-      setSubscription(subData);
+      if (trialData) setTrialStatus(trialData);
+      if (subData) setSubscription(subData);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch subscription status:', error);

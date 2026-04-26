@@ -60,15 +60,13 @@ export function useSubscription(userId: string | null) {
         fetch(`${API_URL}/subscription/${userId}/limits`),
       ]);
 
-      if (!subRes.ok) throw new Error('Failed to fetch subscription');
+      const subData = subRes.ok ? await subRes.json() : null;
+      const trialData = trialRes.ok ? await trialRes.json() : null;
+      const limitsData = limitsRes.ok ? await limitsRes.json() : null;
 
-      const subData = await subRes.json();
-      const trialData = await trialRes.json();
-      const limitsData = await limitsRes.json();
-
-      setSubscription(subData);
-      setTrialStatus(trialData);
-      setLimits(limitsData);
+      if (subData) setSubscription(subData);
+      if (trialData) setTrialStatus(trialData);
+      if (limitsData) setLimits(limitsData);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch subscription');

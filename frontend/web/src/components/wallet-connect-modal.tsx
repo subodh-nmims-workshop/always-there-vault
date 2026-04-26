@@ -1,7 +1,9 @@
 'use client'
 
 import { X, Wallet, Shield, CheckCircle } from 'lucide-react'
-import { connectWallet } from '@/lib/blockchain'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
+import { useAccount, useDisconnect } from 'wagmi'
+import { useEffect } from 'react'
 
 interface WalletConnectModalProps {
   isOpen: boolean
@@ -11,25 +13,38 @@ interface WalletConnectModalProps {
 }
 
 export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }: WalletConnectModalProps) {
+  const { openConnectModal } = useConnectModal()
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+
+  useEffect(() => {
+    if (!isOpen) return
+    // Wallet already connected (e.g. MetaMask still has session) — skip RainbowKit modal, go straight to signing
+    if (isConnected && address) {
+      onConnect(address)
+      return
+    }
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When wallet connects after user picks one from RainbowKit
+  useEffect(() => {
+    if (isConnected && address && isOpen) {
+      onConnect(address)
+    }
+  }, [isConnected, address]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!isOpen) return null
 
-  const handleWalletSelect = async (type: string) => {
-    try {
-      const result = await connectWallet()
-      if (result.success && result.address) {
-        onConnect(result.address)
-        toast.success('Wallet Secured', {
-          description: `Connected to ${result.address.substring(0, 15)}...`
-        })
-      } else {
-        toast.error('Connection Diverted', {
-          description: result.error || 'The protocol could not handshake with your wallet.'
-        })
-      }
-    } catch (err: any) {
-      toast.error('Node Communication Failure', {
-        description: err.message || 'Check your internet or wallet provider status.'
-      })
+  const handleWalletSelect = () => {
+    if (isConnected && address) {
+      // Already connected, just trigger auth signing
+      onConnect(address)
+    } else if (openConnectModal) {
+      openConnectModal()
+    } else {
+      // Fallback: disconnect stale session and retry
+      disconnect()
+      setTimeout(() => openConnectModal?.(), 300)
     }
   }
 
@@ -60,84 +75,36 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
               Connect Your Wallet
             </h2>
             <p className="text-sm text-slate-400">
-              Choose how you want to connect to Digital Will Protocol
+              Unlock the protocol with your decentralized identity
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <button
-              onClick={() => handleWalletSelect('metamask')}
-              disabled={isConnecting}
-              className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleWalletSelect}
+              className="w-full py-4 bg-[#1152d4] hover:bg-[#1152d4]/90 text-white rounded-2xl font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.3)] transition-all flex items-center justify-center gap-3"
             >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                  <span className="text-2xl">🦊</span>
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-slate-200">MetaMask</h3>
-                  <p className="text-xs text-slate-400">Connect with MetaMask</p>
-                </div>
-                {isConnecting && (
-                  <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-                )}
-              </div>
+              <Wallet className="w-6 h-6" />
+              Open Multi-Wallet Selector
             </button>
-            <button
-              onClick={() => handleWalletSelect('rainbow')}
-              disabled={isConnecting}
-              className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                  <span className="text-2xl">🌈</span>
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-slate-200">Rainbow</h3>
-                  <p className="text-xs text-slate-400">Connect with Rainbow</p>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleWalletSelect('walletconnect')}
-              disabled={isConnecting}
-              className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-slate-200">WalletConnect</h3>
-                  <p className="text-xs text-slate-400">Scan with mobile wallet</p>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleWalletSelect('coinbase')}
-              disabled={isConnecting}
-              className="w-full premium-card p-4 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                  <span className="text-2xl">👛</span>
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-slate-200">Coinbase Wallet</h3>
-                  <p className="text-xs text-slate-400">Connect with Coinbase</p>
-                </div>
-              </div>
-            </button>
+            
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Supported Networks</p>
+            <div className="flex justify-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
+                <span className="text-2xl" title="Ethereum">🔹</span>
+                <span className="text-2xl" title="Polygon">🟣</span>
+                <span className="text-2xl" title="Local Hardhat">👷</span>
+            </div>
+            <p className="text-xs text-amber-500/80 mt-2 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+              ⚠️ <b>Local Testing:</b> Mobile wallets & WalletConnect do not support Localhost. Please install the MetaMask browser extension to connect.
+            </p>
           </div>
 
           <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
               <div className="text-left text-sm text-slate-300">
-                <p className="font-medium text-blue-300 mb-1">Secure Connection</p>
-                <p className="text-xs">Your wallet credentials are never stored on our servers. All encryption happens client-side.</p>
+                <p className="font-medium text-blue-300 mb-1">RainbowKit Integrated</p>
+                <p className="text-xs">Access Rainbow, Coinbase, MetaMask, and hundreds of mobile wallets via WalletConnect.</p>
               </div>
             </div>
           </div>
@@ -150,10 +117,6 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
             <div className="flex items-center justify-center space-x-2">
               <CheckCircle className="h-4 w-4 text-green-400" />
               <span>Client-side encryption</span>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <CheckCircle className="h-4 w-4 text-green-400" />
-              <span>No data collection</span>
             </div>
           </div>
         </div>

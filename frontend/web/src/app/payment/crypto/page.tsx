@@ -108,6 +108,22 @@ function CryptoPaymentContent() {
 
       await subscribeTx.wait()
 
+      // Notify backend to update database and send email
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'}/api/payment/process`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: walletAddress,
+            method: 'CRYPTO',
+            planId: plan,
+            reference: subscribeTx.hash
+          })
+        })
+      } catch (err) {
+        console.error('Failed to notify backend:', err)
+      }
+
       setIsPaid(true)
       toast.success('Payment successful!', {
         description: 'Your subscription is now active'

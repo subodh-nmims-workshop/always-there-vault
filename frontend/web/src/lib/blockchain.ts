@@ -344,20 +344,56 @@ export async function connectWallet() {
 
     // Check if on correct network
     const network = await provider.getNetwork()
+    const currentChainId = Number(network.chainId)
     const config = getContractConfig()
+    const targetChainId = config.CHAIN_ID || 1337
+    
+    console.log(`[Blockchain] Current Chain: ${currentChainId}, Target Chain: ${targetChainId}`)
 
-    if (Number(network.chainId) !== config.CHAIN_ID) {
-      // Switch network
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${config.CHAIN_ID.toString(16)}` }]
-      })
+    if (currentChainId !== targetChainId) {
+      const chainIdHex = `0x${targetChainId.toString(16)}`
+      try {
+        console.log(`[Blockchain] Attempting to switch to ${targetChainId}...`)
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainIdHex }]
+        })
+      } catch (switchError: any) {
+        console.warn(`[Blockchain] Switch failed (code: ${switchError.code}), attempting to add network:`, switchError)
+        // 4902 = chain not added, -32603/-32600 = invalid request (also means not added on some wallets)
+        if (switchError.code === 4902 || switchError.code === -32603 || switchError.code === -32600) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: chainIdHex,
+                chainName: 'Hardhat Local',
+                rpcUrls: ['http://127.0.0.1:8545'],
+                nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+              }
+            ]
+          })
+          // After adding, explicitly switch to it
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: chainIdHex }]
+          })
+        } else {
+          throw switchError
+        }
+      }
     }
+
+    // Re-fetch address after potential network switch
+    const freshProvider = new ethers.BrowserProvider(window.ethereum)
+    const freshSigner = await freshProvider.getSigner()
+    const freshAddress = await freshSigner.getAddress()
+    const finalNetwork = await freshProvider.getNetwork()
 
     return {
       success: true,
-      address,
-      chainId: Number(network.chainId)
+      address: freshAddress,
+      chainId: Number(finalNetwork.chainId)
     }
   } catch (error: any) {
     console.error('Failed to connect wallet:', error)

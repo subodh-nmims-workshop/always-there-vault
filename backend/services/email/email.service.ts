@@ -15,20 +15,20 @@ export class EmailService {
   private fromEmail: string;
 
   constructor(private configService: ConfigService) {
-    const host = this.configService.get<string>('EMAIL_HOST') || 'smtp.gmail.com';
-    const port = this.configService.get<number>('EMAIL_PORT') || 587;
-    const user = this.configService.get<string>('EMAIL_USER');
-    const pass = this.configService.get<string>('EMAIL_PASSWORD');
-    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"Digital Will Protocol" <${user}>`;
+    const host = this.configService.get<string>('SMTP_HOST') || 'smtp.ethereal.email';
+    const port = parseInt(this.configService.get<string>('SMTP_PORT') || '587');
+    const user = this.configService.get<string>('SMTP_USER');
+    const pass = this.configService.get<string>('SMTP_PASS');
+    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"Last Wish Protocol" <${user}>`;
 
-    if (!user || !pass) {
-      console.warn('⚠️  EMAIL_USER or EMAIL_PASSWORD not configured. Email features will be simulated in console.');
+    if (!user || user.includes('example')) {
+      console.warn('⚠️  SMTP_USER or SMTP_PASS not configured. Using temporary Ethereal account logic.');
     }
 
     this.transporter = nodemailer.createTransport({
       host,
       port,
-      secure: port === 465, // true for 465, false for other ports
+      secure: port === 465, 
       auth: {
         user,
         pass,
@@ -40,7 +40,7 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    const user = this.configService.get<string>('EMAIL_USER');
+    const user = this.configService.get<string>('SMTP_USER');
     
     // If no real email provided, use Ethereal for a REAL preview without credentials
     if (!user || user.includes('your-email') || user.includes('paste-your-16-digit')) {
@@ -197,7 +197,7 @@ export class EmailService {
     });
   }
 
-  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, assetCount: number): Promise<boolean> {
+  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number): Promise<boolean> {
     return this.sendEmail({
       to: email,
       subject: 'Assets Released - Action Required',
@@ -242,7 +242,7 @@ export class EmailService {
 
       <!-- Action Button -->
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/beneficiary/assets"
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/beneficiary/assets?owner=${ownerAddress}"
            style="display: inline-block; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px rgba(56, 189, 248, 0.3); transition: all 0.3s ease;">
           Claim Digital Assets
         </a>
@@ -280,7 +280,7 @@ export class EmailService {
             <li>Priority support</li>
             <li>Automatic heartbeat reminders</li>
           </ul>
-          <a href="https://lastwishprotocol.com/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             View Plans
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">

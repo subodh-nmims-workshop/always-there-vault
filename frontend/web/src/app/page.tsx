@@ -1,31 +1,50 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Shield,
-  Heart,
-  Users,
-  FileText,
-  Key,
-  Lock,
-  Zap,
-  Globe,
-  CheckCircle,
+import React, { useState, useEffect } from 'react'
+import { 
+  Shield, 
+  Lock, 
+  Users, 
+  Zap, 
+  ArrowRight, 
+  Database, 
+  Heart, 
+  Globe, 
+  ChevronRight,
+  ShieldCheck,
+  Timer,
+  Cpu,
   RefreshCw,
   Server,
-  Activity,
-  ArrowRight,
-  Fingerprint,
-  AlertOctagon,
-  Clock,
   KeyRound,
+  LineChart,
+  BookOpen,
+  Mail,
+  Smartphone,
+  HardDrive,
+  Target,
+  FileSearch,
+  Scale,
+  Award,
+  Fingerprint,
+  Layers,
   Network,
-  LineChart
+  HelpCircle,
+  Cloud,
+  CheckCircle2,
+  AlertTriangle,
+  History,
+  Info
 } from 'lucide-react'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAccount, useSignMessage, useDisconnect } from 'wagmi'
+import { toast } from 'sonner'
+
+// Components
+import { PricingPlans } from '@/components/pricing-plans'
+import { SharedFooter } from '@/components/shared-footer'
+import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import { AssetCreationForm } from '@/components/asset-creation-form'
 import { HeartbeatMonitor } from '@/components/heartbeat-monitor'
 import { OverviewDashboard } from '@/components/overview-dashboard'
@@ -33,129 +52,63 @@ import { BeneficiariesDashboard } from '@/components/beneficiaries-dashboard'
 import { BeneficiaryManager } from '@/components/beneficiary-manager'
 import { StatusDashboard } from '@/components/status-dashboard'
 import { SubscriptionDashboard } from '@/components/subscription-dashboard'
-import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import { ModeIndicator } from '@/components/mode-indicator'
 import { TrialBanner } from '@/components/trial-banner'
 import { SettingsDashboard } from '@/components/settings-dashboard'
 import { SupportSection } from '@/components/support-section'
-import WebStorageService, { AppState } from '@/lib/storage'
-import Link from 'next/link'
-import { SharedFooter } from '@/components/shared-footer'
-import { ethers } from 'ethers'
-import { toast } from 'sonner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function HomePage() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
+  const { address: wagmiAddress } = useAccount()
+  const { signMessageAsync } = useSignMessage()
+  const { disconnect } = useDisconnect()
+
   const [hasMounted, setHasMounted] = useState(false)
-
-  useEffect(() => {
-    setHasMounted(true)
-    const savedTab = localStorage.getItem('dwp_active_tab')
-    if (savedTab) setActiveTab(savedTab)
-  }, [])
-
-  const handleTabChange = (val: string) => {
-    setActiveTab(val)
-    localStorage.setItem('dwp_active_tab', val)
-  }
-  const [address, setAddress] = useState('0x742d35Cc6634C0532925a3b8D4C2C4e0C8b83c8e')
-  const [appState, setAppState] = useState<AppState | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isConnected, setIsConnected] = useState(false)
+  const [address, setAddress] = useState('')
+  const [activeTab, setActiveTab] = useState('overview')
   const [isConnecting, setIsConnecting] = useState(false)
   const [showWalletModal, setShowWalletModal] = useState(false)
 
-  const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll()
-
-  const storage = WebStorageService.getInstance()
-
-  // --- Persistence Logic ---
   useEffect(() => {
-    const checkConnection = () => {
-      const storedConnection = localStorage.getItem('dwp_wallet_connected')
-      if (storedConnection === 'true') {
-        const storedAddress = localStorage.getItem('dwp_wallet_address')
-        if (storedAddress) setAddress(storedAddress)
-        setIsConnected(true)
-      } else {
-        setIsLoading(false)
-      }
+    setHasMounted(true)
+    const storedConnection = localStorage.getItem('dwp_wallet_connected')
+    if (storedConnection === 'true') {
+      setIsConnected(true)
+      setAddress(localStorage.getItem('dwp_wallet_address') || '')
     }
-    checkConnection()
   }, [])
 
-  useEffect(() => {
-    if (isConnected) {
-      loadAppState()
-      const interval = setInterval(loadAppState, 10000)
-      return () => clearInterval(interval)
-    }
-  }, [isConnected])
-
-  const loadAppState = async () => {
-    try {
-      const state = await storage.getAppState()
-      setAppState(state)
-    } catch (error) {
-      console.error('Failed to load app state:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleConnect = () => {
-    setShowWalletModal(true)
-  }
+  const handleConnect = () => setShowWalletModal(true)
 
   const handleWalletConnect = async (walletAddress: string) => {
     setIsConnecting(true)
     try {
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
-      
-      // 1. Get Nonce
       const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
-      const nonceData = await nonceRes.json()
-      const message = nonceData.message
-      
-      // 2. Sign Message
-      if (!window.ethereum) {
-        throw new Error('Web3 wallet (MetaMask/Core) not detected. Please install a wallet to continue.')
-      }
-      
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const signature = await signer.signMessage(message)
-      
-      // 3. Verify Signature & Get JWT
+      const nonceData = await nonceRes.json().catch(() => ({}));
+      const message = nonceData?.nonce || "Welcome to LASTWISH. Please sign this message to authenticate."
+      const signature = await signMessageAsync({ message })
       const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress, message, signature })
       })
-      
-      const authData = await verifyRes.json()
-      
-      if (authData.token) {
+      const authData = await verifyRes.json().catch(() => ({}));
+      if (authData?.token) {
         setIsConnected(true)
         localStorage.setItem('dwp_wallet_connected', 'true')
         localStorage.setItem('dwp_wallet_address', walletAddress)
         localStorage.setItem('dwp_token', authData.token)
         setAddress(walletAddress)
         setShowWalletModal(false)
-        toast.success('Successfully authenticated with protocol quorum.')
-      } else {
-        throw new Error('Authentication failed. No token received.')
       }
     } catch (error: any) {
-      console.error('Wallet Authentication Error:', error)
-      toast.error(error.message || 'Failed to authenticate wallet signature')
-      // Fallback for development if backend is not running
       if (process.env.NODE_ENV === 'development') {
         setIsConnected(true)
+        setAddress(walletAddress)
         localStorage.setItem('dwp_wallet_connected', 'true')
         localStorage.setItem('dwp_wallet_address', walletAddress)
-        setAddress(walletAddress)
         setShowWalletModal(false)
       }
     } finally {
@@ -165,346 +118,287 @@ export default function HomePage() {
 
   const handleDisconnect = () => {
     setIsConnected(false)
-    localStorage.removeItem('dwp_wallet_connected')
-    localStorage.removeItem('dwp_wallet_address')
-    localStorage.removeItem('dwp_token')
+    disconnect()
+    localStorage.clear()
   }
 
-  const getHeartbeatStatusInfo = () => {
-    if (!appState) return { status: 'Unknown', color: 'gray', lastTime: 'Never' }
+  if (!hasMounted) return <div className="min-h-screen bg-[#030712]" />
 
-    const now = Date.now()
-    const daysSinceLastHeartbeat = (now - appState.stats.lastHeartbeat) / (1000 * 60 * 60 * 24)
-
-    if (daysSinceLastHeartbeat <= appState.settings.heartbeatInterval) {
-      return { status: 'Active', color: 'green', lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString() }
-    } else if (daysSinceLastHeartbeat <= appState.settings.heartbeatInterval + appState.settings.gracePeriod) {
-      return { status: 'Grace Period', color: 'yellow', lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString() }
-    } else {
-      return { status: 'Overdue', color: 'red', lastTime: new Date(appState.stats.lastHeartbeat).toLocaleDateString() }
-    }
-  }
-
-  const getSystemStatusInfo = () => {
-    if (!appState) return { status: 'Unknown', color: 'gray' }
-
-    switch (appState.stats.systemStatus) {
-      case 'secure': return { status: 'Secure', color: 'green' }
-      case 'warning': return { status: 'Warning', color: 'yellow' }
-      case 'error': return { status: 'Error', color: 'red' }
-      default: return { status: 'Unknown', color: 'gray' }
-    }
-  }
-
-  const defaultTransition: any = { duration: 0.8, ease: "easeOut" }
-
-  // Mock Activity Log for the Overview to make it look active and dense
-  const mockActivities = [
-    { type: 'heartbeat', title: 'Heartbeat Signature Verified', time: '2 hours ago', icon: <Heart className="w-4 h-4 text-green-400" /> },
-    { type: 'asset', title: 'Encrypted Payload "Cold Wallet Seeds" synced to IPFS', time: '1 day ago', icon: <Server className="w-4 h-4 text-[#2b52ff]" /> },
-    { type: 'security', title: 'Protocol Quorum Status: 5/5 Shards Healthy', time: '2 days ago', icon: <Shield className="w-4 h-4 text-purple-400" /> },
-    { type: 'beneficiary', title: 'Added "Legal Counsel" to Beneficiary Matrix', time: '5 days ago', icon: <Users className="w-4 h-4 text-orange-400" /> },
-  ]
-
-  if (!hasMounted) {
-    return <div className="min-h-screen bg-[#080a0f]" /> // Empty shell while mounting
-  }
-
-  if (!isConnected) {
+  if (isConnected) {
     return (
-      <div ref={containerRef} className="min-h-screen bg-[#080a0f] font-sans text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
-        {/* Navigation */}
-        <nav className="sticky top-0 z-50 bg-[#080a0f]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+      <div className="min-h-screen bg-[#030712] text-slate-100 font-sans flex flex-col overflow-x-hidden relative">
+        <nav className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Shield className="w-8 h-8" />
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Shield className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
+            <span className="font-black text-xl tracking-tight text-white uppercase">LastWish</span>
           </Link>
-          <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-            <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
-            <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
-            <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Security</Link>
-          </div>
-          <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)] disabled:opacity-50 flex items-center"
-          >
-            {isConnecting ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : null}
-            {isConnecting ? 'Connecting...' : 'Launch App'}
-          </button>
+          <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest">Logout</button>
         </nav>
-
-        <main className="flex-1 flex flex-col relative">
-          {/* Hero Section */}
-          <section className="relative pt-24 pb-20 px-6 text-center overflow-hidden flex flex-col items-center justify-center min-h-[85vh]">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[600px] bg-[#1152d4]/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={defaultTransition}
-              className="max-w-4xl mx-auto space-y-8 relative z-10"
-            >
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-sm mb-4">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-                <span className="text-xs font-semibold tracking-wide text-blue-100/80 uppercase">Secure • Decentralized • Trustless</span>
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24">
+          <TrialBanner />
+          <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-3xl p-8 shadow-2xl backdrop-blur-sm">
+            <div className="flex items-center space-x-5">
+              <div className="w-14 h-14 flex items-center justify-center bg-blue-600/20 rounded-2xl border border-blue-500/30">
+                <KeyRound className="h-7 w-7 text-blue-500" />
               </div>
-
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] tracking-tight text-slate-100">
-                Your Digital Legacy,<br />
-                <span className="bg-gradient-to-r from-[#1152d4] to-[#8b5cf6] bg-clip-text text-transparent">Protected Forever.</span>
-              </h1>
-
-              <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                Decentralized asset inheritance secured by smart contracts and zero-knowledge encryption. Built for the future of finance.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-                <button
-                  onClick={handleConnect}
-                  className="w-full sm:w-auto px-8 py-4 bg-[#1152d4] text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 hover:shadow-[0_0_30px_rgba(17,82,212,0.6)] transition-all"
-                >
-                  Access Protocol
-                </button>
-                <Link href="/features" className="w-full sm:w-auto px-8 py-4 bg-white/[0.03] border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors backdrop-blur-md flex justify-center">
-                  Read Specifications
-                </Link>
-              </div>
-
-              <div className="flex justify-center items-center gap-8 text-xs font-semibold tracking-wider text-slate-500 mt-12 uppercase">
-                <span className="flex items-center"><Shield className="w-4 h-4 mr-2" /> AES-256-GCM</span>
-                <span className="flex items-center"><Server className="w-4 h-4 mr-2" /> IPFS Storage</span>
-                <span className="flex items-center"><LineChart className="w-4 h-4 mr-2" /> Polygon Network</span>
-              </div>
-            </motion.div>
-          </section>
-
-          {/* Feature Grid */}
-          <section className="px-6 py-20 relative z-10 border-t border-white/5 bg-[#05070a]">
-            <div className="flex flex-col gap-12 max-w-6xl mx-auto">
-              <div className="flex flex-col gap-3 text-center md:text-left">
-                <span className="text-[#1152d4] font-bold tracking-widest text-xs uppercase">Security Protocol</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-slate-100 tracking-tight">Battle-Tested Architecture</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1, duration: 0.5 }}
-                  className="bg-white/[0.02] backdrop-blur-xl p-10 rounded-3xl flex flex-col gap-6 border border-white/5 hover:border-[#1152d4]/50 hover:bg-white/[0.04] transition-all group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-[#1152d4]/10 flex items-center justify-center text-[#1152d4] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(17,82,212,0.3)] transition-all">
-                    <Lock className="w-7 h-7" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold text-slate-100">Zero Trust Architecture</h3>
-                    <p className="text-slate-400 leading-relaxed">End-to-end encryption with zero-knowledge proofs ensuring privacy remains absolute. Servers never see plaintext.</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                  className="bg-white/[0.02] backdrop-blur-xl p-10 rounded-3xl flex flex-col gap-6 border border-white/5 hover:border-[#8b5cf6]/50 hover:bg-white/[0.04] transition-all group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center text-[#8b5cf6] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all">
-                    <Key className="w-7 h-7" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold text-slate-100">Shamir Secret Sharing</h3>
-                    <p className="text-slate-400 leading-relaxed">Distributed key security via advanced secret sharing protocols across decentralized nodes. No single point of failure.</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="bg-white/[0.02] backdrop-blur-xl p-10 rounded-3xl flex flex-col gap-6 border border-white/5 hover:border-[#10b981]/50 hover:bg-white/[0.04] transition-all group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-[#10b981]/10 flex items-center justify-center text-[#10b981] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all">
-                    <Clock className="w-7 h-7" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold text-slate-100">Automated Execution</h3>
-                    <p className="text-slate-400 leading-relaxed">Precision-engineered heartbeat smart contracts trigger asset transfer automatically upon verification of life decay.</p>
-                  </div>
-                </motion.div>
+              <div>
+                <h1 className="text-2xl font-black text-white">Your Secure Vault</h1>
+                <p className="text-xs font-mono text-slate-500 mt-1 uppercase tracking-tighter opacity-70">{address}</p>
               </div>
             </div>
-          </section>
-
-          {/* Social Proof */}
-          <section className="px-6 py-24 relative overflow-hidden bg-[#080a0f]">
-            <div className="max-w-5xl mx-auto rounded-[3rem] overflow-hidden bg-white/[0.02] border border-[#1152d4]/20 relative p-10 md:p-16 backdrop-blur-xl">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-[#1152d4]/20 blur-[100px] pointer-events-none -z-10"></div>
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8b5cf6]/10 blur-[100px] pointer-events-none -z-10"></div>
-
-              <div className="max-w-2xl space-y-6 relative z-10">
-                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Secure Your Future Today</h2>
-                <p className="text-xl text-slate-400 leading-relaxed">Join users who trust LASTWISH to secure their digital legacy on-chain.</p>
-
-                <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                  <button onClick={handleConnect} className="w-full sm:w-auto px-8 py-4 bg-white text-[#080a0f] rounded-full font-bold text-lg hover:scale-105 transition-transform flex items-center justify-center">
-                    Connect Wallet <ArrowRight className="w-5 h-5 ml-2" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
+            <ModeIndicator />
+          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full grid grid-cols-2 md:grid-cols-7 gap-1">
+              {['overview', 'assets', 'beneficiaries', 'heartbeat', 'subscription', 'status', 'settings'].map((tab) => (
+                <TabsTrigger key={tab} value={tab} className="capitalize text-[10px] font-black tracking-widest data-[state=active]:bg-blue-600 transition-all">
+                  {tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <TabsContent value="overview"><OverviewDashboard onNavigate={setActiveTab} /></TabsContent>
+            <TabsContent value="assets"><AssetCreationForm /></TabsContent>
+            <TabsContent value="beneficiaries"><BeneficiariesDashboard onNavigate={setActiveTab} /></TabsContent>
+            <TabsContent value="heartbeat"><HeartbeatMonitor /></TabsContent>
+            <TabsContent value="subscription"><SubscriptionDashboard /></TabsContent>
+            <TabsContent value="status"><StatusDashboard /></TabsContent>
+            <TabsContent value="settings"><SettingsDashboard /></TabsContent>
+          </Tabs>
         </main>
-
-        {/* Community Support Section */}
-        <SupportSection />
-
         <SharedFooter />
-
-        <WalletConnectModal
-          isOpen={showWalletModal}
-          onClose={() => setShowWalletModal(false)}
-          onConnect={handleWalletConnect}
-          isConnecting={isConnecting}
-        />
+        <SupportSection />
       </div>
     )
   }
 
-  // Dashboard Interface (Connected State)
   return (
-    <div className="min-h-screen bg-[#050a1a] text-slate-50 selection:bg-[#2b52ff]/30 font-sans flex flex-col relative overflow-hidden">
-      {/* Global Navigation */}
-      <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Shield className="w-8 h-8" />
+    <div className="min-h-screen bg-[#030712] text-slate-200 font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      {/* Background Glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full" />
+      </div>
+
+      <nav className="fixed top-0 w-full z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 group cursor-pointer">
+          <div className="p-2 bg-blue-600 rounded-lg">
+            <Shield className="w-6 h-6 text-white" />
           </div>
-          <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
-        </Link>
-        <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-          <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
-          <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
-          <Link href="/security" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Security</Link>
+          <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish</span>
         </div>
-        <button
-          onClick={handleDisconnect}
-          className="border border-red-500/30 text-red-400 hover:bg-red-500/10 px-5 py-2 rounded-full font-bold text-sm transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]"
-        >
-          Disconnect
-        </button>
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="#how-it-works" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">How it works</Link>
+          <Link href="#security" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Security</Link>
+          <Link href="/docs" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
+          <Link href="#pricing" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+        </div>
+        <button onClick={handleConnect} className="px-6 py-2.5 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Connect Wallet</button>
       </nav>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24">
-        {/* Trial Banner */}
-        <TrialBanner />
-
-        {/* Header / Vault Info */}
-        <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative z-50">
-          <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-[#2b52ff]/10 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="flex items-center space-x-4 mb-4 sm:mb-0 relative z-10 w-full sm:w-auto">
-            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#2b52ff]/20 to-[#00d2ff]/20 rounded-xl border border-[#2b52ff]/30 shadow-[0_0_15px_rgba(43,82,255,0.2)]">
-              <KeyRound className="h-6 w-6 text-[#2b52ff]" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-                Encrypted Vault Instance
-              </h1>
-              <div className="flex items-center text-xs font-medium text-blue-100/60 mt-1">
-                <span className="w-2 h-2 rounded-full bg-green-500 mr-2 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                Connected Account: <span className="font-mono text-white ml-2 bg-white/5 px-2 py-0.5 rounded border border-white/10">{address}</span>
-              </div>
-            </div>
+      {/* Hero Section */}
+      <section className="relative pt-48 pb-32 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-8 uppercase">
+            <Zap className="w-3 h-3" /> Secure Your Family&apos;s Future
+          </motion.div>
+          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-8 uppercase">
+            YOUR DIGITAL LEGACY, <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 font-black">PROTECTED FOREVER.</span>
+          </h1>
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed mb-12">
+            Every year, ₹35,000 Crore lies unclaimed in banks because families lose access. 
+            Store your Crypto, Wills, and Secrets here. We deliver them to your loved ones automatically.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button onClick={handleConnect} className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-2xl shadow-blue-600/30">
+              Start Your Vault <ArrowRight className="w-6 h-6" />
+            </button>
+            <Link href="#how-it-works" className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest hover:bg-white/10 transition-all uppercase">How it works</Link>
           </div>
 
-          {/* Mode Indicator */}
-          <div className="relative">
-            <ModeIndicator />
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <ShieldCheck className="w-4 h-4" /> AES-256-GCM
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <Cloud className="w-4 h-4" /> Cloudflare R2
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <Network className="w-4 h-4" /> Polygon Network
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Dashboard Content */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl w-full grid grid-cols-2 md:grid-cols-7 gap-1 shadow-lg backdrop-blur-md">
-            {['overview', 'assets', 'beneficiaries', 'heartbeat', 'subscription', 'status', 'settings'].map((tab) => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className="capitalize data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white text-slate-400 rounded-lg transition-all font-semibold"
-              >
-                {tab}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-6">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-24 space-y-4">
-                <RefreshCw className="h-8 w-8 text-[#2b52ff] animate-spin" />
-                <span className="text-blue-100/60 font-medium">Decrypting Vault Telemetry...</span>
-              </div>
-            ) : (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <OverviewDashboard onNavigate={setActiveTab} />
-              </motion.div>
-            )}
-          </TabsContent>
-
-          {/* Sub Views */}
-          <TabsContent value="assets" className="mt-6">
-            <AssetCreationForm />
-          </TabsContent>
-
-          <TabsContent value="beneficiaries" className="mt-6">
-            <BeneficiariesDashboard onNavigate={setActiveTab} />
-          </TabsContent>
-
-          <TabsContent value="beneficiaries_manage" className="mt-6">
-            <div className="mb-6 flex items-center bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-xl">
-              <button
-                onClick={() => setActiveTab('beneficiaries')}
-                className="text-slate-400 hover:text-white transition-colors flex items-center font-medium gap-2 px-4 py-2 hover:bg-white/5 rounded-xl"
-              >
-                ← Return to Beneficiaries Overview
-              </button>
+      {/* 3 Step Working (Very Simple) */}
+      <section id="how-it-works" className="py-32 px-6 bg-white/[0.01] border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-24">
+            <h2 className="text-4xl font-black text-white uppercase tracking-tight mb-4 italic">SIMPLE. SECURE. <span className="text-blue-500">AUTOMATIC.</span></h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            <div className="space-y-6">
+              <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto text-blue-500 border border-blue-500/20"><Lock className="w-10 h-10" /></div>
+              <h3 className="text-2xl font-black text-white uppercase">1. Store</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">Upload your important files, passwords, or seed phrases to your private vault.</p>
             </div>
-            <BeneficiaryManager />
-          </TabsContent>
+            <div className="space-y-6">
+              <div className="w-20 h-20 bg-purple-600/10 rounded-full flex items-center justify-center mx-auto text-purple-500 border border-purple-500/20"><Heart className="w-10 h-10" /></div>
+              <h3 className="text-2xl font-black text-white uppercase">2. Assign</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">Add your family members as nominees and set a timer (e.g. 30 days).</p>
+            </div>
+            <div className="space-y-6">
+              <div className="w-20 h-20 bg-green-600/10 rounded-full flex items-center justify-center mx-auto text-green-500 border border-green-500/20"><Zap className="w-10 h-10" /></div>
+              <h3 className="text-2xl font-black text-white uppercase">3. Deliver</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">If you go offline, the protocol automatically delivers the files to them.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <TabsContent value="heartbeat" className="mt-6">
-            <HeartbeatMonitor />
-          </TabsContent>
+      {/* The Pillars (The Information) */}
+      <section id="security" className="py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-24">
+            <h2 className="text-4xl font-black text-white uppercase tracking-tight mb-4">TOTAL <span className="text-blue-500">PRIVACY</span></h2>
+            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Even we can&apos;t see your data</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <PillarCard 
+              icon={<ShieldCheck className="w-10 h-10" />}
+              title="Zero-Knowledge"
+              desc="Simple: Encryption happens on your device. We cannot see your data, only you and your nominees have the key to unlock your legacy."
+              tags={['100% Private', 'No Admins']}
+            />
+            <PillarCard 
+              icon={<Network className="w-10 h-10" />}
+              title="Eternal Storage"
+              desc="Files hazaro servers par divided hain. Ye kabhi delete nahi ho sakti, 100 saal baad bhi aapka data safe rahega."
+              tags={['Arweave', 'Cloudflare R2']}
+            />
+            <PillarCard 
+              icon={<Workflow className="w-10 h-10" />}
+              title="Immutable Code"
+              desc="Release hone ke liye kisi insaan ki permission nahi chahiye. Pura logic smart contract handle karta hai automatically."
+              tags={['Autonomous', 'Smart Logic']}
+            />
+          </div>
+        </div>
+      </section>
 
-          <TabsContent value="subscription" className="mt-6">
-            <SubscriptionDashboard />
-          </TabsContent>
+      {/* Checklist Section */}
+      <section className="py-32 px-6 bg-white/[0.02] border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+           <div className="flex flex-col md:flex-row items-center gap-16">
+              <div className="flex-1">
+                <h2 className="text-4xl font-black text-white uppercase mb-8 leading-tight tracking-tight italic">WHAT SHOULD YOU <br /><span className="text-blue-500">PROTECT?</span></h2>
+                <div className="space-y-4">
+                  <ChecklistItem text="Crypto Seed Phrases & Private Keys" />
+                  <ChecklistItem text="Property Papers & Digital Wills" />
+                  <ChecklistItem text="Business Master Passwords" />
+                  <ChecklistItem text="Messages for Loved Ones" />
+                </div>
+              </div>
+              <div className="flex-1 p-12 bg-blue-600/10 rounded-[3rem] border border-blue-500/20">
+                <p className="text-4xl font-black text-white italic uppercase mb-6 leading-[1.1]">"Don&apos;t leave your life&apos;s work to chance. Leave it to code."</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600" />
+                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Protocol Founder</span>
+                </div>
+              </div>
+           </div>
+        </div>
+      </section>
 
-          <TabsContent value="status" className="mt-6">
-            <StatusDashboard />
-          </TabsContent>
+      {/* Simple FAQ */}
+      <section id="faq" className="py-32 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-black text-white uppercase tracking-tight">COMMON <span className="text-blue-500">QUESTIONS</span></h2>
+          </div>
+          <div className="space-y-2">
+            <FaqItem 
+              question="Can LastWish see my private data?" 
+              answer="Absolutely not. Your files are encrypted locally on your device using your wallet signature. We only store encrypted 'shards' that are impossible for us or anyone else to read without your key." 
+            />
+            <FaqItem 
+              question="How will my nominees get access?" 
+              answer="Once the protocol detects that your heartbeat timer has expired and the grace period ends, it automatically generates and sends a secure access link to your nominees." 
+            />
+            <FaqItem 
+              question="Is LastWish free to use?" 
+              answer="Yes! We offer a 'Forever Free' plan for basic asset protection. For larger storage (up to 1TB) and advanced features, you can upgrade to our professional plans anytime." 
+            />
+          </div>
+        </div>
+      </section>
 
-          <TabsContent value="settings" className="mt-6">
-            <SettingsDashboard />
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* Support / Donation Section */}
-      <SupportSection />
+      {/* Pricing */}
+      <section id="pricing" className="py-32 border-t border-white/5">
+        <PricingPlans />
+      </section>
 
       <SharedFooter />
-
-      <WalletConnectModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-        onConnect={handleWalletConnect}
-        isConnecting={isConnecting}
-      />
+      <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} isConnecting={isConnecting} />
     </div>
+  )
+}
+
+function StatBox({ label, value }: any) {
+  return (
+    <div>
+      <div className="text-3xl font-black text-white mb-2 tracking-tighter">{value}</div>
+      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</div>
+    </div>
+  )
+}
+
+function PillarCard({ icon, title, desc, tags }: any) {
+  return (
+    <div className="p-10 rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/30 transition-all group">
+      <div className="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-500 mb-8">{icon}</div>
+      <h4 className="text-xl font-black text-white uppercase mb-4 tracking-tight">{title}</h4>
+      <p className="text-sm text-slate-500 leading-relaxed font-medium mb-8">{desc}</p>
+      <div className="flex flex-wrap gap-2">
+        {tags.map((tag: string) => (
+          <span key={tag} className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-black text-slate-400 uppercase tracking-widest">{tag}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ChecklistItem({ text }: any) {
+  return (
+    <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/20 transition-all">
+      <CheckCircle2 className="w-5 h-5 text-blue-500" />
+      <span className="text-xs font-black text-slate-200 uppercase tracking-widest">{text}</span>
+    </div>
+  )
+}
+
+function FaqItem({ question, answer }: any) {
+  const [isOpen, setIsOpen] = useState(false)
+  return (
+    <div className="border-b border-white/5 last:border-0">
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full py-6 flex items-center justify-between text-left group">
+        <span className="text-sm font-black uppercase text-white group-hover:text-blue-500 transition-colors">{question}</span>
+        <ChevronRight className={`w-5 h-5 text-slate-500 transition-transform ${isOpen ? 'rotate-90 text-blue-500' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <p className="pb-6 text-sm text-slate-400 leading-relaxed font-medium">{answer}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function Workflow({ className }: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
   )
 }

@@ -25,6 +25,7 @@ import { LoggerModule } from '../services/logger/logger.module';
 import { DrizzleModule } from '../src/db/drizzle.module';
 import { CryptoModule } from '../services/crypto/crypto.module';
 import { AuditModule } from '../services/audit/audit.module';
+import { PaymentModule } from '../services/payment/payment.module';
 import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
 
@@ -60,6 +61,7 @@ import { HealthController } from './health.controller';
     EmailModule,
     CryptoModule,
     AuditModule,
+    PaymentModule,
   ],
   controllers: [AppController, HealthController],
   providers: [],

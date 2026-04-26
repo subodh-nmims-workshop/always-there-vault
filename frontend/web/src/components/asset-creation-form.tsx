@@ -336,15 +336,42 @@ export function AssetCreationForm() {
       const isImage = asset.type?.toLowerCase() === 'photo' || asset.mimeType?.toLowerCase().startsWith('image/')
 
       if (isImage) {
-        // Decrypt as binary and convert to Blob Object URL (much faster for large files)
+        // Decrypt as binary first
         const decryptedBuffer = await crypto.decryptBinary(
           asset.encryptedData,
           reconstructedKey,
           asset.iv
         )
-        const blob = new Blob([decryptedBuffer], { type: asset.mimeType || 'image/png' })
-        const objectURL = URL.createObjectURL(blob)
-        setDecryptedContent(objectURL)
+
+        // Backward compatibility: check if the buffer is actually a string containing a Data URL or raw Base64
+        let isLegacyFormat = false;
+        try {
+          const textDecoder = new TextDecoder('utf-8', { fatal: true });
+          const decodedText = textDecoder.decode(decryptedBuffer);
+
+          // Check for data URI prefix OR common raw base64 image prefixes (JPEG: /9j/, PNG: iVBOR, GIF: R0lG)
+          if (
+            decodedText.startsWith('data:') ||
+            decodedText.startsWith('/9j/') ||
+            decodedText.startsWith('iVBOR') ||
+            decodedText.startsWith('R0lG') ||
+            // Fallback: If it's a very long string and contains only base64 characters, it's likely legacy base64
+            (decodedText.length > 100 && /^[A-Za-z0-9+/=]+$/.test(decodedText.substring(0, 100)))
+          ) {
+            isLegacyFormat = true;
+            setDecryptedContent(decodedText);
+            console.log('✅ Legacy image format decrypted');
+          }
+        } catch (e) {
+          // Not a valid UTF-8 string, must be raw binary (new format)
+        }
+
+        if (!isLegacyFormat) {
+          const blob = new Blob([decryptedBuffer], { type: asset.mimeType || 'image/jpeg' })
+          const objectURL = URL.createObjectURL(blob)
+          setDecryptedContent(objectURL)
+          console.log('✅ Binary image format decrypted');
+        }
       } else {
         const decrypted = await crypto.decryptData(
           asset.encryptedData,
@@ -559,11 +586,11 @@ export function AssetCreationForm() {
     return folders
       .filter(folder => {
         const matchesSearch = folder.name.toLowerCase().includes(searchQuery.toLowerCase())
-        
+
         // Use name-based heuristic if type is missing (for legacy folders)
         const folderType = folder.type || WebStorageService.getFolderType(folder.name);
         const matchesCategory = activeCategory === 'all' || folderType === activeCategory;
-        
+
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
@@ -885,16 +912,7 @@ export function AssetCreationForm() {
               }}
               className="w-full text-left px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-slate-700/70 flex items-center"
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setRenameFolderState({ isOpen: true, folderId: folder.id, currentName: folder.name })
-                  setRenameInput(folder.name)
-                }}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
+              <Pencil className="h-3 w-3 mr-2" /> Rename Folder
             </button>
             <button
               onClick={(e) => {
@@ -2026,11 +2044,23 @@ export function AssetCreationForm() {
                         </div>
                       ) : (viewingAsset.type?.toLowerCase() === 'photo' || viewingAsset.mimeType?.toLowerCase().startsWith('image/')) && !decryptedContent?.includes('Failed') ? (
                         <div className="flex justify-center bg-slate-900/40 rounded-lg p-2 overflow-hidden min-h-[300px] items-center">
-                          <img
-                            src={decryptedContent.startsWith('blob:') || decryptedContent.startsWith('data:image') ? decryptedContent : `data:${viewingAsset.mimeType || 'image/png'};base64,${decryptedContent}`}
-                            alt={viewingAsset.name}
-                            className="max-h-[50vh] object-contain rounded-md shadow-2xl"
-                          />
+                          {isDecrypting || !decryptedContent ? (
+                            <div className="flex flex-col items-center gap-3 text-slate-400">
+                              <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                              <p className="text-xs">Decrypting image...</p>
+                            </div>
+                          ) : (
+                            <img
+                              src={decryptedContent.startsWith('blob:') || decryptedContent.startsWith('data:') ? decryptedContent : `data:${viewingAsset.mimeType || 'image/jpeg'};base64,${decryptedContent}`}
+                              alt={viewingAsset.name}
+                              className="max-h-[50vh] object-contain rounded-md shadow-2xl"
+                              onError={(e) => {
+                                console.error('Image render failed, src:', (e.target as HTMLImageElement).src.substring(0, 100))
+                                  ; (e.target as HTMLImageElement).style.display = 'none'
+                                  ; (e.target as HTMLImageElement).insertAdjacentHTML('afterend', '<p class="text-red-400 text-sm">Image failed to render. Check console for details.</p>')
+                              }}
+                            />
+                          )}
                         </div>
                       ) : (
                         <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto">

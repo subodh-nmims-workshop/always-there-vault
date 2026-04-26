@@ -150,9 +150,17 @@ export class AssetsController {
 
   @Get('keys/:id')
   @ApiOperation({ summary: 'Retrieve key distribution for decryption' })
-  async getKey(@Param('id') id: string) {
-    return this.assetsService.getKeyDistribution(id);
+  async getKey(@Param('id') id: string, @Req() req: any) {
+    const requesterWallet = req.user.walletAddress;
+    return this.assetsService.getKeyDistribution(id, requesterWallet);
   }
+  @Get(':id/download')
+  @ApiOperation({ summary: 'Get a temporary download URL for an asset' })
+  async getDownloadUrl(@Param('id') id: string, @Req() req: any) {
+    const walletAddress = req.user.walletAddress;
+    return this.assetsService.getDownloadUrl(id, walletAddress);
+  }
+
   @Patch('folders/:id')
   @ApiOperation({ summary: 'Update folder details (rename, move, etc)' })
   async updateFolder(

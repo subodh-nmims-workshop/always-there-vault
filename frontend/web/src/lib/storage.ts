@@ -59,8 +59,16 @@ export interface AppState {
   settings: {
     heartbeatInterval: number;
     gracePeriod: number;
+    timeLock: number;
+    multiSig: 'off' | '2of3' | '3of5';
+    sessionTimeout: number;
     encryptionEnabled: boolean;
     notificationsEnabled: boolean;
+    emailNotification: string;
+    telegramNotification: string;
+    storageProvider: 'ipfs' | 'arweave';
+    testnetMode: boolean;
+    gasPrice: number | 'auto';
   };
   stats: {
     totalAssets: number;
@@ -74,7 +82,7 @@ class WebStorageService {
   private static instance: WebStorageService;
   private crypto: WebCryptoService;
   private dbName = 'digital-will-db';
-  private dbVersion = 1;
+  private dbVersion = 2;
   private db: IDBDatabase | null = null;
   private dbInitPromise: Promise<void> | null = null;
 
@@ -299,11 +307,19 @@ class WebStorageService {
    * Settings Management (localStorage)
    */
   getSettings() {
-    const defaultSettings = {
-      heartbeatInterval: 30,
-      gracePeriod: 14,
+    const defaultSettings: AppState['settings'] = {
+      heartbeatInterval: 7,
+      gracePeriod: 30,
+      timeLock: 24,
+      multiSig: 'off',
+      sessionTimeout: 30,
       encryptionEnabled: true,
-      notificationsEnabled: true
+      notificationsEnabled: true,
+      emailNotification: '',
+      telegramNotification: '',
+      storageProvider: 'ipfs',
+      testnetMode: false,
+      gasPrice: 'auto'
     };
 
     try {
