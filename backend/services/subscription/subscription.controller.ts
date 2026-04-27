@@ -12,13 +12,31 @@ import {
 import { SubscriptionService } from './subscription.service';
 import { ServiceMode, PlanType } from './subscription.schema';
 import Stripe from 'stripe';
+import { UsersService } from '../users/users.service';
+import { users } from '../../src/db/schema/users';
+import { eq } from 'drizzle-orm';
+import { Inject } from '@nestjs/common';
 
 @Controller('subscription')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(
+    private readonly subscriptionService: SubscriptionService,
+    private readonly usersService: UsersService,
+    @Inject('DRIZZLE_DB') private readonly db: any,
+  ) {}
 
   @Post('trial')
-  async mocktrial() { return {}; }
+  async createTrial(@Body() body: { userId: string; mode?: string }) {
+    // userId from frontend is usually walletAddress for initial trial creation
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.userId);
+    let userId = body.userId;
+    if (!isUuid) {
+        const user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, body.userId) });
+        if (!user) throw new BadRequestException('User not found');
+        userId = user.id;
+    }
+    return this.subscriptionService.createSubscription(userId, 'trial', 'MONTHLY', 0);
+  }
   @Get(':userId')
   async getSubscription(@Param('userId') userId: string) {
     return this.subscriptionService.getSubscription(userId);
@@ -48,10 +66,32 @@ export class SubscriptionController {
   async mockActivate() { return {}; }
   
   @Post(':userId/switch-mode')
-  async mockSwitch() { return {}; }
-  
+  async switchMode(
+    @Param('userId') userId: string,
+    @Body('mode') mode: 'cloud' | 'web3'
+  ) {
+    // Note: In this controller, 'cloud' maps to 'centralized' for the UI
+    const targetEngine = (mode as any) === 'cloud' || (mode as any) === 'centralized' ? 'cloud' : 'web3';
+    
+    // Check if the provided ID is a UUID or a wallet address
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    let user;
+    
+    if (isUuid) {
+        user = await this.db.query.users.findFirst({ where: eq(users.id, userId) });
+    } else {
+        user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, userId) });
+    }
+    
+    if (!user) throw new BadRequestException('User not found');
+    
+    return this.usersService.updateStorageEngine(user.id, targetEngine as any);
+  }
+
   @Post(':userId/cancel')
-  async mockCancel() { return {}; }
+  async cancelSubscription(@Param('userId') userId: string) {
+    return this.subscriptionService.cancelSubscription(userId);
+  }
   @Get(':userId/limits')
   async checkLimits(@Param('userId') userId: string) {
     return this.subscriptionService.checkLimits(userId);

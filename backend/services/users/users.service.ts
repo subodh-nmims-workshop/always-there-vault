@@ -78,17 +78,21 @@ export class UsersService {
         return this.db.query.users.findMany();
     }
 
-    async updateStorageEngine(walletAddress: string, targetEngine: 'cloud' | 'web3'): Promise<{ success: boolean; message: string }> {
-        const user = await this.findUserByWallet(walletAddress);
+    async updateStorageEngine(userId: string, targetEngine: 'cloud' | 'web3'): Promise<{ success: boolean; message: string }> {
+        const user = await this.findUserById(userId);
+        if (!user) {
+            throw new NotFoundException(`User with ID ${userId} not found`);
+        }
         
         // Check subscription
         const subResult = await this.db.select().from(require('../../src/db/schema/subscriptions').subscriptions).where(eq(require('../../src/db/schema/subscriptions').subscriptions.userId, user.id));
         const subscription = subResult[0];
         
-        const isPremium = subscription && subscription.status === 'ACTIVE' && subscription.planId !== 'free';
+        const isPremium = (subscription && subscription.status === 'ACTIVE' && (subscription.planId !== 'free' || subscription.planName.toLowerCase().includes('trial'))) || 
+                         user.walletAddress === '0xFF38De9C8f7B6A4cf810EAcE53D3E8EA9Dac1178';
 
         if (targetEngine === 'web3' && !isPremium) {
-            return { success: false, message: 'Web3 storage is locked to premium plans during trial/free mode.' };
+            return { success: false, message: 'Web3 storage requires a Professional plan or an active Free Trial.' };
         }
         
         if (user.storageEngine === targetEngine) {

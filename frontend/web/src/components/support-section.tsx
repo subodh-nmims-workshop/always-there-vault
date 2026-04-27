@@ -15,9 +15,8 @@ export function SupportSection() {
   const [selectedNetwork, setSelectedNetwork] = useState('Ethereum')
   const [donateBy, setDonateBy] = useState('wallet')
   const [frequency, setFrequency] = useState('once')
-  const [expandedCoin, setExpandedCoin] = useState<string | null>(null)
 
-  const developerAddress = '0xEd7870b4756166AC14673697b2505cA04Fc67bD5'
+  const developerAddress = '0xFF38De9C8f7B6A4cf810EAcE53D3E8EA9Dac1178'
 
   const NETWORKS: Record<string, any> = {
     'Ethereum': { id: 1, symbol: 'ETH' },
@@ -174,7 +173,7 @@ export function SupportSection() {
                     <p className="text-[10px] font-black text-[#2b52ff] uppercase tracking-[0.3em]">AMOUNT</p>
                     <div className="grid grid-cols-3 gap-3">
                       {['5', '25', '75', '125', '500', '1000'].map((val) => (
-                        <button key={val} onClick={() => setUsdAmount(val)} className={`py-5 rounded-xl text-lg font-black transition-all border-2 ${usdAmount === val ? 'bg-[#2b52ff] text-white border-[#2b52ff]' : 'bg-white/5 text-white border-transparent'}`}>
+                        <button key={val} onClick={() => setUsdAmount(val)} className={`py-5 rounded-xl text-lg font-black transition-all border-2 ${usdAmount === val ? 'bg-[#2b52ff] text-white border-[#2b52ff]' : 'bg-white/5 text-white border-transparent hover:bg-white/10'}`}>
                           ${val}
                         </button>
                       ))}
@@ -192,40 +191,31 @@ export function SupportSection() {
 
                   <div className="pt-8 border-t border-white/5 space-y-6">
                     <p className="text-[10px] font-black text-[#2b52ff] uppercase tracking-[0.3em]">STEP 1: SELECT YOUR ASSET</p>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       {COINS.map((coin) => (
-                        <div key={coin.name}>
-                          <button onClick={() => { setExpandedCoin(expandedCoin === coin.name ? null : coin.name); setSelectedCurrency(coin.name) }} className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all ${expandedCoin === coin.name ? 'border-[#2b52ff] bg-white/[0.03]' : 'border-white/5 bg-white/[0.01]'}`}>
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-xl">{coin.icon}</div>
-                              <div className="text-left">
-                                <p className="text-sm font-black text-white uppercase">{coin.name}</p>
-                                <p className="text-[10px] text-slate-500 font-bold">{coin.full}</p>
-                              </div>
-                            </div>
-                            <ChevronDown className={`w-5 h-5 text-slate-600 ${expandedCoin === coin.name ? 'rotate-180 text-white' : ''}`} />
-                          </button>
-                          <AnimatePresence>
-                            {expandedCoin === coin.name && (
-                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                                <div className="p-6 bg-white/[0.02] rounded-b-2xl border-x border-b border-white/5 space-y-4 text-[10px] text-slate-500 italic font-bold">
-                                  Transfer {coin.name} to our verified protocol reserve.
-                                  <div className="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5 mt-2 not-italic">
-                                    <code className="text-[#2b52ff] font-mono truncate mr-4">{developerAddress}</code>
-                                    <button onClick={() => { navigator.clipboard.writeText(developerAddress); toast.success('Copied') }} className="p-2 hover:bg-white/10 rounded-lg">
-                                      <Copy className="w-4 h-4 text-slate-500" />
-                                    </button>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                         <button 
+                           key={coin.name} 
+                           onClick={() => setSelectedCurrency(coin.name)} 
+                           className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${selectedCurrency === coin.name ? 'border-[#2b52ff] bg-[#2b52ff]/10 shadow-[0_0_15px_rgba(43,82,255,0.2)]' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'}`}
+                         >
+                           <span className="text-2xl mb-2 filter drop-shadow-md">{coin.icon}</span>
+                           <span className={`text-xs font-black uppercase tracking-wider ${selectedCurrency === coin.name ? 'text-white' : 'text-slate-400'}`}>{coin.name}</span>
+                         </button>
                       ))}
+                    </div>
+                    
+                    <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5 flex items-center justify-between">
+                      <div className="overflow-hidden">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Direct Transfer Address</p>
+                        <code className="text-[#2b52ff] font-mono text-xs sm:text-sm truncate block">{developerAddress}</code>
+                      </div>
+                      <button onClick={() => { navigator.clipboard.writeText(developerAddress); toast.success('Copied') }} className="p-3 hover:bg-white/10 rounded-lg bg-white/5 transition-all">
+                        <Copy className="w-4 h-4 text-slate-400" />
+                      </button>
                     </div>
                   </div>
 
-                  <button onClick={handleDonate} disabled={isDonating} className="w-full bg-[#2b52ff] text-white py-8 rounded-[2rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-4">
+                  <button onClick={handleDonate} disabled={isDonating} className="w-full bg-[#2b52ff] hover:bg-[#1a3ecd] text-white py-8 rounded-[2rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:shadow-[#2b52ff]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-4">
                     {isDonating ? <RefreshCw className="w-8 h-8 animate-spin" /> : <>INITIATE PROTOCOL SUPPORT</>}
                   </button>
                 </motion.div>
@@ -235,18 +225,19 @@ export function SupportSection() {
                   initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
                   className="space-y-8 flex flex-col items-center justify-center py-10"
                 >
-                  <CreditCard className="w-20 h-20 text-[#2b52ff] mb-4" />
+                  <CreditCard className="w-20 h-20 text-[#00457C] mb-4" />
                   <h3 className="text-2xl font-black text-white">Fiat Legacy Bridge</h3>
                   <p className="text-slate-400 text-center text-sm max-w-xs leading-relaxed">
-                    Securely contribute using Visa, Mastercard, or Google Pay via our PCI DSS Level 1 compliant gateway.
+                    Securely contribute using PayPal, Visa, or Mastercard via our verified PayPal gateway.
                   </p>
                   <button
-                    onClick={() => window.open('https://donate.stripe.com/test_demo', '_blank')}
-                    className="w-full h-20 rounded-[2rem] bg-white text-black font-black uppercase tracking-[0.2em] text-sm hover:bg-slate-100 transition-all shadow-xl mt-6 flex items-center justify-center gap-3 active:scale-95"
+                    onClick={() => { navigator.clipboard.writeText('subodhram3350@gmail.com'); toast.success('PayPal Email Copied!', { description: 'Please paste it in PayPal to send the support.' }); window.open('https://www.paypal.com/myaccount/transfer/homepage', '_blank'); }}
+                    className="w-full h-20 rounded-[2rem] bg-[#0079C1] text-white font-black uppercase tracking-[0.2em] text-sm hover:bg-[#00457C] transition-all shadow-xl mt-6 flex items-center justify-center gap-3 active:scale-95 border border-[#00457C]/50"
                   >
-                    <Zap className="w-5 h-5 fill-current" /> Pay ${usdAmount} via Secure Gateway
+                    <Zap className="w-5 h-5 fill-current text-yellow-400" /> Pay ${usdAmount} via PayPal
                   </button>
                   <div className="flex gap-6 opacity-30 mt-10">
+                    <span className="text-white font-black italic">PAYPAL</span>
                     <span className="text-white font-black italic">VISA</span>
                     <span className="text-white font-black italic">MASTERCARD</span>
                   </div>

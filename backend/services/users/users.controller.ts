@@ -19,8 +19,8 @@ export class UsersController {
         @Req() req: any,
         @Body('engine') engine: 'cloud' | 'web3'
     ) {
-        const walletAddress = req.user.walletAddress;
-        return this.usersService.updateStorageEngine(walletAddress, engine);
+        const userId = req.user.userId;
+        return this.usersService.updateStorageEngine(userId, engine);
     }
 
     @Get('profile')

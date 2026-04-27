@@ -55,7 +55,6 @@ import { SubscriptionDashboard } from '@/components/subscription-dashboard'
 import { ModeIndicator } from '@/components/mode-indicator'
 import { TrialBanner } from '@/components/trial-banner'
 import { SettingsDashboard } from '@/components/settings-dashboard'
-import { SupportSection } from '@/components/support-section'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function HomePage() {
@@ -94,7 +93,14 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress, message, signature })
       })
-      const authData = await verifyRes.json().catch(() => ({}));
+
+      if (!verifyRes.ok) {
+        const errorData = await verifyRes.json().catch(() => ({ message: 'Identity verification failed' }))
+        throw new Error(errorData.message || 'Identity verification failed')
+      }
+
+      const authData = await verifyRes.json()
+      
       if (authData?.token) {
         setIsConnected(true)
         localStorage.setItem('dwp_wallet_connected', 'true')
@@ -102,14 +108,22 @@ export default function HomePage() {
         localStorage.setItem('dwp_token', authData.token)
         setAddress(walletAddress)
         setShowWalletModal(false)
+        toast.success('Authentication successful!')
+      } else {
+        throw new Error('No authentication token received')
       }
     } catch (error: any) {
+      console.error('Login error:', error)
+      toast.error(error.message || 'Login failed')
+      
       if (process.env.NODE_ENV === 'development') {
+        // Fallback for local dev if backend is down
         setIsConnected(true)
         setAddress(walletAddress)
         localStorage.setItem('dwp_wallet_connected', 'true')
         localStorage.setItem('dwp_wallet_address', walletAddress)
         setShowWalletModal(false)
+        toast.info('Development mode: Bypass authentication')
       }
     } finally {
       setIsConnecting(false)
@@ -128,13 +142,14 @@ export default function HomePage() {
     return (
       <div className="min-h-screen bg-[#030712] text-slate-100 font-sans flex flex-col overflow-x-hidden relative">
         <nav className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
+          <Link href="/" className="flex items-center space-x-3">
+            <Shield className="h-8 w-8 text-blue-500" />
             <span className="font-black text-xl tracking-tight text-white uppercase">LastWish</span>
           </Link>
-          <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest">Logout</button>
+          <div className="flex items-center space-x-4">
+            <Link href="/donate" className="px-5 py-2.5 rounded-xl bg-[#2b52ff]/10 text-[#2b52ff] text-xs font-black border border-[#2b52ff]/20 uppercase tracking-widest hover:bg-[#2b52ff]/20 transition-all">Support Us</Link>
+            <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 transition-all">Logout</button>
+          </div>
         </nav>
         <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24">
           <TrialBanner />
@@ -148,7 +163,7 @@ export default function HomePage() {
                 <p className="text-xs font-mono text-slate-500 mt-1 uppercase tracking-tighter opacity-70">{address}</p>
               </div>
             </div>
-            <ModeIndicator />
+            {/* ModeIndicator moved to Sidebar */}
           </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full grid grid-cols-2 md:grid-cols-7 gap-1">
@@ -168,7 +183,6 @@ export default function HomePage() {
           </Tabs>
         </main>
         <SharedFooter />
-        <SupportSection />
       </div>
     )
   }

@@ -61,7 +61,32 @@ class ModeService {
       if (onProgress) onProgress('Loading existing vault ledger...')
       const existingAssets = await this.loadAssets()
 
-      // 2. Set new mode context
+      // 2. Sync engine preference with backend
+      if (onProgress) onProgress(`Syncing ${newMode} protocol with backend...`)
+      try {
+        const response = await fetch(`${this.config.apiEndpoint}/api/users/storage-engine`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+          },
+          body: JSON.stringify({ engine: newMode === 'centralized' ? 'cloud' : 'web3' })
+        })
+
+        const result = await response.json()
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || `Failed to sync ${newMode} status with backend`)
+        }
+        console.log('✅ Backend storage engine updated')
+      } catch (apiError: any) {
+        console.warn('⚠️ Backend sync failed:', apiError.message)
+        // If it's a "locked" message from backend, we MUST abort the migration
+        if (apiError.message.includes('requires a Professional plan')) {
+          throw apiError
+        }
+      }
+
+      // 3. Set new mode context
       const oldMode = this.currentMode
       this.currentMode = newMode
       this.config.mode = newMode
@@ -71,7 +96,7 @@ class ModeService {
         if (onProgress) onProgress(`Found ${existingAssets.length} assets. Restructuring payload...`)
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        // 3. Migrate assets to new mode
+        // 4. Migrate assets to new mode
         let migrated = 0
         for (const asset of existingAssets) {
           try {

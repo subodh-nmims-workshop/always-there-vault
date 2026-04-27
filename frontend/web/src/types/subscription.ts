@@ -186,3 +186,26 @@ export const ALL_PLANS: Record<PlanType, PricingPlan> = {
   ...CENTRALIZED_PLANS,
   ...DECENTRALIZED_PLANS
 }
+
+export interface UserSubscription {
+  id: string
+  userId: string
+  planId: PlanType | 'free' | 'pro_trial'
+  plan: PlanType // Added for backward compatibility in some components
+  planName: string
+  status: SubscriptionStatus
+  mode: UserMode
+  storageUsed: number
+  storageLimit: number
+  assetsCount?: number
+  beneficiariesCount?: number
+  storageUsedGB?: number
+  canSwitchMode?: boolean
+  trialEndsAt: Date | null
+  subscriptionEndsAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+  limits?: SubscriptionLimits
+}
+
+export const TRIAL_DURATION_DAYS = 30

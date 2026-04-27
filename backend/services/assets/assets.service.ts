@@ -1,4 +1,5 @@
 import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { eq, and, isNull, or, sql } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
 import { folders, type NewFolder } from '../../src/db/schema/folders';
@@ -111,7 +112,7 @@ export class AssetsService {
       name: file.originalname,
       size: file.size,
       mimeType: file.mimetype,
-      location: r2Result.key,
+      location: b2Result,
       isIpfs: false,
       encrypted: true,
       

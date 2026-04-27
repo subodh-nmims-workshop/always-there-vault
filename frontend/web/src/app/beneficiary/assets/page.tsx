@@ -30,7 +30,7 @@ import { useSearchParams } from 'next/navigation'
 
 function BeneficiaryAssetsContent() {
   const searchParams = useSearchParams()
-  const [ownerAddress, setOwnerAddress] = useState(searchParams.get('owner') || '')
+  const [ownerAddress, setOwnerAddress] = useState(searchParams?.get('owner') || '')
   const [isConnected, setIsConnected] = useState(false)
   const [userAddress, setUserAddress] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)

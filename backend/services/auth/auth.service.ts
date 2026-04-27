@@ -87,11 +87,11 @@ export class AuthService {
             }
 
             // 4. Regular login
-            await this.usersService.createOrUpdateUser(walletAddress);
+            const dbUser = await this.usersService.createOrUpdateUser(walletAddress);
             
             // Generate JWT
             const token = jwt.sign(
-                { walletAddress, userId: user?.id || walletAddress },
+                { walletAddress, userId: dbUser.id },
                 this.configService.get<string>('JWT_SECRET') || 'secret',
                 { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h' }
             );

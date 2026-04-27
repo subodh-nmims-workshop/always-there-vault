@@ -11,8 +11,9 @@ export class SubscriptionService {
     private usersService: UsersService,
   ) { }
 
-  async createSubscription(walletAddress: string, planId: string, billingCycle: string, price: number): Promise<any> {
-    const user = await this.usersService.findUserByWallet(walletAddress);
+  async createSubscription(userId: string, planId: string, billingCycle: string, price: number): Promise<any> {
+    const user = await this.usersService.findUserById(userId);
+    if (!user) throw new NotFoundException('User not found');
     
     // Map plan limits (simple for now)
     let storageLimit = 524288000; // 500MB
@@ -57,7 +58,7 @@ export class SubscriptionService {
       let userId = id;
       if (!isUuid) {
           const user = await this.usersService.findUserByWallet(id);
-          if (!user) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
+          if (!user) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: id };
           userId = user.id;
       }
 
@@ -65,10 +66,13 @@ export class SubscriptionService {
         where: eq(subscriptions.userId, userId),
       });
 
-      if (!sub) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
+      if (!sub) {
+          // Auto-create a trial for new users
+          return this.createSubscription(userId, 'trial', 'MONTHLY', 0);
+      }
       return sub;
     } catch (error) {
-      return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000 };
+      return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: id };
     }
   }
 

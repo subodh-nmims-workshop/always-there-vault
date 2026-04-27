@@ -14,6 +14,7 @@ import { registerTokenAsset } from '@/lib/blockchain'
 import { CategoryModal } from './category-modal'
 import type { AssetCategory } from '@/lib/category-handlers'
 import ModeService from '@/lib/mode-service'
+import { ModeIndicator } from './mode-indicator'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ConfirmationDialog } from './confirmation-dialog'
 import { toast } from 'sonner'
@@ -1070,6 +1071,10 @@ export function AssetCreationForm() {
                 {cat.label}
               </button>
             ))}
+          </div>
+
+          <div className="mb-6">
+            <ModeIndicator compact={true} />
           </div>
 
           <div className="mt-auto pt-8">

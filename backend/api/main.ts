@@ -5,11 +5,16 @@ import { AppModule } from './app.module';
 import { LoggerService } from '../services/logger/logger.service';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+const hpp = require('hpp');
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new LoggerService(null as any),
   });
+
+  // Trust proxy for accurate rate limiting (essential for Ngrok/Cloudflare)
+  app.set('trust proxy', 1);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -37,7 +42,17 @@ async function bootstrap() {
     },
     xFrameOptions: { action: "deny" },
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    dnsPrefetchControl: { allow: false },
+    hidePoweredBy: true,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
   }));
+
+  // Prevent HTTP Parameter Pollution
+  app.use(hpp());
 
   // Extra hardening headers
   app.use((req, res, next) => {

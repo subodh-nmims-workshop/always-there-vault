@@ -7,7 +7,7 @@ import ModeService from '@/lib/mode-service'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { useRouter } from 'next/navigation'
 
-export function ModeIndicator() {
+export function ModeIndicator({ compact = false }: { compact?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSwitching, setIsSwitching] = useState(false)
   const [switchMessage, setSwitchMessage] = useState('')
@@ -32,11 +32,13 @@ export function ModeIndicator() {
       setTimeout(() => {
         window.location.reload()
       }, 1000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to switch mode:', error)
-      alert('Failed to switch mode. Please try again.')
-      setIsSwitching(false)
-      setSwitchMessage('')
+      setSwitchMessage(`Access Denied: ${error.message}`)
+      setTimeout(() => {
+        setIsSwitching(false)
+        setSwitchMessage('')
+      }, 4000)
     }
   }
 
@@ -50,12 +52,12 @@ export function ModeIndicator() {
   const isCentralized = currentMode === 'centralized'
 
   return (
-    <div className="relative z-[100]">
+    <div className={`relative z-[100] ${compact ? 'w-full' : ''}`}>
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-4 px-5 py-3 rounded-2xl transition-all duration-300 group border box-border ${isCentralized
+        className={`flex items-center justify-between w-full ${compact ? 'px-4 py-3 rounded-xl' : 'px-5 py-3 rounded-2xl'} transition-all duration-300 group border box-border ${isCentralized
           ? 'bg-[#0f172a]/80 border-blue-500/30 hover:bg-[#1e293b]/90 hover:border-blue-400/50 hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]'
           : 'bg-[#0f172a]/80 border-purple-500/30 hover:bg-[#1e293b]/90 hover:border-purple-400/50 hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]'
           } backdrop-blur-xl relative overflow-hidden`}
@@ -67,32 +69,37 @@ export function ModeIndicator() {
         <div className="relative flex items-center gap-3 z-10">
           <motion.div
             layoutId="mode-icon-container"
-            className={`w-12 h-12 rounded-xl flex items-center justify-center border shadow-inner ${isCentralized
+            className={`${compact ? 'w-8 h-8' : 'w-12 h-12'} rounded-lg flex items-center justify-center border shadow-inner ${isCentralized
               ? 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-400/30 shadow-blue-500/20 text-blue-400'
               : 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-400/30 shadow-purple-500/20 text-purple-400'
               }`}
           >
-            {isCentralized ? <Server className="w-6 h-6" /> : <Network className="w-6 h-6" />}
+            {isCentralized ? <Server className={compact ? "w-4 h-4" : "w-6 h-6"} /> : <Network className={compact ? "w-4 h-4" : "w-6 h-6"} />}
           </motion.div>
 
           <div className="text-left">
-            <div className="flex items-center gap-2 mb-0.5">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Storage Tier</p>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border backdrop-blur-md flex items-center gap-1 ${isCentralized
-                ? 'bg-blue-500/10 text-blue-300 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-                : 'bg-purple-500/10 text-purple-300 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-                }`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                Active
-              </span>
-            </div>
-            <p className="text-lg font-bold text-white tracking-wide capitalize bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-              {currentMode} Node
+            {!compact && (
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Storage Tier</p>
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border backdrop-blur-md flex items-center gap-1 ${isCentralized
+                  ? 'bg-blue-500/10 text-blue-300 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                  : 'bg-purple-500/10 text-purple-300 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                  }`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                  Active
+                </span>
+              </div>
+            )}
+            {compact && (
+              <p className="text-[9px] uppercase tracking-tighter text-slate-500 font-black mb-0.5">Node Status</p>
+            )}
+            <p className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-white tracking-wide capitalize bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70`}>
+              {currentMode}
             </p>
           </div>
         </div>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-          <ChevronDown className={`w-5 h-5 relative z-10 transition-colors ${isCentralized ? 'text-blue-400 group-hover:text-blue-300' : 'text-purple-400 group-hover:text-purple-300'}`} />
+          <ChevronDown className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} relative z-10 transition-colors ${isCentralized ? 'text-blue-400 group-hover:text-blue-300' : 'text-purple-400 group-hover:text-purple-300'}`} />
         </motion.div>
       </motion.button>
 
@@ -107,11 +114,11 @@ export function ModeIndicator() {
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -15, transformOrigin: 'top right' }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              initial={{ opacity: 0, scale: 0.95, y: compact ? 0 : -15, x: compact ? -15 : 0, transformOrigin: compact ? 'left center' : 'top right' }}
+              animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: compact ? 0 : -10, x: compact ? -10 : 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="absolute right-0 top-[calc(100%+12px)] w-[420px] bg-[#050914]/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden z-[120] ring-1 ring-white/5"
+              className={`absolute ${compact ? 'left-[calc(100%+16px)] top-1/2 -translate-y-1/2' : 'right-0 top-[calc(100%+12px)]'} w-[420px] bg-[#050914]/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden z-[120] ring-1 ring-white/5`}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
               <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />

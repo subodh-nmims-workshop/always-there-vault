@@ -166,7 +166,7 @@ export class PaymentService {
             user.email || walletAddress, 
             user.name || 'Guardian', 
             planId.toUpperCase(), 
-            price
+            parseFloat(price)
         );
     } catch (e) {
         this.logger.error('Failed to send payment success email:', e.message);

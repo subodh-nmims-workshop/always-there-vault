@@ -228,11 +228,13 @@ export function SettingsDashboard() {
         </Card>
       </section>
 
-      {/* -- SECTION: DEADMAN PROTOCOL -- */}
+      {/* -- SECTION: LASTWISH CORE -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <Activity className="size-5 text-blue-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Deadman Protocol Core</h2>
+        <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+          <Shield className="w-5 h-5 text-[#2b52ff]" />
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">LastWish Core</h2>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

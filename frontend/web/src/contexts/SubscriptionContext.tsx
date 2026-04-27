@@ -40,6 +40,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         const formatted = {
           ...data,
+          plan: data.planId, // Map planId to plan
           trialEndsAt: data.trialEndsAt ? new Date(data.trialEndsAt) : null,
           subscriptionEndsAt: data.currentPeriodEnd ? new Date(data.currentPeriodEnd) : null,
           createdAt: new Date(data.createdAt),
@@ -59,6 +60,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           const newData = await createRes.json();
           const formatted = {
             ...newData,
+            plan: newData.planId, // Map planId to plan
             trialEndsAt: newData.trialEndsAt ? new Date(newData.trialEndsAt) : null,
             subscriptionEndsAt: null,
             createdAt: new Date(newData.createdAt),
@@ -111,16 +113,29 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const updated = await response.json();
-        const formatted = {
-          ...updated,
-          trialEndsAt: updated.trialEndsAt ? new Date(updated.trialEndsAt) : null,
-          subscriptionEndsAt: updated.currentPeriodEnd ? new Date(updated.currentPeriodEnd) : null,
-        };
-        setSubscription(formatted);
-        localStorage.setItem('dwp_subscription', JSON.stringify(formatted));
+        
+        if (updated && updated.success === false) {
+           throw new Error(updated.message || 'Storage switch failed');
+        }
+        
+        // Check if we got a valid response (not the empty {} from before)
+        if (updated && (updated.status || updated.success)) {
+          const formatted = {
+            ...updated,
+            plan: updated.planId, // Map planId to plan
+            trialEndsAt: updated.trialEndsAt ? new Date(updated.trialEndsAt) : null,
+            subscriptionEndsAt: updated.currentPeriodEnd ? new Date(updated.currentPeriodEnd) : null,
+          };
+          setSubscription(formatted);
+          localStorage.setItem('dwp_subscription', JSON.stringify(formatted));
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Storage switch failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to switch mode on backend:', error);
+      throw error;
     }
   }
 
@@ -153,6 +168,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const updated = await response.json();
         const formatted = {
           ...updated,
+          plan: updated.planId, // Map planId to plan
           trialEndsAt: updated.trialEndsAt ? new Date(updated.trialEndsAt) : null,
           subscriptionEndsAt: updated.currentPeriodEnd ? new Date(updated.currentPeriodEnd) : null,
         };
