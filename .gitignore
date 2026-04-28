@@ -38,7 +38,7 @@ ehthumbs.db
 Thumbs.db
 
 # Hardhat files
-cache/
+/cache/
 artifacts/
 typechain-types/
 
