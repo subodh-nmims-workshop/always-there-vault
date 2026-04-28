@@ -44,7 +44,6 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
     } else {
       // Fallback: disconnect stale session and retry
       disconnect()
-      setTimeout(() => openConnectModal?.(), 300)
     }
   }
 

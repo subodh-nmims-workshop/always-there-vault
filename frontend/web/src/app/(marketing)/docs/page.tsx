@@ -1,15 +1,15 @@
 'use client'
 
 import React from 'react'
-import { 
-  Shield, 
-  Lock, 
-  BookOpen, 
-  Zap, 
-  ArrowLeft, 
-  Database, 
-  Heart, 
-  Globe, 
+import {
+  Shield,
+  Lock,
+  BookOpen,
+  Zap,
+  ArrowLeft,
+  Database,
+  Heart,
+  Globe,
   ShieldCheck,
   Timer,
   Cpu,
@@ -29,15 +29,29 @@ export default function DocsPage() {
     <div className="min-h-screen bg-[#030712] text-slate-200 font-sans selection:bg-blue-500/30 overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-          <div className="p-2 bg-blue-600 rounded-lg">
-            <Shield className="w-5 h-5 text-white" />
+        <Link href="/">
+          <div className="flex items-center gap-2 group cursor-pointer">
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish</span>
           </div>
-          <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish Documentation</span>
         </Link>
-        <Link href="/" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-          Exit Documentation
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="/investors" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-blue-500/20 hover:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Partners & Investors
+          </Link>
+          <Link href="/#how-it-works" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">How it works</Link>
+          <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
+          <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
+          <Link href="/#pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+        </div>
+        <Link href="/">
+          <button className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Go to App</button>
         </Link>
       </nav>
 
@@ -49,14 +63,14 @@ export default function DocsPage() {
           </motion.div>
           <h1 className="text-5xl font-black text-white mb-6 uppercase tracking-tight">The <span className="text-blue-500">Infrastructure</span> of Legacy</h1>
           <p className="text-slate-400 text-lg leading-relaxed font-medium">
-            Deep-dive into the security, architecture, and logic that powers the LastWish Protocol. 
+            Deep-dive into the security, architecture, and logic that powers the LastWish Protocol.
             Designed for durability, anonymity, and zero-trust execution.
           </p>
         </div>
 
         {/* Content Sections */}
         <div className="space-y-32">
-          
+
           {/* Section 1: Core Architecture */}
           <section id="architecture">
             <div className="flex items-center gap-4 mb-10">
@@ -69,7 +83,7 @@ export default function DocsPage() {
               <p className="text-slate-400 leading-relaxed font-medium text-lg">
                 LastWish utilizes a <span className="text-white font-bold italic">Dual-Layer Storage Architecture</span> to balance instant accessibility with eternal persistence.
               </p>
-              
+
               <div className="space-y-6">
                 <div className="flex gap-6 p-6 bg-white/5 rounded-2xl border border-white/5">
                   <div className="p-4 bg-blue-600/20 rounded-xl flex items-center justify-center shrink-0">
@@ -108,7 +122,7 @@ export default function DocsPage() {
                 <DocFeatureCard title="Non-Custodial" desc="Your wallet key is the only chabi. We have zero knowledge of your contents." />
                 <DocFeatureCard title="Quantum Ready" desc="Using AES-256-GCM with authenticated tags for integrity verification." />
               </div>
-              
+
               <div className="p-8 bg-white/5 border border-white/10 rounded-3xl">
                 <h4 className="font-black text-white mb-4 uppercase text-xs tracking-[0.3em]">The Data Journey:</h4>
                 <div className="space-y-4">
@@ -141,14 +155,14 @@ export default function DocsPage() {
 
           {/* Section 4: Privacy Policy */}
           <section id="privacy">
-             <div className="text-center p-16 bg-white/5 rounded-[3rem] border border-white/10">
-                <Shield className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-                <h3 className="text-2xl font-black text-white uppercase mb-4">PRIVACY BY DESIGN</h3>
-                <p className="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed">
-                  We do not collect names, phone numbers, or emails by default. Your identity is your Wallet Address. 
-                  We maintain zero logs of your file contents. Your legacy is yours alone.
-                </p>
-             </div>
+            <div className="text-center p-16 bg-white/5 rounded-[3rem] border border-white/10">
+              <Shield className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+              <h3 className="text-2xl font-black text-white uppercase mb-4">PRIVACY BY DESIGN</h3>
+              <p className="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed">
+                We do not collect names, phone numbers, or emails by default. Your identity is your Wallet Address.
+                We maintain zero logs of your file contents. Your legacy is yours alone.
+              </p>
+            </div>
           </section>
 
         </div>

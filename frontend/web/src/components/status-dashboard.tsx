@@ -100,7 +100,7 @@ export function StatusDashboard() {
                     recentActivities.push({
                         id: `asset-${i}`,
                         type: 'asset',
-                        title: `Encrypted: ${asset.title}`,
+                        title: `Encrypted: ${asset.name}`,
                         time: new Date(asset.createdAt).toLocaleDateString(),
                         status: asset.ipfsHash ? 'success' : 'pending'
                     });

@@ -151,36 +151,73 @@ export default function HomePage() {
             <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 transition-all">Logout</button>
           </div>
         </nav>
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24">
-          <TrialBanner />
-          <div className="flex flex-col sm:flex-row items-center justify-between bg-white/[0.02] border border-white/5 rounded-3xl p-8 shadow-2xl backdrop-blur-sm">
-            <div className="flex items-center space-x-5">
-              <div className="w-14 h-14 flex items-center justify-center bg-blue-600/20 rounded-2xl border border-blue-500/30">
-                <KeyRound className="h-7 w-7 text-blue-500" />
+        <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-16 mb-24">
+          
+          <div className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-[#2b52ff]/30 via-purple-500/20 to-transparent overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 animate-pulse" />
+            <div className="bg-[#0a0c12]/95 backdrop-blur-2xl rounded-[2.4rem] p-8 md:p-14 border border-white/5 relative z-10 text-center space-y-8 shadow-2xl">
+              
+              <div className="w-24 h-24 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto border border-red-500/20 relative shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+                <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full animate-pulse" />
+                <Lock className="w-12 h-12 text-red-500" />
               </div>
+
               <div>
-                <h1 className="text-2xl font-black text-white">Your Secure Vault</h1>
-                <p className="text-xs font-mono text-slate-500 mt-1 uppercase tracking-tighter opacity-70">{address}</p>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 text-[10px] font-black uppercase tracking-widest mb-4">
+                  <AlertTriangle className="w-4 h-4" /> System Under Development
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight">
+                  MAINNET ACCESS <span className="text-red-500">RESTRICTED</span>
+                </h1>
+                <p className="text-slate-400 mt-4 text-lg font-medium">
+                  Wallet Connected: <span className="text-white font-mono">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>
+                </p>
               </div>
+
+              <div className="p-8 rounded-2xl bg-[#2b52ff]/5 border border-[#2b52ff]/20 text-left space-y-6">
+                <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                  <Target className="w-6 h-6 text-[#2b52ff]" /> Why Are We In Stealth?
+                </h2>
+                <p className="text-slate-300 leading-relaxed">
+                  LastWish is engineering the world's most secure, unstoppable digital will protocol. We are currently finalizing our smart contract infrastructure, Zero-Knowledge encryption layer, and undergoing rigorous security audits to ensure 100% protection of user assets.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                  <div>
+                     <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">The Market</h3>
+                     <p className="text-lg font-black text-white">$1.5 Trillion</p>
+                     <p className="text-xs text-slate-500">Projected Digital Estate Market</p>
+                  </div>
+                  <div>
+                     <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">Current Status</h3>
+                     <p className="text-lg font-black text-yellow-500">Seed Round Open</p>
+                     <p className="text-xs text-slate-500">Seeking Strategic Partners</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="mailto:subodhram3350@gmail.com?subject=Investor Access Request - LastWish">
+                  <button className="w-full sm:w-auto px-8 py-4 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)] flex items-center justify-center gap-2">
+                    Request Investor Access <ChevronRight className="w-5 h-5" />
+                  </button>
+                </Link>
+                <button 
+                  onClick={() => {
+                    if (address.toLowerCase() === '0xYOUR_ADMIN_WALLET_ADDRESS_HERE'.toLowerCase()) {
+                       // Logic to bypass
+                       toast.success('Admin Bypass Enabled')
+                    } else {
+                       toast.error('You do not have Developer privileges to bypass this lock.')
+                    }
+                  }}
+                  className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 rounded-xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                >
+                  <Cpu className="w-5 h-5" /> Dev Override
+                </button>
+              </div>
+
             </div>
-            {/* ModeIndicator moved to Sidebar */}
           </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full grid grid-cols-2 md:grid-cols-7 gap-1">
-              {['overview', 'assets', 'beneficiaries', 'heartbeat', 'subscription', 'status', 'settings'].map((tab) => (
-                <TabsTrigger key={tab} value={tab} className="capitalize text-[10px] font-black tracking-widest data-[state=active]:bg-blue-600 transition-all">
-                  {tab}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <TabsContent value="overview"><OverviewDashboard onNavigate={setActiveTab} /></TabsContent>
-            <TabsContent value="assets"><AssetCreationForm /></TabsContent>
-            <TabsContent value="beneficiaries"><BeneficiariesDashboard onNavigate={setActiveTab} /></TabsContent>
-            <TabsContent value="heartbeat"><HeartbeatMonitor /></TabsContent>
-            <TabsContent value="subscription"><SubscriptionDashboard /></TabsContent>
-            <TabsContent value="status"><StatusDashboard /></TabsContent>
-            <TabsContent value="settings"><SettingsDashboard /></TabsContent>
-          </Tabs>
         </main>
         <SharedFooter />
       </div>
@@ -202,12 +239,19 @@ export default function HomePage() {
           <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish</span>
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <Link href="#how-it-works" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">How it works</Link>
-          <Link href="#security" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Security</Link>
-          <Link href="/docs" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
-          <Link href="#pricing" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+          <Link href="/investors" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-blue-500/20 hover:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Partners & Investors
+          </Link>
+          <Link href="#how-it-works" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">How it works</Link>
+          <Link href="#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
+          <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
+          <Link href="#pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
         </div>
-        <button onClick={handleConnect} className="px-6 py-2.5 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Connect Wallet</button>
+        <button onClick={handleConnect} className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Connect Wallet</button>
       </nav>
 
       {/* Hero Section */}
