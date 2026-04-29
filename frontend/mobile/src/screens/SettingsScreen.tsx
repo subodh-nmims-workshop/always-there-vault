@@ -35,7 +35,7 @@ import ProtocolModal from '../components/ProtocolModal';
 import { useTranslation } from '../hooks/useTranslation';
 import { Language } from '../utils/i18n';
 
-const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
+const SettingsScreen = ({ navigation, onLogout }: { navigation?: any, onLogout: () => void }) => {
   const [wallet, setWallet] = useState('0x0000...0000');
   const [bioEnabled, setBioEnabled] = useState(true);
   const [notifEnabled, setNotifEnabled] = useState(true);
@@ -126,7 +126,7 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
       >
         {/* ── IDENTITY & PLAN ──────────────────────────────── */}
         <SettingCard title="PROTOCOL IDENTITY">
-           <TouchableOpacity style={styles.planHeader} activeOpacity={0.9}>
+           <TouchableOpacity style={styles.planHeader} activeOpacity={0.9} onPress={() => navigation?.navigate('Subscription')}>
               <View>
                 <Text style={styles.planBadgeText}>CURRENT CLEARANCE</Text>
                 <Text style={styles.planName}>Lite Protocol</Text>
@@ -224,10 +224,10 @@ const SettingsScreen = ({ onLogout }: { onLogout: () => void }) => {
 
         {/* ── RESOURCES ───────────────────────────────────── */}
         <SettingCard title="PROTOCOL RESOURCES">
-           <SettingRow icon={FileText} title="Technical Whitepaper" color={COLORS.primary} />
-           <SettingRow icon={Map} title="Development Roadmap" color={COLORS.secondary} />
-           <SettingRow icon={Scale} title="Legal Compliance" color={COLORS.textMuted} />
-           <SettingRow icon={LifeBuoy} title="Priority Support" color={COLORS.warning} />
+           <SettingRow icon={FileText} title="Technical Whitepaper" color={COLORS.primary} onPress={() => navigation?.navigate('Docs')} />
+           <SettingRow icon={Map} title="Development Roadmap" color={COLORS.secondary} onPress={() => navigation?.navigate('Roadmap')} />
+           <SettingRow icon={Scale} title="Legal Compliance" color={COLORS.textMuted} onPress={() => navigation?.navigate('Legal')} />
+           <SettingRow icon={LifeBuoy} title="Priority Support" color={COLORS.warning} onPress={() => navigation?.navigate('Docs')} />
         </SettingCard>
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>

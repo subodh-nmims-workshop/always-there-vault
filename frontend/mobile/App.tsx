@@ -10,6 +10,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
 import { 
   Shield, 
@@ -42,12 +43,65 @@ import HeartbeatScreen from './src/screens/HeartbeatScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import LandingScreen from './src/screens/LandingScreen';
 import LoginScreen from './src/screens/LoginScreen';
+import ProtocolLegalScreen from './src/screens/ProtocolLegalScreen';
+import RoadmapScreen from './src/screens/RoadmapScreen';
+import SubscriptionScreen from './src/screens/SubscriptionScreen';
+import DocsScreen from './src/screens/DocsScreen';
 import { COLORS, FONTS, SHADOWS } from './src/theme';
 import { useTranslation } from './src/hooks/useTranslation';
 
 LogBox.ignoreLogs(['Sending `onAnimatedValueUpdate`']);
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+function HomeTabs({ onLogout }: { onLogout: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ color, size }) => {
+          const iconConfig = {
+            Home: Shield,
+            Assets: Folder,
+            Beneficiaries: Users,
+            Heartbeat: Zap,
+            Settings: Settings,
+          };
+          const IconComp = iconConfig[route.name as keyof typeof iconConfig] || Shield;
+          return <IconComp size={size} color={color} />;
+        },
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textDim,
+        tabBarStyle: {
+          backgroundColor: COLORS.background,
+          borderTopColor: COLORS.border,
+          height: 85,
+          paddingBottom: 25,
+          paddingTop: 10,
+          position: 'absolute',
+        },
+        tabBarBackground: () => (
+          <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: COLORS.glass, borderTopWidth: 1, borderTopColor: COLORS.glassBorder }} />
+        ),
+        tabBarLabelStyle: {
+          fontFamily: FONTS.orbitron.bold,
+          fontSize: 8,
+          letterSpacing: 1,
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('nav_home').toUpperCase() }} />
+      <Tab.Screen name="Assets" component={AssetsScreen} options={{ title: t('nav_assets').toUpperCase() }} />
+      <Tab.Screen name="Beneficiaries" component={BeneficiariesScreen} options={{ title: t('nav_beneficiaries').toUpperCase() }} />
+      <Tab.Screen name="Heartbeat" component={HeartbeatScreen} options={{ title: t('nav_pulse').toUpperCase() }} />
+      <Tab.Screen name="Settings" options={{ title: t('nav_settings').toUpperCase() }}>
+        {({ navigation }) => <SettingsScreen navigation={navigation} onLogout={onLogout} />}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+}
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
 interface ErrorBoundaryProps {
@@ -172,48 +226,15 @@ export default function App() {
         return (
           <NavigationContainer>
             <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
-              <Tab.Navigator
-                screenOptions={({ route }) => ({
-                  headerShown: false,
-                  tabBarIcon: ({ color, size }) => {
-                    const iconConfig = {
-                      Home: Shield,
-                      Assets: Folder,
-                      Beneficiaries: Users,
-                      Heartbeat: Zap,
-                      Settings: Settings,
-                    };
-                    const IconComp = iconConfig[route.name as keyof typeof iconConfig] || Shield;
-                    return <IconComp size={size} color={color} />;
-                  },
-                  tabBarActiveTintColor: COLORS.primary,
-                  tabBarInactiveTintColor: COLORS.textDim,
-                  tabBarStyle: {
-                    backgroundColor: COLORS.background,
-                    borderTopColor: COLORS.border,
-                    height: 85,
-                    paddingBottom: 25,
-                    paddingTop: 10,
-                    position: 'absolute',
-                  },
-                  tabBarBackground: () => (
-                    <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: COLORS.glass, borderTopWidth: 1, borderTopColor: COLORS.glassBorder }} />
-                  ),
-                  tabBarLabelStyle: {
-                    fontFamily: FONTS.orbitron.bold,
-                    fontSize: 8,
-                    letterSpacing: 1,
-                  },
-                })}
-              >
-                <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('nav_home').toUpperCase() }} />
-                <Tab.Screen name="Assets" component={AssetsScreen} options={{ title: t('nav_assets').toUpperCase() }} />
-                <Tab.Screen name="Beneficiaries" component={BeneficiariesScreen} options={{ title: t('nav_beneficiaries').toUpperCase() }} />
-                <Tab.Screen name="Heartbeat" component={HeartbeatScreen} options={{ title: t('nav_pulse').toUpperCase() }} />
-                <Tab.Screen name="Settings" options={{ title: t('nav_settings').toUpperCase() }}>
-                  {() => <SettingsScreen onLogout={() => setAppState('landing')} />}
-                </Tab.Screen>
-              </Tab.Navigator>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="Tabs">
+                {(props) => <HomeTabs {...props} onLogout={() => setAppState('landing')} />}
+              </Stack.Screen>
+              <Stack.Screen name="Subscription" component={SubscriptionScreen} />
+              <Stack.Screen name="Roadmap" component={RoadmapScreen} />
+              <Stack.Screen name="Legal" component={ProtocolLegalScreen} />
+              <Stack.Screen name="Docs" component={DocsScreen} />
+            </Stack.Navigator>
           </NavigationContainer>
         );
       default:
