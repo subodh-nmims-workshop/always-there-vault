@@ -1,0 +1,11 @@
+[package]
+name = "decentralized-digital-will-protocol"
+version = "1.0.0"
+
+[[dependency]]
+name = "node"
+version = "20.0.0"
+
+[[command]]
+name = "start"
+code = "node dist/main.js"
