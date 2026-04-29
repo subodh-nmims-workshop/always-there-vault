@@ -8,4 +8,4 @@ version = "20.0.0"
 
 [[command]]
 name = "start"
-code = "node dist/main.js"
+code = "cd backend && node dist/main.js"
