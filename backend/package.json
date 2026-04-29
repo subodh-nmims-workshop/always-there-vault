@@ -2,10 +2,6 @@
   "name": "digital-will-backend",
   "version": "1.0.0",
   "description": "Backend API for Decentralized Digital Will Protocol",
-  "engines": {
-    "node": "20.x",
-    "npm": "10.x"
-  },
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",
