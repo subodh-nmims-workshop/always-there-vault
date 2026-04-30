@@ -1,6 +1,6 @@
-# 📦 DeadMan Protocol: Storage Overview
+# 📦 AlwaysThere Protocol: Storage Overview
 
-Digital Will Protocol (LastWish) do tarah ke storage mechanism use karta hai taaki aapka data secure aur hamesha accessible rahe.
+Digital Will Protocol (AlwaysThere) do tarah ke storage mechanism use karta hai taaki aapka data secure aur hamesha accessible rahe.
 
 ## 🚀 Storage Types
 

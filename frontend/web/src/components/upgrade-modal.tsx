@@ -83,7 +83,7 @@ export function UpgradeModal({
                 />
                 <FeatureItem 
                   icon={<CheckCircle2 className="text-emerald-400" size={18} />}
-                  text="Fail-Safe DeadMan Asset Release"
+                  text="Fail-Safe AlwaysThere Asset Release"
                 />
               </div>
 

@@ -134,7 +134,7 @@ export default function SecurityPage() {
                                 Verify our cryptographic claims yourself. The code is entirely open-source, heavily audited, and designed for maximum paranoia.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                                <Link href="https://github.com/deadmanprotocol" className="bg-white text-[#0a0c10] px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all">
+                                <Link href="https://github.com/alwaysthereprotocol" className="bg-white text-[#0a0c10] px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all">
                                     View on GitHub
                                 </Link>
                                 <Link href="/docs" className="bg-white/[0.05] hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-white/10 text-white">

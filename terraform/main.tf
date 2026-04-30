@@ -4,14 +4,14 @@ variable "do_token" {
   sensitive   = true
 }
 
-resource "digitalocean_droplet" "deadman_protocol" {
+resource "digitalocean_droplet" "alwaysthere_protocol" {
   image    = "ubuntu-22-04-x64"
-  name     = "deadman-protocol-prod"
+  name     = "alwaysthere-protocol-prod"
   region   = "blr1"
   size     = "s-2vcpu-4gb"
   ssh_keys = [] # Add your SSH key IDs here
 
-  tags = ["deadman-protocol", "production"]
+  tags = ["alwaysthere-protocol", "production"]
 
   # Basic user data to install Docker automatically
   user_data = <<-EOF
@@ -30,5 +30,5 @@ resource "digitalocean_droplet" "deadman_protocol" {
 }
 
 output "droplet_ip" {
-  value = digitalocean_droplet.deadman_protocol.ipv4_address
+  value = digitalocean_droplet.alwaysthere_protocol.ipv4_address
 }

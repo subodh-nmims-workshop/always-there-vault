@@ -103,7 +103,7 @@ export class EmailService {
             <li>Explore premium features</li>
           </ul>
           <p>You have 30 days of free trial to explore all features!</p>
-          <a href="https://lastwishprotocol.com/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://alwaysthereprotocol.com/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Go to Dashboard
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -133,7 +133,7 @@ export class EmailService {
             <li>All assets are encrypted and secure</li>
             <li>You can create your own account anytime</li>
           </ul>
-          <a href="https://lastwishprotocol.com" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://alwaysthereprotocol.com" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Learn More
           </a>
         </div>
@@ -157,7 +157,7 @@ export class EmailService {
             </p>
           </div>
           <p>If you don't submit a heartbeat within the grace period, your designated assets will be released to your beneficiaries.</p>
-          <a href="https://lastwishprotocol.com/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://alwaysthereprotocol.com/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Submit Heartbeat Now
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -185,7 +185,7 @@ export class EmailService {
             <p><strong>Status:</strong> Active</p>
           </div>
           <p>You now have access to all premium features!</p>
-          <a href="https://lastwishprotocol.com/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="https://alwaysthereprotocol.com/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             View Subscription
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">

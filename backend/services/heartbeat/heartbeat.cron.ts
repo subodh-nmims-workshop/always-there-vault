@@ -232,7 +232,7 @@ export class HeartbeatCronService {
                         // All buffers exhausted
                         this.logger.error(`Protocol Triggered for ${user.walletAddress}! Buffer completely exhausted after ${maxBuffer} misses.`);
                         try {
-                            await this.blockchainService.triggerLastWish(user.walletAddress);
+                            await this.blockchainService.triggerAlwaysThere(user.walletAddress);
                             
                             // Notify user
                             if (user.email) {

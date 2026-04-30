@@ -1,34 +1,6 @@
 {
   "pages": {
-    "/_app": [
-      "static/chunks/082m_next_dist_compiled_0guwz4g._.js",
-      "static/chunks/082m_next_dist_shared_lib_0pmmsw6._.js",
-      "static/chunks/082m_next_dist_client_12m76yy._.js",
-      "static/chunks/082m_next_dist_0s1zxvy._.js",
-      "static/chunks/082m_next_app_0bhs3r5.js",
-      "static/chunks/[next]_entry_page-loader_ts_06hqb4g._.js",
-      "static/chunks/082m_react_0mxtefm._.js",
-      "static/chunks/082m_react-dom_cjs_react-dom_development_0xpco_3.js",
-      "static/chunks/082m_react-dom_0k41yrd._.js",
-      "static/chunks/082m_08f30oi._.js",
-      "static/chunks/[root-of-the-server]__11xf8bk._.js",
-      "static/chunks/Desktop_Nmims_DeadMan Protocol_frontend_web_src_pages__app_07xvfw~._.js",
-      "static/chunks/turbopack-Desktop_Nmims_DeadMan Protocol_frontend_web_src_pages__app_0po4n8g._.js"
-    ],
-    "/_error": [
-      "static/chunks/082m_next_dist_compiled_0guwz4g._.js",
-      "static/chunks/082m_next_dist_shared_lib_0v4da28._.js",
-      "static/chunks/082m_next_dist_client_12m76yy._.js",
-      "static/chunks/082m_next_dist_0h2nz15._.js",
-      "static/chunks/[next]_entry_page-loader_ts_0o~y03e._.js",
-      "static/chunks/082m_react_0mxtefm._.js",
-      "static/chunks/082m_react-dom_cjs_react-dom_development_0xpco_3.js",
-      "static/chunks/082m_react-dom_0k41yrd._.js",
-      "static/chunks/082m_08f30oi._.js",
-      "static/chunks/[root-of-the-server]__0og7i5k._.js",
-      "static/chunks/Desktop_Nmims_DeadMan Protocol_frontend_web_src_pages__error_07xvfw~._.js",
-      "static/chunks/turbopack-Desktop_Nmims_DeadMan Protocol_frontend_web_src_pages__error_0nw~9jo._.js"
-    ]
+    "/_app": []
   },
   "devFiles": [],
   "polyfillFiles": [],

@@ -35,8 +35,8 @@ USDC_TOKEN_ADDRESS=0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
 ```
 
 ## 4. Production Domain & Hosting
-- [ ] **Frontend Domain**: (e.g., app.lastwishprotocol.com)
-- [ ] **Backend API Domain**: (e.g., api.lastwishprotocol.com) - Used in Stripe Webhook settings.
+- [ ] **Frontend Domain**: (e.g., app.alwaysthereprotocol.com)
+- [ ] **Backend API Domain**: (e.g., api.alwaysthereprotocol.com) - Used in Stripe Webhook settings.
 - [ ] **Database (Managed)**: A production-ready database like Neon (Postgres) or MongoDB Atlas.
 
 ## 5. Third-Party Integrations

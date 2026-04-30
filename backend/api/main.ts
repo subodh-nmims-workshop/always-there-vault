@@ -37,7 +37,7 @@ async function bootstrap() {
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'", "https://api.lastwish-protocol.com", "http://localhost:*"],
+        connectSrc: ["'self'", "https://api.alwaysthere-protocol.com", "http://localhost:*"],
       },
     },
     xFrameOptions: { action: "deny" },
@@ -62,7 +62,7 @@ async function bootstrap() {
 
   // CORS with strict origins
   const allowedOrigins = [
-    'https://app.lastwish-protocol.com',
+    'https://app.alwaysthere-protocol.com',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:7000',

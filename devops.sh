@@ -19,9 +19,9 @@ if ! docker compose build; then
 fi
 
 echo "☁️ Step 3: Pushing images to your Docker Hub repository..."
-docker push subodh40/lastwish-blockchain:latest
-docker push subodh40/lastwish-backend:latest
-docker push subodh40/lastwish-web:latest
+docker push subodh40/alwaysthere-blockchain:latest
+docker push subodh40/alwaysthere-backend:latest
+docker push subodh40/alwaysthere-web:latest
 
 echo "🏃‍♂️ Step 4: Starting all services locally..."
 docker compose up -d

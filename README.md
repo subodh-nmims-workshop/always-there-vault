@@ -67,8 +67,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/lastwish-protocol.git
-cd lastwish-protocol
+git clone https://github.com/yourusername/alwaysthere-protocol.git
+cd alwaysthere-protocol
 
 # Run complete setup
 ./setup-complete-system.sh
@@ -87,7 +87,7 @@ cd lastwish-protocol
 ## 📁 Project Structure
 
 ```
-lastwish-protocol/
+alwaysthere-protocol/
 ├── backend/                      # NestJS Backend (Secondary)
 │   ├── api/                     # API controllers
 │   ├── services/                # Business logic
@@ -182,7 +182,7 @@ npx ts-node scripts/setup-indexes.ts
 ./backup-database.sh
 
 # Restore database
-./restore-database.sh backups/lastwish_backup_20240308_120000.gz
+./restore-database.sh backups/alwaysthere_backup_20240308_120000.gz
 ```
 
 ## 🐳 Docker Deployment
@@ -218,7 +218,7 @@ curl http://localhost:7001/health
 curl http://localhost:7000
 
 # Database health
-docker exec lastwish-mongodb mongosh --eval "db.adminCommand('ping')"
+docker exec alwaysthere-mongodb mongosh --eval "db.adminCommand('ping')"
 ```
 
 ### Logs
@@ -300,9 +300,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Email**: support@lastwishprotocol.com
-- **Documentation**: [docs.lastwishprotocol.com](https://docs.lastwishprotocol.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/lastwish-protocol/issues)
+- **Email**: support@alwaysthereprotocol.com
+- **Documentation**: [docs.alwaysthereprotocol.com](https://docs.alwaysthereprotocol.com)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/alwaysthere-protocol/issues)
 
 ---
 

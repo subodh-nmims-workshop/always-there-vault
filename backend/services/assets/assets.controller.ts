@@ -74,7 +74,7 @@ export class AssetsController {
     const walletAddress = req.user.walletAddress;
     return this.assetsService.createAsset(body, walletAddress);
   }
-  
+
   @Get()
   @ApiOperation({ summary: 'Get all asset metadata for a user' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
@@ -88,20 +88,20 @@ export class AssetsController {
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async getAssetMock(): Promise<any> { return null; }
-  
+
   @Put(':id')
   @ApiOperation({ summary: 'Update asset metadata' })
   @ApiResponse({ status: 200, description: 'Asset metadata updated successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async updateAssetMock(): Promise<any> { return null; }
-  
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete asset metadata' })
   @ApiResponse({ status: 204, description: 'Asset metadata deleted successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
   async deleteAssetMock(): Promise<any> { return null; }
-  
+
   @Post('folders')
   @ApiOperation({ summary: 'Create a new folder' })
   async createFolder(
@@ -130,9 +130,10 @@ export class AssetsController {
   async shareFolder(
     @Param('id') id: string,
     @Body('walletToShareWith') wallet: string,
+    @Req() req: any,
     @Body('permission') permission?: string
   ) {
-    return this.assetsService.shareFolder(id, wallet, permission);
+    return this.assetsService.shareFolder(id, req.user.walletAddress, wallet, permission);
   }
 
   @Get(':id/release-status')
@@ -144,8 +145,8 @@ export class AssetsController {
 
   @Post('keys/:id')
   @ApiOperation({ summary: 'Store key distribution for recovery' })
-  async saveKey(@Param('id') id: string, @Body('shares') shares: any) {
-    return this.assetsService.saveKeyDistribution(id, shares);
+  async saveKey(@Param('id') id: string, @Body('shares') shares: any, @Req() req: any) {
+    return this.assetsService.saveKeyDistribution(id, req.user.walletAddress, shares);
   }
 
   @Get('keys/:id')
@@ -165,10 +166,11 @@ export class AssetsController {
   @ApiOperation({ summary: 'Update folder details (rename, move, etc)' })
   async updateFolder(
     @Param('id') id: string,
+    @Req() req: any,
     @Body('name') name?: string,
     @Body('parentId') parentId?: string,
     @Body('beneficiaries') beneficiaries?: string[]
   ) {
-    return this.assetsService.updateFolder(id, { name, parentId, beneficiaries });
+    return this.assetsService.updateFolder(id, req.user.walletAddress, { name, parentId, beneficiaries });
   }
 }

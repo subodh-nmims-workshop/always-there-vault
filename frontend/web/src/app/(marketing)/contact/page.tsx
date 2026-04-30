@@ -51,17 +51,17 @@ export default function ContactPage() {
                 {/* Contact Links */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-24">
 
-                    <motion.a href="mailto:security@deadman.xyz" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-md rounded-2xl p-8 border border-white/10 flex items-center gap-6 group transition-all">
+                    <motion.a href="mailto:security@alwaysthere.xyz" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-md rounded-2xl p-8 border border-white/10 flex items-center gap-6 group transition-all">
                         <div className="w-12 h-12 rounded-xl bg-[#1152d4]/10 border border-[#1152d4]/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                             <Mail className="text-[#1152d4] w-6 h-6" suppressHydrationWarning />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold mb-1 text-white">Email Us</h3>
-                            <p className="text-slate-400">security@deadman.xyz</p>
+                            <p className="text-slate-400">security@alwaysthere.xyz</p>
                         </div>
                     </motion.a>
 
-                    <motion.a href="https://discord.gg/deadmanprotocol" target="_blank" rel="noopener noreferrer" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.4 }} className="bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-md rounded-2xl p-8 border border-white/10 flex items-center gap-6 group transition-all">
+                    <motion.a href="https://discord.gg/alwaysthereprotocol" target="_blank" rel="noopener noreferrer" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.4 }} className="bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-md rounded-2xl p-8 border border-white/10 flex items-center gap-6 group transition-all">
                         <div className="w-12 h-12 rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                             <MessageCircle className="text-[#8b5cf6] w-6 h-6" suppressHydrationWarning />
                         </div>

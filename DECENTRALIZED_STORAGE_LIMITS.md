@@ -1,6 +1,6 @@
 # 🌐 Decentralized Storage (Web3) Actual Limits
 
-DeadMan Protocol me decentralized storage (IPFS/Arweave) ki limits purely technical constraints aur security parameters par based hain.
+AlwaysThere Protocol me decentralized storage (IPFS/Arweave) ki limits purely technical constraints aur security parameters par based hain.
 
 ## 📏 Actual Storage Limits (The Numbers)
 
@@ -27,7 +27,7 @@ Aap soch rahe honge ki IPFS toh GBs me data store kar sakta hai, toh humne **50M
 
 ## 🌍 Global Comparison
 
-| Feature | DeadMan Protocol | Standard IPFS Gateway | Arweave (Permaweb) |
+| Feature | AlwaysThere Protocol | Standard IPFS Gateway | Arweave (Permaweb) |
 |:--- |:--- |:--- |:--- |
 | **Privacy** | **Encrypted (AES-256)** | Public by default | Public by default |
 | **Access** | **Shamir Secret Sharing** | Single Hash | Single Hash |

@@ -150,7 +150,7 @@ export default function GuidesPage() {
                                 <h3 className="text-white text-2xl font-semibold mb-4 mt-8">1. Clone and Configure</h3>
                                 <p className="mb-4">Begin by cloning the relayer repository and configuring your environment variables. The relayer needs to know which contract it is interacting with and its own private funding key.</p>
                                 <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto mb-8 shadow-inner">
-                                    <pre><code>{`git clone https://github.com/deadman-protocol/relayer-node.git
+                                    <pre><code>{`git clone https://github.com/alwaysthere-protocol/relayer-node.git
 cd relayer-node
 cp .env.example .env
 

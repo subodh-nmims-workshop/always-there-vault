@@ -317,7 +317,7 @@ export function StatusDashboard() {
                                 <div className="size-3 rounded-full bg-amber-500/50"></div>
                                 <div className="size-3 rounded-full bg-emerald-500/50"></div>
                             </div>
-                            <span className="text-xs text-slate-600 font-mono font-medium tracking-wide">bash — lastwish-kernel — 80x24</span>
+                            <span className="text-xs text-slate-600 font-mono font-medium tracking-wide">bash — alwaysthere-kernel — 80x24</span>
                         </div>
 
                         <div className="p-8 h-[200px] overflow-y-auto font-mono text-sm leading-loose space-y-2 custom-scrollbar">

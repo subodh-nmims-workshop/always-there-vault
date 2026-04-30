@@ -34,7 +34,7 @@ export default function DocsPage() {
             <div className="p-2 bg-blue-600 rounded-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish</span>
+            <span className="text-xl font-black tracking-tighter uppercase text-white">AlwaysThere</span>
           </div>
         </Link>
         <div className="hidden md:flex items-center gap-8">
@@ -63,7 +63,7 @@ export default function DocsPage() {
           </motion.div>
           <h1 className="text-5xl font-black text-white mb-6 uppercase tracking-tight">The <span className="text-blue-500">Infrastructure</span> of Legacy</h1>
           <p className="text-slate-400 text-lg leading-relaxed font-medium">
-            Deep-dive into the security, architecture, and logic that powers the LastWish Protocol.
+            Deep-dive into the security, architecture, and logic that powers the AlwaysThere Protocol.
             Designed for durability, anonymity, and zero-trust execution.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function DocsPage() {
             </div>
             <div className="bg-white/[0.02] rounded-[2.5rem] p-10 border border-white/5 space-y-8">
               <p className="text-slate-400 leading-relaxed font-medium text-lg">
-                LastWish utilizes a <span className="text-white font-bold italic">Dual-Layer Storage Architecture</span> to balance instant accessibility with eternal persistence.
+                AlwaysThere utilizes a <span className="text-white font-bold italic">Dual-Layer Storage Architecture</span> to balance instant accessibility with eternal persistence.
               </p>
 
               <div className="space-y-6">

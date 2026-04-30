@@ -80,11 +80,11 @@ const DocsScreen = ({ onBack }: { onBack: () => void }) => {
 
           {/* Web Links for expanded reading */}
           <View style={styles.linkRow}>
-            <TouchableOpacity style={styles.webLinkBtn} onPress={() => openBrowser('https://deadmanprotocol.com/docs')}>
+            <TouchableOpacity style={styles.webLinkBtn} onPress={() => openBrowser('https://alwaysthereprotocol.com/docs')}>
               <Text style={styles.webLinkText}>FULL DOCUMENTATION</Text>
               <ExternalLink size={14} color={COLORS.primary} style={{marginLeft: 6}} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.webLinkBtn, { borderColor: COLORS.accent + '50' }]} onPress={() => openBrowser('https://deadmanprotocol.com/support')}>
+            <TouchableOpacity style={[styles.webLinkBtn, { borderColor: COLORS.accent + '50' }]} onPress={() => openBrowser('https://alwaysthereprotocol.com/support')}>
               <Text style={[styles.webLinkText, { color: COLORS.accent }]}>HELPDESK</Text>
               <ExternalLink size={14} color={COLORS.accent} style={{marginLeft: 6}} />
             </TouchableOpacity>
@@ -104,8 +104,8 @@ const DocsScreen = ({ onBack }: { onBack: () => void }) => {
 
           <View style={styles.footer}>
             <Text style={styles.footerBrand}>OPEN SOURCE PROTOCOL v2.0</Text>
-            <TouchableOpacity onPress={() => openBrowser('https://github.com/deadman-protocol')}>
-              <Text style={styles.footerLink}>github.com/deadman-protocol</Text>
+            <TouchableOpacity onPress={() => openBrowser('https://github.com/alwaysthere-protocol')}>
+              <Text style={styles.footerLink}>github.com/alwaysthere-protocol</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

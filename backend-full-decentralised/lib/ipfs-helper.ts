@@ -246,7 +246,7 @@ export async function encryptForIPFS(
   const key = await crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: encoder.encode('lastwish-protocol-salt'),
+      salt: encoder.encode('alwaysthere-protocol-salt'),
       iterations: 100000,
       hash: 'SHA-256'
     },
@@ -300,7 +300,7 @@ export async function decryptFromIPFS(
   const key = await crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: encoder.encode('lastwish-protocol-salt'),
+      salt: encoder.encode('alwaysthere-protocol-salt'),
       iterations: 100000,
       hash: 'SHA-256'
     },

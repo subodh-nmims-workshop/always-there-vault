@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  StatusBar, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  StatusBar,
   ActivityIndicator,
   LogBox
 } from 'react-native';
@@ -12,28 +12,28 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Font from 'expo-font';
-import { 
-  Shield, 
-  Folder, 
-  Users, 
-  Zap, 
+import {
+  Shield,
+  Folder,
+  Users,
+  Zap,
   Settings,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Google Fonts Packages ────────────────────────────────────────────────────
-import { 
-  Outfit_400Regular, 
-  Outfit_500Medium, 
+import {
+  Outfit_400Regular,
+  Outfit_500Medium,
   Outfit_600SemiBold,
-  Outfit_700Bold, 
-  Outfit_900Black 
+  Outfit_700Bold,
+  Outfit_900Black
 } from '@expo-google-fonts/outfit';
-import { 
-  PlusJakartaSans_400Regular, 
-  PlusJakartaSans_500Medium, 
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
   PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold, 
+  PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -161,11 +161,11 @@ export default function App() {
           'PlusJakartaSans_600SemiBold': PlusJakartaSans_600SemiBold,
           'PlusJakartaSans_700Bold': PlusJakartaSans_700Bold,
         });
-        
+
         // 1. Initial State Handling
         const savedWallet = await AsyncStorage.getItem('dwp_wallet_address');
         const setupDone = await AsyncStorage.getItem('dwp_setup_complete');
-        
+
         if (savedWallet && setupDone) {
           setAppState('unlock');
         } else if (savedWallet && !setupDone) {
@@ -204,20 +204,20 @@ export default function App() {
         return <LandingScreen onConnectWallet={() => setAppState('login')} />;
       case 'login':
         return (
-          <LoginScreen 
-            mode="wallet_auth" 
+          <LoginScreen
+            mode="wallet_auth"
             onBack={() => setAppState('landing')}
             onSuccess={() => setAppState('setup_security')}
           />
         );
       case 'setup_security':
         return (
-          <LoginScreen 
-            mode="setup_security" 
+          <LoginScreen
+            mode="setup_security"
             onSuccess={async () => {
               await AsyncStorage.setItem('dwp_setup_complete', 'true');
               setAppState('home');
-            }} 
+            }}
           />
         );
       case 'unlock':

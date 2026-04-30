@@ -144,7 +144,7 @@ export default function HomePage() {
         <nav className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
             <Shield className="h-8 w-8 text-blue-500" />
-            <span className="font-black text-xl tracking-tight text-white uppercase">LastWish</span>
+            <span className="font-black text-xl tracking-tight text-white uppercase">AlwaysThere</span>
           </Link>
           <div className="flex items-center space-x-4">
             <Link href="/donate" className="px-5 py-2.5 rounded-xl bg-[#2b52ff]/10 text-[#2b52ff] text-xs font-black border border-[#2b52ff]/20 uppercase tracking-widest hover:bg-[#2b52ff]/20 transition-all">Support Us</Link>
@@ -179,7 +179,7 @@ export default function HomePage() {
                   <Target className="w-6 h-6 text-[#2b52ff]" /> Why Are We In Stealth?
                 </h2>
                 <p className="text-slate-300 leading-relaxed">
-                  LastWish is engineering the world's most secure, unstoppable digital will protocol. We are currently finalizing our smart contract infrastructure, Zero-Knowledge encryption layer, and undergoing rigorous security audits to ensure 100% protection of user assets.
+                  AlwaysThere is engineering the world's most secure, unstoppable digital will protocol. We are currently finalizing our smart contract infrastructure, Zero-Knowledge encryption layer, and undergoing rigorous security audits to ensure 100% protection of user assets.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
                   <div>
@@ -196,7 +196,7 @@ export default function HomePage() {
               </div>
 
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="mailto:subodhram3350@gmail.com?subject=Investor Access Request - LastWish">
+                <Link href="mailto:subodhram3350@gmail.com?subject=Investor Access Request - AlwaysThere">
                   <button className="w-full sm:w-auto px-8 py-4 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)] flex items-center justify-center gap-2">
                     Request Investor Access <ChevronRight className="w-5 h-5" />
                   </button>
@@ -236,7 +236,7 @@ export default function HomePage() {
           <div className="p-2 bg-blue-600 rounded-lg">
             <Shield className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish</span>
+          <span className="text-xl font-black tracking-tighter uppercase text-white">AlwaysThere</span>
         </div>
         <div className="hidden md:flex items-center gap-8">
           <Link href="/investors" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-blue-500/20 hover:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)]">
@@ -377,7 +377,7 @@ export default function HomePage() {
           </div>
           <div className="space-y-2">
             <FaqItem 
-              question="Can LastWish see my private data?" 
+              question="Can AlwaysThere see my private data?" 
               answer="Absolutely not. Your files are encrypted locally on your device using your wallet signature. We only store encrypted 'shards' that are impossible for us or anyone else to read without your key." 
             />
             <FaqItem 
@@ -385,7 +385,7 @@ export default function HomePage() {
               answer="Once the protocol detects that your heartbeat timer has expired and the grace period ends, it automatically generates and sends a secure access link to your nominees." 
             />
             <FaqItem 
-              question="Is LastWish free to use?" 
+              question="Is AlwaysThere free to use?" 
               answer="Yes! We offer a 'Forever Free' plan for basic asset protection. For larger storage (up to 1TB) and advanced features, you can upgrade to our professional plans anytime." 
             />
           </div>

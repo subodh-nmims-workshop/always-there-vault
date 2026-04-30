@@ -7,7 +7,7 @@ import { subscriptions } from './backend/src/db/schema/subscriptions';
 
 dotenv.config({ path: './backend/.env' });
 
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/deadman';
+const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/alwaysthere';
 const client = postgres(connectionString);
 const db = drizzle(client, { schema: { users, subscriptions } });
 

@@ -32,7 +32,7 @@ contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
     event HeartbeatLogged(address indexed owner, uint256 timestamp);
     event NomineeAuthorized(address indexed owner, address indexed nominee);
     event NomineeRevoked(address indexed owner, address indexed nominee);
-    event LastWishTriggered(address indexed owner, uint256 timestamp);
+    event AlwaysThereTriggered(address indexed owner, uint256 timestamp);
     event PayloadReleased(address indexed owner, address indexed nominee);
     event WillPaused(address indexed owner);
     event WillResumed(address indexed owner);
@@ -73,7 +73,7 @@ contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
     }
 
     /**
-     * @dev Submit a heartbeat to prevent the lastwish switch from triggering
+     * @dev Submit a heartbeat to prevent the alwaysthere switch from triggering
      */
     function ping() external whenNotPaused {
         WillCondition storage userWill = wills[msg.sender];
@@ -121,7 +121,7 @@ contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
         require(timeSinceHeartbeat > (userWill.heartbeatInterval + userWill.gracePeriod), "Safety window not yet breached");
 
         userWill.isTriggered = true;
-        emit LastWishTriggered(owner, block.timestamp);
+        emit AlwaysThereTriggered(owner, block.timestamp);
     }
 
     /**

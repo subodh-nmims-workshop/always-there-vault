@@ -33,7 +33,7 @@ const DIGITAL_WILL_ABI = [
   'function registerTokenAsset(address _token,uint8 _tokenType,uint256 _amountOrId,address _beneficiary) external',
   'function executeTokenAssets(address _owner) external',
   'event HeartbeatLogged(address indexed owner, uint256 timestamp)',
-  'event DeadmanTriggered(address indexed owner, uint256 timestamp)',
+  'event AlwaysThereTriggered(address indexed owner, uint256 timestamp)',
   'event TokenAssetRegistered(address indexed owner,address indexed token,address indexed beneficiary,uint8 tokenType,uint256 amountOrId,uint256 timestamp)',
   'event TokenAssetExecuted(address indexed owner,address indexed token,address indexed beneficiary,uint8 tokenType,uint256 amountOrId,uint256 timestamp)'
 ]

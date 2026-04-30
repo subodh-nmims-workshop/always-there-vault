@@ -17,7 +17,7 @@ export class ReleaseService {
             throw new NotFoundException('Asset not found');
         }
 
-        const isTriggered = await this.blockchainService.isLastWishTriggered(asset.ownerWallet);
+        const isTriggered = await this.blockchainService.isAlwaysThereTriggered(asset.ownerWallet);
         if (!isTriggered) {
             throw new UnauthorizedException('Last Wish switch has not been triggered for this owner yet.');
         }

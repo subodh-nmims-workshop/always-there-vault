@@ -188,8 +188,14 @@ export class AssetsService {
     return { url: file.location, provider: 'Local' };
   }
 
-  async shareFolder(folderId: string, walletToShareWith: string, permission: string = 'READ') {
+  async shareFolder(folderId: string, ownerWalletAddress: string, walletToShareWith: string, permission: string = 'READ') {
     try {
+      const ownerUser = await this.usersService.findUserByWallet(ownerWalletAddress);
+      const folder = await this.db.query.folders.findFirst({
+        where: and(eq(folders.id, folderId), eq(folders.userId, ownerUser.id)),
+      });
+      if (!folder) throw new NotFoundException('Folder not found or access denied');
+
       const targetUser = await this.usersService.findUserByWallet(walletToShareWith);
       if (targetUser) {
         const [share] = await this.db.insert(sharedAccess).values({
@@ -212,29 +218,31 @@ export class AssetsService {
     });
   }
 
-  async deleteAsset(id: string) {
+  async deleteAsset(id: string, walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
     const file = await this.db.query.files.findFirst({
-      where: eq(files.id, id),
+      where: and(eq(files.id, id), eq(files.userId, user.id)),
     });
 
-    if (!file) throw new NotFoundException('Asset not found');
+    if (!file) throw new NotFoundException('Asset not found or access denied');
 
     await this.db.delete(files).where(eq(files.id, id));
     
     // Decrement storage
-    const user = await this.db.query.users.findFirst({
-        where: eq(users.id, file.userId)
-    });
-    if (user) {
-        await this.usersService.decrementStorage(user.walletAddress, file.size);
-    }
+    await this.usersService.decrementStorage(user.walletAddress, file.size);
 
     await this.auditService.trackAction(file.userId, 'DELETE_ASSET', 'FILE', id, { name: file.name });
 
     return { success: true };
   }
 
-  async updateFolder(id: string, updates: { name?: string, parentId?: string, beneficiaries?: string[] }) {
+  async updateFolder(id: string, walletAddress: string, updates: { name?: string, parentId?: string, beneficiaries?: string[] }) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    const folder = await this.db.query.folders.findFirst({
+      where: and(eq(folders.id, id), eq(folders.userId, user.id)),
+    });
+    if (!folder) throw new NotFoundException('Folder not found or access denied');
+
     const updateData: any = { updatedAt: new Date() };
     if (updates.name) updateData.name = updates.name;
     if (updates.parentId !== undefined) updateData.parentId = updates.parentId;
@@ -248,7 +256,15 @@ export class AssetsService {
     return { canRelease: false, reason: 'Manual trigger only for now' };
   }
 
-  async saveKeyDistribution(keyId: string, shares: any) {
+  async saveKeyDistribution(keyId: string, walletAddress: string, shares: any) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    
+    // Verify the asset belongs to the user
+    const asset = await this.db.query.files.findFirst({
+      where: and(eq(files.encryptionKeyId, keyId), eq(files.userId, user.id)),
+    });
+    if (!asset) throw new NotFoundException('Asset for this key not found or access denied');
+
     const { keyDistributions } = await import('../../src/db/schema/keys');
     return this.db.insert(keyDistributions).values({
       keyId,

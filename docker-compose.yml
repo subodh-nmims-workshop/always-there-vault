@@ -2,12 +2,12 @@
 services:
   # 1. Local Blockchain Node (Hardhat) - Mostly for Staging/Testing
   blockchain:
-    image: subodh40/lastwish-blockchain:latest
+    image: subodh40/alwaysthere-blockchain:latest
     build:
       context: ./
       dockerfile: Dockerfile.hardhat
       network: host
-    container_name: lastwish_blockchain
+    container_name: alwaysthere_blockchain
     ports:
       - "8545:8545"
     volumes:
@@ -22,12 +22,12 @@ services:
 
   # 2. Next.js Web Dashboard (Disabled to allow local dev server)
   # web:
-  #   image: subodh40/lastwish-web:latest
+  #   image: subodh40/alwaysthere-web:latest
   #   build:
   #     context: ./frontend/web
   #     dockerfile: Dockerfile
   #     network: host
-  #   container_name: lastwish_web
+  #   container_name: alwaysthere_web
   #   ports:
   #     - "7000:7000"
   #   environment:
@@ -43,18 +43,18 @@ services:
 
   # 3. NestJS Backend API (Disabled to allow local dev server)
   # backend:
-  #   image: subodh40/lastwish-backend:latest
+  #   image: subodh40/alwaysthere-backend:latest
   #   build:
   #     context: ./backend
   #     dockerfile: Dockerfile
   #     network: host
-  #   container_name: lastwish_backend
+  #   container_name: alwaysthere_backend
   #   ports:
   #     - "7001:7001"
   #   environment:
   #     - NODE_ENV=production
   #     - PORT=7001
-  #     - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/lastwish}
+  #     - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/alwaysthere}
   #     - RPC_URL=http://blockchain:8545
   #     - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
   #     - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
@@ -74,13 +74,13 @@ services:
   # 4. PostgreSQL Database (For Drizzle ORM)
   postgres:
     image: postgres:15-alpine
-    container_name: lastwish_db
+    container_name: alwaysthere_db
     ports:
       - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: lastwish
+      POSTGRES_DB: alwaysthere
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -89,7 +89,7 @@ services:
   # 5. MongoDB (For legacy services)
   mongodb:
     image: mongo:7.0
-    container_name: lastwish_mongodb
+    container_name: alwaysthere_mongodb
     ports:
       - "27018:27017"
     expose:
@@ -104,7 +104,7 @@ services:
   # 6. Redis (For Caching/Pulse logs)
   redis:
     image: redis:7-alpine
-    container_name: lastwish_redis
+    container_name: alwaysthere_redis
     ports:
       - "6379:6379"
     networks:
@@ -113,7 +113,7 @@ services:
   # 7. Prometheus (Metrics Collection)
   prometheus:
     image: prom/prometheus:latest
-    container_name: lastwish_prometheus
+    container_name: alwaysthere_prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -124,7 +124,7 @@ services:
   # 8. Grafana (Visualization Dashboard)
   grafana:
     image: grafana/grafana:latest
-    container_name: lastwish_grafana
+    container_name: alwaysthere_grafana
     ports:
       - "3001:3000"
     environment:
@@ -139,7 +139,7 @@ services:
   # 9. Certbot (SSL Certificate Auto-Renewal)
   certbot:
     image: certbot/certbot
-    container_name: lastwish_certbot
+    container_name: alwaysthere_certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot

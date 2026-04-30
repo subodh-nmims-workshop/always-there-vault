@@ -23,7 +23,7 @@ export default function InvestorsPage() {
             <div className="p-2 bg-blue-600 rounded-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase text-white">LastWish</span>
+            <span className="text-xl font-black tracking-tighter uppercase text-white">AlwaysThere</span>
           </div>
         </Link>
         <div className="hidden md:flex items-center gap-8">
@@ -62,15 +62,15 @@ export default function InvestorsPage() {
             </span>
           </h1>
           <p className="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
-            Billions of dollars in digital assets are lost forever when owners pass away. LastWish is building the ultimate decentralized digital will protocol to solve the internet's biggest generational wealth transfer problem.
+            Billions of dollars in digital assets are lost forever when owners pass away. AlwaysThere is building the ultimate decentralized digital will protocol to solve the internet's biggest generational wealth transfer problem.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link href="mailto:subodhram3350@gmail.com?subject=Investor Inquiry - LastWish">
+            <Link href="mailto:subodhram3350@gmail.com?subject=Investor Inquiry - AlwaysThere">
               <Button className="h-14 px-8 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_0_30px_rgba(43,82,255,0.3)]">
-                Invest in LastWish <TrendingUp className="w-4 h-4 ml-2" />
+                Invest in AlwaysThere <TrendingUp className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link href="mailto:subodhram3350@gmail.com?subject=Developer Application - LastWish">
+            <Link href="mailto:subodhram3350@gmail.com?subject=Developer Application - AlwaysThere">
               <Button variant="outline" className="h-14 px-8 bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest">
                 Join the Dev Team <Code className="w-4 h-4 ml-2" />
               </Button>
@@ -95,7 +95,7 @@ export default function InvestorsPage() {
             <div className="w-12 h-12 rounded-2xl bg-[#2b52ff]/10 flex items-center justify-center border border-[#2b52ff]/20">
               <Shield className="w-6 h-6 text-[#2b52ff]" />
             </div>
-            <h2 className="text-3xl font-black">The LastWish Solution</h2>
+            <h2 className="text-3xl font-black">The AlwaysThere Solution</h2>
             <p className="text-slate-400 leading-relaxed text-lg">
               A trustless, smart-contract-driven "Dead Man's Switch". Users lock their encrypted assets and data in our protocol. Using an automated heartbeat ping system, if a user goes offline for a designated period, the protocol automatically decrypts and transfers assets to their designated beneficiaries—zero middlemen required.
             </p>
@@ -205,7 +205,7 @@ export default function InvestorsPage() {
 
       {/* FOOTER */}
       <footer className="py-12 border-t border-white/5 text-center relative z-10 bg-[#0a0c12]">
-        <p className="text-slate-600 text-sm font-medium">© 2026 LastWish Protocol. Currently in closed Beta.</p>
+        <p className="text-slate-600 text-sm font-medium">© 2026 AlwaysThere Protocol. Currently in closed Beta.</p>
       </footer>
     </div>
   )

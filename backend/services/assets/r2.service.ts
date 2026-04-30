@@ -8,7 +8,7 @@ export class R2Service {
   private bucketName: string;
 
   constructor() {
-    this.bucketName = process.env.R2_BUCKET_NAME || 'deadman-protocol-assets';
+    this.bucketName = process.env.R2_BUCKET_NAME || 'alwaysthere-protocol-assets';
     
     this.s3Client = new S3Client({
       region: 'auto',

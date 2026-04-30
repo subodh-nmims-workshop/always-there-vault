@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.27;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -47,7 +47,7 @@ contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
     event HeartbeatLogged(address indexed owner, uint256 timestamp);
     event NomineeAuthorized(address indexed owner, address indexed nominee);
     event UserPaused(address indexed user, uint256 timestamp);
-    event LastWishTriggered(address indexed owner, uint256 timestamp);
+    event AlwaysThereTriggered(address indexed owner, uint256 timestamp);
 
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -116,7 +116,7 @@ contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
         nominees[msg.sender][nominee] = false;
     }
 
-    function checkAndTrigger(address owner) external onlyRole(ORACLE_ROLE) {
+    function checkAndTrigger(address owner) external {
         WillCondition storage userWill = wills[owner];
         require(userWill.isActive, "Will not active");
         require(!userWill.isTriggered, "Already triggered");
@@ -128,7 +128,7 @@ contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
         );
         
         userWill.isTriggered = true;
-        emit LastWishTriggered(owner, block.timestamp);
+        emit AlwaysThereTriggered(owner, block.timestamp);
     }
 
     function claimPayload(address owner) external nonReentrant returns (string memory) {

@@ -8,7 +8,7 @@ set -e
 
 BACKUP_DIR="./backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="lastwish_backup_${TIMESTAMP}.gz"
+BACKUP_FILE="alwaysthere_backup_${TIMESTAMP}.gz"
 
 mkdir -p "$BACKUP_DIR"
 
@@ -16,7 +16,7 @@ echo "🗄️  Starting database backup..."
 echo ""
 
 # Backup MongoDB
-docker exec lastwish-mongodb mongodump \
+docker exec alwaysthere-mongodb mongodump \
   --username=admin \
   --password="${MONGO_PASSWORD:-password}" \
   --authenticationDatabase=admin \
@@ -25,20 +25,20 @@ docker exec lastwish-mongodb mongodump \
   --gzip
 
 # Copy backup from container
-docker cp lastwish-mongodb:/tmp/backup.archive "${BACKUP_DIR}/${BACKUP_FILE}"
+docker cp alwaysthere-mongodb:/tmp/backup.archive "${BACKUP_DIR}/${BACKUP_FILE}"
 
 # Clean up container
-docker exec lastwish-mongodb rm /tmp/backup.archive
+docker exec alwaysthere-mongodb rm /tmp/backup.archive
 
 echo "✅ Backup created: ${BACKUP_DIR}/${BACKUP_FILE}"
 echo ""
 
 # Keep only last 7 backups
 cd "$BACKUP_DIR"
-ls -t lastwish_backup_*.gz | tail -n +8 | xargs -r rm
+ls -t alwaysthere_backup_*.gz | tail -n +8 | xargs -r rm
 echo "🧹 Old backups cleaned up"
 echo ""
 
 echo "📊 Available backups:"
-ls -lh lastwish_backup_*.gz
+ls -lh alwaysthere_backup_*.gz
 echo ""

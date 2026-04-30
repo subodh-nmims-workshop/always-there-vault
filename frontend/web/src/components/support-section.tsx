@@ -261,7 +261,7 @@ export function SupportSection() {
                     </div>
                   ))}
                   <div className="text-center pt-6">
-                    <button onClick={() => window.open('https://docs.lastwish.io', '_blank')} className="text-[10px] font-black text-[#2b52ff] uppercase tracking-widest hover:underline flex items-center justify-center gap-2 mx-auto">
+                    <button onClick={() => window.open('https://docs.alwaysthere.io', '_blank')} className="text-[10px] font-black text-[#2b52ff] uppercase tracking-widest hover:underline flex items-center justify-center gap-2 mx-auto">
                       View Detailed Documentation <ExternalLink className="w-3 h-3" />
                     </button>
                   </div>

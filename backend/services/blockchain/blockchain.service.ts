@@ -60,7 +60,7 @@ export class BlockchainService {
     };
   }
 
-  async triggerLastWish(walletAddress: string): Promise<boolean> {
+  async triggerAlwaysThere(walletAddress: string): Promise<boolean> {
     if (!this.signer) {
         console.warn(`🏗️  Simulating contract trigger for: ${walletAddress}`);
         return true;
@@ -85,7 +85,7 @@ export class BlockchainService {
     }
   }
 
-  async isLastWishTriggered(walletAddress: string): Promise<boolean> {
+  async isAlwaysThereTriggered(walletAddress: string): Promise<boolean> {
     if (!this.provider) return false;
 
     try {

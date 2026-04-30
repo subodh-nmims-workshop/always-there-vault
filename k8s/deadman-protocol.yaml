@@ -5,15 +5,15 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lastwish-protocol
+  name: alwaysthere-protocol
 
 ---
 # 1. ConfigMaps and Secrets
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: lastwish-config
-  namespace: lastwish-protocol
+  name: alwaysthere-config
+  namespace: alwaysthere-protocol
 data:
   NODE_ENV: "production"
   POSTGRES_DB: "digitalwill"
@@ -22,15 +22,15 @@ data:
   MONGODB_URI: "mongodb://admin:supersecurepassword123@mongodb-service:27017/digital-will?authSource=admin"
   REDIS_URL: "redis://redis-service:6379"
   PORT: "7001"
-  NEXT_PUBLIC_API_URL: "https://api.lastwish.xyz"
+  NEXT_PUBLIC_API_URL: "https://api.alwaysthere.xyz"
   NEXT_PUBLIC_NETWORK: "mainnet"
 
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: lastwish-secrets
-  namespace: lastwish-protocol
+  name: alwaysthere-secrets
+  namespace: alwaysthere-protocol
 type: Opaque
 stringData:
   POSTGRES_PASSWORD: "supersecurepassword123"
@@ -44,7 +44,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   selector:
     app: postgres
@@ -56,7 +56,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   serviceName: postgres-service
   replicas: 1
@@ -73,9 +73,9 @@ spec:
           image: postgres:15
           envFrom:
             - configMapRef:
-                name: lastwish-config
+                name: alwaysthere-config
             - secretRef:
-                name: lastwish-secrets
+                name: alwaysthere-secrets
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -96,7 +96,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis-service
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   selector:
     app: redis
@@ -108,7 +108,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   serviceName: redis-service
   replicas: 1
@@ -143,7 +143,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongodb-service
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   selector:
     app: mongodb
@@ -155,7 +155,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mongodb
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   serviceName: mongodb-service
   replicas: 1
@@ -174,12 +174,12 @@ spec:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 configMapKeyRef:
-                  name: lastwish-config
+                  name: alwaysthere-config
                   key: POSTGRES_USER
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: lastwish-secrets
+                  name: alwaysthere-secrets
                   key: MONGO_INITDB_ROOT_PASSWORD
           ports:
             - containerPort: 27017
@@ -201,7 +201,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hardhat-service
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   selector:
     app: hardhat
@@ -213,7 +213,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hardhat
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   replicas: 1
   selector:
@@ -226,7 +226,7 @@ spec:
     spec:
       containers:
         - name: hardhat
-          image: lastwish-hardhat:latest
+          image: alwaysthere-hardhat:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8545
@@ -237,7 +237,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   selector:
     app: backend
@@ -250,7 +250,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   replicas: 2
   selector:
@@ -263,13 +263,13 @@ spec:
     spec:
       containers:
         - name: backend
-          image: lastwish-backend:latest
+          image: alwaysthere-backend:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
-                name: lastwish-config
+                name: alwaysthere-config
             - secretRef:
-                name: lastwish-secrets
+                name: alwaysthere-secrets
           ports:
             - containerPort: 7001
           resources:
@@ -286,7 +286,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   selector:
     app: frontend
@@ -299,7 +299,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: lastwish-protocol
+  namespace: alwaysthere-protocol
 spec:
   replicas: 2
   selector:
@@ -312,11 +312,11 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: lastwish-frontend:latest
+          image: alwaysthere-frontend:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
-                name: lastwish-config
+                name: alwaysthere-config
           ports:
             - containerPort: 7000
           resources:
@@ -332,19 +332,19 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: lastwish-ingress
-  namespace: lastwish-protocol
+  name: alwaysthere-ingress
+  namespace: alwaysthere-protocol
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
   - hosts:
-    - app.lastwish.xyz
-    - api.lastwish.xyz
-    secretName: lastwish-tls-secret
+    - app.alwaysthere.xyz
+    - api.alwaysthere.xyz
+    secretName: alwaysthere-tls-secret
   rules:
-  - host: app.lastwish.xyz
+  - host: app.alwaysthere.xyz
     http:
       paths:
       - path: /
@@ -354,7 +354,7 @@ spec:
             name: frontend-service
             port:
               number: 80
-  - host: api.lastwish.xyz
+  - host: api.alwaysthere.xyz
     http:
       paths:
       - path: /

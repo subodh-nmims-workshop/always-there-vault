@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // For development, use your machine's LAN IP. For production, use your deployed API URL.
 // IMPORTANT: Ensure your backend PORT (7001) is open on your firewall.
 const DEV_API_URL = 'http://192.168.1.11:7001'; // <--- Update this to match your laptop's IP
-const PROD_API_URL = 'https://api.deadmanprotocol.com'; // <--- Update this for production
+const PROD_API_URL = 'https://api.alwaysthereprotocol.com'; // <--- Update this for production
 
 // @ts-ignore
 const API_BASE_URL = typeof __DEV__ !== 'undefined' && __DEV__ ? DEV_API_URL : PROD_API_URL;

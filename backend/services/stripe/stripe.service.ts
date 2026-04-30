@@ -300,7 +300,7 @@ export class StripeService {
     // Search for existing customer
     const customers = await this.stripe.customers.list({
       limit: 1,
-      email: `${userId}@lastwishprotocol.com`, // Use user email if available
+      email: `${userId}@alwaysthereprotocol.com`, // Use user email if available
     });
 
     if (customers.data.length > 0) {

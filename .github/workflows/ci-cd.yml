@@ -140,7 +140,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ghcr.io/${{ github.repository }}/deadman-backend:latest
+          tags: ghcr.io/${{ github.repository }}/alwaysthere-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -149,7 +149,7 @@ jobs:
         with:
           context: ./frontend/web
           push: true
-          tags: ghcr.io/${{ github.repository }}/deadman-frontend:latest
+          tags: ghcr.io/${{ github.repository }}/alwaysthere-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -158,7 +158,7 @@ jobs:
         with:
           context: ./backend-full-decentralised
           push: true
-          tags: ghcr.io/${{ github.repository }}/deadman-hardhat:latest
+          tags: ghcr.io/${{ github.repository }}/alwaysthere-hardhat:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

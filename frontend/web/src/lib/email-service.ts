@@ -5,7 +5,7 @@
  */
 
 // EmailJS Configuration (FREE service)
-const EMAILJS_SERVICE_ID = 'service_deadman' // You'll get this from emailjs.com
+const EMAILJS_SERVICE_ID = 'service_alwaysthere' // You'll get this from emailjs.com
 const EMAILJS_TEMPLATE_ID = 'template_beneficiary' // You'll create this template
 const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY' // You'll get this from emailjs.com
 

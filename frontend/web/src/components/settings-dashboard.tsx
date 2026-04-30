@@ -145,7 +145,7 @@ export function SettingsDashboard() {
             <Settings className="size-8 text-blue-500" />
             PROTOCOL SETTINGS
         </h1>
-        <p className="text-slate-500 font-medium">Configure global parameters for the LastWish decentralized digital will protocol.</p>
+        <p className="text-slate-500 font-medium">Configure global parameters for the AlwaysThere decentralized digital will protocol.</p>
       </div>
 
       {/* -- SECTION: ACCOUNT -- */}
@@ -233,7 +233,7 @@ export function SettingsDashboard() {
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
           <Shield className="w-5 h-5 text-[#2b52ff]" />
           <div>
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">LastWish Core</h2>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">AlwaysThere Core</h2>
           </div>
         </div>
         

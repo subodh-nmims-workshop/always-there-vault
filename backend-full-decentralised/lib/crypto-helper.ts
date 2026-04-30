@@ -118,7 +118,7 @@ export async function deriveKeyFromPassword(
 ): Promise<CryptoKey> {
   const encoder = new TextEncoder()
   const passwordBuffer = encoder.encode(password)
-  const saltBuffer = encoder.encode(salt || 'lastwish-protocol-salt')
+  const saltBuffer = encoder.encode(salt || 'alwaysthere-protocol-salt')
   
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
