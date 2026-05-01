@@ -49,6 +49,7 @@ export default function DocsPage() {
           <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
           <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
           <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+          <Link href="/donate" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#2b52ff]/10 border border-[#2b52ff]/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-[#2b52ff]/20 hover:text-white transition-all">Support Us</Link>
         </div>
         <Link href="/">
           <button className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Go to App</button>

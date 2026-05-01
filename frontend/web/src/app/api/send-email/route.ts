@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         
         <p style="font-size: 16px; line-height: 1.6;">
           You have been officially registered as a cryptographic beneficiary on the 
-          <strong>LASTWISH (Decentralized Digital Will)</strong>.
+          <strong>AlwaysThere (Decentralized Digital Will)</strong>.
         </p>
 
         <div style="background-color: #1e293b; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #38bdf8;">
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
 
         // REAL SEND if RESEND_API_KEY is configured in .env.local
         const data = await resend.emails.send({
-            from: 'LASTWISH <onboarding@resend.dev>', // Free tier uses resend.dev testing domain
+            from: 'AlwaysThere <onboarding@resend.dev>', // Free tier uses resend.dev testing domain
             to: email,
             subject: 'Important: You have been added as a Digital Will Beneficiary',
             html: htmlContent,

@@ -147,7 +147,7 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
         {/* LOGO SECTION */}
         <Animated.View entering={FadeInUp.delay(300).duration(800)} style={styles.header}>
             <PulsingShield />
-            <Text style={styles.headerLogoText}>LASTWISH PROTOCOL</Text>
+            <Text style={styles.headerLogoText}>AlwaysThere PROTOCOL</Text>
             <View style={styles.versionBadge}>
                 <Text style={styles.versionText}>V2.4.0 ENCRYPTED</Text>
             </View>

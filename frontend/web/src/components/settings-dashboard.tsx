@@ -228,7 +228,7 @@ export function SettingsDashboard() {
         </Card>
       </section>
 
-      {/* -- SECTION: LASTWISH CORE -- */}
+      {/* -- SECTION: AlwaysThere CORE -- */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
           <Shield className="w-5 h-5 text-[#2b52ff]" />
@@ -472,7 +472,7 @@ export function SettingsDashboard() {
                                 <Send className="size-3" /> Telegram Bot
                             </label>
                             <Button variant="outline" className="w-full bg-slate-950 border-white/5 text-blue-400 text-xs font-bold gap-2 rounded-xl py-5">
-                                CONNECT TO LASTWISH_BOT
+                                CONNECT TO AlwaysThere_BOT
                             </Button>
                         </div>
                     </div>

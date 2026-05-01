@@ -85,7 +85,7 @@ export default function SubscriptionPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">AlwaysThere</span>
                 </Link>
                 <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
                     Dashboard

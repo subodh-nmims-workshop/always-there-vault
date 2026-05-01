@@ -6,10 +6,46 @@ import Script from 'next/script'
 
 
 export const metadata: Metadata = {
-  title: 'Decentralized Digital Will Protocol',
-  description: 'A decentralized, non-custodial system that encrypts your digital life and automatically releases only what you choose, only to whom you choose, only when you are no longer active.',
-  keywords: ['blockchain', 'digital will', 'inheritance', 'crypto', 'decentralized'],
-  authors: [{ name: 'Digital Will Protocol Team' }],
+  metadataBase: new URL('https://decentralized-digital-will-protocol.vercel.app/'),
+  title: {
+    default: 'AlwaysThere Protocol | The Decentralized Crypto Inheritance & Digital Will',
+    template: '%s | AlwaysThere Protocol'
+  },
+  description: 'Secure your digital legacy with AlwaysThere Protocol. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files. Automated, trustless inheritance on the blockchain.',
+  keywords: ['crypto inheritance', 'digital will', 'dead man switch crypto', 'decentralized inheritance', 'secure seed phrase storage', 'blockchain will', 'AlwaysThere protocol', 'crypto estate planning', 'digital asset management', 'web3 legacy'],
+  authors: [{ name: 'AlwaysThere Team' }],
+  openGraph: {
+    title: 'AlwaysThere Protocol | Decentralized Crypto Inheritance',
+    description: 'Ensure your crypto assets and private data are passed on securely. AlwaysThere is a trustless digital will protocol and dead man switch.',
+    url: 'https://decentralized-digital-will-protocol.vercel.app/',
+    siteName: 'AlwaysThere Protocol',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'AlwaysThere Protocol Banner',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AlwaysThere Protocol | Decentralized Crypto Inheritance',
+    description: 'Secure your digital legacy with the ultimate decentralized dead man switch.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export const viewport = {

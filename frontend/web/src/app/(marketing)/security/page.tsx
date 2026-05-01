@@ -24,7 +24,7 @@ export default function SecurityPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">AlwaysThere</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -52,7 +52,7 @@ export default function SecurityPage() {
                     </motion.h1>
 
                     <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="max-w-2xl mx-auto text-slate-400 text-lg leading-relaxed">
-                        LASTWISH assumes servers are compromised. We build exclusively on client-side encryption and decentralized consensus.
+                        AlwaysThere assumes servers are compromised. We build exclusively on client-side encryption and decentralized consensus.
                     </motion.p>
                 </header>
 

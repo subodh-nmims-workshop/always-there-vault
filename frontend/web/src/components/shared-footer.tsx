@@ -17,7 +17,7 @@ export function SharedFooter() {
                                 <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <Shield className="w-8 h-8" suppressHydrationWarning />
                                 </div>
-                                <span className="text-white font-bold text-lg tracking-tight">LASTWISH</span>
+                                <span className="text-white font-bold text-lg tracking-tight">AlwaysThere</span>
                             </Link>
                         </div>
                         <p className="text-sm">
@@ -57,7 +57,7 @@ export function SharedFooter() {
                 </div>
 
                 <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-                    <p>© 2026 LASTWISH. All rights reserved.</p>
+                    <p>© 2026 AlwaysThere. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 md:mt-0">
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>

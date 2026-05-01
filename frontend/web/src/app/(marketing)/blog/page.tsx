@@ -57,7 +57,7 @@ export default function BlogPage() {
         },
         {
             title: "Decentralized Storage: IPFS vs Arweave for Encrypted Blobs",
-            excerpt: "A technical comparison of immutable storage networks and why LASTWISH utilizes IPFS with a pinning coalition for immediate availability, backed by Arweave for permanent archival persistence.",
+            excerpt: "A technical comparison of immutable storage networks and why AlwaysThere utilizes IPFS with a pinning coalition for immediate availability, backed by Arweave for permanent archival persistence.",
             date: "Aug 30, 2026",
             author: "Infrastructure Team",
             category: "Infrastructure",
@@ -80,7 +80,7 @@ export default function BlogPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block text-white">LASTWISH</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block text-white">AlwaysThere</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>

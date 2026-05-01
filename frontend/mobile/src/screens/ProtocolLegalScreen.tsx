@@ -22,7 +22,7 @@ const LEGAL_CONTENT: Record<string, { title: string, icon: any, sections: { t: s
     title: 'PRIVACY POLICY',
     icon: Shield,
     sections: [
-      { t: 'Data Sovereignty', c: 'LASTWISH does not collect personal identity data. All encryption happens locally on your device before public ledger interaction.' },
+      { t: 'Data Sovereignty', c: 'AlwaysThere does not collect personal identity data. All encryption happens locally on your device before public ledger interaction.' },
       { t: 'Decentralized Storage', c: 'Your encrypted will payloads are stored on IPFS. No centralized database holds your assets or recipient lists.' },
       { t: 'Zero Tracking', c: 'We do not use cookies or tracking pixels in the protocol layer. Your wallet address is your only identifier.' }
     ]

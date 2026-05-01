@@ -115,7 +115,7 @@ export function SupportSection() {
       <div className="max-w-4xl mx-auto px-6 relative z-10">
 
         <div className="text-center mb-12 space-y-4">
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight">Help keep LASTWISH strong</h1>
+          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight">Help keep AlwaysThere strong</h1>
           <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
             Your contribution will help millions of people secure their digital afterlife and stay safe online every day.
           </p>
@@ -249,7 +249,7 @@ export function SupportSection() {
                   className="space-y-6"
                 >
                   {[
-                    { q: "Is my donation tax-deductible?", a: "LASTWISH operates as a public good protocol. Check with your local jurisdiction." },
+                    { q: "Is my donation tax-deductible?", a: "AlwaysThere operates as a public good protocol. Check with your local jurisdiction." },
                     { q: "How are funds used?", a: "100% used for node maintenance and zero-knowledge research." },
                     { q: "Can I donate anonymously?", a: "Yes, crypto contributions are pseudonymous by design." }
                   ].map((faq, i) => (

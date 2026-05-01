@@ -205,7 +205,7 @@ export function BeneficiariesDashboard({ onNavigate }: BeneficiariesDashboardPro
                             </div>
                             <h3 className="text-2xl font-bold text-white tracking-tight">Beneficiary Configuration Protocol</h3>
                             <p className="text-slate-400 leading-relaxed text-sm">
-                                LASTWISH uses multi-sig validation combined with time-locked encryption. Upon a verified trigger event (e.g. wallet inactivity), the protocol's smart contracts autonomously distribute encrypted assets to beneficiaries.
+                                AlwaysThere uses multi-sig validation combined with time-locked encryption. Upon a verified trigger event (e.g. wallet inactivity), the protocol's smart contracts autonomously distribute encrypted assets to beneficiaries.
                             </p>
                             <div className="flex gap-4 pt-2">
                                 <button className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2">

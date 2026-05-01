@@ -245,7 +245,7 @@ const AssetsScreen = () => {
            <View style={styles.driveHeader}>
               <View>
                  <Text style={styles.driveTitle}>Vault Drive</Text>
-                 <Text style={styles.driveSub}>LASTWISH PROTOCOL</Text>
+                 <Text style={styles.driveSub}>AlwaysThere PROTOCOL</Text>
               </View>
               <TouchableOpacity style={styles.searchBtn}>
                  <Search size={20} color={COLORS.textDim} />

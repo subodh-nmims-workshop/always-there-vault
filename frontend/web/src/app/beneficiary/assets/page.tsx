@@ -148,7 +148,7 @@ function BeneficiaryAssetsContent() {
           <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
             <Shield className="w-8 h-8" />
           </div>
-          <span className="font-bold text-xl tracking-tight">LASTWISH</span>
+          <span className="font-bold text-xl tracking-tight">AlwaysThere</span>
         </Link>
         
         {!isConnected ? (

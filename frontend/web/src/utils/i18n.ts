@@ -11,7 +11,7 @@ export const translations = {
 
     // Hero
     hero_badge: 'SECURE YOUR DIGITAL LEGACY',
-    hero_title: 'LASTWISH',
+    hero_title: 'AlwaysThere',
     hero_title_accent: '',
     hero_subtitle: 'Your final word, secured. Ensure your crypto assets and digital life are passed on securely. Decentralized, encrypted, and triggered by your status.',
     hero_cta: 'Start Your Legacy',
@@ -46,7 +46,7 @@ export const translations = {
     nav_contact: 'संपर्क करें',
 
     hero_badge: 'अपनी डिजिटल विरासत सुरक्षित करें',
-    hero_title: 'LASTWISH',
+    hero_title: 'AlwaysThere',
     hero_title_accent: '',
     hero_subtitle: 'आपका अंतिम शब्द, सुरक्षित। सुनिश्चित करें कि आपकी क्रिप्टो संपत्ति और डिजिटल जीवन सुरक्षित रूप से आगे बढ़े। विकेन्द्रीकृत, एन्क्रिप्टेड, और आपकी स्थिति के आधार पर।',
     hero_cta: 'अपनी विरासत शुरू करें',
@@ -78,7 +78,7 @@ export const translations = {
     nav_contact: 'Contacto',
 
     hero_badge: 'ASEGURE SU LEGADO DIGITAL',
-    hero_title: 'LASTWISH',
+    hero_title: 'AlwaysThere',
     hero_title_accent: '',
     hero_subtitle: 'Tu última voluntad, asegurada. Asegure que sus activos cripto y vida digital se transmitan de forma segura. Descentralizado, cifrado y activado por su estado.',
     hero_cta: 'Comenzar Mi Legado',
@@ -110,7 +110,7 @@ export const translations = {
     nav_contact: 'Contact',
 
     hero_badge: 'SÉCURISEZ VOTRE HÉRITAGE NUMÉRIQUE',
-    hero_title: 'LASTWISH',
+    hero_title: 'AlwaysThere',
     hero_title_accent: '',
     hero_subtitle: 'Votre dernier souhait, sécurisé. Assurez-vous que vos actifs crypto et votre vie numérique sont transmis en toute sécurité. Décentralisé, crypté et déclenché par votre statut.',
     hero_cta: 'Commencer Mon Héritage',

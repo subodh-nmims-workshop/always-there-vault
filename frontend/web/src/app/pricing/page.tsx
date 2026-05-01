@@ -29,6 +29,7 @@ export default function PricingPage() {
                     <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
                     <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
                     <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+                    <Link href="/donate" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#2b52ff]/10 border border-[#2b52ff]/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-[#2b52ff]/20 hover:text-white transition-all">Support Us</Link>
                 </div>
                 <Link href="/dashboard" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
                     Launch App

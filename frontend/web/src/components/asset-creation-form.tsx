@@ -992,7 +992,7 @@ export function AssetCreationForm() {
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center">
             Vault Drive
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-blue-500 font-semibold mt-1">LASTWISH</p>
+          <p className="text-[10px] uppercase tracking-widest text-blue-500 font-semibold mt-1">AlwaysThere</p>
         </div>
 
         <div className="flex items-center gap-3">

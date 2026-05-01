@@ -86,7 +86,7 @@ export default function HomePage() {
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
       const nonceData = await nonceRes.json().catch(() => ({}));
-      const message = nonceData?.nonce || "Welcome to LASTWISH. Please sign this message to authenticate."
+      const message = nonceData?.nonce || "Welcome to AlwaysThere. Please sign this message to authenticate."
       const signature = await signMessageAsync({ message })
       const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
         method: 'POST',
@@ -250,6 +250,7 @@ export default function HomePage() {
           <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
           <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
           <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+          <Link href="/donate" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#2b52ff]/10 border border-[#2b52ff]/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-[#2b52ff]/20 hover:text-white transition-all">Support Us</Link>
         </div>
         <button onClick={handleConnect} className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Connect Wallet</button>
       </nav>
@@ -396,6 +397,51 @@ export default function HomePage() {
       <section id="pricing" className="py-32 border-t border-white/5">
         <PricingPlans />
       </section>
+
+      {/* SEO Content Section */}
+      {/* SEO & Knowledge Base Section - Premium Design */}
+      <article className="py-32 px-6 border-t border-white/5 relative overflow-hidden bg-[#030712]">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#2b52ff]/5 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest mb-6">
+              <BookOpen className="w-4 h-4" /> Protocol Deep Dive
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-6">The Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Digital Inheritance</span></h2>
+            <p className="text-slate-400 max-w-2xl mx-auto text-lg">Understanding the core mechanics of decentralized estate planning and self-custodial asset recovery.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-blue-500/20 transition-all duration-500 group">
+              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-8 border border-blue-500/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+                <Shield className="w-8 h-8 text-blue-400" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">The Crypto Dead Man Switch</h3>
+              <p className="text-slate-400 leading-relaxed text-sm">
+                In the rapidly evolving world of Web3, securing your digital assets is paramount. But what happens to your cryptocurrency and seed phrases if you lose access? <strong>AlwaysThere Protocol</strong> solves the multi-billion dollar problem of lost digital wealth through an automated, trustless, and immutable crypto dead man switch. Every year, massive amounts of Bitcoin are permanently lost because physical wills fail to transfer self-custodial wealth securely.
+              </p>
+            </div>
+
+            <div className="p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-purple-500/20 transition-all duration-500 group">
+              <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-8 border border-purple-500/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+                <Lock className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">Zero-Knowledge Digital Will</h3>
+              <p className="text-slate-400 leading-relaxed text-sm">
+                Built on advanced smart contracts and Zero-Knowledge encryption, our decentralized inheritance protocol ensures your private keys and digital estate are never exposed to the public or even the developers. Encryption happens entirely on your local device using AES-256-GCM. Whether you hold assets on Ethereum, Polygon, or Bitcoin, your access instructions are secured eternally without relying on centralized intermediaries.
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center pt-8 border-t border-white/5">
+            <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">
+              Keywords: Crypto Inheritance, Digital Will, Dead Man Switch Crypto, Decentralized Estate Planning, Secure Seed Phrase Storage.
+            </p>
+          </div>
+        </div>
+      </article>
 
       <SharedFooter />
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} isConnecting={isConnecting} />

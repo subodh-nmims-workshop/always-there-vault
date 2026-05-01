@@ -21,7 +21,7 @@ export default function AboutPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">AlwaysThere</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -75,7 +75,7 @@ export default function AboutPage() {
                         <h2 className="text-3xl font-bold mb-6 text-white tracking-tight">The Origin Story</h2>
                         <div className="space-y-6 text-slate-300 leading-relaxed text-lg">
                             <p>
-                                LASTWISH was born out of necessity. In 2023, the sudden loss of several prominent early cryptocurrency figures highlighted a massive structural flaw in self-custody: if you are your own bank, what happens when the banker passes away?
+                                AlwaysThere was born out of necessity. In 2023, the sudden loss of several prominent early cryptocurrency figures highlighted a massive structural flaw in self-custody: if you are your own bank, what happens when the banker passes away?
                             </p>
                             <p>
                                 Centralized solutions required trusting lawyers, third-party vaults, or multi-sig services that could be hacked, coerced, or simply go out of business. We realized the only solution was a cryptographically assured, zero-knowledge, and fully decentralized dead man's switch.

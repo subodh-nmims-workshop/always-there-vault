@@ -21,7 +21,7 @@ export default function ContactPage() {
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" suppressHydrationWarning />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">LASTWISH</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block">AlwaysThere</span>
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
@@ -111,7 +111,7 @@ export default function ContactPage() {
                         <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 backdrop-blur-md h-full flex flex-col justify-center">
                             <h3 className="text-2xl font-bold text-white mb-6">DAO Hubs</h3>
                             <p className="text-slate-400 leading-relaxed mb-8">
-                                LASTWISH operates as a decentralized autonomous organization. We do not have a single physical headquarters, but our core contributors operate out of several crypto-friendly hubs.
+                                AlwaysThere operates as a decentralized autonomous organization. We do not have a single physical headquarters, but our core contributors operate out of several crypto-friendly hubs.
                             </p>
 
                             <div className="space-y-6">
