@@ -166,7 +166,7 @@ export default function HomePage() {
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 text-[10px] font-black uppercase tracking-widest mb-4">
                   <AlertTriangle className="w-4 h-4" /> System Under Development
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight">
                   MAINNET ACCESS <span className="text-red-500">RESTRICTED</span>
                 </h1>
                 <p className="text-slate-400 mt-4 text-lg font-medium">
@@ -260,7 +260,7 @@ export default function HomePage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-8 uppercase">
             <Zap className="w-3 h-3" /> Secure Your Family&apos;s Future
           </motion.div>
-          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-8 uppercase">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-8 uppercase">
             YOUR DIGITAL LEGACY, <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 font-black">PROTECTED FOREVER.</span>
           </h1>
@@ -293,7 +293,7 @@ export default function HomePage() {
       <section id="how-it-works" className="py-32 px-6 bg-white/[0.01] border-y border-white/5">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
-            <h2 className="text-4xl font-black text-white uppercase tracking-tight mb-4 italic">SIMPLE. SECURE. <span className="text-blue-500">AUTOMATIC.</span></h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4 italic">SIMPLE. SECURE. <span className="text-blue-500">AUTOMATIC.</span></h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
             <div className="space-y-6">
@@ -319,7 +319,7 @@ export default function HomePage() {
       <section id="security" className="py-32 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
-            <h2 className="text-4xl font-black text-white uppercase tracking-tight mb-4">TOTAL <span className="text-blue-500">PRIVACY</span></h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4">TOTAL <span className="text-blue-500">PRIVACY</span></h2>
             <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Even we can&apos;t see your data</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -350,7 +350,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
            <div className="flex flex-col md:flex-row items-center gap-16">
               <div className="flex-1">
-                <h2 className="text-4xl font-black text-white uppercase mb-8 leading-tight tracking-tight italic">WHAT SHOULD YOU <br /><span className="text-blue-500">PROTECT?</span></h2>
+                <h2 className="text-3xl md:text-4xl font-black text-white uppercase mb-8 leading-tight tracking-tight italic">WHAT SHOULD YOU <br /><span className="text-blue-500">PROTECT?</span></h2>
                 <div className="space-y-4">
                   <ChecklistItem text="Crypto Seed Phrases & Private Keys" />
                   <ChecklistItem text="Property Papers & Digital Wills" />
@@ -359,7 +359,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex-1 p-12 bg-blue-600/10 rounded-[3rem] border border-blue-500/20">
-                <p className="text-4xl font-black text-white italic uppercase mb-6 leading-[1.1]">"Don&apos;t leave your life&apos;s work to chance. Leave it to code."</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black text-white italic uppercase mb-6 leading-[1.1]">"Don&apos;t leave your life&apos;s work to chance. Leave it to code."</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-600" />
                   <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Protocol Founder</span>
@@ -373,7 +373,7 @@ export default function HomePage() {
       <section id="faq" className="py-32 px-6">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-black text-white uppercase tracking-tight">COMMON <span className="text-blue-500">QUESTIONS</span></h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">COMMON <span className="text-blue-500">QUESTIONS</span></h2>
           </div>
           <div className="space-y-2">
             <FaqItem 

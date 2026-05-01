@@ -55,7 +55,7 @@ export default function InvestorsPage() {
             <span className="w-2 h-2 rounded-full bg-[#2b52ff] animate-pulse" />
             Strategic Partnerships & Investment
           </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-tight">
             Securing the Future of <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2b52ff] to-purple-500">
               Digital Wealth.
