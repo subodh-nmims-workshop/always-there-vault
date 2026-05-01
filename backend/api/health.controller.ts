@@ -1,18 +1,24 @@
-import { Controller, Get } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { CacheService } from '../services/cache/cache.service';
+import { sql } from 'drizzle-orm';
 
 @Controller('health')
 export class HealthController {
   constructor(
-    @InjectConnection() private connection: Connection,
+    @Inject('DRIZZLE_DB') private db: any,
     private cacheService: CacheService,
   ) {}
 
   @Get()
   async check() {
-    const mongoStatus = this.connection.readyState === 1 ? 'connected' : 'disconnected';
+    let dbStatus = 'disconnected';
+    try {
+      await this.db.execute(sql`SELECT 1`);
+      dbStatus = 'connected';
+    } catch (e) {
+      console.error('Health check DB error:', e.message);
+    }
+
     const cacheStats = this.cacheService.getStats();
 
     return {
@@ -20,14 +26,14 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       services: {
         api: 'running',
-        database: mongoStatus,
+        database: dbStatus,
         cache: {
           status: 'running',
           size: cacheStats.size,
         },
       },
       version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      environment: process.env.NODE_ENV || 'production',
     };
   }
 
