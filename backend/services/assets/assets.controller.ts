@@ -24,6 +24,7 @@ import { CreateAssetDto, UpdateAssetDto } from './dto/asset.dto';
 import { Asset } from './schemas/asset.schema';
 import { UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('assets')
 @ApiBearerAuth()
@@ -33,6 +34,7 @@ export class AssetsController {
   constructor(
     private readonly assetsService: AssetsService,
     private readonly ipfsService: IpfsService,
+    private readonly usersService: UsersService,
   ) { }
 
   @Post('upload')
