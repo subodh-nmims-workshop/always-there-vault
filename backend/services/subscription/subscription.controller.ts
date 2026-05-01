@@ -80,12 +80,24 @@ export class SubscriptionController {
     if (isUuid) {
         user = await this.db.query.users.findFirst({ where: eq(users.id, userId) });
     } else {
-        user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, userId) });
+        user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, userId.toLowerCase()) });
     }
     
-    if (!user) throw new BadRequestException('User not found');
+    console.log(`SwitchMode: userId=${userId}, foundUser=${user?.id}, targetEngine=${targetEngine}`);
     
-    return this.usersService.updateStorageEngine(user.id, targetEngine as any);
+    if (!user) {
+        if (!isUuid && userId.startsWith('0x')) {
+            console.log('SwitchMode: Creating new user for guest wallet:', userId);
+            user = await this.usersService.createOrUpdateUser(userId);
+        } else {
+            throw new BadRequestException('User not found and invalid wallet address');
+        }
+    }
+    
+    await this.usersService.updateStorageEngine(user.id, targetEngine as any);
+    
+    // Return the updated subscription object so the frontend state stays in sync
+    return this.subscriptionService.getSubscription(user.id);
   }
 
   @Post(':userId/cancel')

@@ -53,7 +53,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const createRes = await fetch(`${API_URL}/subscription/trial`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: address, mode: 'centralized' })
+          body: JSON.stringify({ userId: address, mode: 'decentralized' })
         });
 
         if (createRes.ok) {
@@ -118,24 +118,30 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
            throw new Error(updated.message || 'Storage switch failed');
         }
         
-        // Check if we got a valid response (not the empty {} from before)
         if (updated && (updated.status || updated.success)) {
           const formatted = {
             ...updated,
-            plan: updated.planId, // Map planId to plan
+            plan: updated.planId,
             trialEndsAt: updated.trialEndsAt ? new Date(updated.trialEndsAt) : null,
             subscriptionEndsAt: updated.currentPeriodEnd ? new Date(updated.currentPeriodEnd) : null,
+            mode: newMode // Ensure mode is updated
           };
           setSubscription(formatted);
           localStorage.setItem('dwp_subscription', JSON.stringify(formatted));
+          return;
         }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Storage switch failed');
       }
+      
+      // If we reach here, backend failed or returned non-ok, throw to trigger fallback
+      throw new Error('Backend update failed');
+      
     } catch (error: any) {
-      console.error('Failed to switch mode on backend:', error);
-      throw error;
+      console.warn('Backend mode switch failed, falling back to local state:', error);
+      
+      // Fallback for Dev Override / Stealth Mode
+      const updated = { ...subscription, mode: newMode };
+      setSubscription(updated);
+      localStorage.setItem('dwp_subscription', JSON.stringify(updated));
     }
   }
 

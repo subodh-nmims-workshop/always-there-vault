@@ -67,6 +67,9 @@ export default function HomePage() {
   const [address, setAddress] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [isConnecting, setIsConnecting] = useState(false)
+  const [isDevOverride, setIsDevOverride] = useState(false)
+  const [showDevModal, setShowDevModal] = useState(false)
+  const [devPasscode, setDevPasscode] = useState('')
   const [showWalletModal, setShowWalletModal] = useState(false)
 
   useEffect(() => {
@@ -75,6 +78,14 @@ export default function HomePage() {
     if (storedConnection === 'true') {
       setIsConnected(true)
       setAddress(localStorage.getItem('dwp_wallet_address') || '')
+    }
+    
+    // Check if dev override is active and not expired (5 hours)
+    const devExpiry = localStorage.getItem('dwp_dev_override_expiry')
+    if (devExpiry && parseInt(devExpiry) > Date.now()) {
+      setIsDevOverride(true)
+    } else {
+      localStorage.removeItem('dwp_dev_override_expiry')
     }
   }, [])
 
@@ -138,7 +149,7 @@ export default function HomePage() {
 
   if (!hasMounted) return <div className="min-h-screen bg-[#030712]" />
 
-  if (isConnected) {
+  if (isConnected && !isDevOverride) {
     return (
       <div className="min-h-screen bg-[#030712] text-slate-100 font-sans flex flex-col overflow-x-hidden relative">
         <nav className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
@@ -202,14 +213,7 @@ export default function HomePage() {
                   </button>
                 </Link>
                 <button 
-                  onClick={() => {
-                    if (address.toLowerCase() === '0xYOUR_ADMIN_WALLET_ADDRESS_HERE'.toLowerCase()) {
-                       // Logic to bypass
-                       toast.success('Admin Bypass Enabled')
-                    } else {
-                       toast.error('You do not have Developer privileges to bypass this lock.')
-                    }
-                  }}
+                  onClick={() => setShowDevModal(true)}
                   className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 rounded-xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
                   <Cpu className="w-5 h-5" /> Dev Override
@@ -218,8 +222,114 @@ export default function HomePage() {
 
             </div>
           </div>
+
+          <AnimatePresence>
+            {showDevModal && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#030712]/80 backdrop-blur-md">
+                <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-[#0f172a] border border-[#2b52ff]/30 rounded-3xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(43,82,255,0.1)] relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2b52ff] to-purple-500" />
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-[#2b52ff]/10 flex items-center justify-center border border-[#2b52ff]/20">
+                      <Cpu className="w-6 h-6 text-[#2b52ff]" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-white tracking-tight uppercase">Dev Override</h3>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Authentication Required</p>
+                    </div>
+                  </div>
+                  <input 
+                    type="password" 
+                    placeholder="Enter Passcode..." 
+                    value={devPasscode} 
+                    onChange={(e) => setDevPasscode(e.target.value)} 
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                         if (devPasscode === 'alwaysthere' || devPasscode === 'subodh123') { 
+                           setIsDevOverride(true); 
+                           localStorage.setItem('dwp_dev_override_expiry', (Date.now() + 5 * 60 * 60 * 1000).toString());
+                           setShowDevModal(false); 
+                           setDevPasscode(''); 
+                           toast.success('Admin Bypass Enabled'); 
+                         } else { toast.error('Invalid passcode'); }
+                      }
+                    }} 
+                    className="w-full bg-[#030712] border border-white/10 rounded-xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-[#2b52ff]/50 mb-6 font-mono transition-colors tracking-widest" 
+                    autoFocus 
+                  />
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => { setShowDevModal(false); setDevPasscode(''); }} className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest transition-all">Cancel</button>
+                    <button onClick={() => {
+                       if (devPasscode === 'alwaysthere' || devPasscode === 'subodh123') { 
+                         setIsDevOverride(true); 
+                         localStorage.setItem('dwp_dev_override_expiry', (Date.now() + 5 * 60 * 60 * 1000).toString());
+                         setShowDevModal(false); 
+                         setDevPasscode(''); 
+                         toast.success('Admin Bypass Enabled'); 
+                       } else { toast.error('Invalid passcode'); }
+                    }} className="px-5 py-3 rounded-xl bg-[#2b52ff] hover:bg-[#1a3ecd] text-white font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(43,82,255,0.4)]">Verify</button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
         <SharedFooter />
+      </div>
+    )
+  }
+
+  if (isConnected && isDevOverride) {
+    return (
+      <div className="min-h-screen bg-[#030712] text-slate-100 font-sans flex flex-col overflow-x-hidden relative">
+        {/* Premium Dashboard Background Glow */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#2b52ff]/10 blur-[150px] rounded-full mix-blend-screen" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[150px] rounded-full mix-blend-screen" />
+        </div>
+
+        <nav className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="p-2 bg-[#2b52ff] rounded-xl shadow-[0_0_20px_rgba(43,82,255,0.4)]">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <span className="font-black text-2xl tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">AlwaysThere</span>
+          </Link>
+          <div className="flex items-center space-x-6">
+            <div className="hidden md:flex items-center gap-6 mr-4">
+              <Link href="/docs" className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">Documentation</Link>
+              <Link href="/donate" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#2b52ff]/20 to-purple-500/20 border border-[#2b52ff]/30 text-xs font-black uppercase tracking-widest text-white hover:from-[#2b52ff]/40 hover:to-purple-500/40 transition-all shadow-[0_0_15px_rgba(43,82,255,0.2)]">
+                <Heart className="w-4 h-4 text-pink-500" /> Support Us
+              </Link>
+            </div>
+            <ModeIndicator />
+            <div className="h-8 w-px bg-white/10 hidden md:block"></div>
+            <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all">
+              Logout
+            </button>
+          </div>
+        </nav>
+        
+        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24 relative z-10">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+            <TabsList className="bg-[#0f172a]/80 backdrop-blur-md border border-white/10 p-2 rounded-2xl w-full justify-start overflow-x-auto hide-scrollbar shadow-2xl">
+              <TabsTrigger value="overview" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(43,82,255,0.4)] transition-all">Overview</TabsTrigger>
+              <TabsTrigger value="assets" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Digital Assets</TabsTrigger>
+              <TabsTrigger value="beneficiaries" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Beneficiaries</TabsTrigger>
+              <TabsTrigger value="status" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Protocol Status</TabsTrigger>
+              <TabsTrigger value="subscription" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Subscription</TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Settings</TabsTrigger>
+            </TabsList>
+
+            <div className="bg-[#030712]/50 backdrop-blur-3xl border border-white/5 rounded-[2rem] p-6 shadow-2xl">
+              <TabsContent value="overview" className="m-0"><OverviewDashboard onNavigate={setActiveTab} /></TabsContent>
+              <TabsContent value="assets" className="m-0"><AssetCreationForm /></TabsContent>
+              <TabsContent value="beneficiaries" className="m-0"><BeneficiaryManager /></TabsContent>
+              <TabsContent value="status" className="m-0"><StatusDashboard /></TabsContent>
+              <TabsContent value="subscription" className="m-0"><SubscriptionDashboard /></TabsContent>
+              <TabsContent value="settings" className="m-0"><SettingsDashboard /></TabsContent>
+            </div>
+          </Tabs>
+        </main>
       </div>
     )
   }

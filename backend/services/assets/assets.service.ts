@@ -91,7 +91,7 @@ export class AssetsService {
     }
 
     // Check quota
-    const hasSpace = await this.usersService.checkAndIncrementStorage(walletAddress, file.size);
+    const hasSpace = await this.usersService.checkAndIncrementStorage(walletAddress, file.size, 'cloud');
     if (!hasSpace) {
       throw new BadRequestException('Storage quota exceeded');
     }
@@ -229,7 +229,7 @@ export class AssetsService {
     await this.db.delete(files).where(eq(files.id, id));
     
     // Decrement storage
-    await this.usersService.decrementStorage(user.walletAddress, file.size);
+    await this.usersService.decrementStorage(user.walletAddress, file.size, file.isIpfs ? 'web3' : 'cloud');
 
     await this.auditService.trackAction(file.userId, 'DELETE_ASSET', 'FILE', id, { name: file.name });
 

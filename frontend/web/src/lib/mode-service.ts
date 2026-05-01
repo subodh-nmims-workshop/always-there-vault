@@ -152,32 +152,86 @@ class ModeService {
       // Also save to backend API
       try {
         const walletAddress = localStorage.getItem('dwp_wallet_address')
-        const response = await fetch(`${this.config.apiEndpoint}/api/assets?walletAddress=${walletAddress}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
-          },
-          body: JSON.stringify({
-            id: asset.id,
-            name: asset.name,
-            type: asset.type,
-            encryptedData: asset.encryptedData,
-            keyId: asset.keyId,
-            iv: asset.iv,
-            ipfsHash: asset.ipfsHash,
-            beneficiaries: asset.beneficiaries,
-            size: asset.size,
-            mimeType: asset.mimeType,
-            folderId: asset.folderId
-          })
-        })
+        const token = localStorage.getItem('dwp_token')
 
-        if (!response.ok) {
-          console.warn('⚠️ Backend save failed, using local storage only')
-          syncPending = true
+        // If it's a binary file asset, we must upload it via multipart FormData
+        // otherwise JSON.stringify will crash the payload size limits
+        const isBinary = asset.mimeType?.includes('image') || asset.mimeType?.includes('video') || asset.mimeType?.includes('pdf') || asset.type === 'photo' || asset.type === 'document' || asset.type === 'video'
+
+        if (isBinary) {
+            const formData = new FormData()
+            
+            // encryptedData is a hex string
+            const blob = new Blob([asset.encryptedData], { type: 'text/plain' })
+            
+            formData.append('file', blob, asset.name + '.enc')
+            
+            const uploadUrl = asset.folderId ? `${this.config.apiEndpoint}/api/assets/upload?folderId=${asset.folderId}` : `${this.config.apiEndpoint}/api/assets/upload`
+            
+            console.log('☁️ Uploading encrypted file to Centralized Cloud Vault...')
+            const uploadResponse = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+
+            if (!uploadResponse.ok) {
+                console.warn('⚠️ Backend file upload failed, using local storage only')
+                syncPending = true
+            } else {
+                const uploadResult = await uploadResponse.json()
+                
+                // Now register metadata linking to the B2 location
+                await fetch(`${this.config.apiEndpoint}/api/assets`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        id: asset.id,
+                        name: asset.name,
+                        type: asset.type,
+                        keyId: asset.keyId,
+                        iv: asset.iv,
+                        ipfsHash: uploadResult.location || asset.ipfsHash, // Use backend location string
+                        beneficiaries: asset.beneficiaries,
+                        size: asset.size,
+                        mimeType: asset.mimeType,
+                        folderId: asset.folderId
+                    })
+                })
+                console.log('✅ Asset binary and metadata saved to Cloud Vault')
+            }
         } else {
-          console.log('✅ Asset saved to backend')
+            // Fallback for small text secrets (Crypto keys, passwords)
+            const response = await fetch(`${this.config.apiEndpoint}/api/assets`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                id: asset.id,
+                name: asset.name,
+                type: asset.type,
+                encryptedData: asset.encryptedData,
+                keyId: asset.keyId,
+                iv: asset.iv,
+                ipfsHash: asset.ipfsHash,
+                beneficiaries: asset.beneficiaries,
+                size: asset.size,
+                mimeType: asset.mimeType,
+                folderId: asset.folderId
+              })
+            })
+
+            if (!response.ok) {
+              console.warn('⚠️ Backend save failed, using local storage only')
+              syncPending = true
+            } else {
+              console.log('✅ Asset saved to backend')
+            }
         }
       } catch (apiError) {
         console.warn('⚠️ Backend unavailable, using local storage only:', apiError)

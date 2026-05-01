@@ -6,7 +6,9 @@ import { mainnet, polygon, optimism, arbitrum, base, hardhat, localhost } from '
 const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 1337;
 
 export const config = getDefaultConfig({
-  appName: 'Decentralized Digital Will Protocol',
+  appName: 'AlwaysThere Protocol',
+  appDescription: 'The Decentralized Digital Will & Crypto Inheritance Protocol',
+  appUrl: 'https://decentralized-digital-will-protocol.vercel.app/',
   projectId: 'c40b8a3e790f9e1564f269df12345678', // Default public project ID for testing
   chains: [
     mainnet,

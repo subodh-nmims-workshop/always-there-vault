@@ -43,6 +43,8 @@ import WebStorageService, { AppState } from '@/lib/storage'
 import { UpgradeModal } from '@/components/upgrade-modal'
 import { toast } from 'sonner'
 
+import { useSubscription } from '@/contexts/SubscriptionContext'
+
 export function SettingsDashboard() {
   const [lang, setLang] = useState<Language>('en')
   const [t, setT] = useState<any>(translations.en)
@@ -53,6 +55,7 @@ export function SettingsDashboard() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
 
+  const { subscription } = useSubscription()
   const storage = WebStorageService.getInstance()
 
   useEffect(() => {
@@ -125,6 +128,7 @@ export function SettingsDashboard() {
             // Reload state
             const newState = await storage.getAppState()
             setAppState(newState)
+            window.location.reload()
         } else {
             throw new Error("Payment failed")
         }
@@ -134,6 +138,17 @@ export function SettingsDashboard() {
         setIsProcessingPayment(false)
     }
   }
+
+  const totalUsedBytes = useMemo(() => {
+      if (!appState) return 0
+      return appState.assets.reduce((acc, asset) => acc + (asset.size || 0), 0)
+  }, [appState])
+
+  const isPremium = subscription?.plan === 'professional'
+  const quotaBytes = isPremium ? 5 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024
+  const quotaGB = isPremium ? 5 : 0.5
+  const usagePercent = Math.min((totalUsedBytes / quotaBytes) * 100, 100)
+  const isTrial = subscription?.status === 'trial'
 
   if (!appState) return <div className="p-8 text-center text-slate-500 font-mono">INITIALIZING KERNEL...</div>
 
@@ -157,42 +172,45 @@ export function SettingsDashboard() {
         
         <Card className="bg-slate-900/50 border-slate-800 shadow-xl overflow-hidden">
             <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="size-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-500 p-0.5">
-                        <div className="size-full bg-slate-950 rounded-[14px] flex items-center justify-center text-blue-400 font-black">
-                            {walletAddress.substring(2, 4).toUpperCase()}
-                        </div>
-                    </div>
-                    <div className="flex-1 space-y-1 text-center md:text-left">
-                        <div className="flex items-center justify-center md:justify-start gap-2">
-                            <span className="text-white font-mono font-bold">{walletAddress}</span>
-                            <button onClick={copyToClipboard} className="text-slate-500 hover:text-white transition-colors">
-                                {copied ? <Check className="size-4 text-green-500" /> : <Copy className="size-4" />}
-                            </button>
-                        </div>
-                        <div className="flex items-center justify-center md:justify-start gap-3">
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                                <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">Ethereum Mainnet</span>
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 w-full">
+                    <div className="flex items-center gap-6">
+                        <div className="size-16 shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-500 p-0.5">
+                            <div className="size-full bg-slate-950 rounded-[14px] flex items-center justify-center text-blue-400 font-black">
+                                {walletAddress.substring(2, 4).toUpperCase()}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Protocol Version v1.0.0</span>
+                        </div>
+                        <div className="space-y-1 text-left">
+                            <div className="flex items-center justify-start gap-2">
+                                <span className="text-white font-mono font-bold break-all">{walletAddress}</span>
+                                <button onClick={copyToClipboard} className="text-slate-500 hover:text-white transition-colors shrink-0">
+                                    {copied ? <Check className="size-4 text-green-500" /> : <Copy className="size-4" />}
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-start gap-3">
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                    <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">Ethereum Mainnet</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Protocol Version v1.0.0</span>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <div className="flex gap-2">
-                            <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-xs font-bold gap-2">
-                                <Key className="size-3" /> Export Key
-                            </Button>
-                            <Button variant="outline" className="bg-red-500/10 border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-bold gap-2">
-                                <LogOut className="size-3" /> Disconnect
-                            </Button>
-                        </div>
-                        <Button 
-                            onClick={() => setShowUpgradeModal(true)}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-[10px] uppercase h-9 rounded-xl shadow-lg shadow-blue-500/20"
-                        >
-                            <Crown className="size-3 mr-2" /> Upgrade to Premium Guardian
+                    
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 mt-4 xl:mt-0 w-full xl:w-auto">
+                        <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-xs font-bold gap-2 whitespace-nowrap flex-1 sm:flex-none">
+                            <Key className="size-3" /> Export Key
                         </Button>
+                        <Button variant="outline" className="bg-red-500/10 border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-bold gap-2 whitespace-nowrap flex-1 sm:flex-none">
+                            <LogOut className="size-3" /> Disconnect
+                        </Button>
+                        {!isPremium && (
+                            <Button 
+                                onClick={() => setShowUpgradeModal(true)}
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-[10px] uppercase h-10 rounded-xl shadow-lg shadow-blue-500/20 whitespace-nowrap flex-1 sm:flex-none"
+                            >
+                                <Crown className="size-3 mr-2" /> Upgrade to Premium
+                            </Button>
+                        )}
                     </div>
                 </div>
             </CardContent>
@@ -211,18 +229,30 @@ export function SettingsDashboard() {
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                            <span className="text-lg font-black text-white">5.00 GB Total Quota</span>
-                            <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[8px] font-black text-blue-400 uppercase tracking-widest">Premium Active</span>
+                            <span className="text-lg font-black text-white">{quotaGB.toFixed(2)} GB Total Quota</span>
+                            <span className={`px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest ${isPremium ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : isTrial ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-slate-500/10 border-slate-500/20 text-slate-400'}`}>
+                                {isPremium ? 'Premium Active' : isTrial ? 'Trial Active' : 'Free Tier'}
+                            </span>
                         </div>
-                        <p className="text-xs text-slate-500">Expiring on: **April 26, 2027** (Automatic Fail-Safe Enabled)</p>
+                        <p className="text-xs text-slate-500">
+                            {subscription?.subscriptionEndsAt 
+                                ? `Expiring on: **${new Date(subscription.subscriptionEndsAt).toLocaleDateString()}**` 
+                                : 'No expiry set'} (Automatic Fail-Safe Enabled)
+                        </p>
                     </div>
                     <div className="text-right">
-                        <div className="text-xl font-black text-white">0.00%</div>
+                        <div className="text-xl font-black text-white">{usagePercent.toFixed(2)}%</div>
                         <div className="text-[10px] font-bold text-slate-600 uppercase">Usage</div>
                     </div>
                 </div>
                 <div className="mt-4 w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="w-[0.5%] h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                    <div 
+                        className={`h-full shadow-[0_0_10px_rgba(59,130,246,0.5)] ${usagePercent > 90 ? 'bg-red-500' : usagePercent > 75 ? 'bg-orange-500' : 'bg-blue-500'}`} 
+                        style={{ width: `${Math.max(usagePercent, 0.5)}%` }}
+                    />
+                </div>
+                <div className="mt-2 text-right">
+                    <span className="text-[10px] text-slate-500 font-mono">{(totalUsedBytes / (1024 * 1024)).toFixed(2)} MB / {quotaGB * 1024} MB</span>
                 </div>
             </CardContent>
         </Card>

@@ -11,8 +11,8 @@ export const users = pgTable('users', {
   storageQuota: bigint('storage_quota', { mode: 'number' }).notNull().default(524288000),
   storageUsed: bigint('storage_used', { mode: 'number' }).notNull().default(0),
   
-  // Storage Engine
-  storageEngine: varchar('storage_engine', { length: 20 }).notNull().default('cloud'),
+  // Storage Engine (Default to Web3 for better decentralization)
+  storageEngine: varchar('storage_engine', { length: 20 }).notNull().default('web3'),
   isMigrating: boolean('is_migrating').notNull().default(false),
   isLocked: boolean('is_locked').notNull().default(false),
   

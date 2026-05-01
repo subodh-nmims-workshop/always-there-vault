@@ -53,13 +53,21 @@ export const viewport = {
   initialScale: 1,
 }
 
+import { Outfit } from 'next/font/google'
+
+const outfit = Outfit({ 
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+})
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={`dark ${outfit.variable}`} suppressHydrationWarning>
       <head>
         <Script id="extension-error-handler" strategy="beforeInteractive">
           {`
@@ -82,7 +90,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-sans bg-slate-950 text-slate-50">
+      <body className={`${outfit.className} antialiased bg-slate-950 text-slate-50`} suppressHydrationWarning>
         <Providers>
           <div className="min-h-screen bg-slate-950 dark:bg-slate-950">
             {children}

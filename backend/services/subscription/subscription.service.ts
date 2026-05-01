@@ -57,22 +57,30 @@ export class SubscriptionService {
       
       let userId = id;
       if (!isUuid) {
-          const user = await this.usersService.findUserByWallet(id);
-          if (!user) return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: id };
+          const lowerAddress = id.toLowerCase();
+          const user = await this.usersService.findUserByWallet(lowerAddress);
+          if (!user) {
+              console.log('GetSubscription: User not found by wallet', lowerAddress);
+              return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: lowerAddress, mode: 'decentralized' };
+          }
           userId = user.id;
       }
+      console.log('GetSubscription: Fetching for userId', userId);
 
+      const user = await this.db.query.users.findFirst({ where: eq(users.id, userId) });
       const sub = await this.db.query.subscriptions.findFirst({
         where: eq(subscriptions.userId, userId),
       });
 
       if (!sub) {
           // Auto-create a trial for new users
-          return this.createSubscription(userId, 'trial', 'MONTHLY', 0);
+          const newSub = await this.createSubscription(userId, 'trial', 'MONTHLY', 0);
+          return { ...newSub, mode: user?.storageEngine === 'web3' ? 'decentralized' : 'centralized' };
       }
-      return sub;
+      return { ...sub, mode: user?.storageEngine === 'web3' ? 'decentralized' : 'centralized' };
     } catch (error) {
-      return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: id };
+      console.error('GetSubscription Error:', error);
+      return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: id, mode: 'decentralized' };
     }
   }
 

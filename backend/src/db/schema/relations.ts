@@ -7,6 +7,7 @@ import { heartbeatConfigs } from './heartbeat';
 import { beneficiaries } from './beneficiaries';
 import { subscriptions } from './subscriptions';
 import { userKeys } from './userKeys';
+import { userStorageQuotas } from './quotas';
 
 // Users relations
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -17,6 +18,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   beneficiaries: many(beneficiaries),
   subscription: one(subscriptions),
   userKeys: many(userKeys),
+  quotas: many(userStorageQuotas),
 }));
 
 // Folders relations
@@ -98,6 +100,14 @@ export const userKeysRelations = relations(userKeys, ({ one }) => ({
   }),
 }));
 
+// UserStorageQuotas relations
+export const userStorageQuotasRelations = relations(userStorageQuotas, ({ one }) => ({
+  user: one(users, {
+    fields: [userStorageQuotas.userId],
+    references: [users.id],
+  }),
+}));
+
 // Export all schemas
 export * from './users';
 export * from './folders';
@@ -109,3 +119,4 @@ export * from './subscriptions';
 export * from './keys';
 export * from './audit';
 export * from './userKeys';
+export * from './quotas';

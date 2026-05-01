@@ -1,8 +1,10 @@
 'use client'
 
-import { BoltIcon, ChartBarIcon, FingerPrintIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
-import { useEffect } from 'react'
+import { BoltIcon, ChartBarIcon, FingerPrintIcon, ShieldCheckIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
+import WebStorageService from '@/lib/storage'
+import { toast } from 'sonner'
 
 interface OverviewDashboardProps {
     onNavigate?: (tab: string) => void
@@ -10,6 +12,9 @@ interface OverviewDashboardProps {
 
 export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
     const { state, refreshState } = useApp()
+    const [emailInput, setEmailInput] = useState('')
+    const [showEmailBanner, setShowEmailBanner] = useState(true)
+    const [isSavingEmail, setIsSavingEmail] = useState(false)
 
     useEffect(() => {
         refreshState()
@@ -55,10 +60,72 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
     const vaultHealth = calculateVaultHealth()
     const totalAssets = assets?.length || 0
     const totalBeneficiaries = beneficiaries?.length || 0
+    const hasEmail = !!state?.settings?.emailNotification
+
+    const handleEnableEmail = async () => {
+        if (!emailInput || !emailInput.includes('@')) {
+            toast.error('Please enter a valid email address')
+            return
+        }
+        setIsSavingEmail(true)
+        try {
+            const storage = WebStorageService.getInstance()
+            await storage.saveSettings({ emailNotification: emailInput })
+            await refreshState()
+            toast.success(`Security alerts enabled for ${emailInput}`)
+            setShowEmailBanner(false)
+        } catch (error) {
+            toast.error('Failed to save email settings')
+        } finally {
+            setIsSavingEmail(false)
+        }
+    }
 
     return (
         <div className="relative flex h-auto min-h-[calc(100vh-120px)] w-full flex-col overflow-x-hidden text-slate-100 font-sans p-2">
             <div className="max-w-[1440px] mx-auto w-full">
+                {/* Security Alert Setup Banner */}
+                {!hasEmail && showEmailBanner && (
+                    <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 rounded-3xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                        <div className="absolute right-0 top-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+                        <button 
+                            onClick={() => setShowEmailBanner(false)}
+                            className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                        >
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30 text-blue-400 shrink-0">
+                                <EnvelopeIcon className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white tracking-tight">Enable Login & Security Alerts</h3>
+                                <p className="text-sm text-slate-400 mt-1 max-w-xl">
+                                    Web3 meets premium security. Link an email to receive instant alerts if a new device accesses your vault, and get a backup record of your public Protocol ID.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex w-full md:w-auto items-center gap-2 shrink-0 z-10">
+                            <input 
+                                type="email" 
+                                placeholder="name@example.com" 
+                                value={emailInput}
+                                onChange={(e) => setEmailInput(e.target.value)}
+                                className="bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-white outline-none focus:border-blue-500 transition-colors w-full md:w-64"
+                            />
+                            <button 
+                                onClick={handleEnableEmail}
+                                disabled={isSavingEmail}
+                                className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] disabled:opacity-50 whitespace-nowrap"
+                            >
+                                {isSavingEmail ? 'Saving...' : 'Enable Alerts'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Hero Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800 flex items-center justify-between overflow-hidden relative group">
@@ -98,6 +165,56 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                         <div className="flex items-end justify-between mt-4">
                             <h3 className="text-3xl font-bold text-white tracking-tighter">{totalBeneficiaries}</h3>
                             <p className="text-slate-400 text-sm font-medium">Active</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Protocol Overview & Features */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-6 rounded-3xl border border-blue-500/20 backdrop-blur-sm relative overflow-hidden">
+                        <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full"></div>
+                        <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <ShieldCheckIcon className="w-6 h-6 text-blue-400" /> Protocol Security Posture
+                        </h3>
+                        <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                            AlwaysThere uses military-grade AES-256-GCM encryption on your local device before any data is sent. Only you and your designated beneficiaries hold the decryption keys.
+                        </p>
+                        <div className="grid grid-cols-2 gap-3 mt-4">
+                            <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">Encryption</p>
+                                <p className="text-sm text-green-400 font-bold">AES-256-GCM Active</p>
+                            </div>
+                            <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">Architecture</p>
+                                <p className="text-sm text-blue-400 font-bold">Zero-Knowledge</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2">Recommended Actions</h3>
+                            <p className="text-slate-400 text-sm mb-4">Complete these steps to fully secure your digital inheritance.</p>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className={`size-6 rounded-full flex items-center justify-center ${totalAssets > 0 ? 'bg-green-500/20 text-green-500' : 'bg-slate-800 text-slate-500'}`}>
+                                    {totalAssets > 0 ? '✓' : '1'}
+                                </div>
+                                <span className={`text-sm ${totalAssets > 0 ? 'text-slate-300' : 'text-white font-medium'}`}>Encrypt your first asset or secret</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className={`size-6 rounded-full flex items-center justify-center ${totalBeneficiaries > 0 ? 'bg-green-500/20 text-green-500' : 'bg-slate-800 text-slate-500'}`}>
+                                    {totalBeneficiaries > 0 ? '✓' : '2'}
+                                </div>
+                                <span className={`text-sm ${totalBeneficiaries > 0 ? 'text-slate-300' : 'text-white font-medium'}`}>Add a trusted beneficiary</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className={`size-6 rounded-full flex items-center justify-center ${heartbeat?.isActive ? 'bg-green-500/20 text-green-500' : 'bg-slate-800 text-slate-500'}`}>
+                                    {heartbeat?.isActive ? '✓' : '3'}
+                                </div>
+                                <span className={`text-sm ${heartbeat?.isActive ? 'text-slate-300' : 'text-white font-medium'}`}>Initialize the Dead Man's Switch</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -240,6 +357,26 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                         ))}
                                     </>
                                 )}
+                            </div>
+                        </div>
+                        {/* Quick Documentation Section */}
+                        <div className="flex flex-col gap-4 mt-4">
+                            <div className="flex items-center justify-between px-2">
+                                <h2 className="text-lg font-bold text-white">Quick Documentation</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800 hover:border-blue-500/30 hover:bg-slate-800/50 transition-all cursor-pointer group">
+                                    <h4 className="text-sm font-bold text-white group-hover:text-blue-400 mb-2 transition-colors">How Encryption Works</h4>
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        Your files are encrypted locally using AES-256-GCM. The key is sharded across the network using Shamir's Secret Sharing. We never see your data.
+                                    </p>
+                                </div>
+                                <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800 hover:border-purple-500/30 hover:bg-slate-800/50 transition-all cursor-pointer group">
+                                    <h4 className="text-sm font-bold text-white group-hover:text-purple-400 mb-2 transition-colors">Dead Man's Switch Trigger</h4>
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        You must sign a heartbeat transaction periodically. If you miss the deadline, the protocol assumes you are offline and releases the key shards to your beneficiaries.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

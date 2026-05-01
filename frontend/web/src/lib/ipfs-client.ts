@@ -68,7 +68,7 @@ async function uploadToBackendBridge(
     iv?: string
 ): Promise<string> {
     try {
-        const IPFS_API = 'http://localhost:7001/api/assets/upload'
+        const IPFS_API = 'http://localhost:7001/api/assets/ipfs'
         const formData = new FormData()
         formData.append('file', file)
         
@@ -76,8 +76,12 @@ async function uploadToBackendBridge(
         if (keyId) url += `&keyId=${keyId}`
         if (iv) url += `&iv=${iv}`
 
+        const token = localStorage.getItem('dwp_token')
         const response = await fetch(url, {
             method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             body: formData
         })
         

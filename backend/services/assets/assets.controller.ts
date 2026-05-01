@@ -14,6 +14,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   Patch,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -64,6 +65,24 @@ export class AssetsController {
   ): Promise<any> {
     const walletAddress = req.user.walletAddress;
     return this.assetsService.uploadFile(file, walletAddress, folderId);
+  }
+
+  @Post('ipfs')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a file to IPFS via Pinata' })
+  async uploadToIpfs(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ): Promise<any> {
+    const walletAddress = req.user.walletAddress;
+    
+    // Check and increment Web3 storage quota
+    const hasSpace = await this.usersService.checkAndIncrementStorage(walletAddress, file.size, 'web3');
+    if (!hasSpace) {
+      throw new BadRequestException('Web3 storage quota exceeded. Please upgrade your plan.');
+    }
+
+    return this.ipfsService.uploadFile(file);
   }
 
   @Post()
