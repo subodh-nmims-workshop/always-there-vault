@@ -62,7 +62,9 @@ async function bootstrap() {
 
   // CORS with strict origins
   const allowedOrigins = [
+    '.vercel.app',
     'https://app.alwaysthere-protocol.com',
+    'https://decentralized-digital-will-protocol.vercel.app',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:7000',

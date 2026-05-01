@@ -111,7 +111,7 @@ export function SettingsDashboard() {
     
     try {
         // Simulate API call to backend
-        const response = await fetch('http://localhost:7001/api/payment/process', {
+        const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/payment/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

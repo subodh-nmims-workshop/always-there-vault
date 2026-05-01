@@ -61,7 +61,7 @@ export function SubscriptionManagement() {
   const openCustomerPortal = async () => {
     try {
       const userId = localStorage.getItem('dwp_wallet_address') || 'user_' + Date.now()
-      const response = await fetch('http://localhost:7001/stripe/create-portal-session', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/stripe/create-portal-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
