@@ -7,7 +7,7 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { HoneypotMiddleware } from '../middleware/honeypot.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+// import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthModule } from '../services/auth/auth.module';
@@ -36,6 +36,7 @@ import { HealthController } from './health.controller';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    /*
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
@@ -45,6 +46,7 @@ import { HealthController } from './health.controller';
       },
       inject: [ConfigService],
     }),
+    */
     ScheduleModule.forRoot(),
     PrometheusModule.register(),
     LoggerModule,
