@@ -17,10 +17,18 @@ export default function PricingPage() {
                     </div>
                     <span className="font-bold text-xl tracking-tight hidden sm:block uppercase">AlwaysThere</span>
                 </Link>
-                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-                    <Link href="/features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Features</Link>
-                    <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
-                    <Link href="/pricing" className="text-white transition-colors text-sm font-medium">Pricing</Link>
+                <div className="hidden md:flex items-center gap-8">
+                    <Link href="/investors" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-blue-500/20 hover:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)]">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                        Partners & Investors
+                    </Link>
+                    <Link href="/#how-it-works" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">How it works</Link>
+                    <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
+                    <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
+                    <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
                 </div>
                 <Link href="/dashboard" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
                     Launch App
