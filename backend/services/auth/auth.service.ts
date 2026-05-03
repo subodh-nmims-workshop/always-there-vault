@@ -21,15 +21,22 @@ export class AuthService {
     ) { }
 
     generateNonce(): string {
-        const nonce = crypto.randomBytes(32).toString('hex');
+        const nonceBase = crypto.randomBytes(16).toString('hex'); // 32 chars
         const timestamp = Date.now();
-        const message = `Welcome to AlwaysThere Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
-
-        // Store nonce in cache to prevent replay attacks
-        this.cacheService.set(`${this.NONCE_PREFIX}${nonce}`, { walletRequested: true }, this.NONCE_EXPIRY);
+        const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
+        
+        // Create HMAC signature of (nonceBase + timestamp)
+        const hmac = crypto.createHmac('sha256', secret)
+            .update(`${nonceBase}:${timestamp}`)
+            .digest('hex')
+            .substring(0, 32); // 32 chars
+            
+        const fullNonce = nonceBase + hmac; // 64 chars total
+        const message = `Welcome to AlwaysThere Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${fullNonce}\nTimestamp: ${timestamp}`;
 
         return message;
     }
+
     async verifySignature(walletAddress: string, message: string, signature: string): Promise<any> {
         try {
             // 1. Normalize line endings (CRLF -> LF) to prevent verification mismatch
@@ -41,31 +48,38 @@ export class AuthService {
                 this.logger.error(`Nonce missing in message for ${walletAddress}`);
                 throw new BadRequestException('Invalid message format. Nonce missing.');
             }
-            const nonce = nonceMatch[1];
+            const fullNonce = nonceMatch[1];
 
             const tsMatch = normalizedMessage.match(/Timestamp: (\d+)/);
             if (!tsMatch) {
                 this.logger.error(`Timestamp missing in message for ${walletAddress}`);
                 throw new BadRequestException('Invalid message format. Timestamp missing.');
             }
-            const timestamp = parseInt(tsMatch[1]);
+            const timestampStr = tsMatch[1];
+            const timestamp = parseInt(timestampStr);
             const now = Date.now();
+
+            // 2. Validate Stateless Nonce
+            const nonceBase = fullNonce.substring(0, 32);
+            const receivedHmac = fullNonce.substring(32);
+            const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
+            
+            const expectedHmac = crypto.createHmac('sha256', secret)
+                .update(`${nonceBase}:${timestampStr}`)
+                .digest('hex')
+                .substring(0, 32);
+
+            if (receivedHmac !== expectedHmac) {
+                this.logger.error(`INVALID NONCE HMAC for ${walletAddress}. Tampering detected?`);
+                throw new UnauthorizedException('Authentication session tampered or invalid.');
+            }
 
             if (Math.abs(now - timestamp) > this.NONCE_EXPIRY) {
                 this.logger.warn(`STALE SIGNATURE DETECTED for ${walletAddress}. Time diff: ${(now - timestamp) / 1000}s`);
                 throw new UnauthorizedException('Signature expired. Please try again with a fresh session.');
             }
 
-            const cachedNonce = this.cacheService.get<any>(`${this.NONCE_PREFIX}${nonce}`);
-            if (!cachedNonce) {
-                this.logger.warn(`EXPIRED OR MISSING NONCE for ${walletAddress}: ${nonce}`);
-                throw new UnauthorizedException('Nonce expired or used. Please request a new one.');
-            }
-
-            // Mark nonce as used
-            this.cacheService.delete(`${this.NONCE_PREFIX}${nonce}`);
-
-            // 2. Verify signature
+            // 3. Verify signature
             let recoveredAddress: string;
             try {
                 // ethers.verifyMessage expects the original message that was signed
@@ -80,7 +94,7 @@ export class AuthService {
                 throw new UnauthorizedException('Invalid signature. Wallet address mismatch.');
             }
 
-            // 3. Check for 2FA
+            // 4. Check for 2FA
             let user;
             try {
                 user = await this.usersService.findUserByWallet(walletAddress);
@@ -95,6 +109,7 @@ export class AuthService {
 
             if (user && user.twoFactorEnabled) {
                 const mfaToken = crypto.randomBytes(32).toString('hex');
+                // MFA sessions still use cache for now, but they are shorter-lived
                 this.cacheService.set(`mfa_pending:${mfaToken}`, { userId: user.id, walletAddress }, 10 * 60 * 1000);
                 return {
                     status: 'PENDING_MFA',
@@ -102,7 +117,7 @@ export class AuthService {
                 };
             }
 
-            // 4. Regular login
+            // 5. Regular login
             const dbUser = await this.usersService.createOrUpdateUser(walletAddress);
             
             // Generate JWT
@@ -124,7 +139,7 @@ export class AuthService {
             }
             // Log full stack for non-HTTP exceptions to help debug in Render logs
             console.error(e);
-            throw new UnauthorizedException('Authentication failed. Signature cannot be verified.');
+            throw new UnauthorizedException('Authentication failed. Please try again.');
         }
     }
 
