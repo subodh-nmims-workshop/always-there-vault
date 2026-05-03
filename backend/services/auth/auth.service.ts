@@ -30,16 +30,24 @@ export class AuthService {
 
         return message;
     }
-
     async verifySignature(walletAddress: string, message: string, signature: string): Promise<any> {
         try {
+            // 1. Normalize line endings (CRLF -> LF) to prevent verification mismatch
+            const normalizedMessage = message.replace(/\r\n/g, '\n');
+
             // Extract and verify nonce & timestamp
-            const nonceMatch = message.match(/Nonce: ([a-f0-9]{64})/);
-            if (!nonceMatch) throw new BadRequestException('Invalid message format. Nonce missing.');
+            const nonceMatch = normalizedMessage.match(/Nonce: ([a-f0-9]{64})/);
+            if (!nonceMatch) {
+                this.logger.error(`Nonce missing in message for ${walletAddress}`);
+                throw new BadRequestException('Invalid message format. Nonce missing.');
+            }
             const nonce = nonceMatch[1];
 
-            const tsMatch = message.match(/Timestamp: (\d+)/);
-            if (!tsMatch) throw new BadRequestException('Invalid message format. Timestamp missing.');
+            const tsMatch = normalizedMessage.match(/Timestamp: (\d+)/);
+            if (!tsMatch) {
+                this.logger.error(`Timestamp missing in message for ${walletAddress}`);
+                throw new BadRequestException('Invalid message format. Timestamp missing.');
+            }
             const timestamp = parseInt(tsMatch[1]);
             const now = Date.now();
 
@@ -50,15 +58,25 @@ export class AuthService {
 
             const cachedNonce = this.cacheService.get<any>(`${this.NONCE_PREFIX}${nonce}`);
             if (!cachedNonce) {
+                this.logger.warn(`EXPIRED OR MISSING NONCE for ${walletAddress}: ${nonce}`);
                 throw new UnauthorizedException('Nonce expired or used. Please request a new one.');
             }
 
-            // Mark nonce as used (delete from cache after verification)
+            // Mark nonce as used
             this.cacheService.delete(`${this.NONCE_PREFIX}${nonce}`);
 
             // 2. Verify signature
-            const recoveredAddress = ethers.verifyMessage(message, signature);
+            let recoveredAddress: string;
+            try {
+                // ethers.verifyMessage expects the original message that was signed
+                recoveredAddress = ethers.verifyMessage(normalizedMessage, signature);
+            } catch (err) {
+                this.logger.error(`Ethers verification error for ${walletAddress}: ${err.message}`);
+                throw new UnauthorizedException('Signature format invalid or tampered.');
+            }
+
             if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+                this.logger.warn(`ADDRESS MISMATCH: Recovered ${recoveredAddress} vs Expected ${walletAddress}`);
                 throw new UnauthorizedException('Invalid signature. Wallet address mismatch.');
             }
 
@@ -67,19 +85,17 @@ export class AuthService {
             try {
                 user = await this.usersService.findUserByWallet(walletAddress);
             } catch (e) {
-                // User not found is fine for first login, we will create them below
                 user = null;
             }
 
             if (user && user.isLocked) {
                 this.logger.warn(`LOCKED ACCOUNT ATTEMPTED LOGIN: ${walletAddress}`);
-                throw new UnauthorizedException('Your account has been locked due to suspicious activity. Please contact support.');
+                throw new UnauthorizedException('Your account has been locked due to suspicious activity.');
             }
 
             if (user && user.twoFactorEnabled) {
-                // Return a temporary token or session that requires MFA verify
                 const mfaToken = crypto.randomBytes(32).toString('hex');
-                this.cacheService.set(`mfa_pending:${mfaToken}`, { userId: user.id, walletAddress }, 10 * 60 * 1000); // 10 min
+                this.cacheService.set(`mfa_pending:${mfaToken}`, { userId: user.id, walletAddress }, 10 * 60 * 1000);
                 return {
                     status: 'PENDING_MFA',
                     mfaToken
@@ -103,7 +119,11 @@ export class AuthService {
             };
         } catch (e) {
             this.logger.error(`Authentication failed for ${walletAddress}: ${e.message}`);
-            if (e instanceof UnauthorizedException || e instanceof BadRequestException) throw e;
+            if (e instanceof UnauthorizedException || e instanceof BadRequestException) {
+                throw e;
+            }
+            // Log full stack for non-HTTP exceptions to help debug in Render logs
+            console.error(e);
             throw new UnauthorizedException('Authentication failed. Signature cannot be verified.');
         }
     }
