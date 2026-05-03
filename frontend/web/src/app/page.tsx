@@ -103,8 +103,18 @@ export default function HomePage() {
     try {
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
-      const nonceData = await nonceRes.json().catch(() => ({}));
-      const message = nonceData?.nonce || "Welcome to AlwaysThere. Please sign this message to authenticate."
+      
+      if (!nonceRes.ok) {
+        throw new Error('Failed to fetch authentication nonce from server')
+      }
+
+      const nonceData = await nonceRes.json()
+      const message = nonceData?.nonce
+      
+      if (!message) {
+        throw new Error('Server returned an empty authentication message')
+      }
+
       const signature = await signMessageAsync({ message })
       const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
         method: 'POST',
