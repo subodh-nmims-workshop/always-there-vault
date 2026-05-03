@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================================
-# Last Wish Protocol - Production Deployment Script
+# Always There Protocol - Production Deployment Script
 # ========================================================
 
 set -e
@@ -30,7 +30,7 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-print_header "🚀 Last Wish Protocol - Production Deployment"
+print_header "🚀 Always There Protocol - Production Deployment"
 echo ""
 
 # Check if .env file exists
@@ -108,7 +108,7 @@ echo ""
 
 print_header "✨ Deployment Complete!"
 echo ""
-echo -e "${GREEN}🎉 Last Wish Protocol is now running in production!${NC}"
+echo -e "${GREEN}🎉 Always There Protocol is now running in production!${NC}"
 echo ""
 echo "Services:"
 echo "  Frontend: http://localhost:7000"

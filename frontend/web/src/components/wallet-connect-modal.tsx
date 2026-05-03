@@ -87,6 +87,15 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
               Open Multi-Wallet Selector
             </button>
             
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => onConnect('0x70997970C51812dc3A010C7d01b50e0d17dc79C8')}
+                className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+              >
+                🛠️ Dev Quick Login (Skip Wallet)
+              </button>
+            )}
+            
             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Supported Networks</p>
             <div className="flex justify-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
                 <span className="text-2xl" title="Ethereum">🔹</span>

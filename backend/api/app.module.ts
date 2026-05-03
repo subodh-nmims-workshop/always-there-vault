@@ -1,5 +1,5 @@
 /**
- * NestJS Application Module for Decentralized Digital Will Protocol
+ * NestJS Application Module for Decentralized AlwaysThere Protocol
  * 
  * Zero-Trust Backend - Never sees raw data or keys
  */

@@ -51,7 +51,7 @@ export function SharedHeader() {
                             </svg>
                         </div>
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                            Digital Will
+                            AlwaysThere
                         </span>
                     </Link>
 

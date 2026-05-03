@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 🚀 Last Wish Protocol - Decentralized Backend Setup Script
+# 🚀 Always There Protocol - Decentralized Backend Setup Script
 
 echo "=================================================="
-echo "🌐 Last Wish Protocol - Decentralized Backend Setup"
+echo "🌐 Always There Protocol - Decentralized Backend Setup"
 echo "=================================================="
 echo ""
 

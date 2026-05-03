@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Digital Will Protocol - Complete Setup Script
+# AlwaysThere Protocol - Complete Setup Script
 # This script sets up the entire project from scratch
 
 set -e  # Exit on error
 
-echo "🚀 Digital Will Protocol - Complete Setup"
+echo "🚀 AlwaysThere Protocol - Complete Setup"
 echo "=========================================="
 echo ""
 

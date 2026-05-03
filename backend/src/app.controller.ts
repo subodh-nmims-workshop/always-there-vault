@@ -8,7 +8,7 @@ export class AppController {
   @ApiOperation({ summary: 'API root endpoint' })
   getRoot(): object {
     return {
-      service: 'Digital Will Protocol API',
+      service: 'AlwaysThere Protocol API',
       version: '2.0.0',
       status: 'operational',
       documentation: '/api/docs',

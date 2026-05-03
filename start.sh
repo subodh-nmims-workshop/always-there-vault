@@ -28,7 +28,7 @@ print_banner() {
     echo ' / /_/ /  __/ /_/ / /_/ / /  / / /_/ / / / / '
     echo '/_____/\___/\__,_/\__,_/_/  /_/\__,_/_/ /_/  '
     echo -e "                                             "
-    echo -e "         ${CYAN}🌟 LASTWISH DIGITAL WILL PROTOCOL (V5.0.0)${NC}"
+    echo -e "         ${CYAN}🌟 ALWAYSTHERE DIGITAL WILL PROTOCOL (V5.0.0)${NC}"
     echo -e "    ${BOLD}================================================${NC}\n"
 }
 

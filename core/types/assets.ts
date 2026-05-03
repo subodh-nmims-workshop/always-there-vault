@@ -1,5 +1,5 @@
 /**
- * Asset and Folder Models for Decentralized Digital Will Protocol
+ * Asset and Folder Models for Decentralized AlwaysThere Protocol
  * 
  * Key Principle: NO MIXING - Folders are UI only, Assets have real control
  */

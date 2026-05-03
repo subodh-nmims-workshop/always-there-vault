@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         // Construct the email HTML blueprint
         const htmlContent = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #f8fafc; padding: 40px; border-radius: 12px; border: 1px solid #1e293b;">
-        <h2 style="color: #38bdf8; margin-bottom: 24px;">Digital Will Protocol: Beneficiary Notice</h2>
+        <h2 style="color: #38bdf8; margin-bottom: 24px;">AlwaysThere Protocol: Beneficiary Notice</h2>
         
         <p style="font-size: 16px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
         

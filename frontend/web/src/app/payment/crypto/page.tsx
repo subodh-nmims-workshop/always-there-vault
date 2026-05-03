@@ -233,7 +233,7 @@ function CryptoPaymentContent() {
           Powered by 
           <span className="text-slate-300 flex items-center gap-1">
             <Shield className="w-3 h-3 text-slate-400" suppressHydrationWarning /> 
-            Last Wish Rails
+            Always There Rails
           </span>
         </div>
       </motion.div>

@@ -1,4 +1,4 @@
-# Missing Features - Last Wish Protocol
+# Missing Features - Always There Protocol
 
 Comparison of architecture diagrams vs actual implementation.
 

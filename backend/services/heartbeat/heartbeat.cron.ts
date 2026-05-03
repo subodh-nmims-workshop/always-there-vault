@@ -50,7 +50,7 @@ function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
       <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Commander <strong>${p.name}</strong>,</p>
       <p style="color: #cbd5e1; font-size: 15px;">
         Your cryptographic heartbeat has been missed. ${p.isFinalWarning
-        ? '<span style="color: #ef4444; font-weight: bold;">This is your absolute final warning.</span> If you do not check in, the Last Wish Protocol will irreversibly distribute your assigned assets.'
+        ? '<span style="color: #ef4444; font-weight: bold;">This is your absolute final warning.</span> If you do not check in, the AlwaysThere Protocol will irreversibly distribute your assigned assets.'
         : 'Please sign a proof-of-life heartbeat transaction immediately to halt asset distribution sequences.'}
       </p>
 
@@ -104,7 +104,7 @@ function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
     <!-- Footer -->
     <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
       <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-        Secured by Last Wish Protocol<br/>
+        Secured by AlwaysThere Protocol<br/>
         End-to-End Encrypted Web3 Inheritance
       </p>
     </div>
@@ -209,7 +209,7 @@ export class HeartbeatCronService {
                                           <h2 style="color:#dc2626;">⚠️ Critical Heartbeat Alert</h2>
                                           <p>Hi <strong>${nominee.name || 'Beneficiary'}</strong>,</p>
                                           <p>The heartbeat for <strong>${user.name || user.walletAddress}</strong> is critically overdue (Stage ${newMissCount}/${maxBuffer}).</p>
-                                          <p>If no heartbeat is received, the Last Wish Protocol will be triggered and assets will be distributed to beneficiaries.</p>
+                                          <p>If no heartbeat is received, the AlwaysThere Protocol will be triggered and assets will be distributed to beneficiaries.</p>
                                           <p style="color:#6b7280;font-size:12px;">Checked at: ${new Date().toUTCString()}</p>
                                         </div>`
                                     });
@@ -238,7 +238,7 @@ export class HeartbeatCronService {
                             if (user.email) {
                                 await this.emailService.sendEmail({
                                     to: user.email,
-                                    subject: '🚨 Last Wish Protocol Activated',
+                                    subject: '🚨 AlwaysThere Protocol Activated',
                                     html: `
 <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
   <!-- Premium Card -->
@@ -254,7 +254,7 @@ export class HeartbeatCronService {
       </div>
     </div>
     <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
-      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase;">Your legacy has been secured.<br/>Last Wish Protocol</p>
+      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase;">Your legacy has been secured.<br/>AlwaysThere Protocol</p>
     </div>
   </div>
 </div>`

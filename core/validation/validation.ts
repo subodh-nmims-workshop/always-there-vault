@@ -1,5 +1,5 @@
 /**
- * Input validation utilities for the Digital Will Protocol
+ * Input validation utilities for the AlwaysThere Protocol
  * Implements validation for heartbeat intervals, wallet addresses, and JSON configurations
  */
 

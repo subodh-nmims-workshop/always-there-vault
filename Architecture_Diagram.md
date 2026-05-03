@@ -1,6 +1,6 @@
-# Last Wish Protocol: Project Architecture
+# Always There Protocol: Project Architecture
 
-This document contains the complete architectural breakdown of the Last Wish Protocol.
+This document contains the complete architectural breakdown of the Always There Protocol.
 
 ## System Architecture Diagram
 
@@ -76,4 +76,4 @@ graph TD
 | **Infrastructure** | Docker, Nginx, n8n | Ensures scalability, security, and automation. |
 
 ---
-*Created for: Last Wish Protocol Dev Team*
+*Created for: Always There Protocol Dev Team*

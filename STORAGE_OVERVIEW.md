@@ -1,6 +1,6 @@
 # 📦 AlwaysThere Protocol: Storage Overview
 
-Digital Will Protocol (AlwaysThere) do tarah ke storage mechanism use karta hai taaki aapka data secure aur hamesha accessible rahe.
+AlwaysThere Protocol (AlwaysThere) do tarah ke storage mechanism use karta hai taaki aapka data secure aur hamesha accessible rahe.
 
 ## 🚀 Storage Types
 

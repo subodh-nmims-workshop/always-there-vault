@@ -82,7 +82,7 @@ export async function submitHeartbeat() {
       blockNumber: receipt.blockNumber
     }
   } catch (error: any) {
-    console.error('Failed to submit heartbeat:', error)
+    console.warn('Failed to submit heartbeat:', error)
     return {
       success: false,
       error: error.message
@@ -117,7 +117,7 @@ export async function configureHeartbeat(intervalDays: number, gracePeriodDays: 
       txHash: receipt.hash
     }
   } catch (error: any) {
-    console.error('Failed to configure heartbeat:', error)
+    console.warn('Failed to configure heartbeat:', error)
     return {
       success: false,
       error: error.message
@@ -153,7 +153,7 @@ export async function getHeartbeatStatus(address: string) {
       isInactive: isInactive
     }
   } catch (error: any) {
-    console.error('Failed to get heartbeat status:', error)
+    console.warn('Failed to get heartbeat status:', error)
     return {
       success: false,
       error: error.message
@@ -185,7 +185,7 @@ export async function registerWill(intervalDays: number) {
       txHash: receipt.hash
     }
   } catch (error: any) {
-    console.error('Failed to register will:', error)
+    console.warn('Failed to register will:', error)
     return {
       success: false,
       error: error.message
@@ -216,7 +216,7 @@ export async function addBeneficiary(beneficiaryAddress: string) {
       txHash: receipt.hash
     }
   } catch (error: any) {
-    console.error('Failed to add beneficiary:', error)
+    console.warn('Failed to add beneficiary:', error)
     return {
       success: false,
       error: error.message
@@ -260,7 +260,7 @@ export async function registerTokenAsset(
       txHash: receipt.hash
     }
   } catch (error: any) {
-    console.error('Failed to register token asset:', error)
+    console.warn('Failed to register token asset:', error)
     return {
       success: false,
       error: error.message
@@ -291,7 +291,7 @@ export async function storeEncryptedPayload(ipfsCID: string) {
       txHash: receipt.hash
     }
   } catch (error: any) {
-    console.error('Failed to store payload:', error)
+    console.warn('Failed to store payload:', error)
     return {
       success: false,
       error: error.message
@@ -320,7 +320,7 @@ export async function isWillTriggered(address: string) {
       isTriggered: triggered
     }
   } catch (error: any) {
-    console.error('Failed to check trigger status:', error)
+    console.warn('Failed to check trigger status:', error)
     return {
       success: false,
       error: error.message
@@ -396,7 +396,7 @@ export async function connectWallet() {
       chainId: Number(finalNetwork.chainId)
     }
   } catch (error: any) {
-    console.error('Failed to connect wallet:', error)
+    console.warn('Failed to connect wallet:', error)
     return {
       success: false,
       error: error.message

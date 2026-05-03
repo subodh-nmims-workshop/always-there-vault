@@ -23,7 +23,7 @@ export class AuthService {
     generateNonce(): string {
         const nonce = crypto.randomBytes(32).toString('hex');
         const timestamp = Date.now();
-        const message = `Welcome to Last Wish Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+        const message = `Welcome to AlwaysThere Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
 
         // Store nonce in cache to prevent replay attacks
         this.cacheService.set(`${this.NONCE_PREFIX}${nonce}`, { walletRequested: true }, this.NONCE_EXPIRY);

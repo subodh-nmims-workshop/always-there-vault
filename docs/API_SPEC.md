@@ -1,6 +1,6 @@
-# Last Wish Protocol API Specification (v1.0)
+# Always There Protocol API Specification (v1.0)
 
-This document provides a summary of the core API endpoints for the Last Wish Protocol Backend.
+This document provides a summary of the core API endpoints for the Always There Protocol Backend.
 
 ## Authentication
 ### POST `/api/auth/wallet/challenge`

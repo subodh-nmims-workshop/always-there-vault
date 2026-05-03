@@ -34,7 +34,7 @@
     "ethereum",
     "polygon"
   ],
-  "author": "Digital Will Protocol Team",
+  "author": "AlwaysThere Protocol Team",
   "license": "MIT",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",

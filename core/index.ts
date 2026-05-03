@@ -1,5 +1,5 @@
 /**
- * Core Library Exports for Decentralized Digital Will Protocol
+ * Core Library Exports for Decentralized AlwaysThere Protocol
  */
 
 // Core types (original)

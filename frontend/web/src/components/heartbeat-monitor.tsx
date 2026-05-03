@@ -90,11 +90,16 @@ export function HeartbeatMonitor() {
             description: `Tx: ${chainResponse.txHash?.substring(0, 10)}...`
           })
         } else {
-          // Blockchain failed but we still want to record for demo/email purposes
-          console.warn('Blockchain log failed, falling back to centralized mode:', chainResponse.error)
-          toast.info('Blockchain Sync Error', {
-            description: 'Network fee issue. Recording proof via Protocol matrix instead.'
-          })
+          if (chainResponse.error?.toLowerCase().includes('reject') || chainResponse.error?.toLowerCase().includes('denied')) {
+            toast.info('Blockchain Bypassed', {
+              description: 'Recording proof via Protocol matrix instead.'
+            })
+          } else {
+            console.warn('Blockchain log failed, falling back to centralized mode:', chainResponse.error)
+            toast.info('Blockchain Sync Error', {
+              description: 'Network fee issue. Recording proof via Protocol matrix instead.'
+            })
+          }
         }
       } catch (e) {
         console.warn('Blockchain exception:', e)
@@ -139,7 +144,13 @@ export function HeartbeatMonitor() {
       try {
         const chainResponse = await configureBlockchainHeartbeat(settings.heartbeatInterval, settings.gracePeriod)
         if (!chainResponse.success) {
-          chainError = chainResponse.error || 'Smart Contract setting update reverted'
+          if (chainResponse.error?.toLowerCase().includes('reject') || chainResponse.error?.toLowerCase().includes('denied')) {
+            toast.info('Blockchain Bypassed', {
+              description: 'Configuration will be saved to the Protocol Matrix.'
+            })
+          } else {
+            chainError = chainResponse.error || 'Smart Contract setting update reverted'
+          }
         }
       } catch (err: any) {
         chainError = err?.message || 'Unable to reach blockchain provider'
@@ -385,7 +396,7 @@ export function HeartbeatMonitor() {
                 <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_theme(colors.red.500/30)] animate-pulse">
                   <ShieldAlert className="w-5 h-5 text-red-500" />
                 </div>
-                <p className="text-sm font-medium text-red-100 italic">Last Wish Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
+                <p className="text-sm font-medium text-red-100 italic">AlwaysThere Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
               </div>
             </motion.div>
           )}

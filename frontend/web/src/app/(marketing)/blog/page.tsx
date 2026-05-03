@@ -39,7 +39,7 @@ export default function BlogPage() {
         },
         {
             title: "The Fallacy of Traditional Estate Planning",
-            excerpt: "The fundamental flaw in giving a lawyer your seed phrase, and why programmatic legal execution is the only sovereign path forward. We breakdown exactly how the Digital Will Protocol bypasses the probate process entirely via autonomous execution.",
+            excerpt: "The fundamental flaw in giving a lawyer your seed phrase, and why programmatic legal execution is the only sovereign path forward. We breakdown exactly how the AlwaysThere Protocol bypasses the probate process entirely via autonomous execution.",
             date: "Sep 28, 2026",
             author: "Governance DAO",
             category: "Philosophy",

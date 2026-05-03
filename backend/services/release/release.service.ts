@@ -19,7 +19,7 @@ export class ReleaseService {
 
         const isTriggered = await this.blockchainService.isAlwaysThereTriggered(asset.ownerWallet);
         if (!isTriggered) {
-            throw new UnauthorizedException('Last Wish switch has not been triggered for this owner yet.');
+            throw new UnauthorizedException('Always There switch has not been triggered for this owner yet.');
         }
 
         // Check if requestor is an authorized beneficiary for this specific asset

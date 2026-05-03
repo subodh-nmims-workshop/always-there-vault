@@ -175,7 +175,7 @@ function BeneficiaryAssetsContent() {
             Secure Asset Retrieval
           </h1>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
-            Verify your clearance and claim designated digital assets through the Last Wish Protocol's trustless distribution sequence.
+            Verify your clearance and claim designated digital assets through the AlwaysThere Protocol's trustless distribution sequence.
           </p>
         </div>
 

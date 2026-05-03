@@ -1,6 +1,6 @@
 # Payment Setup Guide: Receiving Funds in Your Account
 
-This guide explains how to configure the Last Wish Protocol so that all subscription revenues (Fiat and Crypto) go directly to your personal or business accounts.
+This guide explains how to configure the Always There Protocol so that all subscription revenues (Fiat and Crypto) go directly to your personal or business accounts.
 
 ## 1. Fiat Payments (Stripe / Razorpay)
 

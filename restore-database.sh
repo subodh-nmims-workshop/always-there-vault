@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================================
-# Last Wish Protocol - Database Restore Script
+# Always There Protocol - Database Restore Script
 # ========================================================
 
 set -e

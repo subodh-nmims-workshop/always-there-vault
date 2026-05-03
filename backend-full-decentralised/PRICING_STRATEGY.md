@@ -1,4 +1,4 @@
-# Decentralized Last Wish Protocol - Pricing Strategy
+# Decentralized Always There Protocol - Pricing Strategy
 
 ## 💰 Subscription Plans (Updated March 2026)
 

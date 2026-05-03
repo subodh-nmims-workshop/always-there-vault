@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 async function main() {
-  console.log("🚀 Deploying Last Wish Protocol Contracts...\n");
+  console.log("🚀 Deploying Always There Protocol Contracts...\n");
 
   // Get deployer account
   const [deployer] = await ethers.getSigners();

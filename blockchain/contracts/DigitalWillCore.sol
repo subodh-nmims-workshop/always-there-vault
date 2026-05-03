@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * @title DigitalWillCore
- * @dev Core smart contract for Decentralized Digital Will Protocol
+ * @dev Core smart contract for Decentralized AlwaysThere Protocol
  * 
  * Key Principles:
  * - Blockchain = logic, not storage

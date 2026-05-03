@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 
 async function main() {
-  console.log('🚀 Starting Last Wish Protocol Deployment...');
+  console.log('🚀 Starting Always There Protocol Deployment...');
 
   const [deployer] = await ethers.getSigners();
   if (!deployer) {

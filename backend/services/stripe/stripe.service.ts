@@ -57,7 +57,7 @@ export class StripeService {
               currency: 'usd',
               product_data: {
                 name: `${params.planType.charAt(0).toUpperCase() + params.planType.slice(1)} Plan`,
-                description: `Last Wish Protocol - ${params.mode === 'centralized' ? 'Centralized' : 'Decentralized'} Mode`,
+                description: `AlwaysThere Protocol - ${params.mode === 'centralized' ? 'Centralized' : 'Decentralized'} Mode`,
               },
               unit_amount: pricing.monthly * 100, // Convert to cents
               recurring: {
@@ -237,7 +237,7 @@ export class StripeService {
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
                 <h2 style="color: #ef4444;">Payment Failure Detected</h2>
                 <p>Hello ${user.name || 'Commander'},</p>
-                <p>We were unable to process your recent payment for the Last Wish Protocol subscription.</p>
+                <p>We were unable to process your recent payment for the AlwaysThere Protocol subscription.</p>
                 <p><strong>Status:</strong> Your account has been moved to the free tier. Heartbeat monitoring and beneficiary alerts may be restricted.</p>
                 <p>Please update your payment method in the dashboard to restore your protocol's protection.</p>
                 <a href="${process.env.FRONTEND_URL}/dashboard" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px;">Update Payment Method</a>

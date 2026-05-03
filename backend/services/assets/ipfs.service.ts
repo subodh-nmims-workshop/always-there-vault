@@ -37,7 +37,7 @@ export class IpfsService {
             formData.append('pinataMetadata', JSON.stringify({
                 name: file.originalname || 'encrypted-asset',
                 keyvalues: {
-                    project: 'Last WishProtocol',
+                    project: 'Always There Protocol',
                     type: 'vault-asset'
                 }
             }));

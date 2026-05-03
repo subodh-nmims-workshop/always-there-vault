@@ -54,7 +54,7 @@ describe("DigitalWill Security Fixes", function () {
       await ethers.provider.send("evm_mine", []);
       
       await expect(digitalWill.checkAndTrigger(user.address))
-        .to.emit(digitalWill, "Last WishTriggered");
+        .to.emit(digitalWill, "Always ThereTriggered");
       
       const will = await digitalWill.wills(user.address);
       expect(will.isTriggered).to.be.true;

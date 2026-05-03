@@ -1,6 +1,6 @@
 # Deployment & Verification Guide (v1.0)
 
-This guide outlines the steps to deploy the Last Wish Protocol to a production environment.
+This guide outlines the steps to deploy the Always There Protocol to a production environment.
 
 ## 1. Secrets Management
 The system requires a secure `.env` file with the following variables:

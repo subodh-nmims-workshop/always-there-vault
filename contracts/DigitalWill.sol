@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title DigitalWill Protocol
- * @dev Secure smart contract for the Last Wish Switch Protocol
+ * @dev Secure smart contract for the Always There Switch Protocol
  * Manages user heartbeats and triggers securely with protection against re-entrancy.
  */
 contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
@@ -130,7 +130,7 @@ contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
     function claimPayload(address owner) external nonReentrant whenNotPaused returns (string memory) {
         WillCondition memory userWill = wills[owner];
         require(userWill.isActive, "No active will found");
-        require(userWill.isTriggered, "Last Wish switch has NOT been triggered yet");
+        require(userWill.isTriggered, "Always There switch has NOT been triggered yet");
         require(nominees[owner][msg.sender], "You are not an authorized nominee");
 
         emit PayloadReleased(owner, msg.sender);

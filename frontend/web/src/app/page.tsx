@@ -89,6 +89,13 @@ export default function HomePage() {
     }
   }, [])
 
+  // Auto-show dev modal when in restricted mode
+  useEffect(() => {
+    if (isConnected && !isDevOverride) {
+      setShowDevModal(true)
+    }
+  }, [isConnected, isDevOverride])
+
   const handleConnect = () => setShowWalletModal(true)
 
   const handleWalletConnect = async (walletAddress: string) => {
@@ -106,8 +113,14 @@ export default function HomePage() {
       })
 
       if (!verifyRes.ok) {
-        const errorData = await verifyRes.json().catch(() => ({ message: 'Identity verification failed' }))
-        throw new Error(errorData.message || 'Identity verification failed')
+        const errorData = await verifyRes.json().catch(() => (null))
+        let errMsg = 'Identity verification failed';
+        if (errorData && errorData.message) {
+            errMsg = typeof errorData.message === 'string' ? errorData.message : JSON.stringify(errorData.message);
+        } else if (errorData && errorData.error) {
+            errMsg = errorData.error;
+        }
+        throw new Error(errMsg)
       }
 
       const authData = await verifyRes.json()
@@ -124,7 +137,7 @@ export default function HomePage() {
         throw new Error('No authentication token received')
       }
     } catch (error: any) {
-      console.error('Login error:', error)
+      console.warn('Login error:', error)
       toast.error(error.message || 'Login failed')
       
       if (process.env.NODE_ENV === 'development') {
@@ -311,11 +324,12 @@ export default function HomePage() {
         
         <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24 relative z-10">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-            <TabsList className="bg-[#0f172a]/80 backdrop-blur-md border border-white/10 p-2 rounded-2xl w-full justify-start overflow-x-auto hide-scrollbar shadow-2xl">
+            <TabsList className="bg-[#0f172a]/80 backdrop-blur-md border border-white/10 p-2 rounded-2xl w-full justify-start overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-2xl">
               <TabsTrigger value="overview" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(43,82,255,0.4)] transition-all">Overview</TabsTrigger>
               <TabsTrigger value="assets" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Digital Assets</TabsTrigger>
               <TabsTrigger value="beneficiaries" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Beneficiaries</TabsTrigger>
               <TabsTrigger value="status" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Protocol Status</TabsTrigger>
+              <TabsTrigger value="heartbeat" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.2)]">Heartbeat</TabsTrigger>
               <TabsTrigger value="subscription" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Subscription</TabsTrigger>
               <TabsTrigger value="settings" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Settings</TabsTrigger>
             </TabsList>
@@ -325,6 +339,7 @@ export default function HomePage() {
               <TabsContent value="assets" className="m-0"><AssetCreationForm /></TabsContent>
               <TabsContent value="beneficiaries" className="m-0"><BeneficiaryManager /></TabsContent>
               <TabsContent value="status" className="m-0"><StatusDashboard /></TabsContent>
+              <TabsContent value="heartbeat" className="m-0"><HeartbeatMonitor /></TabsContent>
               <TabsContent value="subscription" className="m-0"><SubscriptionDashboard /></TabsContent>
               <TabsContent value="settings" className="m-0"><SettingsDashboard /></TabsContent>
             </div>

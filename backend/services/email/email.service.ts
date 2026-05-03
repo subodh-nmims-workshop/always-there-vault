@@ -19,7 +19,7 @@ export class EmailService {
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || '587');
     const user = this.configService.get<string>('SMTP_USER');
     const pass = this.configService.get<string>('SMTP_PASS');
-    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"Last Wish Protocol" <${user}>`;
+    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Protocol" <${user}>`;
 
     if (!user || user.includes('example')) {
       console.warn('⚠️  SMTP_USER or SMTP_PASS not configured. Using temporary Ethereal account logic.');
@@ -54,7 +54,7 @@ export class EmailService {
          });
 
          const info = await testTransporter.sendMail({
-           from: `"Last Wish Protocol Test" <${user}>`,
+           from: `"AlwaysThere Protocol Test" <${user}>`,
            to: options.to,
            subject: options.subject,
            html: options.html,
@@ -89,12 +89,12 @@ export class EmailService {
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     return this.sendEmail({
       to: email,
-      subject: 'Welcome to Last Wish Protocol',
+      subject: 'Welcome to AlwaysThere Protocol',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1152d4;">Welcome to Last Wish Protocol! 🎉</h1>
+          <h1 style="color: #1152d4;">Welcome to AlwaysThere Protocol! 🎉</h1>
           <p>Hi ${name},</p>
-          <p>Thank you for joining Last Wish Protocol. Your digital legacy is now secure.</p>
+          <p>Thank you for joining AlwaysThere Protocol. Your digital legacy is now secure.</p>
           <h2>What's Next?</h2>
           <ul>
             <li>Upload your first digital asset</li>
@@ -111,7 +111,7 @@ export class EmailService {
           </p>
         </div>
       `,
-      text: `Welcome to Last Wish Protocol! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
+      text: `Welcome to AlwaysThere Protocol! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
     });
   }
 
@@ -123,7 +123,7 @@ export class EmailService {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1152d4;">You're a Beneficiary 🎁</h1>
           <p>Hi ${name},</p>
-          <p><strong>${ownerName}</strong> has added you as a beneficiary in their Last Wish Protocol account.</p>
+          <p><strong>${ownerName}</strong> has added you as a beneficiary in their AlwaysThere Protocol account.</p>
           <h2>What does this mean?</h2>
           <p>You will receive access to designated digital assets if the owner's heartbeat is not detected within the specified timeframe.</p>
           <h2>Important Information:</h2>
@@ -138,7 +138,7 @@ export class EmailService {
           </a>
         </div>
       `,
-      text: `Hi ${name}, ${ownerName} has added you as a beneficiary in Last Wish Protocol. You'll be notified if action is required.`,
+      text: `Hi ${name}, ${ownerName} has added you as a beneficiary in AlwaysThere Protocol. You'll be notified if action is required.`,
     });
   }
 
@@ -224,7 +224,7 @@ export class EmailService {
     <div style="padding: 35px 30px;">
       <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Greetings <strong>${name}</strong>,</p>
       <p style="color: #cbd5e1; font-size: 15px;">
-        The Last Wish Protocol heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
+        The AlwaysThere Protocol heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
       </p>
 
       <div style="background: #0f172a; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #334155; text-align: center;">
@@ -252,7 +252,7 @@ export class EmailService {
     <!-- Footer -->
     <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
       <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-        Secured by Last Wish Protocol<br/>
+        Secured by AlwaysThere Protocol<br/>
         End-to-End Encrypted Proof-of-Trust Distribution
       </p>
     </div>
@@ -272,7 +272,7 @@ export class EmailService {
           <h1 style="color: #f59e0b;">⏰ Trial Ending Soon</h1>
           <p>Hi ${name},</p>
           <p>Your free trial will end in <strong>${daysRemaining} days</strong>.</p>
-          <p>To continue using Last Wish Protocol and keep your digital legacy secure, please upgrade to a paid plan.</p>
+          <p>To continue using AlwaysThere Protocol and keep your digital legacy secure, please upgrade to a paid plan.</p>
           <h2>Why Upgrade?</h2>
           <ul>
             <li>Unlimited asset storage</li>

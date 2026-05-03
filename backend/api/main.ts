@@ -129,8 +129,8 @@ async function bootstrap() {
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
-    .setTitle('Last Wish Protocol API')
-    .setDescription('Decentralized Digital Will Protocol - Backend API Documentation')
+    .setTitle('AlwaysThere Protocol API')
+    .setDescription('Decentralized AlwaysThere Protocol - Backend API Documentation')
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management')
@@ -151,7 +151,7 @@ async function bootstrap() {
 
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🚀 Last Wish Protocol - Backend Server');
+  console.log('🚀 AlwaysThere Protocol - Backend Server');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
   console.log(`✅ Server running on: http://localhost:${port}`);

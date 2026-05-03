@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title DigitalWillCore
- * @dev Core smart contract for Decentralized Digital Will Protocol
+ * @dev Core smart contract for Decentralized AlwaysThere Protocol
  */
 contract DigitalWillCore is ReentrancyGuard, AccessControl, Pausable {
     using ECDSA for bytes32;

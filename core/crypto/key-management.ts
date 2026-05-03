@@ -1,5 +1,5 @@
 /**
- * Advanced Key Management for Decentralized Digital Will Protocol
+ * Advanced Key Management for Decentralized AlwaysThere Protocol
  * 
  * Implements military-grade key splitting and distribution
  */

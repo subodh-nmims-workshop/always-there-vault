@@ -1,4 +1,4 @@
-# 🛡️ Last Wish Protocol - Digital Legacy Platform
+# 🛡️ Always There Protocol - Digital Legacy Platform
 
 > Secure your digital assets and ensure they reach your loved ones when it matters most.
 

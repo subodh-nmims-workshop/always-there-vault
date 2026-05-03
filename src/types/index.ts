@@ -1,5 +1,5 @@
 /**
- * Core type definitions for the Decentralized Digital Will Protocol
+ * Core type definitions for the Decentralized AlwaysThere Protocol
  */
 
 export type UserStatus = 'active' | 'grace_period' | 'triggered' | 'emergency_override';
