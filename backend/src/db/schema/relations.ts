@@ -6,6 +6,9 @@ import { sharedAccess } from './sharing';
 import { heartbeatConfigs } from './heartbeat';
 import { beneficiaries } from './beneficiaries';
 import { subscriptions } from './subscriptions';
+import { auditLogs } from './audit';
+import { verificationTokens } from './verificationTokens';
+import { timeCapsules } from './timeCapsules';
 import { userKeys } from './userKeys';
 import { userStorageQuotas } from './quotas';
 
@@ -84,6 +87,24 @@ export const beneficiariesRelations = relations(beneficiaries, ({ one }) => ({
   }),
 }));
 
+export const verificationTokensRelations = relations(verificationTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [verificationTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+export const timeCapsulesRelations = relations(timeCapsules, ({ one }) => ({
+  user: one(users, {
+    fields: [timeCapsules.userId],
+    references: [users.id],
+  }),
+  beneficiary: one(beneficiaries, {
+    fields: [timeCapsules.beneficiaryId],
+    references: [beneficiaries.id],
+  }),
+}));
+
 // Subscriptions relations
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
   user: one(users, {
@@ -121,3 +142,4 @@ export * from './audit';
 export * from './userKeys';
 export * from './quotas';
 export * from './verificationTokens';
+export * from './timeCapsules';

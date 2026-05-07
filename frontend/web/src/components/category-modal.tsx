@@ -18,7 +18,7 @@ interface CategoryModalProps {
   onClose: () => void
   category: AssetCategory
   beneficiaries: any[]
-  onSubmit: (data: { name: string; type: string; structuredData: string; file?: File; beneficiaryIds?: string[] }) => Promise<void>
+  onSubmit: (data: { name: string; type: string; structuredData: string; file?: File; beneficiaryIds?: string[]; timeCapsule?: { scheduledDate: string; customMessage: string } }) => Promise<void>
 }
 
 export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubmit }: CategoryModalProps) {
@@ -29,6 +29,9 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isTimeCapsule, setIsTimeCapsule] = useState(false)
+  const [scheduledDate, setScheduledDate] = useState('')
+  const [customMessage, setCustomMessage] = useState('')
 
   useEffect(() => {
     if (isOpen && category) {
@@ -42,6 +45,9 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
         setSelectedBens([])
         setErrors([])
         setShowSuccess(false)
+        setIsTimeCapsule(false)
+        setScheduledDate('')
+        setCustomMessage('')
       } catch (error) {
         console.error('❌ Failed to initialize category modal:', error)
         setErrors(['Initialization failed. Please try again.'])
@@ -90,7 +96,8 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
         type: category,
         structuredData,
         file: selectedFile || undefined,
-        beneficiaryIds: selectedBens
+        beneficiaryIds: selectedBens,
+        timeCapsule: isTimeCapsule && scheduledDate ? { scheduledDate, customMessage } : undefined
       })
 
       setShowSuccess(true)
@@ -322,6 +329,60 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Time Capsule Toggle */}
+              <div className="bg-slate-900/40 border border-white/5 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span className="text-lg">🕰️</span>
+                      Schedule Delivery (Time Capsule)
+                    </h4>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                      Deliver this on a specific date regardless of your heartbeat
+                    </p>
+                  </div>
+                  <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                    <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 24 : 0 }} />
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {isTimeCapsule && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden pt-2"
+                    >
+                      <div className="space-y-2">
+                        <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+                          Delivery Date <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+                          Personal Message (Optional)
+                        </label>
+                        <textarea
+                          value={customMessage}
+                          onChange={(e) => setCustomMessage(e.target.value)}
+                          placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
+                          rows={3}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none resize-none"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Dynamic Fields */}

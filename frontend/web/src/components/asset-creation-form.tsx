@@ -658,7 +658,7 @@ export function AssetCreationForm() {
   }
 
   // Handle category modal submission
-  const handleCategorySubmit = async (data: { name: string; type: string; structuredData: string; file?: File }) => {
+  const handleCategorySubmit = async (data: { name: string; type: string; structuredData: string; file?: File; beneficiaryIds?: string[]; timeCapsule?: { scheduledDate: string; customMessage: string } }) => {
     // Check subscription status
     if (!subscription || subscription.status === 'expired') {
       toast.error('Subscription Expired', {
@@ -702,10 +702,10 @@ export function AssetCreationForm() {
         }
       }
 
-      // Get beneficiary IDs
-      const beneficiaryIds = selectedBeneficiaries.length > 0
-        ? selectedBeneficiaries
-        : []
+      // Get beneficiary IDs from modal or fallback to global state
+      const beneficiaryIds = data.beneficiaryIds && data.beneficiaryIds.length > 0 
+        ? data.beneficiaryIds 
+        : (selectedBeneficiaries.length > 0 ? selectedBeneficiaries : [])
 
       if (beneficiaryIds.length === 0) {
         toast.error('No Nominee Selected', {
@@ -745,6 +745,32 @@ export function AssetCreationForm() {
         console.log('✅ Key synced to backend for recovery')
       } catch (syncErr) {
         console.warn('⚠️ Key sync to cloud failed (Offline mode?)', syncErr)
+      }
+
+      // 🕰️ Save Time Capsule to Backend if scheduled
+      if (data.timeCapsule) {
+        try {
+          const token = localStorage.getItem('dwp_token')
+          for (const benId of beneficiaryIds) {
+            await fetch(`http://localhost:7001/api/time-capsules`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+              },
+              body: JSON.stringify({ 
+                beneficiaryId: benId,
+                assetId: asset.id,
+                scheduledDate: data.timeCapsule.scheduledDate,
+                customMessage: data.timeCapsule.customMessage
+              })
+            })
+          }
+          console.log('✅ Time Capsule scheduled on backend')
+        } catch (tcError) {
+          console.warn('⚠️ Failed to schedule time capsule:', tcError)
+          toast.warning('Asset saved, but failed to schedule time capsule delivery.')
+        }
       }
 
       console.log('✅ Asset saved successfully!')
