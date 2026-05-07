@@ -12,9 +12,10 @@ import { HeartbeatService } from './heartbeat.service';
 import { HeartbeatCronService } from './heartbeat.cron';
 import { RecordHeartbeatDto, HeartbeatStatusDto, HeartbeatSettingsDto } from './dto/heartbeat.dto';
 import { HeartbeatLog } from './schemas/heartbeat.schema';
-import { UseGuards, Req } from '@nestjs/common';
+import { UseGuards, Req, Res } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { TokenService } from '../auth/token.service';
 
 @ApiTags('heartbeat')
 @Controller('api/heartbeat')
@@ -22,6 +23,7 @@ export class HeartbeatController {
   constructor(
     private readonly heartbeatService: HeartbeatService,
     private readonly heartbeatCronService: HeartbeatCronService,
+    private readonly tokenService: TokenService,
   ) { }
 
   @Get('public-status/:wallet')
@@ -29,6 +31,21 @@ export class HeartbeatController {
   @ApiResponse({ status: 200, description: 'Heartbeat status retrieved successfully' })
   async getPublicStatus(@Param('wallet') wallet: string): Promise<any> {
     return this.heartbeatService.getHeartbeatStatus(wallet);
+  }
+
+  @Get('verify')
+  @ApiOperation({ summary: 'Verify heartbeat via email token' })
+  @ApiResponse({ status: 200, description: 'Heartbeat verified' })
+  async verifyEmailHeartbeat(@Query('token') token: string, @Res() res: any): Promise<any> {
+    try {
+      const record = await this.tokenService.verifyToken(token, 'HEARTBEAT_VERIFY');
+      // Record heartbeat for this user/wallet
+      await this.heartbeatService.recordHeartbeat(record.targetAddress || '', 'Email Token Verification');
+      
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/heartbeat-success`);
+    } catch (e) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=invalid_token`);
+    }
   }
 
   @ApiBearerAuth()

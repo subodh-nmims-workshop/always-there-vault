@@ -8,13 +8,14 @@ import { UsersModule } from '../users/users.module';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 import { EmailModule } from '../email/email.module';
 import { BeneficiariesModule } from '../beneficiaries/beneficiaries.module';
-
+import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [
     UsersModule,
     BlockchainModule,
     EmailModule,
-    BeneficiariesModule
+    BeneficiariesModule,
+    AuthModule
   ],
   controllers: [HeartbeatController],
   providers: [HeartbeatService, HeartbeatCronService],

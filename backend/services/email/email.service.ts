@@ -197,7 +197,7 @@ export class EmailService {
     });
   }
 
-  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number): Promise<boolean> {
+  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number, verificationUrl: string): Promise<boolean> {
     return this.sendEmail({
       to: email,
       subject: 'Assets Released - Action Required',
@@ -242,7 +242,7 @@ export class EmailService {
 
       <!-- Action Button -->
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/beneficiary/assets?owner=${ownerAddress}"
+        <a href="${verificationUrl}"
            style="display: inline-block; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px rgba(56, 189, 248, 0.3); transition: all 0.3s ease;">
           Claim Digital Assets
         </a>

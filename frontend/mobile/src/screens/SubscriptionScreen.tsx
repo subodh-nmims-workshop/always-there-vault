@@ -15,8 +15,8 @@ import { COLORS, FONTS, RADIUS, GAPS, SHADOWS } from '../theme';
 const PLANS = [
   {
     name: 'Vault Lite',
-    price: 'Free',
-    features: ['500 MB Secure Storage', '1 Nominee / Beneficiary', 'Centralized Primary Backup', 'Standard Heartbeat'],
+    price: 'Lifetime Free',
+    features: ['500 MB Secure Storage (Lifetime Free)', '1 Nominee / Beneficiary', 'Centralized Primary Backup', 'Standard Heartbeat'],
     color: COLORS.textDim
   },
   {

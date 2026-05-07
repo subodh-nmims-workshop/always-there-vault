@@ -794,9 +794,9 @@ export function AssetCreationForm() {
         exit={{ opacity: 0, scale: 0.9 }}
         onClick={() => handleViewAsset(asset)}
         onContextMenu={(e) => handleAssetContextMenu(e, asset)}
-        className="bg-white/[0.03] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg cursor-pointer"
+        className="bg-white/[0.03] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative group hover:border-blue-500/30 transition-all shadow-lg cursor-pointer"
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-40 transition-opacity"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-40 transition-opacity rounded-t-2xl"></div>
 
         <div className="flex justify-between items-start mb-6">
           <div className={`w-10 h-10 rounded-xl ${iconInfo.bg} flex items-center justify-center ${iconInfo.color}`}>
@@ -807,20 +807,20 @@ export function AssetCreationForm() {
             <button className="text-slate-500 hover:text-white transition-colors p-1">
               <MoreVertical className="w-5 h-5" />
             </button>
-            <div className="absolute right-0 top-6 mt-1 w-32 bg-slate-800 border border-slate-700 rounded-xl shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
+            <div className="absolute right-0 top-6 mt-1 w-28 bg-slate-800 border border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
               <button
                 onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
-                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-t-xl flex items-center"
+                className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-t-lg flex items-center"
               >
                 <Eye className="h-3 w-3 mr-2" /> View
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); openShareAssetModal(asset) }}
-                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center"
+                className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center"
               >
                 <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
               </button>
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center">
+              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center">
                 <Trash2 className="h-3 w-3 mr-2" /> Delete
               </button>
             </div>
@@ -885,7 +885,7 @@ export function AssetCreationForm() {
     <div
       onClick={() => setCurrentFolderId(folder.id)}
       onContextMenu={(e) => handleFolderContextMenu(e, folder)}
-      className="bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative overflow-hidden group hover:border-[#1152d4]/40 hover:bg-white/[0.04] transition-all shadow-lg cursor-pointer"
+      className="bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative group hover:border-[#1152d4]/40 hover:bg-white/[0.04] transition-all shadow-lg cursor-pointer"
     >
       <div className="flex justify-between items-start mb-6">
         <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
@@ -895,15 +895,15 @@ export function AssetCreationForm() {
           <button onClick={(e) => e.stopPropagation()} className="text-slate-500 hover:text-white transition-colors p-1">
             <MoreVertical className="w-5 h-5" />
           </button>
-          <div className="absolute right-0 top-6 mt-1 w-40 bg-slate-800 border border-slate-700 rounded-xl shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
+          <div className="absolute right-0 top-6 mt-1 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 openShareFolderModal(folder)
               }}
-              className="w-full text-left px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-slate-700/70 rounded-t-xl flex items-center"
+              className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:text-white hover:bg-slate-700/70 rounded-t-lg flex items-center"
             >
-              <Shield className="h-3 w-3 mr-2" /> Share Folder
+              <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
             </button>
             <button
               onClick={(e) => {
@@ -911,16 +911,16 @@ export function AssetCreationForm() {
                 setRenameFolderState({ isOpen: true, folderId: folder.id, currentName: folder.name })
                 setRenameInput(folder.name)
               }}
-              className="w-full text-left px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-slate-700/70 flex items-center"
+              className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:text-white hover:bg-slate-700/70 flex items-center"
             >
-              <Pencil className="h-3 w-3 mr-2" /> Rename Folder
+              <Pencil className="h-3 w-3 mr-2 text-blue-400" /> Rename
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 handleDeleteFolder(folder.id, folder.name)
               }}
-              className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-xl flex items-center"
+              className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center"
             >
               <Trash2 className="h-3 w-3 mr-2" /> Delete
             </button>

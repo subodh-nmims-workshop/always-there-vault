@@ -28,30 +28,27 @@ export function SharedFooter() {
                     <div>
                         <h4 className="text-white font-bold mb-4">Product</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="/features" className="hover:text-white transition-colors">{t('nav_features')}</Link></li>
-                            <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
-                            <li><Link href="/pricing" className="hover:text-white transition-colors">{t('nav_pricing')}</Link></li>
-                            <li><Link href="/roadmap" className="hover:text-white transition-colors">Roadmap</Link></li>
+                            <li><Link href="/#how-it-works" className="hover:text-white transition-colors">How it works</Link></li>
+                            <li><Link href="/#security" className="hover:text-white transition-colors">Security</Link></li>
+                            <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="text-white font-bold mb-4">Resources</h4>
                         <ul className="space-y-3 text-sm">
-                             <li><Link href="/docs" className="hover:text-white transition-colors">{t('nav_docs')}</Link></li>
+                             <li><Link href="/docs" className="hover:text-white transition-colors">Tech Guide</Link></li>
                             <li><Link href="/api" className="hover:text-white transition-colors">API Reference</Link></li>
-                            <li><Link href="/guides" className="hover:text-white transition-colors">Guides</Link></li>
-                            <li><Link href="/contact" className="hover:text-white transition-colors">{t('nav_contact')}</Link></li>
+                            <li><Link href="/donate" className="hover:text-white transition-colors">Support Us</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="text-white font-bold mb-4">Company</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                            <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-                            <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
-                            <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                            <li><Link href="/investors" className="hover:text-white transition-colors">Partners & Investors</Link></li>
+                            <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+                            <li><Link href="mailto:subodhram3350@gmail.com" className="hover:text-white transition-colors">Contact</Link></li>
                         </ul>
                     </div>
                 </div>

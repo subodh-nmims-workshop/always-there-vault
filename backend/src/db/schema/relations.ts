@@ -120,3 +120,4 @@ export * from './keys';
 export * from './audit';
 export * from './userKeys';
 export * from './quotas';
+export * from './verificationTokens';

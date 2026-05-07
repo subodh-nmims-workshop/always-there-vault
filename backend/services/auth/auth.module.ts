@@ -7,10 +7,12 @@ import { CryptoModule } from '../crypto/crypto.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+import { TokenService } from './token.service';
+
 @Module({
     imports: [UsersModule, CryptoModule, ConfigModule],
     controllers: [AuthController],
-    providers: [AuthService, MFAService, JwtAuthGuard],
-    exports: [AuthService, MFAService, JwtAuthGuard],
+    providers: [AuthService, MFAService, JwtAuthGuard, TokenService],
+    exports: [AuthService, MFAService, JwtAuthGuard, TokenService],
 })
 export class AuthModule { }

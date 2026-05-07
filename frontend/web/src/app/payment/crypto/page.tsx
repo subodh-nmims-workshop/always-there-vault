@@ -17,21 +17,44 @@ const USDC_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' // Polygon USD
 // Plan mapping
 const PLAN_IDS: Record<string, number> = {
   starter: 0,
-  professional: 1,
-  enterprise: 2,
-  freedom: 3,
-  sovereign: 4,
-  immortal: 5
+  nano: 1,
+  lite: 2,
+  essential: 3,
+  secure: 4,
+  professional: 5,
+  mega: 6,
+  enterprise: 7,
+  freedom_starter: 10,
+  freedom_nano: 11,
+  freedom_lite: 12,
+  freedom_basic: 13,
+  freedom_secure: 14,
+  sovereign_pro: 15,
+  sovereign_mega: 16,
+  immortal_elite: 17
 }
 
 // Pricing in USDC (6 decimals)
 const PRICING: Record<string, any> = {
-  starter: { monthly: '4.99', yearly: '49.90' },
-  professional: { monthly: '14.99', yearly: '149.90' },
-  enterprise: { monthly: '49.99', yearly: '499.90' },
-  freedom: { monthly: '9.99', yearly: '99.90' },
-  sovereign: { monthly: '29.99', yearly: '299.90' },
-  immortal: { monthly: '149.00', yearly: '1499.00' }
+  // Centralized
+  starter: { monthly: '0.00', yearly: '0.00' },
+  nano: { monthly: '0.03', yearly: '0.36' },
+  lite: { monthly: '0.15', yearly: '1.80' },
+  essential: { monthly: '0.45', yearly: '5.40' },
+  secure: { monthly: '1.50', yearly: '18.00' },
+  professional: { monthly: '2.99', yearly: '35.88' },
+  mega: { monthly: '14.95', yearly: '179.40' },
+  enterprise: { monthly: '29.90', yearly: '358.80' },
+  
+  // Decentralized
+  freedom_starter: { monthly: '0.00', yearly: '0.00' },
+  freedom_nano: { monthly: '0.19', yearly: '2.34' },
+  freedom_lite: { monthly: '0.97', yearly: '11.70' },
+  freedom_basic: { monthly: '2.92', yearly: '35.10' },
+  freedom_secure: { monthly: '9.75', yearly: '117.00' },
+  sovereign_pro: { monthly: '19.50', yearly: '234.00' },
+  sovereign_mega: { monthly: '97.50', yearly: '1170.00' },
+  immortal_elite: { monthly: '195.00', yearly: '2340.00' }
 }
 
 function CryptoPaymentContent() {

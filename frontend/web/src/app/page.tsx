@@ -426,7 +426,7 @@ export default function HomePage() {
       </section>
 
       {/* 3 Step Working (Very Simple) */}
-      <section id="how-it-works" className="py-32 px-6 bg-white/[0.01] border-y border-white/5">
+      <section id="how-it-works" className="py-32 px-6 bg-white/[0.01] border-y border-white/5 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
             <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4 italic">SIMPLE. SECURE. <span className="text-blue-500">AUTOMATIC.</span></h2>
@@ -452,7 +452,7 @@ export default function HomePage() {
       </section>
 
       {/* The Pillars (The Information) */}
-      <section id="security" className="py-32 px-6">
+      <section id="security" className="py-32 px-6 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
             <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-4">TOTAL <span className="text-blue-500">PRIVACY</span></h2>
@@ -506,7 +506,7 @@ export default function HomePage() {
       </section>
 
       {/* Simple FAQ */}
-      <section id="faq" className="py-32 px-6">
+      <section id="faq" className="py-32 px-6 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">COMMON <span className="text-blue-500">QUESTIONS</span></h2>
@@ -529,7 +529,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-32 border-t border-white/5">
+      <section id="pricing" className="py-32 border-t border-white/5 scroll-mt-24">
         <PricingPlans />
       </section>
 

@@ -5,6 +5,7 @@ import { HeartbeatService } from './heartbeat.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { EmailService } from '../email/email.service';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
+import { TokenService } from '../auth/token.service';
 import { eq, sql } from 'drizzle-orm';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 
@@ -18,6 +19,7 @@ interface HeartbeatAlertEmailParams {
     lastHeartbeat: string;
     checkedAt: string;
     isFinalWarning: boolean;
+    verificationUrl: string;
 }
 
 function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
@@ -94,9 +96,9 @@ function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
 
       <!-- Action Button -->
       <div style="text-align: center;">
-        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard"
+        <a href="${p.verificationUrl}"
            style="display: inline-block; background: linear-gradient(135deg, ${urgencyColor}, #991b1b); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px ${glowColor}; transition: all 0.3s ease;">
-          Authenticate Heartbeat
+          Verify My Status
         </a>
       </div>
     </div>
@@ -123,6 +125,7 @@ export class HeartbeatCronService {
         private readonly blockchainService: BlockchainService,
         private readonly emailService: EmailService,
         private readonly beneficiariesService: BeneficiariesService,
+        private readonly tokenService: TokenService,
     ) { }
 
     @Cron(CronExpression.EVERY_MINUTE)
@@ -172,6 +175,10 @@ export class HeartbeatCronService {
                                 subject = `⚠️ Heartbeat Missed - Stage ${newMissCount}/${maxBuffer}`;
                             }
 
+                            const token = await this.tokenService.generateToken('HEARTBEAT_VERIFY', user.id, user.walletAddress, 24);
+                            const backendUrl = process.env.API_URL || 'http://localhost:3001';
+                            const verificationUrl = `${backendUrl}/api/heartbeat/verify?token=${token}`;
+
                             const messageHtml = buildHeartbeatAlertEmail({
                                 name: user.name || 'User',
                                 walletAddress: user.walletAddress,
@@ -182,6 +189,7 @@ export class HeartbeatCronService {
                                 lastHeartbeat,
                                 checkedAt,
                                 isFinalWarning: newMissCount === maxBuffer,
+                                verificationUrl,
                             });
 
                             await this.emailService.sendEmail({
@@ -267,12 +275,17 @@ export class HeartbeatCronService {
                             
                             for (const nominee of nominees) {
                                 if (nominee.email) {
+                                    const token = await this.tokenService.generateToken('CLAIM_ACCESS', nominee.id, user.walletAddress, 7 * 24); // 7 days expiry
+                                    const backendUrl = process.env.API_URL || 'http://localhost:3001';
+                                    const claimUrl = `${backendUrl}/api/claim/${token}`;
+                                    
                                     await this.emailService.sendAssetReleaseNotification(
                                         nominee.email,
                                         nominee.name,
                                         user.name || 'The account owner',
                                         user.walletAddress,
-                                        1 // Default to 1 asset for now (can be expanded)
+                                        1, // Default to 1 asset for now (can be expanded)
+                                        claimUrl
                                     );
                                 }
                             }
@@ -303,6 +316,10 @@ export class HeartbeatCronService {
             ? new Date(config.lastHeartbeat).toUTCString()
             : 'Never';
 
+        const token = await this.tokenService.generateToken('HEARTBEAT_VERIFY', user.id, user.walletAddress, 24);
+        const backendUrl = process.env.API_URL || 'http://localhost:3001';
+        const verificationUrl = `${backendUrl}/api/heartbeat/verify?token=${token}`;
+
         const html = buildHeartbeatAlertEmail({
             name: user.name || 'User',
             walletAddress: user.walletAddress,
@@ -313,6 +330,7 @@ export class HeartbeatCronService {
             lastHeartbeat,
             checkedAt: new Date().toUTCString(),
             isFinalWarning: false,
+            verificationUrl,
         });
 
         await this.emailService.sendEmail({

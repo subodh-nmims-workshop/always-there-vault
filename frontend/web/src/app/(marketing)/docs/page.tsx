@@ -73,7 +73,7 @@ export default function DocsPage() {
         <div className="space-y-32">
 
           {/* Section 1: Core Architecture */}
-          <section id="architecture">
+          <section id="architecture" className="scroll-mt-24">
             <div className="flex items-center gap-4 mb-10">
               <div className="p-3 bg-blue-600/10 rounded-2xl border border-blue-500/20 text-blue-500 shadow-2xl shadow-blue-600/20">
                 <Cpu className="w-6 h-6" />
@@ -110,7 +110,7 @@ export default function DocsPage() {
           </section>
 
           {/* Section 2: Security Workflow */}
-          <section id="security">
+          <section id="security" className="scroll-mt-24">
             <div className="flex items-center gap-4 mb-10">
               <div className="p-3 bg-green-600/10 rounded-2xl border border-green-500/20 text-green-500">
                 <Workflow className="w-6 h-6" />
@@ -137,7 +137,7 @@ export default function DocsPage() {
           </section>
 
           {/* Section 3: Heartbeat & Nominee Logic */}
-          <section id="heartbeat">
+          <section id="heartbeat" className="scroll-mt-24">
             <div className="flex items-center gap-4 mb-10">
               <div className="p-3 bg-red-600/10 rounded-2xl border border-red-500/20 text-red-500 shadow-2xl shadow-red-600/10">
                 <Timer className="w-6 h-6" />
@@ -155,7 +155,7 @@ export default function DocsPage() {
           </section>
 
           {/* Section 4: Privacy Policy */}
-          <section id="privacy">
+          <section id="privacy" className="scroll-mt-24">
             <div className="text-center p-16 bg-white/5 rounded-[3rem] border border-white/10">
               <Shield className="w-16 h-16 text-blue-500 mx-auto mb-6" />
               <h3 className="text-2xl font-black text-white uppercase mb-4">PRIVACY BY DESIGN</h3>

@@ -29,8 +29,8 @@ export const PLANS: Record<PlanType, PlanConfig> = {
       decentralizedStorageMB: 500,
     },
     features: [
-      '500 MB Secure Cloud',
-      '500 MB Protocol IPFS',
+      '500 MB Secure Cloud (Lifetime Free)',
+      '500 MB Protocol IPFS (Lifetime Free)',
       '1 Nominee / Beneficiary',
       'Centralized Primary Backup',
       'Standard Heartbeat',

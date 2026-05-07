@@ -84,7 +84,7 @@ export function PricingPlans() {
         </div>
 
         {/* Granular Plans Grid */}
-        <div className={`grid grid-cols-1 md:grid-cols-${selectedMode === 'centralized' ? '4' : '3'} gap-6 mb-24`}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-24">
           <AnimatePresence mode="wait">
             {plans.map((plan, idx) => {
               const price = billingCycle === 'yearly' ? plan.yearlyPrice : billingCycle === 'quarterly' ? plan.quarterlyPrice : plan.price

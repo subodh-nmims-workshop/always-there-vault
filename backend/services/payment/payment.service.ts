@@ -101,27 +101,26 @@ export class PaymentService {
 
     switch (planId) {
       // Centralized Plans
-      case 'nano': 
-        storageLimit = 1 * 1024 * 1024 * 1024; 
-        price = billingCycle === 'YEARLY' ? '5.00' : billingCycle === 'QUARTERLY' ? '3.00' : '1.00'; 
-        break;
-      case 'lite': storageLimit = 5 * 1024 * 1024 * 1024; price = '9.99'; break;
-      case 'essential': storageLimit = 15 * 1024 * 1024 * 1024; price = '19.99'; break;
-      case 'secure': storageLimit = 50 * 1024 * 1024 * 1024; price = '39.99'; break;
-      case 'professional': storageLimit = 100 * 1024 * 1024 * 1024; price = '79.99'; break;
-      case 'mega': storageLimit = 500 * 1024 * 1024 * 1024; price = '149.99'; break;
-      case 'enterprise': storageLimit = 1000 * 1024 * 1024 * 1024; price = '299.99'; break;
+      case 'starter': storageLimit = 500 * 1024 * 1024; price = '0.00'; break;
+      case 'nano': storageLimit = 1 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '0.36' : '0.03'; break;
+      case 'lite': storageLimit = 5 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '1.80' : '0.15'; break;
+      case 'essential': storageLimit = 15 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '5.40' : '0.45'; break;
+      case 'secure': storageLimit = 50 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '18.00' : '1.50'; break;
+      case 'professional': storageLimit = 100 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '35.88' : '2.99'; break;
+      case 'mega': storageLimit = 500 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '179.40' : '14.95'; break;
+      case 'enterprise': storageLimit = 1000 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '358.80' : '29.90'; break;
       
       // Decentralized Plans
-      case 'freedom_nano': storageLimit = 1 * 1024 * 1024 * 1024; price = '49.99'; break;
-      case 'freedom_lite': storageLimit = 5 * 1024 * 1024 * 1024; price = '99.99'; break;
-      case 'freedom_basic': storageLimit = 15 * 1024 * 1024 * 1024; price = '199.99'; break;
-      case 'freedom_secure': storageLimit = 50 * 1024 * 1024 * 1024; price = '99.99'; break;
-      case 'sovereign_pro': storageLimit = 100 * 1024 * 1024 * 1024; price = '149.99'; break;
-      case 'sovereign_mega': storageLimit = 500 * 1024 * 1024 * 1024; price = '499.99'; break;
-      case 'immortal_elite': storageLimit = 1000 * 1024 * 1024 * 1024; price = '899.99'; break;
+      case 'freedom_starter': storageLimit = 500 * 1024 * 1024; price = '0.00'; break;
+      case 'freedom_nano': storageLimit = 1 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '2.34' : '0.19'; break;
+      case 'freedom_lite': storageLimit = 5 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '11.70' : '0.97'; break;
+      case 'freedom_basic': storageLimit = 15 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '35.10' : '2.92'; break;
+      case 'freedom_secure': storageLimit = 50 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '117.00' : '9.75'; break;
+      case 'sovereign_pro': storageLimit = 100 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '234.00' : '19.50'; break;
+      case 'sovereign_mega': storageLimit = 500 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '1170.00' : '97.50'; break;
+      case 'immortal_elite': storageLimit = 1000 * 1024 * 1024 * 1024; price = billingCycle === 'YEARLY' ? '2340.00' : '195.00'; break;
       
-      default: storageLimit = 1 * 1024 * 1024 * 1024; price = '4.99';
+      default: storageLimit = 1 * 1024 * 1024 * 1024; price = '0.19';
     }
 
     const expiryDate = new Date();
