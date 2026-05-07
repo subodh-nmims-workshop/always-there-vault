@@ -71,6 +71,11 @@ export function AssetCreationForm() {
   })
   const [renameInput, setRenameInput] = useState('')
   const [selectedBeneficiaries, setSelectedBeneficiaries] = useState<string[]>([])
+  
+  // Time Capsule State for generic upload
+  const [isTimeCapsule, setIsTimeCapsule] = useState(false)
+  const [scheduledDate, setScheduledDate] = useState('')
+  const [customMessage, setCustomMessage] = useState('')
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
@@ -246,6 +251,31 @@ export function AssetCreationForm() {
         console.warn('⚠️ Key sync failed', syncErr)
       }
 
+      // 🕰️ Save Time Capsule to Backend if scheduled
+      if (isTimeCapsule && scheduledDate) {
+        try {
+          const token = localStorage.getItem('dwp_token')
+          for (const benId of selectedBeneficiaries) {
+            await fetch(`http://localhost:7001/api/time-capsules`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+              },
+              body: JSON.stringify({ 
+                beneficiaryId: benId,
+                assetId: asset.id,
+                scheduledDate: scheduledDate,
+                customMessage: customMessage
+              })
+            })
+          }
+          console.log('✅ Time Capsule scheduled on backend')
+        } catch (tcError) {
+          console.warn('⚠️ Failed to schedule time capsule:', tcError)
+        }
+      }
+
       setUploadProgress(100)
 
       setTimeout(() => {
@@ -275,6 +305,9 @@ export function AssetCreationForm() {
     setUploadProgress(0)
     setIsEncrypting(false)
     setSelectedBeneficiaries([])
+    setIsTimeCapsule(false)
+    setScheduledDate('')
+    setCustomMessage('')
   }
 
   const handleDeleteAsset = (assetId: string, assetName: string) => {
@@ -1424,6 +1457,60 @@ export function AssetCreationForm() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Time Capsule Toggle for Generic Upload */}
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-4">
+                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
+                      <div>
+                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                          <span className="text-lg">🕰️</span>
+                          Schedule Delivery (Time Capsule)
+                        </h4>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                          Deliver this on a specific date regardless of your heartbeat
+                        </p>
+                      </div>
+                      <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                        <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 24 : 0 }} />
+                      </div>
+                    </div>
+
+                    <AnimatePresence>
+                      {isTimeCapsule && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4 overflow-hidden pt-2"
+                        >
+                          <div className="space-y-2">
+                            <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">
+                              Delivery Date <span className="text-red-400">*</span>
+                            </label>
+                            <input
+                              type="date"
+                              value={scheduledDate}
+                              onChange={(e) => setScheduledDate(e.target.value)}
+                              min={new Date().toISOString().split('T')[0]}
+                              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">
+                              Personal Message (Optional)
+                            </label>
+                            <textarea
+                              value={customMessage}
+                              onChange={(e) => setCustomMessage(e.target.value)}
+                              placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
+                              rows={3}
+                              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-inner"
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   {/* Progress Bar */}
