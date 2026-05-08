@@ -69,20 +69,36 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Process Crypto Payment
-   */
   async processCryptoPayment(walletAddress: string, txHash: string, planId: string, billingCycle: string = 'YEARLY'): Promise<any> {
     this.logger.log(`⛓️ Processing Crypto Payment for ${walletAddress}, TX: ${txHash}, Cycle: ${billingCycle}`);
     
-    // In production, you would use an Etherscan API or Alchemy Webhook here
-    // For now, we trust the client-side signature/tx verification
-    const isVerified = txHash && txHash.length > 10; 
+    try {
+      const { ethers } = require('ethers');
+      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com');
+      
+      // Wait for transaction to be mined (max 30 seconds)
+      const receipt = await provider.waitForTransaction(txHash, 1, 30000);
+      if (!receipt || receipt.status !== 1) {
+          throw new Error('Transaction failed or not found on blockchain');
+      }
 
-    if (isVerified) {
+      const tx = await provider.getTransaction(txHash);
+      const companyWallet = (process.env.CRYPTO_RECEIVE_WALLET || '').toLowerCase();
+      
+      if (companyWallet && tx.to?.toLowerCase() !== companyWallet) {
+          throw new Error('Transaction sent to invalid wallet address');
+      }
+
+      // Here you can also check tx.value (amount of ETH sent) matches the plan price
+      // const requiredAmount = ethers.parseEther('0.01');
+      // if (tx.value < requiredAmount) throw new Error('Insufficient payment amount');
+
+      this.logger.log(`✅ Crypto Payment Verified on Blockchain: ${txHash}`);
       return await this.activatePremium(walletAddress, 'CRYPTO', txHash, planId, billingCycle);
+    } catch (error) {
+      this.logger.error(`❌ Crypto Verification Failed: ${error.message}`);
+      throw new Error(`Crypto Verification Failed: ${error.message}`);
     }
-    throw new Error('Crypto Verification Failed');
   }
 
   /**

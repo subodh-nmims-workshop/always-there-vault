@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useSendTransaction } from 'wagmi'
+import { parseEther } from 'viem'
 import { 
     Globe, 
     Shield, 
@@ -105,20 +107,36 @@ export function SettingsDashboard() {
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
   }, [appState])
 
-  const handleUpgrade = async (method: 'PAYPAL' | 'CRYPTO') => {
+  const { sendTransactionAsync } = useSendTransaction()
+
+  const handleUpgrade = async (method: 'PAYPAL' | 'CRYPTO', referenceFromModal?: string) => {
     setIsProcessingPayment(true)
     toast.info(`Processing ${method} payment...`)
     
     try {
-        // Simulate API call to backend
+        let referenceStr = '';
+        if (method === 'CRYPTO') {
+            const companyWallet = process.env.NEXT_PUBLIC_CRYPTO_RECEIVE_WALLET || '0xFF38De9C8f7B6A4cf810EAcE53D3E8EA9Dac1178';
+            const txHash = await sendTransactionAsync({
+                to: companyWallet as `0x${string}`,
+                value: parseEther('0.01'), // $9 equivalent or Professional plan cost
+            });
+            toast.info(`Transaction submitted: ${txHash}. Verifying on blockchain...`);
+            referenceStr = txHash;
+        } else {
+            // PAYPAL
+            if (!referenceFromModal) throw new Error("PayPal payment was not completed.");
+            referenceStr = referenceFromModal;
+        }
+
         const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/payment/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 walletAddress,
                 method,
-                planId: 'premium',
-                reference: method === 'PAYPAL' ? 'PAY-67890' : '0xabc123...'
+                planId: 'professional',
+                reference: referenceStr
             })
         })
 
@@ -130,10 +148,11 @@ export function SettingsDashboard() {
             setAppState(newState)
             window.location.reload()
         } else {
-            throw new Error("Payment failed")
+            throw new Error("Payment verification failed on backend")
         }
-    } catch (e) {
-        toast.error("Payment failed. Please try again.")
+    } catch (e: any) {
+        console.error(e);
+        toast.error(`Payment failed: ${e.message || 'Please try again.'}`)
     } finally {
         setIsProcessingPayment(false)
     }

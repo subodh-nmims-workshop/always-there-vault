@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Crown, Shield, Zap, CheckCircle2, ArrowRight, Wallet, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 
 interface UpgradeModalProps {
   isOpen: boolean
   onClose: () => void
-  onUpgrade: (method: 'PAYPAL' | 'CRYPTO') => void
+  onUpgrade: (method: 'PAYPAL' | 'CRYPTO', reference?: string) => void
   title?: string
   description?: string
 }
@@ -113,13 +114,43 @@ export function UpgradeModal({
               </div>
 
               <div className="flex flex-col gap-3">
-                <Button 
-                  onClick={handlePayment}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 group transition-all duration-300 transform hover:scale-[1.02]"
-                >
-                  Confirm & Pay $49.99
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                {method === 'PAYPAL' ? (
+                  <PayPalScriptProvider options={{ 
+                      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test",
+                      currency: "USD",
+                      intent: "capture"
+                  }}>
+                      <PayPalButtons
+                          style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                          createOrder={(data, actions) => {
+                              return actions.order.create({
+                                  purchase_units: [{
+                                      description: "AlwaysThere Protocol - Premium Vault",
+                                      amount: { value: "49.99" }
+                                  }]
+                              });
+                          }}
+                          onApprove={async (data, actions) => {
+                              if (!actions.order) return;
+                              const details = await actions.order.capture();
+                              onUpgrade('PAYPAL', data.orderID);
+                          }}
+                          onError={(err) => {
+                              console.error("PayPal Error:", err);
+                              toast.error("PayPal transaction failed or was cancelled.");
+                          }}
+                      />
+                  </PayPalScriptProvider>
+                ) : (
+                  <Button 
+                    onClick={handlePayment}
+                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 group transition-all duration-300 transform hover:scale-[1.02]"
+                  >
+                    Confirm & Pay $49.99 (Crypto)
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                )}
+                
                 <button 
                   onClick={onClose}
                   className="w-full h-12 text-slate-400 hover:text-slate-200 text-sm font-medium transition-colors"

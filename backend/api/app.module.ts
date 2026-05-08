@@ -18,7 +18,6 @@ import { BlockchainModule } from '../services/blockchain/blockchain.module';
 import { UsersModule } from '../services/users/users.module';
 import { ReleaseModule } from '../services/release/release.module';
 import { SubscriptionModule } from '../services/subscription/subscription.module';
-import { StripeModule } from '../services/stripe/stripe.module';
 import { EmailModule } from '../services/email/email.module';
 import { CacheModule } from '../services/cache/cache.module';
 import { LoggerModule } from '../services/logger/logger.module';
@@ -60,7 +59,6 @@ import { TimeCapsulesModule } from '../services/time-capsules/time-capsules.modu
     BlockchainModule,
     ReleaseModule,
     SubscriptionModule,
-    StripeModule,
     EmailModule,
     CryptoModule,
     AuditModule,
