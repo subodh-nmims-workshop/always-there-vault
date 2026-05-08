@@ -19,7 +19,7 @@ COPY . .
 RUN npm run build
 
 # Remove development dependencies to keep the image small
-RUN npm prune --production
+RUN npm prune --production --legacy-peer-deps
 
 # ─── STAGE 3: Production Runner ──────────────────────────────────────────────────
 FROM node:20-alpine AS runner
