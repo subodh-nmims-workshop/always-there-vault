@@ -25,7 +25,7 @@
     "ethers": "^6.16.0",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.290.0",
-    "next": "^16.1.6",
+    "next": "^9.3.3",
     "next-themes": "^0.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -39,7 +39,7 @@
     "typescript": "^5.0.0",
     "viem": "^2.48.4",
     "wagmi": "^2.19.5",
-    "web3.storage": "^4.5.5"
+    "web3.storage": "^3.3.4"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
