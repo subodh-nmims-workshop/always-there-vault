@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { TimeCapsulesService } from './time-capsules.service';
 import { TimeCapsulesController } from './time-capsules.controller';
 import { TimeCapsuleCronService } from './time-capsule.cron';
-import { DatabaseModule } from '../../src/db/database.module';
+import { DrizzleModule } from '../../src/db/drizzle.module';
 import { EmailModule } from '../email/email.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [DatabaseModule, EmailModule, AuthModule],
+  imports: [DrizzleModule, EmailModule, AuthModule],
   controllers: [TimeCapsulesController],
   providers: [TimeCapsulesService, TimeCapsuleCronService],
 })

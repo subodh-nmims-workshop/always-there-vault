@@ -28,7 +28,7 @@ import { AuditModule } from '../services/audit/audit.module';
 import { PaymentModule } from '../services/payment/payment.module';
 import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
-import { TimeCapsulesModule } from './services/time-capsules/time-capsules.module';
+import { TimeCapsulesModule } from '../services/time-capsules/time-capsules.module';
 
 @Module({
   imports: [

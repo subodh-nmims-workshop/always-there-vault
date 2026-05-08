@@ -4,7 +4,7 @@ import { TimeCapsulesService } from './time-capsules.service';
 import { EmailService } from '../email/email.service';
 import { TokenService } from '../auth/token.service';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from '../../src/db/schema';
+import * as schema from '../../src/db/schema/relations';
 import { Inject } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 
