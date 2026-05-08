@@ -7,7 +7,7 @@ RUN apk add --no-cache libc6-compat
 
 COPY package*.json ./
 # Install ALL dependencies (including devDeps) so we can build
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # ─── STAGE 2: Builder ─────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
