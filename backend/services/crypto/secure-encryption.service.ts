@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { KMS } from 'aws-sdk'; // Or Google KMS, Azure KeyVault
+import * as AWS from 'aws-sdk';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { eq, and, desc, between } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
@@ -31,10 +31,10 @@ export class SecureEncryptionService {
     private readonly ITERATIONS = 100000; // PBKDF2 iterations
     private readonly logger = new Logger(SecureEncryptionService.name);
     
-    private kms: KMS;
+    private kms: AWS.KMS;
 
     constructor(@Inject('DRIZZLE_DB') private db: any) {
-        this.kms = new KMS({
+        this.kms = new AWS.KMS({
             region: process.env.AWS_REGION || 'us-east-1'
         });
     }
