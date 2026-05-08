@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class TimeCapsulesService {
   constructor(
-    @Inject('DB_CONNECTION')
+    @Inject('DRIZZLE_DB')
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 

@@ -16,7 +16,7 @@ export class TimeCapsuleCronService {
     private readonly timeCapsulesService: TimeCapsulesService,
     private readonly emailService: EmailService,
     private readonly tokenService: TokenService,
-    @Inject('DB_CONNECTION')
+    @Inject('DRIZZLE_DB')
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
