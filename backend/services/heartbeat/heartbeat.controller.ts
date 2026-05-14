@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { HeartbeatService } from './heartbeat.service';
+import { UsersService } from '../users/users.service';
 import { HeartbeatCronService } from './heartbeat.cron';
 import { RecordHeartbeatDto, HeartbeatStatusDto, HeartbeatSettingsDto } from './dto/heartbeat.dto';
 import { HeartbeatLog } from './schemas/heartbeat.schema';
@@ -22,6 +23,7 @@ import { TokenService } from '../auth/token.service';
 export class HeartbeatController {
   constructor(
     private readonly heartbeatService: HeartbeatService,
+    private readonly usersService: UsersService,
     private readonly heartbeatCronService: HeartbeatCronService,
     private readonly tokenService: TokenService,
   ) { }
@@ -100,5 +102,14 @@ export class HeartbeatController {
   async sendTestEmail(@Req() req: any): Promise<any> {
     const walletAddress = req.user.walletAddress;
     return this.heartbeatCronService.sendTestHeartbeatEmail(walletAddress);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('register-push')
+  @ApiOperation({ summary: 'Register Expo push token for mobile notifications' })
+  async registerPushToken(@Req() req: any, @Body('token') token: string): Promise<any> {
+    const walletAddress = req.user.walletAddress;
+    return this.usersService.updatePushToken(walletAddress, token);
   }
 }

@@ -555,7 +555,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-black text-white mb-4">The Crypto Dead Man Switch</h3>
               <p className="text-slate-400 leading-relaxed text-sm">
-                In the rapidly evolving world of Web3, securing your digital assets is paramount. But what happens to your cryptocurrency and seed phrases if you lose access? <strong>AlwaysThere Protocol</strong> solves the multi-billion dollar problem of lost digital wealth through an automated, trustless, and immutable crypto dead man switch. Every year, massive amounts of Bitcoin are permanently lost because physical wills fail to transfer self-custodial wealth securely.
+                In the rapidly evolving world of Web3, securing your digital assets is paramount. But what happens to your cryptocurrency and seed phrases if you lose access? <strong>AlwaysThere Protocol</strong> solves the multi-billion dollar problem of lost digital wealth through an automated, trustless, and immutable crypto dead man switch. Every year, massive amounts of Bitcoin are permanently lost because physical wills fail to transfer self-custodial wealth securely. Our <strong>Web3 succession planning</strong> tools ensure that your <strong>decentralized digital assets recovery</strong> is handled by code, not intermediaries.
               </p>
             </div>
 
@@ -565,14 +565,14 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-black text-white mb-4">Zero-Knowledge Digital Will</h3>
               <p className="text-slate-400 leading-relaxed text-sm">
-                Built on advanced smart contracts and Zero-Knowledge encryption, our decentralized inheritance protocol ensures your private keys and digital estate are never exposed to the public or even the developers. Encryption happens entirely on your local device using AES-256-GCM. Whether you hold assets on Ethereum, Polygon, or Bitcoin, your access instructions are secured eternally without relying on centralized intermediaries.
+                Built on advanced smart contracts and Zero-Knowledge encryption, our decentralized inheritance protocol ensures your private keys and digital estate are never exposed to the public or even the developers. Encryption happens entirely on your local device using AES-256-GCM. Whether you need to <strong>inherit Bitcoin securely</strong> or manage a complex <strong>blockchain estate</strong> across Ethereum and Polygon, your access instructions are secured eternally. AlwaysThere is the definitive solution for <strong>crypto legacy management</strong> in the 21st century.
               </p>
             </div>
           </div>
           
           <div className="mt-16 text-center pt-8 border-t border-white/5">
             <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">
-              Keywords: Crypto Inheritance, Digital Will, Dead Man Switch Crypto, Decentralized Estate Planning, Secure Seed Phrase Storage.
+              Keywords: Crypto Inheritance, Digital Will, Dead Man Switch Crypto, Decentralized Estate Planning, Secure Seed Phrase Storage, Web3 Succession, Inherit Bitcoin Securely, Blockchain Wills.
             </p>
           </div>
         </div>

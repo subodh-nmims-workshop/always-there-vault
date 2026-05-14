@@ -28,6 +28,7 @@ import { PaymentModule } from '../services/payment/payment.module';
 import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
 import { TimeCapsulesModule } from '../services/time-capsules/time-capsules.module';
+import { NotificationsModule } from '../services/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { TimeCapsulesModule } from '../services/time-capsules/time-capsules.modu
     AuditModule,
     PaymentModule,
     TimeCapsulesModule,
+    NotificationsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [],

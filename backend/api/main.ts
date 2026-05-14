@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -9,8 +10,15 @@ const hpp = require('hpp');
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
+  // Initialize Sentry before everything else
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 1.0,
+  });
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: new LoggerService(null as any),
+    logger: new LoggerService(),
   });
 
   // Trust proxy for accurate rate limiting (essential for Ngrok/Cloudflare)

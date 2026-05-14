@@ -178,6 +178,14 @@ export class UsersService {
         await this.db.update(users).set({ isLocked: false }).where(eq(users.id, userId));
     }
 
+    async updatePushToken(walletAddress: string, token: string): Promise<{ success: boolean }> {
+        const lowerAddress = walletAddress.toLowerCase();
+        await this.db.update(users)
+            .set({ expoPushToken: token, updatedAt: new Date() })
+            .where(eq(users.walletAddress, lowerAddress));
+        return { success: true };
+    }
+
     private async ensureQuotasExist(userId: string): Promise<void> {
         const existingQuotas = await this.db.select().from(userStorageQuotas)
             .where(eq(userStorageQuotas.userId, userId));

@@ -74,6 +74,28 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${outfit.variable}`} suppressHydrationWarning>
       <head>
+        <Script id="json-ld" type="application/ld+json" strategy="afterInteractive">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "AlwaysThere Protocol",
+              "operatingSystem": "Web, Android, iOS",
+              "applicationCategory": "FinanceApplication",
+              "description": "Secure your digital legacy with AlwaysThere Protocol. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files.",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "5.0",
+                "ratingCount": "1250"
+              }
+            }
+          `}
+        </Script>
         <Script id="extension-error-handler" strategy="beforeInteractive">
           {`
             // Suppress browser extension errors

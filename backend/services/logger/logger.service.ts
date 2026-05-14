@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -23,10 +24,10 @@ export class LoggerService implements NestLoggerService {
   private environment: string;
 
   constructor(private configService?: ConfigService) {
-    this.sentryDsn = this.configService?.get<string>('SENTRY_DSN') || '';
-    this.environment = this.configService?.get<string>('NODE_ENV') || 'development';
+    this.sentryDsn = this.configService?.get<string>('SENTRY_DSN') || process.env.SENTRY_DSN || '';
+    this.environment = this.configService?.get<string>('NODE_ENV') || process.env.NODE_ENV || 'development';
 
-    if (!this.sentryDsn && this.configService) {
+    if (!this.sentryDsn && this.environment === 'production') {
       console.warn('⚠️  SENTRY_DSN not configured. Error tracking will be disabled.');
     }
   }
@@ -114,9 +115,16 @@ export class LoggerService implements NestLoggerService {
     }
 
     try {
-      // In production, integrate with Sentry SDK
-      // For now, just log that it would be sent
-      console.log('📊 Would send to Sentry:', { message, context, trace });
+      Sentry.withScope((scope) => {
+        if (context) scope.setTag('context', context);
+        if (trace) scope.setExtra('trace', trace);
+        
+        if (trace || message.toLowerCase().includes('error')) {
+          Sentry.captureException(new Error(message));
+        } else {
+          Sentry.captureMessage(message);
+        }
+      });
     } catch (error) {
       console.error('Failed to send to Sentry:', error);
     }

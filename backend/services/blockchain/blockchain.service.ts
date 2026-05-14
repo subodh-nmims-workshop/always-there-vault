@@ -14,8 +14,8 @@ export class BlockchainService {
     this.contractAddress = this.configService.get<string>('CONTRACT_ADDRESS') || '0x0000000000000000000000000000000000000000';
     this.networkName = this.configService.get<string>('NETWORK_NAME') || 'polygon-mumbai';
 
-    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL');
-    const privateKey = this.configService.get<string>('KEEPER_PRIVATE_KEY');
+    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL') || this.configService.get<string>('POLYGON_RPC_URL');
+    const privateKey = this.configService.get<string>('ADMIN_PRIVATE_KEY') || this.configService.get<string>('PRIVATE_KEY');
 
     if (rpcUrl && privateKey) {
       this.provider = new ethers.JsonRpcProvider(rpcUrl);
@@ -68,13 +68,13 @@ export class BlockchainService {
 
     try {
         const abi = [
-            "function checkAndTrigger(address owner) external",
-            "function wills(address owner) public view returns (uint256, uint256, uint256, bool, bool)"
+            "function triggerSystem(address user) external",
+            "function users(address owner) public view returns (uint256, uint256, uint256, uint256, bool, bool)"
         ];
         const contract = new ethers.Contract(this.contractAddress, abi, this.signer);
         
         console.log(`📡 Triggering smart contract for wallet: ${walletAddress}...`);
-        const tx = await contract.checkAndTrigger(walletAddress);
+        const tx = await contract.triggerSystem(walletAddress);
         await tx.wait();
         
         console.log(`✅ Contract trigger successful! TX: ${tx.hash}`);

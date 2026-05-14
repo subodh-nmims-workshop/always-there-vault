@@ -6,6 +6,7 @@ import { BlockchainService } from '../blockchain/blockchain.service';
 import { EmailService } from '../email/email.service';
 import { BeneficiariesService } from '../beneficiaries/beneficiaries.service';
 import { TokenService } from '../auth/token.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { eq, sql } from 'drizzle-orm';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 
@@ -126,6 +127,7 @@ export class HeartbeatCronService {
         private readonly emailService: EmailService,
         private readonly beneficiariesService: BeneficiariesService,
         private readonly tokenService: TokenService,
+        private readonly notificationsService: NotificationsService,
     ) { }
 
     @Cron(CronExpression.EVERY_MINUTE)
@@ -199,6 +201,11 @@ export class HeartbeatCronService {
                             });
                         } else {
                             this.logger.warn(`⚠️ Cannot send alert — user ${user.walletAddress} has no email in DB`);
+                        }
+
+                        // Send Push Notification if token exists
+                        if (user.expoPushToken) {
+                            await this.notificationsService.sendHeartbeatReminder(user.expoPushToken, status.daysUntilDue);
                         }
 
                         // Also notify nominees on final warning stage

@@ -9,13 +9,15 @@ import { BlockchainModule } from '../blockchain/blockchain.module';
 import { EmailModule } from '../email/email.module';
 import { BeneficiariesModule } from '../beneficiaries/beneficiaries.module';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     UsersModule,
     BlockchainModule,
     EmailModule,
     BeneficiariesModule,
-    AuthModule
+    AuthModule,
+    NotificationsModule
   ],
   controllers: [HeartbeatController],
   providers: [HeartbeatService, HeartbeatCronService],
