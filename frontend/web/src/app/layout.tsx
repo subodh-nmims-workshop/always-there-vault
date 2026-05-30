@@ -58,11 +58,17 @@ export const viewport = {
   initialScale: 1,
 }
 
-import { Outfit } from 'next/font/google'
+import { Outfit, Plus_Jakarta_Sans } from 'next/font/google'
 
 const outfit = Outfit({ 
   subsets: ['latin'],
   variable: '--font-outfit',
+  display: 'swap',
+})
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
   display: 'swap',
 })
 
@@ -72,7 +78,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`dark ${outfit.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${outfit.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning>
       <head>
         <Script id="json-ld" type="application/ld+json" strategy="afterInteractive">
           {`
@@ -117,9 +123,9 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${outfit.className} antialiased bg-slate-950 text-slate-50`} suppressHydrationWarning>
+      <body className={`${outfit.className} antialiased bg-background text-foreground transition-colors duration-300`} suppressHydrationWarning>
         <Providers>
-          <div className="min-h-screen bg-slate-950 dark:bg-slate-950">
+          <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             {children}
           </div>
           <Toaster 

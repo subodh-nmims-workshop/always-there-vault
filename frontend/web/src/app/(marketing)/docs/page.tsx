@@ -26,15 +26,15 @@ import { SharedFooter } from '@/components/shared-footer'
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 font-sans selection:bg-blue-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#030712] text-slate-800 dark:text-slate-200 font-sans selection:bg-blue-500/30 overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-[#030712]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between">
         <Link href="/">
           <div className="flex items-center gap-2 group cursor-pointer">
             <div className="p-2 bg-blue-600 rounded-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase text-white">AlwaysThere</span>
+            <span className="text-xl font-black tracking-tighter uppercase text-slate-900 dark:text-white">AlwaysThere</span>
           </div>
         </Link>
         <div className="hidden md:flex items-center gap-8">
@@ -45,14 +45,14 @@ export default function DocsPage() {
             </span>
             Partners & Investors
           </Link>
-          <Link href="/#how-it-works" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">How it works</Link>
-          <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Security</Link>
-          <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Tech Guide</Link>
-          <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-400 hover:text-white transition-colors">Pricing</Link>
+          <Link href="/#how-it-works" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">How it works</Link>
+          <Link href="/#security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Security</Link>
+          <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Tech Guide</Link>
+          <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</Link>
           <Link href="/donate" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#2b52ff]/10 border border-[#2b52ff]/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-[#2b52ff]/20 hover:text-white transition-all">Support Us</Link>
         </div>
         <Link href="/">
-          <button className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Go to App</button>
+          <button className="px-6 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Go to App</button>
         </Link>
       </nav>
 
@@ -62,8 +62,8 @@ export default function DocsPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4">
             Technical Specification v2.4
           </motion.div>
-          <h1 className="text-5xl font-black text-white mb-6 uppercase tracking-tight">The <span className="text-blue-500">Infrastructure</span> of Legacy</h1>
-          <p className="text-slate-400 text-lg leading-relaxed font-medium">
+          <h1 className="text-5xl font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tight">The <span className="text-blue-500">Infrastructure</span> of Legacy</h1>
+          <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
             Deep-dive into the security, architecture, and logic that powers the AlwaysThere Protocol.
             Designed for durability, anonymity, and zero-trust execution.
           </p>
@@ -78,15 +78,15 @@ export default function DocsPage() {
               <div className="p-3 bg-blue-600/10 rounded-2xl border border-blue-500/20 text-blue-500 shadow-2xl shadow-blue-600/20">
                 <Cpu className="w-6 h-6" />
               </div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tight">01. Hybrid Storage Engine</h2>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">01. Hybrid Storage Engine</h2>
             </div>
-            <div className="bg-white/[0.02] rounded-[2.5rem] p-10 border border-white/5 space-y-8">
-              <p className="text-slate-400 leading-relaxed font-medium text-lg">
+            <div className="bg-slate-50 dark:bg-white/[0.02] rounded-[2.5rem] p-10 border border-slate-200 dark:border-white/5 space-y-8">
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-lg">
                 AlwaysThere utilizes a <span className="text-white font-bold italic">Dual-Layer Storage Architecture</span> to balance instant accessibility with eternal persistence.
               </p>
 
               <div className="space-y-6">
-                <div className="flex gap-6 p-6 bg-white/5 rounded-2xl border border-white/5">
+                <div className="flex gap-6 p-6 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
                   <div className="p-4 bg-blue-600/20 rounded-xl flex items-center justify-center shrink-0">
                     <Layers className="text-blue-400 w-8 h-8" />
                   </div>
@@ -115,7 +115,7 @@ export default function DocsPage() {
               <div className="p-3 bg-green-600/10 rounded-2xl border border-green-500/20 text-green-500">
                 <Workflow className="w-6 h-6" />
               </div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tight">02. Encryption Workflow</h2>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">02. Encryption Workflow</h2>
             </div>
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -124,8 +124,8 @@ export default function DocsPage() {
                 <DocFeatureCard title="Quantum Ready" desc="Using AES-256-GCM with authenticated tags for integrity verification." />
               </div>
 
-              <div className="p-8 bg-white/5 border border-white/10 rounded-3xl">
-                <h4 className="font-black text-white mb-4 uppercase text-xs tracking-[0.3em]">The Data Journey:</h4>
+              <div className="p-8 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl">
+                <h4 className="font-black text-slate-900 dark:text-white mb-4 uppercase text-xs tracking-[0.3em]">The Data Journey:</h4>
                 <div className="space-y-4">
                   <JourneyStep step="A" label="File Selection" desc="User selects sensitive document in the dashboard." />
                   <JourneyStep step="B" label="Key Derivation" desc="Wallet signs a message to derive a 256-bit unique symmetric key." />
@@ -142,9 +142,9 @@ export default function DocsPage() {
               <div className="p-3 bg-red-600/10 rounded-2xl border border-red-500/20 text-red-500 shadow-2xl shadow-red-600/10">
                 <Timer className="w-6 h-6" />
               </div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tight">03. The Heartbeat Logic</h2>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">03. The Heartbeat Logic</h2>
             </div>
-            <div className="bg-[#0f172a] rounded-[3rem] p-12 border border-blue-500/20">
+            <div className="bg-slate-900 dark:bg-[#0f172a] rounded-[3rem] p-12 border border-blue-500/20">
               <p className="text-slate-300 font-bold mb-10 text-xl italic">"Autonomous execution is the ultimate trust."</p>
               <div className="space-y-10">
                 <LogicBlock title="Threshold Trigger" desc="The user defines a 'Survival Window' (e.g. 90 days). If no heartbeat signature is logged within this window, the protocol enters 'Grace Mode'." />
@@ -158,7 +158,7 @@ export default function DocsPage() {
           <section id="privacy" className="scroll-mt-24">
             <div className="text-center p-16 bg-white/5 rounded-[3rem] border border-white/10">
               <Shield className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-              <h3 className="text-2xl font-black text-white uppercase mb-4">PRIVACY BY DESIGN</h3>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase mb-4">PRIVACY BY DESIGN</h3>
               <p className="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed">
                 We do not collect names, phone numbers, or emails by default. Your identity is your Wallet Address.
                 We maintain zero logs of your file contents. Your legacy is yours alone.
@@ -176,9 +176,9 @@ export default function DocsPage() {
 
 function DocFeatureCard({ title, desc }: any) {
   return (
-    <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
-      <h4 className="font-black text-white uppercase text-xs mb-2 tracking-widest">{title}</h4>
-      <p className="text-xs text-slate-500 leading-relaxed font-medium">{desc}</p>
+    <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
+      <h4 className="font-black text-slate-900 dark:text-white uppercase text-xs mb-2 tracking-widest">{title}</h4>
+      <p className="text-xs text-slate-600 dark:text-slate-500 leading-relaxed font-medium">{desc}</p>
     </div>
   )
 }
@@ -188,7 +188,7 @@ function JourneyStep({ step, label, desc }: any) {
     <div className="flex items-center gap-4">
       <span className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-[10px] font-black text-white">{step}</span>
       <div className="flex flex-col">
-        <span className="text-[10px] font-black text-white uppercase tracking-widest">{label}</span>
+        <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest">{label}</span>
         <span className="text-[10px] text-slate-500 uppercase tracking-tighter">{desc}</span>
       </div>
     </div>
@@ -198,8 +198,8 @@ function JourneyStep({ step, label, desc }: any) {
 function LogicBlock({ title, desc }: any) {
   return (
     <div className="border-l-2 border-blue-500 pl-8 space-y-2">
-      <h4 className="font-black text-white uppercase tracking-tight">{title}</h4>
-      <p className="text-sm text-slate-400 leading-relaxed font-medium">{desc}</p>
+      <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-tight">{title}</h4>
+      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{desc}</p>
     </div>
   )
 }

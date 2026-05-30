@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    /* Dark Professional Theme - Inspired by GitHub, Vercel, Linear */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 210 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 63% 31%;
+    /* Clean Light Professional Theme */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 210 100% 50%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
     
     /* Custom Colors */
@@ -36,6 +36,7 @@
   }
 
   .dark {
+    /* Dark Professional Theme - Inspired by GitHub, Vercel, Linear */
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
     --card: 222 47% 11%;
@@ -518,9 +519,9 @@ input:focus, textarea:focus, select:focus {
 
 /* Modern Card Styles with Depth */
 .premium-card {
-  @apply bg-slate-900/50 dark:bg-slate-900/50 rounded-2xl shadow-xl border border-slate-800/50 dark:border-slate-800/50;
+  @apply bg-white dark:bg-slate-900/50 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800/50;
   @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-1;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
   backdrop-filter: blur(20px);
 }
 
@@ -536,8 +537,8 @@ input:focus, textarea:focus, select:focus {
 
 /* Glass Morphism Cards */
 .glass-card {
-  @apply backdrop-blur-xl bg-slate-900/40 dark:bg-slate-900/40;
-  @apply border border-slate-800/50 dark:border-slate-700/50;
+  @apply backdrop-blur-xl bg-white/40 dark:bg-slate-900/40;
+  @apply border border-slate-200/50 dark:border-slate-700/50;
   @apply rounded-2xl shadow-2xl;
 }
 
@@ -696,6 +697,7 @@ input:focus, textarea:focus, select:focus {
 .input-premium {
   @apply w-full px-4 py-3 rounded-xl;
   @apply bg-white dark:bg-slate-900;
+  @apply text-slate-900 dark:text-white;
   @apply border-2 border-slate-200 dark:border-slate-700;
   @apply transition-all duration-300;
   @apply focus:outline-none focus:ring-4 focus:ring-purple-500/20;

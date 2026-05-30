@@ -168,7 +168,7 @@ function CryptoPaymentContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] flex flex-col items-center justify-center p-4 font-sans selection:bg-purple-500/30">
+    <div className="min-h-screen bg-white dark:bg-[#0a0c10] flex flex-col items-center justify-center p-4 font-sans selection:bg-purple-500/30">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

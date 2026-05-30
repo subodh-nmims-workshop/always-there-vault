@@ -135,7 +135,7 @@ function BeneficiaryAssetsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080a0f] text-slate-100 font-sans selection:bg-[#1152d4]/30 flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#080a0f] text-slate-800 dark:text-slate-100 font-sans selection:bg-[#1152d4]/30 flex flex-col relative overflow-x-hidden">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#1152d4]/10 blur-[150px] rounded-full"></div>
@@ -143,7 +143,7 @@ function BeneficiaryAssetsContent() {
       </div>
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-[#080a0f]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#080a0f]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
             <Shield className="w-8 h-8" />
@@ -384,7 +384,7 @@ function BeneficiaryAssetsContent() {
 
 export default function BeneficiaryAssetsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#080a0f] flex flex-col items-center justify-center"><RefreshCw className="w-10 h-10 text-blue-500 animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-white dark:bg-[#080a0f] flex flex-col items-center justify-center"><RefreshCw className="w-10 h-10 text-blue-500 animate-spin" /></div>}>
       <BeneficiaryAssetsContent />
     </Suspense>
   )

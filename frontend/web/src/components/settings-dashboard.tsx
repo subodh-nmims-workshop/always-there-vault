@@ -175,7 +175,7 @@ export function SettingsDashboard() {
     <div className="max-w-5xl mx-auto space-y-12 p-4 pb-24">
       {/* -- PAGE HEADER -- */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-black text-white tracking-tighter flex items-center gap-3">
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter flex items-center gap-3">
             <Settings className="size-8 text-blue-500" />
             PROTOCOL SETTINGS
         </h1>
@@ -184,24 +184,24 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: ACCOUNT -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <User className="size-5 text-slate-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Account</h2>
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <User className="size-5 text-slate-500 dark:text-slate-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Account</h2>
         </div>
         
-        <Card className="bg-slate-900/50 border-slate-800 shadow-xl overflow-hidden">
+        <Card className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
             <CardContent className="p-6">
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 w-full">
                     <div className="flex items-center gap-6">
                         <div className="size-16 shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-500 p-0.5">
-                            <div className="size-full bg-slate-950 rounded-[14px] flex items-center justify-center text-blue-400 font-black">
+                            <div className="size-full bg-slate-50 dark:bg-slate-950 rounded-[14px] flex items-center justify-center text-blue-600 dark:text-blue-400 font-black">
                                 {walletAddress.substring(2, 4).toUpperCase()}
                             </div>
                         </div>
                         <div className="space-y-1 text-left">
                             <div className="flex items-center justify-start gap-2">
-                                <span className="text-white font-mono font-bold break-all">{walletAddress}</span>
-                                <button onClick={copyToClipboard} className="text-slate-500 hover:text-white transition-colors shrink-0">
+                                <span className="text-slate-800 dark:text-white font-mono font-bold break-all">{walletAddress}</span>
+                                <button onClick={copyToClipboard} className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white transition-colors shrink-0">
                                     {copied ? <Check className="size-4 text-green-500" /> : <Copy className="size-4" />}
                                 </button>
                             </div>
@@ -216,10 +216,10 @@ export function SettingsDashboard() {
                     </div>
                     
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 mt-4 xl:mt-0 w-full xl:w-auto">
-                        <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-xs font-bold gap-2 whitespace-nowrap flex-1 sm:flex-none">
+                        <Button variant="outline" className="bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold gap-2 whitespace-nowrap flex-1 sm:flex-none">
                             <Key className="size-3" /> Export Key
                         </Button>
-                        <Button variant="outline" className="bg-red-500/10 border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-bold gap-2 whitespace-nowrap flex-1 sm:flex-none">
+                        <Button variant="outline" className="bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold gap-2 whitespace-nowrap flex-1 sm:flex-none">
                             <LogOut className="size-3" /> Disconnect
                         </Button>
                         {!isPremium && (
@@ -238,18 +238,18 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: SUBSCRIPTION -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
             <Database className="size-5 text-indigo-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Subscription Status</h2>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Subscription Status</h2>
         </div>
         
-        <Card className="bg-slate-900/40 border-slate-800">
+        <Card className="bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800">
             <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                            <span className="text-lg font-black text-white">{quotaGB.toFixed(2)} GB Total Quota</span>
-                            <span className={`px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest ${isPremium ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : isTrial ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-slate-500/10 border-slate-500/20 text-slate-400'}`}>
+                            <span className="text-lg font-black text-slate-900 dark:text-white">{quotaGB.toFixed(2)} GB Total Quota</span>
+                            <span className={`px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest ${isPremium ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : isTrial ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-slate-100 dark:bg-slate-500/10 border-slate-200 dark:border-slate-500/20 text-slate-600 dark:text-slate-400'}`}>
                                 {isPremium ? 'Premium Active' : isTrial ? 'Trial Active' : 'Free Tier'}
                             </span>
                         </div>
@@ -260,11 +260,11 @@ export function SettingsDashboard() {
                         </p>
                     </div>
                     <div className="text-right">
-                        <div className="text-xl font-black text-white">{usagePercent.toFixed(2)}%</div>
-                        <div className="text-[10px] font-bold text-slate-600 uppercase">Usage</div>
+                        <div className="text-xl font-black text-slate-900 dark:text-white">{usagePercent.toFixed(2)}%</div>
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-slate-600 uppercase">Usage</div>
                     </div>
                 </div>
-                <div className="mt-4 w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className="mt-4 w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div 
                         className={`h-full shadow-[0_0_10px_rgba(59,130,246,0.5)] ${usagePercent > 90 ? 'bg-red-500' : usagePercent > 75 ? 'bg-orange-500' : 'bg-blue-500'}`} 
                         style={{ width: `${Math.max(usagePercent, 0.5)}%` }}
@@ -279,18 +279,18 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: AlwaysThere CORE -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-4">
           <Shield className="w-5 h-5 text-[#2b52ff]" />
           <div>
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">AlwaysThere Core</h2>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">AlwaysThere Core</h2>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
+            <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10 backdrop-blur-xl">
                 <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Clock className="size-4 text-blue-400" />
+                    <CardTitle className="text-base flex items-center gap-2 text-slate-900 dark:text-white">
+                        <Clock className="size-4 text-blue-500 dark:text-blue-400" />
                         Heartbeat Parameters
                     </CardTitle>
                 </CardHeader>
@@ -298,48 +298,48 @@ export function SettingsDashboard() {
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Heartbeat Interval</label>
-                                <span className="text-blue-400 font-mono font-bold text-sm">{appState.settings.heartbeatInterval} Days</span>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Heartbeat Interval</label>
+                                <span className="text-blue-600 dark:text-blue-400 font-mono font-bold text-sm">{appState.settings.heartbeatInterval} Days</span>
                             </div>
                             <input 
                                 type="range" min="1" max="90" 
                                 value={appState.settings.heartbeatInterval}
                                 onChange={(e) => updateSetting('heartbeatInterval', parseInt(e.target.value))}
-                                className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
+                                className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
                             />
                         </div>
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Grace Period</label>
-                                <span className="text-orange-400 font-mono font-bold text-sm">{appState.settings.gracePeriod} Days</span>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Grace Period</label>
+                                <span className="text-orange-600 dark:text-orange-400 font-mono font-bold text-sm">{appState.settings.gracePeriod} Days</span>
                             </div>
                             <input 
                                 type="range" min="1" max="60" 
                                 value={appState.settings.gracePeriod}
                                 onChange={(e) => updateSetting('gracePeriod', parseInt(e.target.value))}
-                                className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-orange-500"
+                                className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-orange-500"
                             />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-600/10 to-indigo-600/10 border-blue-500/20 shadow-lg relative overflow-hidden">
+            <Card className="bg-gradient-to-br from-blue-600/5 to-indigo-600/5 dark:from-blue-600/10 dark:to-indigo-600/10 border-blue-200 dark:border-blue-500/20 shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <Zap className="size-24 -mr-8 -mt-8 text-blue-400" />
                 </div>
                 <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Activity className="size-4 text-blue-400" />
+                    <CardTitle className="text-base flex items-center gap-2 text-slate-900 dark:text-white">
+                        <Activity className="size-4 text-blue-500 dark:text-blue-400" />
                         Live Status
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 relative z-10">
-                    <div className="flex items-center justify-between p-4 bg-slate-950/40 rounded-2xl border border-white/5">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-white/5">
                         <div className="space-y-1">
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol Integrity</span>
-                            <div className="text-xl font-black text-white">{heartbeatDaysLeft} Days Remaining</div>
+                            <span className="text-[10px] font-black text-slate-500 dark:text-slate-500 uppercase tracking-widest">Protocol Integrity</span>
+                            <div className="text-xl font-black text-slate-900 dark:text-white">{heartbeatDaysLeft} Days Remaining</div>
                             <p className="text-[10px] text-slate-500 font-medium">Until beneficiary execution trigger</p>
                         </div>
                         <Button className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 h-10 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)]">
@@ -348,12 +348,12 @@ export function SettingsDashboard() {
                     </div>
                     <div className="flex justify-between px-2">
                         <div className="text-center">
-                            <div className="text-xs font-mono font-bold text-slate-400">APR 19, 2026</div>
-                            <div className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Last Heartbeat</div>
+                            <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">APR 19, 2026</div>
+                            <div className="text-[8px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-tighter">Last Heartbeat</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-xs font-mono font-bold text-slate-400">APR 26, 2026</div>
-                            <div className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Next Due</div>
+                            <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">APR 26, 2026</div>
+                            <div className="text-[8px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-tighter">Next Due</div>
                         </div>
                     </div>
                 </CardContent>
@@ -363,37 +363,37 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: BENEFICIARIES -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <Users className="size-5 text-emerald-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Beneficiary Registry</h2>
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <Users className="size-5 text-emerald-500 dark:text-emerald-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Beneficiary Registry</h2>
         </div>
 
-        <Card className="bg-white/[0.02] border-white/10">
+        <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10">
             <CardContent className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                        <h3 className="text-white font-bold">Distribution Summary</h3>
+                        <h3 className="text-slate-900 dark:text-white font-bold">Distribution Summary</h3>
                         <p className="text-xs text-slate-500">Currently mapping {appState.stats.totalBeneficiaries} unique addresses.</p>
                     </div>
-                    <Button variant="ghost" className="text-blue-400 hover:text-blue-300 font-bold text-xs gap-1">
+                    <Button variant="ghost" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-bold text-xs gap-1">
                         Manage Registry <ChevronRight className="size-3" />
                     </Button>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {appState.beneficiaries.slice(0, 3).map((ben, idx) => (
-                        <div key={idx} className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
-                            <div className="size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xs font-bold">
+                        <div key={idx} className="p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 flex items-center gap-3">
+                            <div className="size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs font-bold">
                                 {idx + 1}
                             </div>
                             <div className="flex-1 overflow-hidden">
-                                <div className="text-white text-xs font-bold truncate">{ben.name}</div>
+                                <div className="text-slate-900 dark:text-white text-xs font-bold truncate">{ben.name}</div>
                                 <div className="text-[10px] text-slate-500 font-mono truncate">{ben.walletAddress}</div>
                             </div>
                         </div>
                     ))}
                     {appState.beneficiaries.length === 0 && (
-                        <div className="md:col-span-3 p-8 text-center text-slate-600 font-mono text-xs border-2 border-dashed border-white/5 rounded-2xl">
+                        <div className="md:col-span-3 p-8 text-center text-slate-600 dark:text-slate-600 font-mono text-xs border-2 border-dashed border-slate-200 dark:border-white/5 rounded-2xl">
                             NO BENEFICIARIES MAPPED IN THIS VAULT
                         </div>
                     )}
@@ -404,17 +404,17 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: SECURITY -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <ShieldCheck className="size-5 text-orange-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Security & Trust</h2>
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <ShieldCheck className="size-5 text-orange-500 dark:text-orange-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Security & Trust</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10">
                 <CardContent className="p-6 space-y-6">
                     <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <div className="space-y-0.5 text-left">
+                            <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Clock className="size-3.5 text-slate-500" />
                                 Execution Time Lock
                             </div>
@@ -423,7 +423,7 @@ export function SettingsDashboard() {
                         <select 
                             value={appState.settings.timeLock}
                             onChange={(e) => updateSetting('timeLock', parseInt(e.target.value))}
-                            className="bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white px-3 py-1.5 outline-none"
+                            className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold text-slate-800 dark:text-white px-3 py-1.5 outline-none"
                         >
                             <option value={0}>Instant</option>
                             <option value={24}>24 Hours</option>
@@ -433,8 +433,8 @@ export function SettingsDashboard() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <div className="space-y-0.5 text-left">
+                            <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Share2 className="size-3.5 text-slate-500" />
                                 Multi-Sig Distribution
                             </div>
@@ -443,7 +443,7 @@ export function SettingsDashboard() {
                         <select 
                             value={appState.settings.multiSig}
                             onChange={(e) => updateSetting('multiSig', e.target.value)}
-                            className="bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white px-3 py-1.5 outline-none"
+                            className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold text-slate-800 dark:text-white px-3 py-1.5 outline-none"
                         >
                             <option value="off">Disabled</option>
                             <option value="2of3">2 of 3 Shards</option>
@@ -453,23 +453,23 @@ export function SettingsDashboard() {
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10">
                 <CardContent className="p-6 space-y-6">
                     <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <div className="space-y-0.5 text-left">
+                            <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Fingerprint className="size-3.5 text-slate-500" />
                                 Biometric Verification
                             </div>
                         </div>
-                        <div className="w-10 h-5 bg-slate-800 rounded-full p-1 cursor-not-allowed opacity-50">
-                            <div className="size-3 bg-slate-600 rounded-full" />
+                        <div className="w-10 h-5 bg-slate-200 dark:bg-slate-800 rounded-full p-1 cursor-not-allowed opacity-50">
+                            <div className="size-3 bg-slate-400 dark:bg-slate-600 rounded-full" />
                         </div>
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <div className="space-y-0.5 text-left">
+                            <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Lock className="size-3.5 text-slate-500" />
                                 Session Timeout
                             </div>
@@ -477,7 +477,7 @@ export function SettingsDashboard() {
                         <select 
                             value={appState.settings.sessionTimeout}
                             onChange={(e) => updateSetting('sessionTimeout', parseInt(e.target.value))}
-                            className="bg-slate-950 border border-white/10 rounded-lg text-xs font-bold text-white px-3 py-1.5 outline-none"
+                            className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold text-slate-800 dark:text-white px-3 py-1.5 outline-none"
                         >
                             <option value={15}>15 Mins</option>
                             <option value={30}>30 Mins</option>
@@ -491,12 +491,12 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: NOTIFICATIONS -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <Bell className="size-5 text-purple-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Notifications</h2>
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <Bell className="size-5 text-purple-500 dark:text-purple-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Notifications</h2>
         </div>
 
-        <Card className="bg-white/[0.02] border-white/10">
+        <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10">
             <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
@@ -510,9 +510,9 @@ export function SettingsDashboard() {
                                     placeholder="Enter backup email"
                                     value={appState.settings.emailNotification}
                                     onChange={(e) => updateSetting('emailNotification', e.target.value)}
-                                    className="flex-1 bg-slate-950 border border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-white outline-none focus:border-blue-500/50 transition-colors"
+                                    className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors"
                                 />
-                                <Button className="bg-white/5 hover:bg-white/10 text-[10px] font-black px-4 h-10 rounded-xl">VERIFY</Button>
+                                <Button className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black px-4 h-10 rounded-xl">VERIFY</Button>
                             </div>
                         </div>
 
@@ -520,17 +520,17 @@ export function SettingsDashboard() {
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                 <Send className="size-3" /> Telegram Bot
                             </label>
-                            <Button variant="outline" className="w-full bg-slate-950 border-white/5 text-blue-400 text-xs font-bold gap-2 rounded-xl py-5">
+                            <Button variant="outline" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 text-blue-600 dark:text-blue-400 text-xs font-bold gap-2 rounded-xl py-5">
                                 CONNECT TO AlwaysThere_BOT
                             </Button>
                         </div>
                     </div>
 
-                    <div className="bg-purple-600/5 rounded-2xl p-6 border border-purple-500/10 space-y-4">
-                        <h4 className="text-xs font-black text-purple-300 uppercase tracking-widest flex items-center gap-2">
+                    <div className="bg-purple-50 dark:bg-purple-600/5 rounded-2xl p-6 border border-purple-200 dark:border-purple-500/10 space-y-4">
+                        <h4 className="text-xs font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest flex items-center gap-2">
                             <Zap className="size-3" /> Web3 Push (EPNS)
                         </h4>
-                        <p className="text-[10px] text-purple-200/60 leading-relaxed">
+                        <p className="text-[10px] text-purple-700/70 dark:text-purple-200/60 leading-relaxed">
                             Receive wallet-to-wallet notifications for critical heartbeat warnings and execution alerts via the EPNS protocol.
                         </p>
                         <Button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl py-5">
@@ -544,40 +544,40 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: STORAGE -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <Database className="size-5 text-indigo-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Decentralized Storage</h2>
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <Database className="size-5 text-indigo-500 dark:text-indigo-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Decentralized Storage</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div 
                 onClick={() => updateSetting('storageProvider', 'ipfs')}
-                className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex gap-4 ${appState.settings.storageProvider === 'ipfs' ? 'bg-blue-600/10 border-blue-600 shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
+                className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex gap-4 text-left ${appState.settings.storageProvider === 'ipfs' ? 'bg-blue-600/10 border-blue-600 shadow-[0_0_30px_rgba(37,99,235,0.1)]' : 'bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20'}`}
             >
-                <div className={`size-12 rounded-2xl flex items-center justify-center ${appState.settings.storageProvider === 'ipfs' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                <div className={`size-12 rounded-2xl flex items-center justify-center ${appState.settings.storageProvider === 'ipfs' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                     <Globe className="size-6" />
                 </div>
                 <div className="flex-1 space-y-1">
-                    <h3 className="text-white font-black text-sm">IPFS / Filecoin</h3>
+                    <h3 className="text-slate-900 dark:text-white font-black text-sm">IPFS / Filecoin</h3>
                     <p className="text-[10px] text-slate-500 leading-tight">Distributed content-addressed storage. Fast & resilient.</p>
                     {appState.settings.storageProvider === 'ipfs' && (
-                        <div className="text-[8px] font-black text-blue-400 uppercase tracking-widest mt-2">ACTIVE PRIMARY</div>
+                        <div className="text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-2">ACTIVE PRIMARY</div>
                     )}
                 </div>
             </div>
 
             <div 
                 onClick={() => updateSetting('storageProvider', 'arweave')}
-                className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex gap-4 ${appState.settings.storageProvider === 'arweave' ? 'bg-amber-600/10 border-amber-600 shadow-[0_0_30px_rgba(217,119,6,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
+                className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex gap-4 text-left ${appState.settings.storageProvider === 'arweave' ? 'bg-amber-600/10 border-amber-600 shadow-[0_0_30px_rgba(217,119,6,0.1)]' : 'bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20'}`}
             >
-                <div className={`size-12 rounded-2xl flex items-center justify-center ${appState.settings.storageProvider === 'arweave' ? 'bg-amber-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                <div className={`size-12 rounded-2xl flex items-center justify-center ${appState.settings.storageProvider === 'arweave' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                     <Database className="size-6" />
                 </div>
                 <div className="flex-1 space-y-1">
-                    <h3 className="text-white font-black text-sm">Arweave (Permanent)</h3>
+                    <h3 className="text-slate-900 dark:text-white font-black text-sm">Arweave (Permanent)</h3>
                     <p className="text-[10px] text-slate-500 leading-tight">Pay once, store forever. Immutable blockchain storage.</p>
                     {appState.settings.storageProvider === 'arweave' && (
-                        <div className="text-[8px] font-black text-amber-400 uppercase tracking-widest mt-2">ACTIVE PRIMARY</div>
+                        <div className="text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-2">ACTIVE PRIMARY</div>
                     )}
                 </div>
             </div>
@@ -586,30 +586,30 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: ADVANCED -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-            <Cpu className="size-5 text-slate-400" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Advanced Engine</h2>
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <Cpu className="size-5 text-slate-500 dark:text-slate-400" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Advanced Engine</h2>
         </div>
 
-        <Card className="bg-white/[0.02] border-white/10">
+        <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10">
             <CardContent className="p-6 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <div className="text-xs font-bold text-white uppercase tracking-tighter">Gas Settings</div>
+                            <div className="space-y-0.5 text-left">
+                                <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">Gas Settings</div>
                                 <p className="text-[10px] text-slate-500">Auto-calculated execution costs</p>
                             </div>
-                            <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-white/5">
+                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-white/5">
                                 <button 
                                     onClick={() => updateSetting('gasPrice', 'auto')}
-                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-colors ${appState.settings.gasPrice === 'auto' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-colors ${appState.settings.gasPrice === 'auto' ? 'bg-blue-600 text-white' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                                 >
                                     AUTO
                                 </button>
                                 <button 
                                     onClick={() => updateSetting('gasPrice', 50)}
-                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-colors ${appState.settings.gasPrice !== 'auto' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-colors ${appState.settings.gasPrice !== 'auto' ? 'bg-blue-600 text-white' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                                 >
                                     MANUAL
                                 </button>
@@ -617,12 +617,12 @@ export function SettingsDashboard() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <div className="text-xs font-bold text-white uppercase tracking-tighter">Testnet Mode</div>
+                            <div className="space-y-0.5 text-left">
+                                <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">Testnet Mode</div>
                                 <p className="text-[10px] text-slate-500">Enable Sepolia / Mumbai support</p>
                             </div>
                             <div 
-                                className={`w-10 h-5 rounded-full p-1 cursor-pointer transition-colors ${appState.settings.testnetMode ? 'bg-blue-600' : 'bg-slate-800'}`}
+                                className={`w-10 h-5 rounded-full p-1 cursor-pointer transition-colors ${appState.settings.testnetMode ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
                                 onClick={() => updateSetting('testnetMode', !appState.settings.testnetMode)}
                             >
                                 <div className={`size-3 bg-white rounded-full transition-transform ${appState.settings.testnetMode ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -631,15 +631,15 @@ export function SettingsDashboard() {
                     </div>
 
                     <div className="space-y-4">
-                        <Button className="w-full bg-slate-950 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-bold gap-3 rounded-2xl py-6 group">
-                            <Terminal className="size-4 group-hover:scale-110 transition-transform" />
+                        <Button className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 border border-slate-200 dark:border-blue-500/20 dark:hover:border-blue-500/40 text-blue-700 dark:text-blue-400 text-xs font-bold gap-3 rounded-2xl py-6 group">
+                            <Terminal className="size-4 group-hover:scale-110 transition-transform text-blue-600 dark:text-blue-400" />
                             SIMULATE EXECUTION (DRY RUN)
                         </Button>
                         <div className="grid grid-cols-2 gap-3">
-                            <Button variant="outline" className="bg-white/5 border-white/5 hover:bg-white/10 text-[10px] font-black tracking-widest rounded-xl py-5">
+                            <Button variant="outline" className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:border-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black tracking-widest rounded-xl py-5">
                                 VIEW AUDIT LOG
                             </Button>
-                            <Button variant="outline" className="bg-white/5 border-white/5 hover:bg-white/10 text-[10px] font-black tracking-widest rounded-xl py-5">
+                            <Button variant="outline" className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:border-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black tracking-widest rounded-xl py-5">
                                 JSON CONFIG
                             </Button>
                         </div>
@@ -651,17 +651,17 @@ export function SettingsDashboard() {
 
       {/* -- SECTION: DANGER ZONE -- */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-red-500/20 pb-2">
+        <div className="flex items-center gap-3 border-b border-red-200 dark:border-red-500/20 pb-2">
             <AlertOctagon className="size-5 text-red-500" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-red-400/60">Danger Zone</h2>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-red-500 dark:text-red-400/60">Danger Zone</h2>
         </div>
 
-        <Card className="bg-red-500/[0.02] border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.05)]">
+        <Card className="bg-red-50/20 dark:bg-red-500/[0.02] border-red-200 dark:border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.05)]">
             <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="space-y-1 text-center md:text-left">
-                        <h3 className="text-red-400 font-black text-base uppercase">Revoke Protocol Instance</h3>
-                        <p className="text-xs text-red-400/40 font-medium">This will permanently delete all encrypted shards and stop the switch switch. This action is irreversible.</p>
+                        <h3 className="text-red-600 dark:text-red-400 font-black text-base uppercase">Revoke Protocol Instance</h3>
+                        <p className="text-xs text-red-600 dark:text-red-400/40 font-medium">This will permanently delete all encrypted shards and stop the switch switch. This action is irreversible.</p>
                     </div>
                     <Button variant="destructive" className="bg-red-600 hover:bg-red-500 text-white font-black text-xs px-8 h-12 rounded-2xl shadow-lg shadow-red-600/20 uppercase tracking-widest">
                         DELETE WILL

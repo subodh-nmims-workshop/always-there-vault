@@ -212,7 +212,7 @@ export function BeneficiaryManager() {
             </div>
             <div>
               <h2 className="text-2xl font-bold gradient-text-premium">Beneficiary Management</h2>
-              <p className="text-sm text-slate-400">Manage who will receive your digital assets</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Manage who will receive your digital assets</p>
             </div>
           </div>
           <button
@@ -226,9 +226,9 @@ export function BeneficiaryManager() {
         </div>
 
         {beneficiaries.length === 0 ? (
-          <div className="text-center py-12 bg-slate-900/30 rounded-xl border border-slate-800">
-            <Users className="h-16 w-16 mx-auto mb-4 text-slate-600" />
-            <p className="text-slate-300 font-medium">No beneficiaries added yet</p>
+          <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200 dark:border-slate-800">
+            <Users className="h-16 w-16 mx-auto mb-4 text-slate-400 dark:text-slate-600" />
+            <p className="text-slate-700 dark:text-slate-300 font-medium">No beneficiaries added yet</p>
             <p className="text-sm text-slate-500 mt-2">Add your first beneficiary to get started</p>
           </div>
         ) : (
@@ -244,7 +244,7 @@ export function BeneficiaryManager() {
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-slate-200">{beneficiary.name}</h3>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{beneficiary.name}</h3>
                         {beneficiary.enabled && (
                           <span className="badge-premium badge-success-premium text-xs">Active</span>
                         )}
@@ -254,15 +254,15 @@ export function BeneficiaryManager() {
                     <div className="space-y-2 mt-4">
                       <div className="flex items-center space-x-2 text-sm">
                         <Mail className="h-4 w-4 text-slate-500" />
-                        <span className="text-slate-400">{beneficiary.email}</span>
+                        <span className="text-slate-600 dark:text-slate-400">{beneficiary.email}</span>
                       </div>
                       <div className="flex items-start space-x-2 text-sm">
                         <Wallet className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-slate-400 font-mono text-xs break-all">
+                        <span className="text-slate-600 dark:text-slate-400 font-mono text-xs break-all">
                           {beneficiary.walletAddress}
                         </span>
                       </div>
-                      <div className="text-xs text-slate-500 mt-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                         Added: {new Date(beneficiary.createdAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -271,13 +271,13 @@ export function BeneficiaryManager() {
                   <div className="flex flex-col space-y-2 ml-4">
                     <button
                       onClick={() => handleEdit(beneficiary)}
-                      className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium transition-colors border border-slate-700 hover:border-blue-500/50"
+                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors border border-slate-200 dark:border-slate-700 hover:border-blue-500/50"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(beneficiary.id, beneficiary.name)}
-                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium transition-colors border border-red-500/20 hover:border-red-500/50"
+                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20 hover:border-red-500/50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -300,13 +300,13 @@ export function BeneficiaryManager() {
               <h2 className="text-2xl font-bold gradient-text-premium">
                 {editingId ? 'Edit Beneficiary' : 'Add New Beneficiary'}
               </h2>
-              <p className="text-sm text-slate-400">Enter beneficiary details and wallet address</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Enter beneficiary details and wallet address</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2 text-slate-200">Name *</label>
+              <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Name *</label>
               <input
                 type="text"
                 className="input-premium w-full"
@@ -318,7 +318,7 @@ export function BeneficiaryManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-slate-200">Email *</label>
+              <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Email *</label>
               <input
                 type="email"
                 className={`input-premium w-full ${formData.email && !validateEmail(formData.email) ? 'border-red-500' : ''
@@ -337,8 +337,8 @@ export function BeneficiaryManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-slate-200">
-                Wallet Address <span className="text-slate-500 font-normal text-xs ml-1">(Optional - Can be added later)</span>
+              <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">
+                Wallet Address <span className="text-slate-500 dark:text-slate-450 font-normal text-xs ml-1">(Optional - Can be added later)</span>
               </label>
               <input
                 type="text"
@@ -355,18 +355,18 @@ export function BeneficiaryManager() {
                 </p>
               )}
               {formData.walletAddress && validateWalletAddress(formData.walletAddress) && (
-                <p className="text-xs text-green-400 mt-1 flex items-center">
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Valid Ethereum address
                 </p>
               )}
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
+            <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-xl">
               <div className="flex items-start space-x-3">
-                <Shield className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-slate-300">
-                  <p className="font-medium text-blue-300 mb-1">Beneficiary Verification</p>
+                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-slate-700 dark:text-slate-300">
+                  <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">Beneficiary Verification</p>
                   <p>The beneficiary will receive email notifications. If they don't have a Web3 wallet yet, they can create one and provide the address later to access assets.</p>
                 </div>
               </div>
@@ -394,7 +394,7 @@ export function BeneficiaryManager() {
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="px-8 py-4 rounded-xl border-2 border-slate-700 text-slate-200 font-semibold hover:bg-slate-800/50 hover:border-blue-500/50 transition-all duration-300"
+                className="px-8 py-4 rounded-xl border-2 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-blue-500/50 transition-all duration-300"
               >
                 <X className="h-5 w-5 mr-2 inline" />
                 Cancel
@@ -411,14 +411,14 @@ export function BeneficiaryManager() {
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-[0_10px_30px_rgba(16,185,129,0.1)] dark:shadow-[0_0_30px_rgba(16,185,129,0.2)]"
           >
-            <div className="bg-emerald-500/20 p-2 rounded-full">
-              <Check className="w-6 h-6 text-emerald-400" />
+            <div className="bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-full">
+              <Check className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-white font-bold tracking-wide">Beneficiary Saved</p>
-              <p className="text-emerald-200 text-xs font-medium">Global database synced successfully.</p>
+              <p className="text-emerald-900 dark:text-white font-bold tracking-wide">Beneficiary Saved</p>
+              <p className="text-emerald-700 dark:text-emerald-200 text-xs font-medium">Global database synced successfully.</p>
             </div>
           </motion.div>
         )}

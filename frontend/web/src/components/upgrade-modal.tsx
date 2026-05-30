@@ -124,9 +124,10 @@ export function UpgradeModal({
                           style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
                           createOrder={(data, actions) => {
                               return actions.order.create({
+                                  intent: "CAPTURE",
                                   purchase_units: [{
                                       description: "AlwaysThere Protocol - Premium Vault",
-                                      amount: { value: "49.99" }
+                                      amount: { currency_code: "USD", value: "49.99" }
                                   }]
                               });
                           }}

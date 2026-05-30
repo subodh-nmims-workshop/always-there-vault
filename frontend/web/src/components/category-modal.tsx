@@ -118,11 +118,11 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
   const renderField = (field: CategoryField) => {
     const value = formData[field.name] || ''
 
-    const fieldClasses = "w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-inner"
+    const fieldClasses = "w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-inner"
 
     return (
       <div key={field.name} className="space-y-2">
-        <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+        <label className="block text-xs uppercase tracking-widest text-slate-700 dark:text-slate-400 font-bold">
           {field.label}
           {field.required && <span className="text-red-400 ml-1">*</span>}
           {field.encrypted && <Lock className="inline-block w-3 h-3 ml-2 text-yellow-400" />}
@@ -210,23 +210,23 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
           >
             {/* Header */}
-            <div className={`${template.bgColor} border-b border-white/10 p-6`}>
+            <div className={`${template.bgColor} border-b border-slate-200 dark:border-white/10 p-6`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-xl ${template.bgColor} flex items-center justify-center ${template.color}`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">{template.label}</h2>
-                    <p className="text-xs text-slate-400 mt-1">{template.instructions}</p>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{template.label}</h2>
+                    <p className="text-xs text-slate-800 dark:text-slate-400 mt-1">{template.instructions}</p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                  className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -282,14 +282,14 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
               </div>
 
               {/* Nominee Selection */}
-              <div className="bg-slate-900/40 border border-white/5 rounded-xl p-5 space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Shield className="w-4 h-4 text-emerald-400" />
                       Assign Nominees
                     </h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                    <p className="text-[10px] text-slate-700 uppercase tracking-widest font-bold mt-1">
                       Who will receive this asset?
                     </p>
                   </div>
@@ -314,14 +314,14 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                         className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${
                           selectedBens.includes(b.id)
                             ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
-                            : 'bg-black/20 border-white/5 text-slate-400 hover:border-white/10'
+                            : 'bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
                         }`}
                       >
                         <span className="text-xs font-semibold truncate flex-1 mr-2">{b.name}</span>
                         <div className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ${
                           selectedBens.includes(b.id)
                             ? 'bg-blue-500 border-blue-400'
-                            : 'bg-white/5 border-white/10'
+                            : 'bg-white dark:bg-white/5 border-slate-300 dark:border-white/10'
                         }`}>
                           {selectedBens.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
                         </div>
@@ -332,18 +332,18 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
               </div>
 
               {/* Time Capsule Toggle */}
-              <div className="bg-slate-900/40 border border-white/5 rounded-xl p-5 space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
                   <div>
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <span className="text-lg">🕰️</span>
                       Schedule Delivery (Time Capsule)
                     </h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                    <p className="text-[10px] text-slate-700 uppercase tracking-widest font-bold mt-1">
                       Deliver this on a specific date regardless of your heartbeat
                     </p>
                   </div>
-                  <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                  <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
                     <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 24 : 0 }} />
                   </div>
                 </div>
@@ -357,7 +357,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                       className="space-y-4 overflow-hidden pt-2"
                     >
                       <div className="space-y-2">
-                        <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+                        <label className="block text-xs uppercase tracking-widest text-slate-700 dark:text-slate-400 font-bold">
                           Delivery Date <span className="text-red-400">*</span>
                         </label>
                         <input
@@ -365,11 +365,11 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                           value={scheduledDate}
                           onChange={(e) => setScheduledDate(e.target.value)}
                           min={new Date().toISOString().split('T')[0]}
-                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
+                          className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+                        <label className="block text-xs uppercase tracking-widest text-slate-700 dark:text-slate-400 font-bold">
                           Personal Message (Optional)
                         </label>
                         <textarea
@@ -377,7 +377,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                           onChange={(e) => setCustomMessage(e.target.value)}
                           placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
                           rows={3}
-                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none resize-none"
+                          className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none resize-none"
                         />
                       </div>
                     </motion.div>
@@ -390,7 +390,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
 
               {/* Optional File Upload */}
               <div className="space-y-2">
-                <label className="block text-xs uppercase tracking-widest text-slate-400 font-bold">
+                <label className="block text-xs uppercase tracking-widest text-slate-700 dark:text-slate-400 font-bold">
                   Attach File (Optional)
                 </label>
                 <div className="relative">
@@ -402,7 +402,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                   />
                   <label
                     htmlFor="category-file-upload"
-                    className="flex items-center justify-center gap-3 w-full bg-black/40 border border-white/10 border-dashed rounded-xl px-4 py-6 text-sm text-slate-400 hover:text-white hover:border-blue-500/50 transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-3 w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 border-dashed rounded-xl px-4 py-6 text-sm text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-blue-500/50 transition-all cursor-pointer"
                   >
                     <Upload className="w-5 h-5" />
                     <span>{selectedFile ? selectedFile.name : 'Click to upload supporting document'}</span>
@@ -412,7 +412,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
             </div>
 
             {/* Footer */}
-            <div className="border-t border-white/10 p-6 bg-black/20">
+            <div className="border-t border-slate-200 dark:border-white/10 p-6 bg-slate-50 dark:bg-black/20">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-xs text-slate-500">
                   <Lock className="inline-block w-3 h-3 mr-1" />
@@ -422,7 +422,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                   <button
                     onClick={onClose}
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all disabled:opacity-50"
+                    className="px-6 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded-xl transition-all disabled:opacity-50"
                   >
                     Cancel
                   </button>

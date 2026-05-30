@@ -52,27 +52,27 @@ export function ConfirmationDialog({
   const typeStyles = {
     danger: {
       gradient: 'from-red-600 to-rose-600',
-      glow: 'shadow-[0_0_50px_rgba(239,68,68,0.3)]',
-      iconBg: 'bg-red-500/20',
-      iconColor: 'text-red-400',
+      glow: 'shadow-[0_15px_30px_rgba(239,68,68,0.1)] dark:shadow-[0_0_50px_rgba(239,68,68,0.3)]',
+      iconBg: 'bg-red-500/10 dark:bg-red-500/20',
+      iconColor: 'text-red-600 dark:text-red-400',
       buttonBg: 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500',
-      buttonGlow: 'shadow-[0_0_30px_rgba(239,68,68,0.4)]'
+      buttonGlow: 'shadow-[0_10px_20px_rgba(239,68,68,0.2)] dark:shadow-[0_0_30px_rgba(239,68,68,0.4)]'
     },
     warning: {
       gradient: 'from-amber-600 to-orange-600',
-      glow: 'shadow-[0_0_50px_rgba(245,158,11,0.3)]',
-      iconBg: 'bg-amber-500/20',
-      iconColor: 'text-amber-400',
+      glow: 'shadow-[0_15px_30px_rgba(245,158,11,0.1)] dark:shadow-[0_0_50px_rgba(245,158,11,0.3)]',
+      iconBg: 'bg-amber-500/10 dark:bg-amber-500/20',
+      iconColor: 'text-amber-650 dark:text-amber-400',
       buttonBg: 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500',
-      buttonGlow: 'shadow-[0_0_30px_rgba(245,158,11,0.4)]'
+      buttonGlow: 'shadow-[0_10px_20px_rgba(245,158,11,0.2)] dark:shadow-[0_0_30px_rgba(245,158,11,0.4)]'
     },
     info: {
       gradient: 'from-blue-600 to-cyan-600',
-      glow: 'shadow-[0_0_50px_rgba(59,130,246,0.3)]',
-      iconBg: 'bg-blue-500/20',
-      iconColor: 'text-blue-400',
+      glow: 'shadow-[0_15px_30px_rgba(59,130,246,0.1)] dark:shadow-[0_0_50px_rgba(59,130,246,0.3)]',
+      iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
+      iconColor: 'text-blue-600 dark:text-blue-400',
       buttonBg: 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500',
-      buttonGlow: 'shadow-[0_0_30px_rgba(59,130,246,0.4)]'
+      buttonGlow: 'shadow-[0_10px_20px_rgba(59,130,246,0.2)] dark:shadow-[0_0_30px_rgba(59,130,246,0.4)]'
     }
   }
 
@@ -98,19 +98,19 @@ export function ConfirmationDialog({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className={`relative w-full max-w-md bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl border-2 border-slate-700/50 ${styles.glow} overflow-hidden`}
+              className={`relative w-full max-w-md bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl ${styles.glow} overflow-hidden`}
             >
               {/* Animated gradient background */}
-              <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 opacity-5 dark:opacity-10">
                 <div className={`absolute inset-0 bg-gradient-to-br ${styles.gradient} animate-pulse`} />
               </div>
 
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 transition-all duration-300 hover:scale-110 z-10"
+                className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 border border-slate-300 dark:border-slate-600/50 transition-all duration-300 hover:scale-110 z-10"
               >
-                <X className="h-5 w-5 text-slate-300" />
+                <X className="h-5 w-5 text-slate-600 dark:text-slate-300" />
               </button>
 
               {/* Content */}
@@ -122,7 +122,7 @@ export function ConfirmationDialog({
                   transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
                   className="flex justify-center mb-6"
                 >
-                  <div className={`${styles.iconBg} p-4 rounded-2xl border border-${type}-500/30`}>
+                  <div className={`${styles.iconBg} p-4 rounded-2xl border border-transparent`}>
                     <AlertTriangle className={`h-12 w-12 ${styles.iconColor}`} />
                   </div>
                 </motion.div>
@@ -132,7 +132,7 @@ export function ConfirmationDialog({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-2xl font-bold text-center mb-3 text-white"
+                  className="text-2xl font-bold text-center mb-3 text-slate-900 dark:text-white"
                 >
                   {title}
                 </motion.h2>
@@ -142,7 +142,7 @@ export function ConfirmationDialog({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-slate-300 text-center mb-8 leading-relaxed"
+                  className="text-slate-600 dark:text-slate-300 text-center mb-8 leading-relaxed text-sm"
                 >
                   {message}
                 </motion.p>
@@ -157,7 +157,7 @@ export function ConfirmationDialog({
                   {/* Cancel Button */}
                   <button
                     onClick={onClose}
-                    className="flex-1 px-6 py-4 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border-2 border-slate-600/50 hover:border-slate-500/50 text-slate-200 font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex-1 px-6 py-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 border border-slate-300 dark:border-slate-600/50 hover:border-slate-400 dark:hover:border-slate-500/50 text-slate-800 dark:text-slate-200 font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {cancelText}
                   </button>

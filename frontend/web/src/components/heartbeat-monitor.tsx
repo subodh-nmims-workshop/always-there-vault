@@ -263,7 +263,7 @@ export function HeartbeatMonitor() {
 
   return (
     <div className="space-y-6 w-full max-w-4xl mx-auto font-sans">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="bg-slate-900/40 rounded-3xl p-8 relative overflow-hidden backdrop-blur-xl border border-white/5 shadow-2xl">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 relative overflow-hidden backdrop-blur-xl border border-slate-200 dark:border-white/5 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 blur-[80px] rounded-full pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none"></div>
 
@@ -276,11 +276,11 @@ export function HeartbeatMonitor() {
             Live Connection
           </span>
           <div className="flex gap-2">
-            <button onClick={() => setShowHistory(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium text-slate-200 shadow-inner">
+            <button onClick={() => setShowHistory(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 shadow-inner">
               <Activity className="w-4 h-4" />
               History
             </button>
-            <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium text-slate-200 shadow-inner">
+            <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 shadow-inner">
               <Settings className="w-4 h-4" />
               Protocol Config
             </button>
@@ -290,35 +290,67 @@ export function HeartbeatMonitor() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
           <div className="space-y-4">
             {/* Status */}
-            <div className="bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-white/5 shadow-inner">
-              <div className={`w-12 h-12 rounded-xl bg-${heartbeatDisplay.color}-500/20 flex flex-shrink-0 items-center justify-center shadow-[0_0_15px_theme(colors.${heartbeatDisplay.color}.500/30)] border border-${heartbeatDisplay.color}-500/20`}>
-                {heartbeatDisplay.status === 'active' ? <ShieldCheck className={`w-6 h-6 text-${heartbeatDisplay.color}-400`} /> : <ShieldAlert className={`w-6 h-6 text-${heartbeatDisplay.color}-400`} />}
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Status</p>
-                <p className="text-white font-bold text-lg">{heartbeatDisplay.message}</p>
-              </div>
-            </div>
+            {/* Status */}
+            {(() => {
+              const colorMaps: Record<string, { bg: string; border: string; text: string; shadow: string }> = {
+                emerald: {
+                  bg: 'bg-emerald-500/20',
+                  border: 'border-emerald-500/20',
+                  text: 'text-emerald-600 dark:text-emerald-400',
+                  shadow: 'shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                },
+                amber: {
+                  bg: 'bg-amber-500/20',
+                  border: 'border-amber-500/20',
+                  text: 'text-amber-600 dark:text-amber-400',
+                  shadow: 'shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                },
+                red: {
+                  bg: 'bg-red-500/20',
+                  border: 'border-red-500/20',
+                  text: 'text-red-600 dark:text-red-400',
+                  shadow: 'shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                },
+                slate: {
+                  bg: 'bg-slate-500/20',
+                  border: 'border-slate-500/20',
+                  text: 'text-slate-600 dark:text-slate-400',
+                  shadow: 'shadow-[0_0_15px_rgba(100,116,139,0.3)]'
+                }
+              };
+              const styles = colorMaps[heartbeatDisplay.color] || colorMaps.slate;
+              return (
+                <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner">
+                  <div className={`w-12 h-12 rounded-xl ${styles.bg} ${styles.shadow} ${styles.border} flex flex-shrink-0 items-center justify-center border`}>
+                    {heartbeatDisplay.status === 'active' ? <ShieldCheck className={`w-6 h-6 ${styles.text}`} /> : <ShieldAlert className={`w-6 h-6 ${styles.text}`} />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-slate-900 dark:text-white font-bold text-lg">{heartbeatDisplay.message}</p>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Interval */}
-            <div className="bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-white/5 shadow-inner">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex flex-shrink-0 items-center justify-center shadow-[0_0_15px_theme(colors.blue.500/20)] border border-blue-500/20">
+            <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex flex-shrink-0 items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-500/20">
                 <Clock className="w-6 h-6 text-blue-400" />
               </div>
               <div className="flex-1">
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Interval</p>
-                <p className="text-white font-bold text-lg">{settings.heartbeatInterval} {settings.heartbeatInterval < 7 ? 'Min' : 'D'} Recurrence</p>
+                <p className="text-slate-900 dark:text-white font-bold text-lg">{settings.heartbeatInterval} {settings.heartbeatInterval < 7 ? 'Min' : 'D'} Recurrence</p>
               </div>
             </div>
 
             {/* Last Pulse */}
-            <div className="bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-white/5 shadow-inner">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex flex-shrink-0 items-center justify-center shadow-[0_0_15px_theme(colors.purple.500/20)] border border-purple-500/20">
+            <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex flex-shrink-0 items-center justify-center shadow-lg shadow-purple-500/20 border border-purple-500/20">
                 <Activity className="w-6 h-6 text-purple-400" />
               </div>
               <div className="flex-1">
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Last Pulse</p>
-                <p className="text-white font-bold text-lg">{lastHeartbeat ? lastHeartbeat.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}</p>
+                <p className="text-slate-900 dark:text-white font-bold text-lg">{lastHeartbeat ? lastHeartbeat.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}</p>
                 {lastHeartbeat && (
                   <p className="text-slate-500 text-xs mt-1">
                     Next due: {settings.heartbeatInterval < 7
@@ -332,32 +364,52 @@ export function HeartbeatMonitor() {
 
           <div className="flex flex-col items-center justify-center py-4">
             <div className="relative w-56 h-56 flex items-center justify-center group">
-              <svg className="absolute inset-0 w-full h-full transform -rotate-90 filter drop-shadow-xl" viewBox="0 0 100 100">
-                <circle
-                  className="text-slate-800 stroke-current"
-                  strokeWidth="6"
-                  cx="50"
-                  cy="50"
-                  r="44"
-                  fill="transparent"
-                ></circle>
-                <circle
-                  className={`stroke-current transition-all duration-1000 ease-out text-${heartbeatDisplay.color}-500`}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  cx="50"
-                  cy="50"
-                  r="44"
-                  fill="transparent"
-                  strokeDasharray={`${progress * 2.76} 276`}
-                ></circle>
-              </svg>
+              {(() => {
+                const strokeColorMap: Record<string, string> = {
+                  emerald: 'text-emerald-500',
+                  amber: 'text-amber-500',
+                  red: 'text-red-500',
+                  slate: 'text-slate-500'
+                };
+                const dropShadowMap: Record<string, string> = {
+                  emerald: 'drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]',
+                  amber: 'drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]',
+                  red: 'drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]',
+                  slate: 'drop-shadow-[0_0_10px_rgba(100,116,139,0.5)]'
+                };
+                const strokeColor = strokeColorMap[heartbeatDisplay.color] || strokeColorMap.slate;
+                const dropShadow = dropShadowMap[heartbeatDisplay.color] || dropShadowMap.slate;
+                return (
+                  <>
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90 filter drop-shadow-xl" viewBox="0 0 100 100">
+                      <circle
+                        className="text-slate-200 dark:text-slate-800 stroke-current"
+                        strokeWidth="6"
+                        cx="50"
+                        cy="50"
+                        r="44"
+                        fill="transparent"
+                      ></circle>
+                      <circle
+                        className={`stroke-current transition-all duration-1000 ease-out ${strokeColor}`}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        cx="50"
+                        cy="50"
+                        r="44"
+                        fill="transparent"
+                        strokeDasharray={`${progress * 2.76} 276`}
+                      ></circle>
+                    </svg>
 
-              <div className="text-center z-10 relative">
-                <p className={`text-6xl font-black text-white drop-shadow-[0_0_10px_theme(colors.${heartbeatDisplay.color}.500/50)] tracking-tighter`}>{dueInfo.value}</p>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{dueInfo.unit} Until Next</p>
-                <p className="text-slate-500 text-[10px] font-medium mt-0.5">Heartbeat Due</p>
-              </div>
+                    <div className="text-center z-10 relative">
+                      <p className={`text-6xl font-black text-slate-900 dark:text-white ${dropShadow} tracking-tighter`}>{dueInfo.value}</p>
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{dueInfo.unit} Until Next</p>
+                      <p className="text-slate-500 text-[10px] font-medium mt-0.5">Heartbeat Due</p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -366,7 +418,7 @@ export function HeartbeatMonitor() {
           {daysUntilDue <= (isDemo ? 60 : 7) && daysUntilDue > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
-                <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_theme(colors.amber.500/30)] animate-pulse">
+                <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
                 </div>
                 <p className="text-sm font-medium text-amber-100">Protocol requires signature in <span className="text-amber-400 font-bold underline">{dueInfo.value} {dueInfo.unit.toLowerCase()}</span>.</p>
@@ -377,7 +429,7 @@ export function HeartbeatMonitor() {
           {daysUntilDue <= 0 && gracePeriodLeft > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
-                <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_theme(colors.amber.500/30)] animate-pulse">
+                <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
                 </div>
                 <div>
@@ -393,7 +445,7 @@ export function HeartbeatMonitor() {
           {daysUntilDue <= 0 && gracePeriodLeft <= 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
-                <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_theme(colors.red.500/30)] animate-pulse">
+                <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse">
                   <ShieldAlert className="w-5 h-5 text-red-500" />
                 </div>
                 <p className="text-sm font-medium text-red-100 italic">AlwaysThere Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
@@ -425,18 +477,18 @@ export function HeartbeatMonitor() {
       <AnimatePresence>
         {showHistory && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[80vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-6 sticky top-0 bg-slate-900 z-10">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-200 dark:border-slate-800 pb-6 sticky top-0 bg-white dark:bg-slate-900 z-10">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20">
                     <Activity className="w-6 h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">Heartbeat History</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Heartbeat History</h3>
                     <p className="text-xs text-slate-400 mt-1">Last 10 proof-of-life signatures</p>
                   </div>
                 </div>
-                <button onClick={() => setShowHistory(false)} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-2 rounded-full">
+                <button onClick={() => setShowHistory(false)} className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-2 rounded-full">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -455,7 +507,7 @@ export function HeartbeatMonitor() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-purple-500/30 transition-all"
+                      className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:border-purple-500/30 transition-all"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -463,7 +515,7 @@ export function HeartbeatMonitor() {
                             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                           </div>
                           <div>
-                            <p className="text-white font-semibold text-sm">
+                            <p className="text-slate-900 dark:text-white font-semibold text-sm">
                               {new Date(heartbeat.timestamp).toLocaleDateString(undefined, {
                                 month: 'short',
                                 day: 'numeric',
@@ -473,7 +525,7 @@ export function HeartbeatMonitor() {
                               })}
                             </p>
                             <p className="text-xs text-slate-500 mt-0.5">
-                              Method: <span className="text-slate-400 font-medium">{heartbeat.method || 'wallet_signature'}</span>
+                              Method: <span className="text-slate-700 dark:text-slate-400 font-medium">{heartbeat.method || 'wallet_signature'}</span>
                             </p>
                           </div>
                         </div>
@@ -491,9 +543,9 @@ export function HeartbeatMonitor() {
                         </div>
                       </div>
                       {heartbeat.signature && (
-                        <div className="mt-3 pt-3 border-t border-slate-800">
+                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                           <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Signature</p>
-                          <p className="text-xs text-slate-400 font-mono break-all">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono break-all">
                             {heartbeat.signature.substring(0, 32)}...{heartbeat.signature.substring(heartbeat.signature.length - 8)}
                           </p>
                         </div>
@@ -503,10 +555,10 @@ export function HeartbeatMonitor() {
                 </div>
               )}
 
-              <div className="mt-6 pt-6 border-t border-slate-800">
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => setShowHistory(false)}
-                  className="w-full px-6 py-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-slate-300 font-bold hover:bg-slate-800 transition-all text-sm"
+                  className="w-full px-6 py-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-sm"
                 >
                   Close
                 </button>
@@ -520,18 +572,18 @@ export function HeartbeatMonitor() {
       <AnimatePresence>
         {showSettings && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-lg w-full relative shadow-2xl">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-lg w-full relative shadow-2xl">
+              <div className="flex justify-between items-center mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20">
                     <Settings className="w-6 h-6 text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">Protocol Lifecycle Config</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Protocol Lifecycle Config</h3>
                     <p className="text-xs text-slate-400 mt-1">Fine-tune your personal dead man's switch timings</p>
                   </div>
                 </div>
-                <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-2 rounded-full">
+                <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-2 rounded-full">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -543,7 +595,7 @@ export function HeartbeatMonitor() {
                   <input
                     type="email"
                     placeholder="your@email.com"
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
                     defaultValue={typeof window !== 'undefined' ? localStorage.getItem('dwp_user_email') || '' : ''}
                     onChange={(e) => {
                       if (typeof window !== 'undefined') localStorage.setItem('dwp_user_email', e.target.value)
@@ -555,7 +607,7 @@ export function HeartbeatMonitor() {
                   <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Heartbeat Interval</label>
                   <p className="text-xs text-slate-500">How frequently you must check in.</p>
                   <select
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
                     value={settings.heartbeatInterval}
                     onChange={(e) => setSettings(prev => ({ ...prev, heartbeatInterval: parseInt(e.target.value) }))}
                   >
@@ -578,7 +630,7 @@ export function HeartbeatMonitor() {
                   <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Grace Period</label>
                   <p className="text-xs text-slate-500">Time before asset release triggers after overdue.</p>
                   <select
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
                     value={settings.gracePeriod}
                     onChange={(e) => setSettings(prev => ({ ...prev, gracePeriod: parseInt(e.target.value) }))}
                   >
@@ -611,7 +663,7 @@ export function HeartbeatMonitor() {
                     setShowSettings(false)
                     fetchLiveStatus()
                   }}
-                  className="px-6 py-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-slate-300 font-bold hover:bg-slate-800 transition-all text-sm"
+                  className="px-6 py-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-sm"
                 >
                   Cancel
                 </button>

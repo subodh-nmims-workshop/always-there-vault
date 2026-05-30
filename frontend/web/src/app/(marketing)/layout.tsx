@@ -4,7 +4,7 @@ export default function MarketingLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex flex-col min-h-screen relative overflow-hidden bg-slate-950">
+        <div className="flex flex-col min-h-screen relative overflow-hidden bg-white dark:bg-slate-950">
             {/* Premium Background Effects */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] mix-blend-screen animate-pulse pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] mix-blend-screen float pointer-events-none"></div>

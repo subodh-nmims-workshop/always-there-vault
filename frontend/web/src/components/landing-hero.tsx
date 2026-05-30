@@ -303,7 +303,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
       </div>
 
       {/* Footer */}
-      <footer className="py-12 bg-[#050a1a] text-slate-400 border-t border-white/5 relative z-10">
+      <footer className="py-12 bg-slate-50 dark:bg-[#050a1a] text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="space-y-4">
@@ -332,7 +332,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
               <h4 className="text-white font-bold mb-4">Resources</h4>
               <ul className="space-y-3 text-sm">
                 <li><Link href="/docs" className="hover:text-[#2b52ff] transition-colors">Documentation</Link></li>
-                <li><Link href="/api" className="hover:text-[#2b52ff] transition-colors">API Reference</Link></li>
+                <li><Link href="/api-reference" className="hover:text-[#2b52ff] transition-colors">API Reference</Link></li>
                 <li><Link href="/guides" className="hover:text-[#2b52ff] transition-colors">Guides</Link></li>
                 <li><Link href="/support" className="hover:text-[#2b52ff] transition-colors">Support</Link></li>
               </ul>

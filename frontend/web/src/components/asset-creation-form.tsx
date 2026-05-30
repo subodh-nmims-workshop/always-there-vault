@@ -853,7 +853,7 @@ export function AssetCreationForm() {
         exit={{ opacity: 0, scale: 0.9 }}
         onClick={() => handleViewAsset(asset)}
         onContextMenu={(e) => handleAssetContextMenu(e, asset)}
-        className="bg-white/[0.03] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative group hover:border-blue-500/30 transition-all shadow-lg cursor-pointer"
+        className="bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 backdrop-blur-md rounded-2xl p-4 relative group hover:border-blue-500/30 transition-all shadow-lg cursor-pointer"
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-40 transition-opacity rounded-t-2xl"></div>
 
@@ -863,30 +863,30 @@ export function AssetCreationForm() {
           </div>
 
           <div className="relative group/menu">
-            <button className="text-slate-500 hover:text-white transition-colors p-1">
+            <button className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors p-1">
               <MoreVertical className="w-5 h-5" />
             </button>
-            <div className="absolute right-0 top-6 mt-1 w-28 bg-slate-800 border border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
+            <div className="absolute right-0 top-6 mt-1 w-28 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
               <button
                 onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
-                className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-t-lg flex items-center"
+                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-t-lg flex items-center"
               >
                 <Eye className="h-3 w-3 mr-2" /> View
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); openShareAssetModal(asset) }}
-                className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center"
+                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
               >
                 <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
               </button>
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center">
+              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-3 py-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center">
                 <Trash2 className="h-3 w-3 mr-2" /> Delete
               </button>
             </div>
           </div>
         </div>
 
-        <h3 className="font-bold text-sm text-white truncate mb-1" title={asset.name}>{asset.name}</h3>
+        <h3 className="font-bold text-sm text-slate-800 dark:text-white truncate mb-1" title={asset.name}>{asset.name}</h3>
 
         <div className="flex items-center justify-between mt-4">
           <span className="text-[10px] text-slate-500">{formatFileSize(asset.size)}</span>
@@ -910,24 +910,24 @@ export function AssetCreationForm() {
         exit={{ opacity: 0, x: 20 }}
         onClick={() => handleViewAsset(asset)}
         onContextMenu={(e) => handleAssetContextMenu(e, asset)}
-        className="group flex items-center bg-white/[0.03] border border-white/5 hover:border-blue-500/30 backdrop-blur-md rounded-xl p-3 transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden"
+        className="group flex items-center bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 hover:border-blue-500/30 backdrop-blur-md rounded-xl p-3 transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden"
       >
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-purple-600 opacity-0 group-hover:opacity-40 transition-opacity"></div>
         <div className={`h-10 w-10 ${iconInfo.bg} rounded-lg flex items-center justify-center mr-4 flex-shrink-0`}>
           <Icon className={`h-5 w-5 ${iconInfo.color}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-white truncate" title={asset.name}>{asset.name}</h3>
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate" title={asset.name}>{asset.name}</h3>
           <p className="text-[10px] text-slate-500 flex items-center mt-0.5">
             <Shield className="h-3 w-3 text-emerald-500/70 mr-1 shadow-[0_0_5px_rgba(16,185,129,0.2)]" />
             Encrypted • {new Date(asset.createdAt).toLocaleDateString()}
           </p>
         </div>
-        <div className="hidden md:block w-24 text-right text-sm text-slate-400 pr-4">{formatFileSize(asset.size)}</div>
+        <div className="hidden md:block w-24 text-right text-sm text-slate-700 dark:text-slate-400 pr-4">{formatFileSize(asset.size)}</div>
         <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
           <button
             onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
-            className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 transition-colors"
+            className="p-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-705 dark:text-slate-300 rounded-lg transition-colors"
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -944,23 +944,23 @@ export function AssetCreationForm() {
     <div
       onClick={() => setCurrentFolderId(folder.id)}
       onContextMenu={(e) => handleFolderContextMenu(e, folder)}
-      className="bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl p-4 relative group hover:border-[#1152d4]/40 hover:bg-white/[0.04] transition-all shadow-lg cursor-pointer"
+      className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 backdrop-blur-md rounded-2xl p-4 relative group hover:border-[#1152d4]/40 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-all shadow-lg cursor-pointer"
     >
       <div className="flex justify-between items-start mb-6">
         <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
           <FolderOpen className="w-6 h-6 fill-blue-500/20" />
         </div>
         <div className="relative group/menu">
-          <button onClick={(e) => e.stopPropagation()} className="text-slate-500 hover:text-white transition-colors p-1">
+          <button onClick={(e) => e.stopPropagation()} className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors p-1">
             <MoreVertical className="w-5 h-5" />
           </button>
-          <div className="absolute right-0 top-6 mt-1 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
+          <div className="absolute right-0 top-6 mt-1 w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 openShareFolderModal(folder)
               }}
-              className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:text-white hover:bg-slate-700/70 rounded-t-lg flex items-center"
+              className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-t-lg flex items-center"
             >
               <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
             </button>
@@ -970,7 +970,7 @@ export function AssetCreationForm() {
                 setRenameFolderState({ isOpen: true, folderId: folder.id, currentName: folder.name })
                 setRenameInput(folder.name)
               }}
-              className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:text-white hover:bg-slate-700/70 flex items-center"
+              className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 flex items-center"
             >
               <Pencil className="h-3 w-3 mr-2 text-blue-400" /> Rename
             </button>
@@ -979,14 +979,14 @@ export function AssetCreationForm() {
                 e.stopPropagation()
                 handleDeleteFolder(folder.id, folder.name)
               }}
-              className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center"
+              className="w-full text-left px-3 py-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center"
             >
               <Trash2 className="h-3 w-3 mr-2" /> Delete
             </button>
           </div>
         </div>
       </div>
-      <h3 className="font-bold text-sm text-white truncate mb-1" title={folder.name}>{folder.name}</h3>
+      <h3 className="font-bold text-sm text-slate-800 dark:text-white truncate mb-1" title={folder.name}>{folder.name}</h3>
       <div className="text-[10px] text-slate-500 mt-2">Folder • {new Date(folder.createdAt).toLocaleDateString()}</div>
     </div>
   )
@@ -995,18 +995,18 @@ export function AssetCreationForm() {
     <div
       onClick={() => setCurrentFolderId(folder.id)}
       onContextMenu={(e) => handleFolderContextMenu(e, folder)}
-      className="group flex items-center bg-white/[0.02] border border-white/5 hover:border-blue-500/30 backdrop-blur-md rounded-xl p-3 transition-all duration-300 cursor-pointer shadow-sm relative"
+      className="group flex items-center bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:border-blue-500/30 backdrop-blur-md rounded-xl p-3 transition-all duration-300 cursor-pointer shadow-sm relative"
     >
       <div className="h-10 w-10 bg-blue-500/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
         <FolderOpen className="h-5 w-5 fill-blue-500/20 text-blue-400" />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-bold text-white truncate" title={folder.name}>{folder.name}</h3>
+        <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate" title={folder.name}>{folder.name}</h3>
         <p className="text-[10px] text-slate-500 flex items-center mt-0.5">
           Directory • {new Date(folder.createdAt).toLocaleDateString()}
         </p>
       </div>
-      <div className="hidden md:block w-24 text-right text-sm text-slate-400 pr-4">--</div>
+      <div className="hidden md:block w-24 text-right text-sm text-slate-600 dark:text-slate-400 pr-4">--</div>
       <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
         <button
           onClick={(e) => {
@@ -1014,7 +1014,7 @@ export function AssetCreationForm() {
             setRenameFolderState({ isOpen: true, folderId: folder.id, currentName: folder.name })
             setRenameInput(folder.name)
           }}
-          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
+          className="p-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
         >
           <Pencil className="h-4 w-4" />
         </button>
@@ -1023,7 +1023,7 @@ export function AssetCreationForm() {
             e.stopPropagation()
             openShareFolderModal(folder)
           }}
-          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
+          className="p-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
         >
           <Shield className="h-4 w-4" />
         </button>
@@ -1048,7 +1048,7 @@ export function AssetCreationForm() {
 
       <div className="flex items-center justify-between mb-8 px-2 md:px-0">
         <div className="flex flex-col">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-white dark:to-slate-400 bg-clip-text text-transparent flex items-center">
             Vault Drive
           </h1>
           <p className="text-[10px] uppercase tracking-widest text-blue-500 font-semibold mt-1">AlwaysThere</p>
@@ -1062,7 +1062,7 @@ export function AssetCreationForm() {
               placeholder="Search assets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white/[0.03] border border-white/10 rounded-full text-sm text-white focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 transition-all w-48 outline-none placeholder-slate-500 shadow-inner"
+              className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-full text-sm text-slate-800 dark:text-white focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 transition-all w-48 outline-none placeholder-slate-500 shadow-inner"
             />
           </div>
 
@@ -1073,15 +1073,15 @@ export function AssetCreationForm() {
             </button>
             <AnimatePresence>
               {isDropdownOpen && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute right-0 top-12 w-48 bg-[#0a0c10] border border-white/10 shadow-2xl rounded-xl z-50 overflow-hidden">
-                  <button onClick={() => { setIsDropdownOpen(false); setIsModalOpen(true); }} className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-[#1152d4]/10 flex items-center transition-colors">
-                    <Shield className="w-4 h-4 mr-3 text-emerald-400" /> Secure Asset
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute right-0 top-12 w-48 bg-white dark:bg-[#0a0c10] border border-slate-200 dark:border-white/10 shadow-2xl rounded-xl z-50 overflow-hidden">
+                  <button onClick={() => { setIsDropdownOpen(false); setIsModalOpen(true); }} className="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-[#1152d4]/10 flex items-center transition-colors">
+                    <Shield className="w-4 h-4 mr-3 text-emerald-500 dark:text-emerald-400" /> Secure Asset
                   </button>
-                  <button onClick={() => { setIsDropdownOpen(false); setIsNewFolderModalOpen(true); }} className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-white/5 flex items-center transition-colors border-t border-white/5">
-                    <FolderPlus className="w-4 h-4 mr-3 text-blue-400" /> New Folder
+                  <button onClick={() => { setIsDropdownOpen(false); setIsNewFolderModalOpen(true); }} className="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 flex items-center transition-colors border-t border-slate-105 dark:border-white/5">
+                    <FolderPlus className="w-4 h-4 mr-3 text-blue-500 dark:text-blue-400" /> New Folder
                   </button>
-                  <button onClick={() => { setIsDropdownOpen(false); setIsOnChainModalOpen(true); }} className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-yellow-500/10 flex items-center transition-colors border-t border-white/5">
-                    <Coins className="w-4 h-4 mr-3 text-yellow-400" /> On-Chain Token
+                  <button onClick={() => { setIsDropdownOpen(false); setIsOnChainModalOpen(true); }} className="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-yellow-500/10 flex items-center transition-colors border-t border-slate-105 dark:border-white/5">
+                    <Coins className="w-4 h-4 mr-3 text-yellow-600 dark:text-yellow-400" /> On-Chain Token
                   </button>
                 </motion.div>
               )}
@@ -1092,7 +1092,7 @@ export function AssetCreationForm() {
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Mobile categories scale */}
-        <div className="flex md:hidden gap-4 overflow-x-auto py-2 no-scrollbar px-2 max-w-[100vw] text-transparent">
+        <div className="flex md:hidden gap-4 overflow-x-auto py-2 no-scrollbar px-2 max-w-[100vw]">
           {categories.map(cat => (
             <div
               key={cat.id}
@@ -1106,10 +1106,10 @@ export function AssetCreationForm() {
               }}
               className="flex flex-col items-center gap-2 min-w-[70px] cursor-pointer group"
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${activeCategory === cat.id ? 'bg-blue-600/20 border border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.2)]' : 'bg-white/[0.03] border border-white/5 text-slate-400 group-hover:bg-white/[0.08]'}`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${activeCategory === cat.id ? 'bg-blue-600/20 border border-blue-500/30 text-blue-500 dark:text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.2)]' : 'bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200/50 dark:group-hover:bg-white/[0.08]'}`}>
                 <cat.icon className="w-6 h-6" />
               </div>
-              <span className={`text-[11px] font-medium ${activeCategory === cat.id ? 'text-blue-400' : 'text-slate-500'}`}>{cat.label}</span>
+              <span className={`text-[11px] font-semibold ${activeCategory === cat.id ? 'text-blue-500 dark:text-blue-400' : 'text-slate-600 dark:text-slate-500'}`}>{cat.label}</span>
             </div>
           ))}
         </div>
@@ -1124,9 +1124,9 @@ export function AssetCreationForm() {
                   // Just set active category, don't open modal
                   setActiveCategory(cat.id)
                 }}
-                className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${activeCategory === cat.id ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner' : 'text-slate-400 hover:bg-white/[0.05] hover:text-white border border-transparent'}`}
+                className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeCategory === cat.id ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/20 shadow-inner' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.05] hover:text-slate-900 dark:hover:text-white border border-transparent'}`}
               >
-                <cat.icon className={`w-5 h-5 mr-3 ${activeCategory === cat.id ? 'text-blue-400' : 'text-slate-500'}`} />
+                <cat.icon className={`w-5 h-5 mr-3 ${activeCategory === cat.id ? 'text-blue-550' : 'text-slate-500'}`} />
                 {cat.label}
               </button>
             ))}
@@ -1137,14 +1137,14 @@ export function AssetCreationForm() {
           </div>
 
           <div className="mt-auto pt-8">
-            <div className="p-5 bg-white/[0.02] rounded-2xl border border-white/5 shadow-inner">
+            <div className="p-5 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/5 shadow-inner">
               <div className="flex justify-between items-end mb-3 mt-1">
                 <div>
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Storage Usage</p>
-                  <p className="text-xl font-bold text-slate-200">{totalAssetsCount} <span className="text-xs font-normal text-slate-500">Assets</span></p>
+                  <p className="text-xl font-bold text-slate-800 dark:text-slate-200">{totalAssetsCount} <span className="text-xs font-normal text-slate-500">Assets</span></p>
                 </div>
               </div>
-              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-1 mt-2">
+              <div className="w-full h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mb-1 mt-2">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (totalAssetsCount / 50) * 100)}%` }}
@@ -1159,16 +1159,16 @@ export function AssetCreationForm() {
         <div className="flex-1 px-2 md:px-0" onContextMenu={handleRootContextMenu}>
 
           {/* Breadcrumb Navigation Row */}
-          <div className="flex items-center space-x-2 text-sm text-slate-400 mb-6 bg-white/[0.01] border border-white/5 px-4 py-3 rounded-xl">
-            <button onClick={() => setCurrentFolderId(null)} className={`hover:text-white transition-colors flex items-center font-medium ${!currentFolderId && 'text-white'}`}>
+          <div className="flex items-center space-x-2 text-sm text-slate-700 dark:text-slate-400 mb-6 bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 px-4 py-3 rounded-xl">
+            <button onClick={() => setCurrentFolderId(null)} className={`hover:text-slate-900 dark:hover:text-white transition-colors flex items-center font-medium ${!currentFolderId ? 'text-slate-900 dark:text-white font-bold' : ''}`}>
               <Shield className="w-4 h-4 mr-2" /> Vault Drive
             </button>
             {breadcrumbs.map((crumb, index) => (
               <div key={crumb.id} className="flex items-center space-x-2">
-                <ChevronRight className="w-4 h-4 text-slate-600" />
+                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                 <button
                   onClick={() => setCurrentFolderId(crumb.id)}
-                  className={`hover:text-white font-medium transition-colors ${index === breadcrumbs.length - 1 ? 'text-blue-400' : ''}`}
+                  className={`hover:text-slate-900 dark:hover:text-white font-medium transition-colors ${index === breadcrumbs.length - 1 ? 'text-blue-500 dark:text-blue-400' : ''}`}
                 >
                   {crumb.name}
                 </button>
@@ -1177,7 +1177,7 @@ export function AssetCreationForm() {
           </div>
 
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-3">
+            <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-3">
               {activeCategory === 'all' ? 'Directory Contents' : `${categories.find(c => c.id === activeCategory)?.label}`}
 
               {/* Add button for category views */}
@@ -1192,47 +1192,47 @@ export function AssetCreationForm() {
               )}
             </h2>
 
-            <div className="flex bg-white/[0.03] border border-white/10 rounded-lg p-1">
-              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>
+            <div className="flex bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-lg p-1">
+              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-slate-700 dark:bg-slate-800 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
                 <Grid className="w-4 h-4" />
               </button>
-              <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-700 dark:bg-slate-800 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
                 <ListIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {assets.length === 0 && folders.length === 0 ? (
-            <div className="min-h-[500px] py-12 flex flex-col items-center justify-center text-center px-4 bg-white/[0.02] border border-white/5 rounded-3xl relative overflow-hidden group">
+            <div className="min-h-[500px] py-12 flex flex-col items-center justify-center text-center px-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-3xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-[#1152d4]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
               <div className="w-20 h-20 bg-[#1152d4]/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(17,82,212,0.15)] relative z-10">
                 <FolderOpen className="h-10 w-10 text-[#1152d4]" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2 relative z-10">Empty Directory</h3>
-              <p className="text-slate-400 max-w-sm mb-6 text-sm relative z-10">Create a sub-folder or encrypt a new payload into this location.</p>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 relative z-10">Empty Directory</h3>
+              <p className="text-slate-700 dark:text-slate-400 max-w-sm mb-6 text-sm relative z-10">Create a sub-folder or encrypt a new payload into this location.</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10 w-full max-w-lg mb-8 px-4">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 hover:border-blue-400/60 hover:from-blue-600/30 hover:to-purple-600/30 transition-all group"
+                  className="flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 to-purple-600/10 dark:from-blue-600/20 dark:to-purple-600/20 border border-blue-500/20 dark:border-blue-500/30 hover:border-blue-500 dark:hover:border-blue-400/60 hover:from-blue-600/20 hover:to-purple-600/20 hover:dark:from-blue-600/30 hover:dark:to-purple-600/30 transition-all group"
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                    <Shield className="w-6 h-6 text-blue-400" />
+                    <Shield className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                   </div>
-                  <span className="text-white font-bold text-sm">Secure Asset</span>
-                  <span className="text-slate-400 text-xs mt-1">Upload encrypted file</span>
+                  <span className="text-slate-800 dark:text-white font-bold text-sm">Secure Asset</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-xs mt-1">Upload encrypted file</span>
                 </button>
 
                 <button
                   onClick={() => setIsNewFolderModalOpen(true)}
-                  className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.06] transition-all group"
+                  className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-100 hover:bg-slate-200/50 dark:bg-white/[0.03] border border-slate-300 dark:border-white/10 hover:border-slate-400 hover:dark:border-white/20 hover:dark:bg-white/[0.06] transition-all group"
                 >
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <FolderPlus className="w-6 h-6 text-slate-300" />
+                  <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <FolderPlus className="w-6 h-6 text-slate-600 dark:text-slate-300" />
                   </div>
-                  <span className="text-white font-bold text-sm">Create Folder</span>
-                  <span className="text-slate-400 text-xs mt-1">Organize locally</span>
+                  <span className="text-slate-800 dark:text-white font-bold text-sm">Create Folder</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-xs mt-1">Organize locally</span>
                 </button>
               </div>
 
@@ -1240,7 +1240,7 @@ export function AssetCreationForm() {
                 <button onClick={() => {
                   const parentNode = breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2].id : null;
                   setCurrentFolderId(parentNode);
-                }} className="px-5 py-2 hover:bg-white/[0.05] text-slate-400 hover:text-white rounded-lg font-medium transition-colors text-xs flex items-center relative z-10 group-hover:opacity-100">
+                }} className="px-5 py-2 hover:bg-slate-100 hover:dark:bg-white/[0.05] text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-lg font-medium transition-colors text-xs flex items-center relative z-10 group-hover:opacity-100">
                   <CornerLeftUp className="w-4 h-4 mr-2" /> Navigate Up
                 </button>
               )}
@@ -1254,10 +1254,10 @@ export function AssetCreationForm() {
               // Special handling for crypto wallets
               if (activeCategory === 'self_custody_crypto') {
                 return (
-                  <div className="h-64 flex flex-col items-center justify-center text-center bg-white/[0.02] border border-white/5 rounded-3xl px-6">
-                    <Coins className="h-10 w-10 text-amber-300 mb-4" />
-                    <p className="text-slate-200 font-semibold text-sm mb-1">No crypto wallet blueprints yet</p>
-                    <p className="text-slate-400 text-xs max-w-md mb-4">
+                  <div className="h-64 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-3xl px-6">
+                    <Coins className="h-10 w-10 text-amber-500 dark:text-amber-300 mb-4" />
+                    <p className="text-slate-800 dark:text-slate-200 font-semibold text-sm mb-1">No crypto wallet blueprints yet</p>
+                    <p className="text-slate-600 dark:text-slate-400 text-xs max-w-md mb-4">
                       Save instructions for your BTC / ETH / multi‑chain wallets and optionally link on‑chain tokens for automatic transfer when your Always There switch triggers.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -1270,7 +1270,7 @@ export function AssetCreationForm() {
                       </button>
                       <button
                         onClick={openOnChainFromCrypto}
-                        className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-600"
+                        className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-300 dark:border-slate-600"
                       >
                         Register On‑Chain Token
                       </button>
@@ -1282,37 +1282,37 @@ export function AssetCreationForm() {
               // Generic empty state for other categories
               if (currentCategory && !currentCategory.isFilter && activeCategory !== 'all') {
                 return (
-                  <div className="min-h-[550px] py-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-white/[0.02] to-white/[0.01] border border-white/5 rounded-3xl px-6 relative overflow-hidden">
+                  <div className="min-h-[550px] py-12 flex flex-col items-center justify-center text-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-white/[0.02] dark:to-white/[0.01] border border-slate-200 dark:border-white/5 rounded-3xl px-6 relative overflow-hidden">
                     <div className="absolute inset-0 bg-blue-500/5 opacity-30"></div>
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center mb-6 border border-white/5 relative z-10 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
-                      <Icon className="h-10 w-10 text-blue-400" />
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center mb-6 border border-slate-200 dark:border-white/5 relative z-10 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+                      <Icon className="h-10 w-10 text-blue-500 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-2xl font-black text-white mb-2 relative z-10">{currentCategory.label}</h3>
-                    <p className="text-slate-400 text-sm max-w-sm mb-10 relative z-10">
+                    <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2 relative z-10">{currentCategory.label}</h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm max-w-sm mb-10 relative z-10">
                       No encrypted {currentCategory.label.toLowerCase()} found. Secure your first asset in this category now.
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10 w-full max-w-lg px-4">
                       <button
                         onClick={() => openCategoryModal(activeCategory)}
-                        className="flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 hover:border-blue-400/60 hover:from-blue-600/30 hover:to-purple-600/30 transition-all group"
+                        className="flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 to-purple-600/10 dark:from-blue-600/20 dark:to-purple-600/20 border border-blue-500/20 dark:border-blue-500/30 hover:border-blue-500 dark:hover:border-blue-400/60 hover:from-blue-600/20 hover:to-purple-600/20 hover:dark:from-blue-600/30 hover:dark:to-purple-600/30 transition-all group"
                       >
                         <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                          <Plus className="w-6 h-6 text-blue-400" />
+                          <Plus className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                         </div>
-                        <span className="text-white font-bold text-sm">Add {currentCategory.label}</span>
-                        <span className="text-slate-400 text-xs mt-1">New encrypted entry</span>
+                        <span className="text-slate-800 dark:text-white font-bold text-sm">Add {currentCategory.label}</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs mt-1">New encrypted entry</span>
                       </button>
 
                       <button
                         onClick={() => setIsNewFolderModalOpen(true)}
-                        className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.06] transition-all group"
+                        className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-100 hover:bg-slate-200/50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 hover:border-slate-400 hover:dark:border-white/20 hover:dark:bg-white/[0.06] transition-all group"
                       >
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                          <FolderPlus className="w-6 h-6 text-slate-300" />
+                        <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <FolderPlus className="w-6 h-6 text-slate-700 dark:text-slate-300" />
                         </div>
-                        <span className="text-white font-bold text-sm">Create Folder</span>
-                        <span className="text-slate-400 text-xs mt-1">Organize locally</span>
+                        <span className="text-slate-800 dark:text-white font-bold text-sm">Create Folder</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs mt-1">Organize locally</span>
                       </button>
                     </div>
                   </div>
@@ -1321,9 +1321,9 @@ export function AssetCreationForm() {
 
               // Default empty state for "All Files" or filter views
               return (
-                <div className="h-64 flex flex-col items-center justify-center text-center bg-white/[0.02] border border-white/5 rounded-3xl">
-                  <Search className="h-12 w-12 text-slate-600 mb-4" />
-                  <p className="text-slate-400 font-medium text-sm">No files found matching criteria.</p>
+                <div className="h-64 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-3xl">
+                  <Search className="h-12 w-12 text-slate-400 dark:text-slate-600 mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400 font-medium text-sm">No files found matching criteria.</p>
                 </div>
               )
             })()
@@ -1352,14 +1352,14 @@ export function AssetCreationForm() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isEncrypting && setIsModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-[#0a0c12] border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600"></div>
 
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-                <h3 className="text-lg font-bold text-white flex items-center">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
                   <Shield className="w-5 h-5 mr-3 text-blue-500" /> Secure Asset Upload
                 </h3>
-                <button onClick={() => !isEncrypting && setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-1.5 rounded-full">
+                <button onClick={() => !isEncrypting && setIsModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1368,21 +1368,21 @@ export function AssetCreationForm() {
                 <div className="space-y-6">
                   {/* Dropzone */}
                   <div>
-                    <div className={`relative border border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${selectedFile ? 'border-blue-500 bg-blue-500/5' : 'border-slate-700 bg-white/[0.02] hover:border-slate-500'}`}>
+                    <div className={`relative border border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${selectedFile ? 'border-blue-500 bg-blue-500/5' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/[0.02] hover:border-slate-500'}`}>
                       <input type="file" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                       {selectedFile ? (
                         <div className="flex flex-col items-center justify-center space-y-2">
-                          <CheckCircle className="h-8 w-8 text-emerald-500 shadow-[0_0_15px_theme(colors.emerald.500/40)] rounded-full mb-1" />
-                          <p className="text-white font-bold truncate max-w-[200px] text-sm">{selectedFile.name}</p>
+                          <CheckCircle className="h-8 w-8 text-emerald-500 shadow-lg shadow-emerald-500/20 rounded-full mb-1" />
+                          <p className="text-slate-800 dark:text-white font-bold truncate max-w-[200px] text-sm">{selectedFile.name}</p>
                           <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center">
-                          <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-3">
-                            <Upload className="w-5 h-5 text-blue-400" />
+                          <div className="w-12 h-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-3">
+                            <Upload className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                           </div>
-                          <p className="text-sm font-medium text-white mb-1">Select File to Encrypt</p>
-                          <p className="text-xs text-slate-500">Max size 50MB</p>
+                          <p className="text-sm font-medium text-slate-800 dark:text-white mb-1">Select File to Encrypt</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-500">Max size 50MB</p>
                         </div>
                       )}
                     </div>
@@ -1391,22 +1391,22 @@ export function AssetCreationForm() {
                   {/* Details */}
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Asset Name</label>
-                      <input type="text" value={assetName} onChange={(e) => setAssetName(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner" placeholder="e.g. Master Passwords" />
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Asset Name</label>
+                      <input type="text" value={assetName} onChange={(e) => setAssetName(e.target.value)} className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner" placeholder="e.g. Master Passwords" />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Category Classification</label>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Category Classification</label>
                       <div className="relative">
-                        <select value={assetType} onChange={(e) => setAssetType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none shadow-inner">
-                          <option value="">Auto-Detect Category</option>
-                          <option value="crypto_keys">Crypto Keys</option>
-                          <option value="bank_account">Bank / Financial Accounts</option>
-                          <option value="self_custody_crypto">Self-Custody Crypto (BTC, etc.)</option>
-                          <option value="exchange_account">Exchange / Broker Accounts</option>
-                          <option value="document">Documentation</option>
-                          <option value="photo">Media Backup</option>
-                          <option value="business_secret">Secret Notes</option>
+                        <select value={assetType} onChange={(e) => setAssetType(e.target.value)} className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none shadow-inner">
+                          <option value="" className="text-slate-900 dark:text-white dark:bg-slate-950">Auto-Detect Category</option>
+                          <option value="crypto_keys" className="text-slate-900 dark:text-white dark:bg-slate-950">Crypto Keys</option>
+                          <option value="bank_account" className="text-slate-900 dark:text-white dark:bg-slate-950">Bank / Financial Accounts</option>
+                          <option value="self_custody_crypto" className="text-slate-900 dark:text-white dark:bg-slate-950">Self-Custody Crypto (BTC, etc.)</option>
+                          <option value="exchange_account" className="text-slate-900 dark:text-white dark:bg-slate-950">Exchange / Broker Accounts</option>
+                          <option value="document" className="text-slate-900 dark:text-white dark:bg-slate-950">Documentation</option>
+                          <option value="photo" className="text-slate-900 dark:text-white dark:bg-slate-950">Media Backup</option>
+                          <option value="business_secret" className="text-slate-900 dark:text-white dark:bg-slate-950">Secret Notes</option>
                         </select>
                         <div className="absolute right-4 top-3.5 pointer-events-none text-slate-500">▼</div>
                       </div>
@@ -1414,17 +1414,17 @@ export function AssetCreationForm() {
 
                     {/* Nominee Selection */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 flex justify-between">
-                        <span>Assign Nominees <span className="text-red-400">*</span></span>
-                        <span className="text-blue-500">{selectedBeneficiaries.length} selected</span>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-555 dark:text-slate-400 font-bold mb-3 flex justify-between">
+                        <span>Assign Nominees <span className="text-red-500">*</span></span>
+                        <span className="text-blue-600 dark:text-blue-500">{selectedBeneficiaries.length} selected</span>
                       </label>
                       {beneficiaries.length === 0 ? (
                         <div className="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl text-center">
-                          <p className="text-xs text-yellow-500 mb-2">No nominees found!</p>
+                          <p className="text-xs text-yellow-600 dark:text-yellow-500 mb-2">No nominees found!</p>
                           <button
                             type="button"
                             onClick={() => window.location.href = '/vault/beneficiaries'}
-                            className="text-[10px] bg-yellow-500/20 text-yellow-200 px-3 py-1 rounded-full border border-yellow-500/30 hover:bg-yellow-500/30 transition-all"
+                            className="text-[10px] bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-200 px-3 py-1 rounded-full border border-yellow-500/30 hover:bg-yellow-500/30 transition-all"
                           >
                             Add Nominees First
                           </button>
@@ -1441,14 +1441,14 @@ export function AssetCreationForm() {
                                 )
                               }}
                               className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-left transition-all ${selectedBeneficiaries.includes(b.id)
-                                ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
-                                : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/10'
+                                ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400'
+                                : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
                                 }`}
                             >
                               <span className="text-xs font-semibold truncate">{b.name}</span>
                               <div className={`w-4 h-4 rounded-md border flex items-center justify-center ${selectedBeneficiaries.includes(b.id)
                                 ? 'bg-blue-500 border-blue-400'
-                                : 'bg-white/5 border-white/10'
+                                : 'bg-white/5 border-slate-300 dark:border-white/10'
                                 }`}>
                                 {selectedBeneficiaries.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
                               </div>
@@ -1460,18 +1460,18 @@ export function AssetCreationForm() {
                   </div>
 
                   {/* Time Capsule Toggle for Generic Upload */}
-                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-4">
+                  <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
                       <div>
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                           <span className="text-lg">🕰️</span>
                           Schedule Delivery (Time Capsule)
                         </h4>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">
+                        <p className="text-[10px] text-slate-600 dark:text-slate-500 uppercase tracking-widest font-bold mt-1">
                           Deliver this on a specific date regardless of your heartbeat
                         </p>
                       </div>
-                      <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                      <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
                         <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 24 : 0 }} />
                       </div>
                     </div>
@@ -1479,25 +1479,25 @@ export function AssetCreationForm() {
                     <AnimatePresence>
                       {isTimeCapsule && (
                         <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-4 overflow-hidden pt-2"
+                           initial={{ opacity: 0, height: 0 }}
+                           animate={{ opacity: 1, height: 'auto' }}
+                           exit={{ opacity: 0, height: 0 }}
+                           className="space-y-4 overflow-hidden pt-2"
                         >
                           <div className="space-y-2">
-                            <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">
-                              Delivery Date <span className="text-red-400">*</span>
+                            <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">
+                              Delivery Date <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="date"
                               value={scheduledDate}
                               onChange={(e) => setScheduledDate(e.target.value)}
                               min={new Date().toISOString().split('T')[0]}
-                              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
+                              className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">
+                            <label className="block text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold mb-2">
                               Personal Message (Optional)
                             </label>
                             <textarea
@@ -1505,7 +1505,7 @@ export function AssetCreationForm() {
                               onChange={(e) => setCustomMessage(e.target.value)}
                               placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
                               rows={3}
-                              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-inner"
+                              className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-inner"
                             />
                           </div>
                         </motion.div>
@@ -1519,12 +1519,12 @@ export function AssetCreationForm() {
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden">
                         <div className="bg-blue-900/10 border border-blue-500/20 p-4 rounded-xl mt-2">
                           <div className="flex justify-between items-center text-xs mb-3">
-                            <span className="text-blue-400 font-medium flex items-center">
+                            <span className="text-blue-600 dark:text-blue-400 font-medium flex items-center">
                               <Lock className="w-3 h-3 mr-1.5" /> AES-256-GCM
                             </span>
-                            <span className="text-white font-bold">{uploadProgress}%</span>
+                            <span className="text-slate-800 dark:text-white font-bold">{uploadProgress}%</span>
                           </div>
-                          <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-slate-200 dark:bg-black/50 rounded-full overflow-hidden">
                             <motion.div className="h-full bg-gradient-to-r from-blue-500 to-emerald-400" initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} transition={{ ease: 'easeInOut', duration: 0.2 }} />
                           </div>
                         </div>
@@ -1534,8 +1534,8 @@ export function AssetCreationForm() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
-                <button onClick={() => setIsModalOpen(false)} disabled={isEncrypting} className="flex-1 py-3 text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all disabled:opacity-50">
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
+                <button onClick={() => setIsModalOpen(false)} disabled={isEncrypting} className="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all disabled:opacity-50">
                   Cancel
                 </button>
                 <button onClick={handleCreateAsset} disabled={!selectedFile || !assetType || !assetName || isEncrypting} className="flex-[2] py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1553,38 +1553,38 @@ export function AssetCreationForm() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsNewFolderModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-sm bg-[#0a0c12] border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-sm bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1152d4] to-cyan-400"></div>
 
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                  <FolderPlus className="w-5 h-5 mr-3 text-blue-400" /> Create Directory
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+                  <FolderPlus className="w-5 h-5 mr-3 text-blue-500 dark:text-blue-400" /> Create Directory
                 </h3>
-                <button onClick={() => setIsNewFolderModalOpen(false)} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-1.5 rounded-full">
+                <button onClick={() => setIsNewFolderModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-6">
-                <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Folder Name</label>
+                <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Folder Name</label>
                 <input
                   type="text"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   autoFocus
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-[#1152d4] focus:border-[#1152d4] outline-none transition-all shadow-inner"
+                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-[#1152d4] focus:border-[#1152d4] outline-none transition-all shadow-inner"
                   placeholder="e.g. Legal Documents 2026"
                 />
 
                 {/* Add Nominee selection for Folders too */}
                 <div className="mt-6">
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 flex justify-between">
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-3 flex justify-between">
                     <span>Default Folder Nominees</span>
-                    <span className="text-blue-500">{selectedBeneficiaries.length} selected</span>
+                    <span className="text-blue-600 dark:text-blue-500">{selectedBeneficiaries.length} selected</span>
                   </label>
                   {beneficiaries.length === 0 ? (
-                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
+                    <div className="p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-center">
                       <p className="text-[10px] text-slate-500">No nominees available.</p>
                     </div>
                   ) : (
@@ -1599,14 +1599,14 @@ export function AssetCreationForm() {
                             )
                           }}
                           className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${selectedBeneficiaries.includes(b.id)
-                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
-                            : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/10'
+                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400'
+                            : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
                             }`}
                         >
                           <span className="text-[11px] font-semibold truncate">{b.name}</span>
                           <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center ${selectedBeneficiaries.includes(b.id)
                             ? 'bg-blue-500 border-blue-400'
-                            : 'bg-white/5 border-white/10'
+                            : 'bg-white/5 border-slate-300 dark:border-white/10'
                             }`}>
                             {selectedBeneficiaries.includes(b.id) && <CheckCircle className="w-2 h-2 text-white" />}
                           </div>
@@ -1619,8 +1619,8 @@ export function AssetCreationForm() {
                 <p className="text-xs text-slate-500 mt-4">This folder will reside {currentFolderId ? `inside ${breadcrumbs[breadcrumbs.length - 1]?.name}` : 'in the Root Drive Sandbox'}.</p>
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
-                <button onClick={() => setIsNewFolderModalOpen(false)} className="flex-1 py-3 text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
+                <button onClick={() => setIsNewFolderModalOpen(false)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all">
                   Cancel
                 </button>
                 <button onClick={handleCreateFolder} disabled={!newFolderName.trim()} className="flex-1 py-3 text-sm font-bold text-white bg-[#1152d4] hover:bg-[#1152d4]/80 rounded-xl transition-all shadow-[0_0_15px_rgba(17,82,212,0.3)] disabled:opacity-50">
@@ -1638,66 +1638,66 @@ export function AssetCreationForm() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOnChainModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-[#05070a] border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-white dark:bg-[#05070a] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-emerald-400 to-blue-500"></div>
 
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                  <Coins className="w-5 h-5 mr-3 text-yellow-400" /> Register On-Chain Token
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+                  <Coins className="w-5 h-5 mr-3 text-yellow-500 dark:text-yellow-400" /> Register On-Chain Token
                 </h3>
-                <button onClick={() => setIsOnChainModalOpen(false)} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-1.5 rounded-full">
+                <button onClick={() => setIsOnChainModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Token Contract Address</label>
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Token Contract Address</label>
                   <input
                     type="text"
                     value={onChainForm.tokenAddress}
                     onChange={(e) => setOnChainForm(prev => ({ ...prev, tokenAddress: e.target.value }))}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all shadow-inner font-mono"
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all shadow-inner font-mono"
                     placeholder="0x..."
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Token Type</label>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Token Type</label>
                     <select
                       value={onChainForm.tokenType}
                       onChange={(e) => setOnChainForm(prev => ({ ...prev, tokenType: e.target.value as 'erc20' | 'erc721' }))}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all"
+                      className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all"
                     >
-                      <option value="erc20">ERC‑20 (fungible)</option>
-                      <option value="erc721">ERC‑721 (NFT)</option>
+                      <option value="erc20" className="text-slate-900 dark:text-white dark:bg-[#05070a]">ERC‑20 (fungible)</option>
+                      <option value="erc721" className="text-slate-900 dark:text-white dark:bg-[#05070a]">ERC‑721 (NFT)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">
                       {onChainForm.tokenType === 'erc20' ? 'Amount (wei)' : 'Token ID'}
                     </label>
                     <input
                       type="text"
                       value={onChainForm.amountOrId}
                       onChange={(e) => setOnChainForm(prev => ({ ...prev, amountOrId: e.target.value }))}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all shadow-inner"
+                      className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all shadow-inner"
                       placeholder={onChainForm.tokenType === 'erc20' ? 'e.g. 1000000000000000000' : 'e.g. 1'}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Beneficiary</label>
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Beneficiary</label>
                   <select
                     value={onChainForm.beneficiaryId}
                     onChange={(e) => setOnChainForm(prev => ({ ...prev, beneficiaryId: e.target.value }))}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all"
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all"
                   >
-                    <option value="">Select beneficiary...</option>
+                    <option value="" className="text-slate-900 dark:text-white dark:bg-[#05070a]">Select beneficiary...</option>
                     {beneficiaries.map((b: any) => (
-                      <option key={b.id} value={b.id}>
+                      <option key={b.id} value={b.id} className="text-slate-900 dark:text-white dark:bg-[#05070a]">
                         {b.name} ({b.walletAddress || 'no wallet'})
                       </option>
                     ))}
@@ -1710,8 +1710,8 @@ export function AssetCreationForm() {
                 </p>
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
-                <button onClick={() => setIsOnChainModalOpen(false)} className="flex-1 py-3 text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
+                <button onClick={() => setIsOnChainModalOpen(false)} className="flex-1 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all">
                   Cancel
                 </button>
                 <button
@@ -1742,43 +1742,43 @@ export function AssetCreationForm() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-[#05070a] border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden"
+              className="relative w-full max-w-md bg-white dark:bg-[#05070a] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-500" />
 
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/30">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                     <Shield className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white">Share Folder Access</h3>
-                    <p className="text-[11px] text-slate-400">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Share Folder Access</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Choose who receives this folder when the protocol triggers.
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsShareFolderModalOpen(false)}
-                  className="text-slate-500 hover:text-white transition-colors bg-white/5 p-1.5 rounded-full"
+                  className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-6 space-y-5">
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl px-4 py-3 mb-1 flex items-center justify-between">
+                <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 mb-1 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 tracking-widest uppercase">Folder</p>
-                    <p className="text-sm font-bold text-white truncate max-w-[220px]" title={shareFolderTarget.name}>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-widest uppercase">Folder</p>
+                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate max-w-[220px]" title={shareFolderTarget.name}>
                       {shareFolderTarget.name}
                     </p>
                   </div>
                 </div>
 
                 {beneficiaries.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-900/40 border border-slate-800 rounded-2xl">
-                    <p className="text-slate-400 text-sm mb-1">No beneficiaries configured yet.</p>
+                  <div className="text-center py-10 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <p className="text-slate-700 dark:text-slate-400 text-sm mb-1">No beneficiaries configured yet.</p>
                     <p className="text-slate-500 text-xs">
                       Add beneficiaries first from the Beneficiaries tab, then share this folder.
                     </p>
@@ -1793,18 +1793,18 @@ export function AssetCreationForm() {
                           type="button"
                           onClick={() => toggleShareSelection(b.id)}
                           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${checked
-                            ? 'bg-emerald-500/10 border-emerald-500/40'
-                            : 'bg-slate-900/40 border-slate-800 hover:border-slate-600'
+                            ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
                             }`}
                         >
                           <div>
-                            <p className="text-sm font-semibold text-white">{b.name}</p>
-                            <p className="text-[11px] text-slate-400">{b.email}</p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{b.name}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{b.email}</p>
                           </div>
                           <div
                             className={`w-5 h-5 rounded-md border flex items-center justify-center ${checked
                               ? 'bg-emerald-500 border-emerald-400'
-                              : 'bg-slate-900 border-slate-600'
+                              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'
                               }`}
                           >
                             {checked && <CheckCircle className="w-3 h-3 text-white" />}
@@ -1817,15 +1817,15 @@ export function AssetCreationForm() {
 
                 <p className="text-[11px] text-slate-500 leading-relaxed">
                   Selected beneficiaries will receive decryption rights to assets in this folder{' '}
-                  <span className="text-slate-200 font-semibold">only after your Always There heartbeat stops</span>{' '}
+                  <span className="text-slate-800 dark:text-slate-200 font-semibold">only after your Always There heartbeat stops</span>{' '}
                   and the protocol marks your vault as triggered.
                 </p>
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
                 <button
                   onClick={() => setIsShareFolderModalOpen(false)}
-                  className="flex-1 py-3 text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all"
+                  className="flex-1 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all"
                 >
                   Cancel
                 </button>
@@ -1858,43 +1858,43 @@ export function AssetCreationForm() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-[#05070a] border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden"
+              className="relative w-full max-w-md bg-white dark:bg-[#05070a] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-400 to-purple-500" />
 
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/30">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-500/30">
                     <Shield className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white">Share Asset Access</h3>
-                    <p className="text-[11px] text-slate-400">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Share Asset Access</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Choose which nominee receives decryption rights to this asset.
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsShareAssetModalOpen(false)}
-                  className="text-slate-500 hover:text-white transition-colors bg-white/5 p-1.5 rounded-full"
+                  className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-6 space-y-5">
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl px-4 py-3 mb-1 flex items-center justify-between">
+                <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 mb-1 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 tracking-widest uppercase">Asset</p>
-                    <p className="text-sm font-bold text-white truncate max-w-[220px]" title={shareAssetTarget.name}>
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 tracking-widest uppercase">Asset</p>
+                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate max-w-[220px]" title={shareAssetTarget.name}>
                       {shareAssetTarget.name}
                     </p>
                   </div>
                 </div>
 
                 {beneficiaries.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-900/40 border border-slate-800 rounded-2xl">
-                    <p className="text-slate-400 text-sm mb-1">No beneficiaries configured yet.</p>
+                  <div className="text-center py-10 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">No beneficiaries configured yet.</p>
                   </div>
                 ) : (
                   <div className="max-h-64 overflow-y-auto space-y-2 custom-scrollbar">
@@ -1906,18 +1906,18 @@ export function AssetCreationForm() {
                           type="button"
                           onClick={() => toggleAssetShareSelection(b.id)}
                           className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${checked
-                            ? 'bg-blue-500/10 border-blue-500/40'
-                            : 'bg-slate-900/40 border-slate-800 hover:border-slate-600'
+                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400'
+                            : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
                             }`}
                         >
                           <div>
-                            <p className="text-sm font-semibold text-white">{b.name}</p>
-                            <p className="text-[11px] text-slate-400">{b.email}</p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{b.name}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{b.email}</p>
                           </div>
                           <div
                             className={`w-5 h-5 rounded-md border flex items-center justify-center ${checked
                               ? 'bg-blue-500 border-blue-400'
-                              : 'bg-slate-900 border-slate-600'
+                              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'
                               }`}
                           >
                             {checked && <CheckCircle className="w-3 h-3 text-white" />}
@@ -1929,10 +1929,10 @@ export function AssetCreationForm() {
                 )}
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
                 <button
                   onClick={() => setIsShareAssetModalOpen(false)}
-                  className="flex-1 py-3 text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all"
+                  className="flex-1 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all"
                 >
                   Cancel
                 </button>
@@ -1960,14 +1960,14 @@ export function AssetCreationForm() {
             onClick={closeContextMenu}
           >
             <div
-              className="absolute z-[121] min-w-[180px] bg-[#05070a] border border-slate-700 rounded-xl shadow-2xl py-1"
+              className="absolute z-[121] min-w-[180px] bg-white dark:bg-[#05070a] border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1"
               style={{ top: contextMenu.y, left: contextMenu.x }}
               onClick={(e) => e.stopPropagation()}
             >
               {contextMenu.target === 'root' && (
                 <>
                   <button
-                    className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
                       setIsNewFolderModalOpen(true)
@@ -1977,7 +1977,7 @@ export function AssetCreationForm() {
                     New Folder
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
                       setIsModalOpen(true)
@@ -1992,7 +1992,7 @@ export function AssetCreationForm() {
               {contextMenu.target === 'folder' && contextMenu.folder && (
                 <>
                   <button
-                    className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
                       setCurrentFolderId(contextMenu.folder!.id)
@@ -2002,7 +2002,7 @@ export function AssetCreationForm() {
                     Open
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
                       openShareFolderModal(contextMenu.folder!)
@@ -2027,7 +2027,7 @@ export function AssetCreationForm() {
               {contextMenu.target === 'asset' && contextMenu.asset && (
                 <>
                   <button
-                    className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
                       handleViewAsset(contextMenu.asset!)
@@ -2037,7 +2037,7 @@ export function AssetCreationForm() {
                     View Asset
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
                       openShareAssetModal(contextMenu.asset!)
@@ -2092,17 +2092,17 @@ export function AssetCreationForm() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+              className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border-b border-white/10 p-6">
+              <div className="bg-slate-50 dark:bg-gradient-to-r dark:from-blue-600/10 dark:to-purple-600/10 border-b border-slate-200 dark:border-white/10 p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                       <Eye className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">{viewingAsset.name}</h2>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">{viewingAsset.name}</h2>
                       <p className="text-xs text-slate-400 mt-1">
                         {new Date(viewingAsset.createdAt).toLocaleString()} • {formatFileSize(viewingAsset.size)}
                       </p>
@@ -2110,7 +2110,7 @@ export function AssetCreationForm() {
                   </div>
                   <button
                     onClick={() => setIsViewModalOpen(false)}
-                    className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                    className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -2144,7 +2144,7 @@ export function AssetCreationForm() {
                     )}
 
                     {/* Decrypted Content */}
-                    <div className="bg-black/40 border border-white/10 rounded-xl p-4">
+                    <div className="bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4">
                       <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-3 flex items-center gap-2">
                         <Lock className={`w-3 h-3 ${decryptedContent?.includes('Failed') ? 'text-red-400' : 'text-green-400'}`} />
                         {decryptedContent?.includes('Failed') ? 'Decryption Failed' : 'Decrypted Content'}
@@ -2161,7 +2161,7 @@ export function AssetCreationForm() {
                           </div>
                         </div>
                       ) : (viewingAsset.type?.toLowerCase() === 'photo' || viewingAsset.mimeType?.toLowerCase().startsWith('image/')) && !decryptedContent?.includes('Failed') ? (
-                        <div className="flex justify-center bg-slate-900/40 rounded-lg p-2 overflow-hidden min-h-[300px] items-center">
+                        <div className="flex justify-center bg-slate-100 dark:bg-slate-900/40 rounded-lg p-2 overflow-hidden min-h-[300px] items-center">
                           {isDecrypting || !decryptedContent ? (
                             <div className="flex flex-col items-center gap-3 text-slate-400">
                               <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -2181,7 +2181,7 @@ export function AssetCreationForm() {
                           )}
                         </div>
                       ) : (
-                        <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto">
+                        <pre className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto">
                           {decryptedContent}
                         </pre>
                       )}
@@ -2189,11 +2189,11 @@ export function AssetCreationForm() {
 
                     {/* Metadata */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
+                      <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-4 group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
                         <p className="text-xs text-slate-500 mb-1">Type</p>
-                        <p className="text-sm text-white font-medium uppercase tracking-tighter">{viewingAsset.type.replace('_', ' ')}</p>
+                        <p className="text-sm text-slate-800 dark:text-white font-medium uppercase tracking-tighter">{viewingAsset.type.replace('_', ' ')}</p>
                       </div>
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
+                      <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-4 group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
                         <p className="text-xs text-slate-500 mb-1">IPFS CID</p>
                         <p className="text-[10px] text-blue-400 font-mono truncate">{viewingAsset.ipfsHash || 'Qm...fallback (Cloud Copy Active)'}</p>
                       </div>
@@ -2203,10 +2203,10 @@ export function AssetCreationForm() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-white/10 p-6 bg-black/20">
+              <div className="border-t border-slate-200 dark:border-white/10 p-6 bg-slate-50 dark:bg-black/20">
                 <button
                   onClick={() => setIsViewModalOpen(false)}
-                  className="w-full px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all font-medium"
+                  className="w-full px-6 py-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded-xl transition-all font-medium"
                 >
                   Close
                 </button>
@@ -2246,32 +2246,32 @@ export function AssetCreationForm() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRenameFolderState({ ...renameFolderState, isOpen: false })} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-sm bg-[#0a0c12] border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-sm bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
 
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-                <h3 className="text-lg font-bold text-white flex items-center">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
                   <Pencil className="w-5 h-5 mr-3 text-blue-400" /> Rename Folder
                 </h3>
-                <button onClick={() => setRenameFolderState({ ...renameFolderState, isOpen: false })} className="text-slate-500 hover:text-white transition-colors bg-white/5 p-1.5 rounded-full">
+                <button onClick={() => setRenameFolderState({ ...renameFolderState, isOpen: false })} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-6">
-                <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">New Name</label>
+                <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">New Name</label>
                 <input
                   type="text"
                   value={renameInput}
                   onChange={(e) => setRenameInput(e.target.value)}
                   autoFocus
                   onKeyDown={(e) => e.key === 'Enter' && handleRenameFolder()}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
+                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
                 />
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-3">
-                <button onClick={() => setRenameFolderState({ ...renameFolderState, isOpen: false })} className="flex-1 py-3 text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
+                <button onClick={() => setRenameFolderState({ ...renameFolderState, isOpen: false })} className="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all">
                   Cancel
                 </button>
                 <button onClick={handleRenameFolder} disabled={!renameInput.trim() || renameInput === renameFolderState.currentName} className="flex-[2] py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50">

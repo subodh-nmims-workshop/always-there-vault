@@ -29,37 +29,18 @@ export function SharedHeader() {
     ];
 
     return (
-        <nav className="fixed w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300 py-3">
+        <nav className="fixed w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all duration-300 py-3">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
-                    <Link href="/" className="flex items-center space-x-3 group">
-                        <div className="w-10 h-10 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M50 5L90 25V65L50 95L10 65V25L50 5Z" fill="url(#gradHeader1)" />
-                                <path d="M50 15L80 30V60L50 85L20 60V30L50 15Z" fill="#0f172a" />
-                                <path d="M50 25L70 35V55L50 75L30 55V35L50 25Z" fill="url(#gradHeader2)" />
-                                <defs>
-                                    <linearGradient id="gradHeader1" x1="10" y1="5" x2="90" y2="95" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#3b82f6" />
-                                        <stop offset="1" stopColor="#8b5cf6" />
-                                    </linearGradient>
-                                    <linearGradient id="gradHeader2" x1="30" y1="25" x2="70" y2="75" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#10b981" />
-                                        <stop offset="1" stopColor="#3b82f6" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                        </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                            AlwaysThere
-                        </span>
+                    <Link href="/" className="flex items-center group">
+                        <img src="/logo.png" alt="AlwaysThere Logo" className="h-20 w-auto object-contain max-w-[320px] group-hover:scale-105 transition-transform duration-300 dark:invert-[0.05]" />
                     </Link>
 
                     <div className="hidden md:flex space-x-8 items-center">
-                        <Link href="/features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">{t('nav_features')}</Link>
-                        <Link href="/security" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Security</Link>
-                        <Link href="/pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">{t('nav_pricing')}</Link>
-                        <Link href="/docs" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">{t('nav_docs')}</Link>
+                        <Link href="/features" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">{t('nav_features')}</Link>
+                        <Link href="/security" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">Security</Link>
+                        <Link href="/pricing" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">{t('nav_pricing')}</Link>
+                        <Link href="/docs" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">{t('nav_docs')}</Link>
                     </div>
 
                     <div className="flex items-center space-x-4">
@@ -67,14 +48,14 @@ export function SharedHeader() {
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
-                                className="p-2 text-slate-300 hover:text-white transition-colors flex items-center space-x-1"
+                                className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center space-x-1"
                             >
                                 <Globe className="w-5 h-5" />
                                 <span className="text-xs font-bold uppercase">{currentLanguage}</span>
                             </button>
 
                             {isOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-2 animate-in fade-in slide-in-from-top-2 duration-200">
                                     {languages.map((lang) => (
                                         <button
                                             key={lang.code}
@@ -82,7 +63,7 @@ export function SharedHeader() {
                                                 changeLanguage(lang.code);
                                                 setIsOpen(false);
                                             }}
-                                            className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                                            className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
                                         >
                                             <span>{lang.label}</span>
                                             {currentLanguage === lang.code && <Check className="w-4 h-4 text-blue-500" />}

@@ -17,9 +17,9 @@ export default function SubscriptionPage() {
 
     if (!subscription) {
         return (
-            <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0a0c10] flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl text-white mb-4">No subscription found</h2>
+                    <h2 className="text-2xl text-slate-900 dark:text-white mb-4">No subscription found</h2>
                     <Link 
                         href="/pricing"
                         className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-3 rounded-full font-bold transition-all"
@@ -78,14 +78,14 @@ export default function SubscriptionPage() {
         : 0
 
     return (
-        <div className="min-h-screen bg-[#0a0c10] font-sans text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
+        <div className="min-h-screen bg-white dark:bg-[#0a0c10] font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
             {/* Navigation */}
-            <nav className="sticky top-0 z-50 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+            <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0c10]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">AlwaysThere</span>
+                    <span className="font-bold text-xl tracking-tight hidden sm:block text-slate-900 dark:text-white">AlwaysThere</span>
                 </Link>
                 <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
                     Dashboard
@@ -100,7 +100,7 @@ export default function SubscriptionPage() {
                         initial={{ opacity: 0, y: 20 }} 
                         animate={{ opacity: 1, y: 0 }} 
                         transition={defaultTransition} 
-                        className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white"
+                        className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-slate-900 dark:text-white"
                     >
                         Subscription Management
                     </motion.h1>
@@ -119,11 +119,11 @@ export default function SubscriptionPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...defaultTransition, delay: 0.2 }}
-                    className="w-full bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-3xl p-8 mb-8"
+                    className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8"
                 >
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-3xl font-bold text-white mb-2">
+                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                 {subscription.mode === 'centralized' ? '🏢' : '⛓️'} {subscription.plan} Plan
                             </h2>
                             <p className="text-slate-400">
@@ -163,18 +163,18 @@ export default function SubscriptionPage() {
 
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <h3 className="font-semibold text-white mb-2">Features:</h3>
+                            <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Features:</h3>
                             <ul className="space-y-1">
                                 {features.map((feature, idx) => (
-                                    <li key={idx} className="text-slate-300 text-sm">
+                                    <li key={idx} className="text-slate-700 dark:text-slate-300 text-sm">
                                         ✓ {feature}
                                     </li>
                                 ))}
                             </ul>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-white mb-2">Mode:</h3>
-                            <p className="text-slate-300 mb-4">
+                            <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Mode:</h3>
+                            <p className="text-slate-700 dark:text-slate-300 mb-4">
                                 {subscription.mode === 'centralized'
                                     ? '🏢 Centralized - Managed service'
                                     : '⛓️ Decentralized - Self-sovereign'}
@@ -199,16 +199,16 @@ export default function SubscriptionPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ ...defaultTransition, delay: 0.3 }}
-                        className="w-full bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-3xl p-8 mb-8"
+                        className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8"
                     >
-                        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                             <TrendingUp className="w-6 h-6" />
                             Usage Statistics
                         </h2>
                         <div className="grid md:grid-cols-3 gap-6">
                             <div>
-                                <p className="text-slate-400 mb-2">Assets</p>
-                                <p className="text-3xl font-bold text-white mb-2">
+                                <p className="text-slate-600 dark:text-slate-400 mb-2">Assets</p>
+                                <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                     0 / {limits.assets === Infinity ? '∞' : limits.assets}
                                 </p>
                                 <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -219,8 +219,8 @@ export default function SubscriptionPage() {
                                 </div>
                             </div>
                             <div>
-                                <p className="text-slate-400 mb-2">Beneficiaries</p>
-                                <p className="text-3xl font-bold text-white mb-2">
+                                <p className="text-slate-600 dark:text-slate-400 mb-2">Beneficiaries</p>
+                                <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                     0 / {limits.beneficiaries === Infinity ? '∞' : limits.beneficiaries}
                                 </p>
                                 <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -231,8 +231,8 @@ export default function SubscriptionPage() {
                                 </div>
                             </div>
                             <div>
-                                <p className="text-slate-400 mb-2">Storage</p>
-                                <p className="text-3xl font-bold text-white mb-2">
+                                <p className="text-slate-600 dark:text-slate-400 mb-2">Storage</p>
+                                <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                     0 / {limits.storage}
                                 </p>
                                 <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -251,9 +251,9 @@ export default function SubscriptionPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...defaultTransition, delay: 0.4 }}
-                    className="w-full bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-3xl p-8"
+                    className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8"
                 >
-                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                         <CreditCard className="w-6 h-6" />
                         Actions
                     </h2>

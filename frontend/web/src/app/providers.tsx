@@ -28,7 +28,7 @@ export function Providers({ children }: ProvidersProps) {
             <ThemeProvider
               attribute="class"
               defaultTheme="system"
-              enableSystem
+              enableSystem={true}
               disableTransitionOnChange
             >
               <SubscriptionProvider>

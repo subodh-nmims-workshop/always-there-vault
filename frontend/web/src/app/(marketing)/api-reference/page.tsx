@@ -48,7 +48,7 @@ export default function ApiReferencePage() {
                 </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
-                    <Link href="/api" className="text-white transition-colors text-sm font-medium">API Reference</Link>
+                    <Link href="/api-reference" className="text-white transition-colors text-sm font-medium">API Reference</Link>
                     <Link href="/support" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Support</Link>
                 </div>
                 <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">

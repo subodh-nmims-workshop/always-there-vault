@@ -109,24 +109,24 @@ export function SupportSection() {
   }
 
   return (
-    <section className="bg-[#020408] min-h-screen py-16 md:py-24 relative overflow-hidden font-sans selection:bg-[#2b52ff]/30">
+    <section className="bg-white dark:bg-[#020408] min-h-screen py-16 md:py-24 relative overflow-hidden font-sans selection:bg-[#2b52ff]/30">
       <div className="absolute top-0 left-0 w-full h-[1000px] bg-gradient-to-b from-[#2b52ff]/5 via-transparent to-transparent pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-6 relative z-10">
 
         <div className="text-center mb-12 space-y-4">
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight">Help keep AlwaysThere strong</h1>
-          <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight">Help keep AlwaysThere strong</h1>
+          <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
             Your contribution will help millions of people secure their digital afterlife and stay safe online every day.
           </p>
         </div>
 
-        <div className="flex justify-center border-b border-white/10 mb-8 max-w-2xl mx-auto">
+        <div className="flex justify-center border-b border-slate-200 dark:border-white/10 mb-8 max-w-2xl mx-auto">
           {['online', 'crypto', 'faq'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-8 py-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${activeTab === tab ? 'text-[#2b52ff]' : 'text-slate-500 hover:text-slate-300'}`}
+              className={`px-8 py-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${activeTab === tab ? 'text-[#2b52ff]' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'}`}
             >
               DONATE {tab}
               {activeTab === tab && (
@@ -137,8 +137,8 @@ export function SupportSection() {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <div className="bg-[#0a0c12] rounded-3xl border border-white/5 p-8 md:p-14 shadow-2xl relative overflow-hidden min-h-[600px]">
-            <h2 className="text-xl font-bold mb-8 text-white">Your donation</h2>
+          <div className="bg-white dark:bg-[#0a0c12] rounded-3xl border border-slate-200 dark:border-white/5 p-8 md:p-14 shadow-2xl relative overflow-hidden min-h-[600px]">
+            <h2 className="text-xl font-bold mb-8 text-slate-900 dark:text-white">Your donation</h2>
 
             <AnimatePresence mode="wait">
               {activeTab === 'crypto' ? (
@@ -151,7 +151,7 @@ export function SupportSection() {
                 >
                   <div className="space-y-4">
                     <p className="text-[10px] font-black text-[#2b52ff] uppercase tracking-[0.3em]">DONATE BY</p>
-                    <div className="flex bg-white/5 rounded-xl p-1.5 w-fit border border-white/5">
+                    <div className="flex bg-slate-100 dark:bg-white/5 rounded-xl p-1.5 w-fit border border-slate-200 dark:border-white/5">
                       <button onClick={() => setDonateBy('wallet')} className={`flex items-center gap-3 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${donateBy === 'wallet' ? 'bg-[#2b52ff] text-white' : 'text-slate-500'}`}>
                         Wallet address
                       </button>
@@ -163,7 +163,7 @@ export function SupportSection() {
 
                   <div className="space-y-4">
                     <p className="text-[10px] font-black text-[#2b52ff] uppercase tracking-[0.3em]">HOW OFTEN?</p>
-                    <div className="flex bg-white/5 rounded-xl p-1.5 w-fit border border-white/5">
+                    <div className="flex bg-slate-100 dark:bg-white/5 rounded-xl p-1.5 w-fit border border-slate-200 dark:border-white/5">
                       <button onClick={() => setFrequency('once')} className={`px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${frequency === 'once' ? 'bg-[#2b52ff] text-white' : 'text-slate-500'}`}>Give once</button>
                       <button onClick={() => setFrequency('monthly')} className={`px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${frequency === 'monthly' ? 'bg-[#2b52ff] text-white' : 'text-slate-500'}`}>Repeat monthly</button>
                     </div>
@@ -173,44 +173,44 @@ export function SupportSection() {
                     <p className="text-[10px] font-black text-[#2b52ff] uppercase tracking-[0.3em]">AMOUNT</p>
                     <div className="grid grid-cols-3 gap-3">
                       {['5', '25', '75', '125', '500', '1000'].map((val) => (
-                        <button key={val} onClick={() => setUsdAmount(val)} className={`py-5 rounded-xl text-lg font-black transition-all border-2 ${usdAmount === val ? 'bg-[#2b52ff] text-white border-[#2b52ff]' : 'bg-white/5 text-white border-transparent hover:bg-white/10'}`}>
+                        <button key={val} onClick={() => setUsdAmount(val)} className={`py-5 rounded-xl text-lg font-black transition-all border-2 ${usdAmount === val ? 'bg-[#2b52ff] text-white border-[#2b52ff]' : 'bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-white border-transparent hover:bg-slate-200 dark:hover:bg-white/10'}`}>
                           ${val}
                         </button>
                       ))}
                     </div>
                     <div className="relative group">
                       <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-600 group-focus-within:text-[#2b52ff]">$</span>
-                      <input type="number" value={usdAmount} onChange={(e) => setUsdAmount(e.target.value)} className="w-full bg-white/5 border-2 border-white/5 rounded-2xl py-6 px-12 text-2xl font-black text-white outline-none focus:border-[#2b52ff] transition-all" />
-                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 uppercase">USD</span>
+                      <input type="number" value={usdAmount} onChange={(e) => setUsdAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-white/5 border-2 border-slate-200 dark:border-white/5 rounded-2xl py-6 px-12 text-2xl font-black text-slate-900 dark:text-white outline-none focus:border-[#2b52ff] transition-all" />
+                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-700 uppercase">USD</span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-[#2b52ff]/5 border border-[#2b52ff]/10 rounded-2xl">
-                      <span className="text-[10px] font-black text-slate-500 uppercase">ESTIMATED CONTRIBUTION</span>
-                      <span className="text-sm font-black text-white">{cryptoAmount} <span className="text-[#2b52ff] uppercase">{selectedCurrency}</span></span>
+                      <span className="text-[10px] font-black text-slate-600 uppercase">ESTIMATED CONTRIBUTION</span>
+                      <span className="text-sm font-black text-slate-900 dark:text-white">{cryptoAmount} <span className="text-[#2b52ff] uppercase">{selectedCurrency}</span></span>
                     </div>
                   </div>
 
-                  <div className="pt-8 border-t border-white/5 space-y-6">
+                  <div className="pt-8 border-t border-slate-200 dark:border-white/5 space-y-6">
                     <p className="text-[10px] font-black text-[#2b52ff] uppercase tracking-[0.3em]">STEP 1: SELECT YOUR ASSET</p>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       {COINS.map((coin) => (
                          <button 
                            key={coin.name} 
                            onClick={() => setSelectedCurrency(coin.name)} 
-                           className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${selectedCurrency === coin.name ? 'border-[#2b52ff] bg-[#2b52ff]/10 shadow-[0_0_15px_rgba(43,82,255,0.2)]' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'}`}
+                           className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${selectedCurrency === coin.name ? 'border-[#2b52ff] bg-[#2b52ff]/10 shadow-[0_0_15px_rgba(43,82,255,0.2)]' : 'border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.05]'}`}
                          >
                            <span className="text-2xl mb-2 filter drop-shadow-md">{coin.icon}</span>
-                           <span className={`text-xs font-black uppercase tracking-wider ${selectedCurrency === coin.name ? 'text-white' : 'text-slate-400'}`}>{coin.name}</span>
+                           <span className={`text-xs font-black uppercase tracking-wider ${selectedCurrency === coin.name ? 'text-white' : 'text-slate-600 dark:text-slate-400'}`}>{coin.name}</span>
                          </button>
                       ))}
                     </div>
                     
-                    <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5 flex items-center justify-between">
+                    <div className="p-4 bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/5 flex items-center justify-between">
                       <div className="overflow-hidden">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Direct Transfer Address</p>
+                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Direct Transfer Address</p>
                         <code className="text-[#2b52ff] font-mono text-xs sm:text-sm truncate block">{developerAddress}</code>
                       </div>
-                      <button onClick={() => { navigator.clipboard.writeText(developerAddress); toast.success('Copied') }} className="p-3 hover:bg-white/10 rounded-lg bg-white/5 transition-all">
-                        <Copy className="w-4 h-4 text-slate-400" />
+                      <button onClick={() => { navigator.clipboard.writeText(developerAddress); toast.success('Copied') }} className="p-3 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg bg-slate-100 dark:bg-white/5 transition-all">
+                        <Copy className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                       </button>
                     </div>
                   </div>
@@ -226,20 +226,20 @@ export function SupportSection() {
                   className="space-y-8 flex flex-col items-center justify-center py-10"
                 >
                   <CreditCard className="w-20 h-20 text-[#00457C] mb-4" />
-                  <h3 className="text-2xl font-black text-white">Fiat Legacy Bridge</h3>
-                  <p className="text-slate-400 text-center text-sm max-w-xs leading-relaxed">
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white">Fiat Legacy Bridge</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-center text-sm max-w-xs leading-relaxed">
                     Securely contribute using PayPal, Visa, or Mastercard via our verified PayPal gateway.
                   </p>
                   <button
-                    onClick={() => { navigator.clipboard.writeText('subodhram3350@gmail.com'); toast.success('PayPal Email Copied!', { description: 'Please paste it in PayPal to send the support.' }); window.open('https://www.paypal.com/myaccount/transfer/homepage', '_blank'); }}
+                    onClick={() => { navigator.clipboard.writeText('subodhram3350@gmail.com'); toast.success('PayPal Email Copied!', { description: 'Please paste it in PayPal to Secure the support.' }); window.open('https://www.paypal.com/myaccount/transfer/homepage', '_blank'); }}
                     className="w-full h-20 rounded-[2rem] bg-[#0079C1] text-white font-black uppercase tracking-[0.2em] text-sm hover:bg-[#00457C] transition-all shadow-xl mt-6 flex items-center justify-center gap-3 active:scale-95 border border-[#00457C]/50"
                   >
                     <Zap className="w-5 h-5 fill-current text-yellow-400" /> Pay ${usdAmount} via PayPal
                   </button>
                   <div className="flex gap-6 opacity-30 mt-10">
-                    <span className="text-white font-black italic">PAYPAL</span>
-                    <span className="text-white font-black italic">VISA</span>
-                    <span className="text-white font-black italic">MASTERCARD</span>
+                    <span className="text-slate-900 dark:text-white font-black italic">PAYPAL</span>
+                    <span className="text-slate-900 dark:text-white font-black italic">VISA</span>
+                    <span className="text-slate-900 dark:text-white font-black italic">MASTERCARD</span>
                   </div>
                 </motion.div>
               ) : (
@@ -253,11 +253,11 @@ export function SupportSection() {
                     { q: "How are funds used?", a: "100% used for node maintenance and zero-knowledge research." },
                     { q: "Can I donate anonymously?", a: "Yes, crypto contributions are pseudonymous by design." }
                   ].map((faq, i) => (
-                    <div key={i} className="p-6 bg-white/5 rounded-2xl border border-white/5">
-                      <h4 className="text-sm font-black text-white mb-2 uppercase flex items-center gap-2">
+                    <div key={i} className="p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white mb-2 uppercase flex items-center gap-2">
                         <HelpCircle className="w-4 h-4 text-[#2b52ff]" /> {faq.q}
                       </h4>
-                      <p className="text-xs text-slate-400 leading-relaxed font-medium">{faq.a}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{faq.a}</p>
                     </div>
                   ))}
                   <div className="text-center pt-6">
@@ -269,7 +269,7 @@ export function SupportSection() {
               )}
             </AnimatePresence>
 
-            <div className="mt-12 pt-8 border-t border-white/5 text-center">
+            <div className="mt-12 pt-8 border-t border-slate-200 dark:border-white/5 text-center">
               <p className="text-[9px] text-slate-600 font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2">
                 <Shield className="w-3 h-3 text-green-500" /> Secure • Decentralized • Anonymous
               </p>
