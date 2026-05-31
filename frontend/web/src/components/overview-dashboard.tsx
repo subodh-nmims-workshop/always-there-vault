@@ -224,100 +224,148 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                     <div className="lg:w-2/3 flex flex-col gap-6">
                         {/* Chart Section */}
                         <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 relative overflow-hidden shadow-sm">
-                            <div className="flex items-center justify-between mb-8">
+                            {/* CSS for ECG wave animation */}
+                            <style>{`
+                                @keyframes ecgPulse {
+                                    to {
+                                        stroke-dashoffset: -600;
+                                    }
+                                }
+                                .animate-ecg-pulse {
+                                    animation: ecgPulse 4s linear infinite;
+                                }
+                            `}</style>
+                            <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Protocol Pulse Timeline</h2>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Proof of life cryptographic verifications over time</p>
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Security & Pulse Center</h2>
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Proof of life active monitoring and on-chain verification record</p>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{heartbeats.length}</span>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mt-1">Total Pings Issued</p>
+                                    <p className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider mt-1">Total Pings</p>
                                 </div>
                             </div>
 
-                            <div className="h-[280px] w-full relative">
-                                {loading ? (
-                                    <div className="flex items-center justify-center h-full">
-                                        <div className="text-slate-400 dark:text-slate-500">Loading data...</div>
-                                    </div>
-                                ) : heartbeats.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                                        <BoltIcon className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-4" />
-                                        <p className="text-slate-400 dark:text-slate-500 font-medium">No structural pings recorded yet.</p>
-                                        <p className="text-slate-500 dark:text-slate-600 text-sm mt-1">Sign your first heartbeat on the network to initialize your protocol timeline.</p>
-                                    </div>
-                                ) : (
-                                    <svg className="w-full h-full overflow-visible" viewBox="0 0 800 280">
-                                        <defs>
-                                            <linearGradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%">
-                                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3"></stop>
-                                                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"></stop>
-                                            </linearGradient>
-                                            <linearGradient id="lineGradient" x1="0%" x2="100%" y1="0%" y2="0%">
-                                                <stop offset="0%" stopColor="#3b82f6"></stop>
-                                                <stop offset="100%" stopColor="#8b5cf6"></stop>
-                                            </linearGradient>
-                                        </defs>
-                                        {(() => {
-                                            // Generate path based on actual heartbeat accumulation dates
-                                            const sortedHeartbeats = [...heartbeats].sort((a, b) => a.timestamp - b.timestamp)
-
-                                            const points = sortedHeartbeats.map((ping, index) => {
-                                                const x = (index / Math.max(sortedHeartbeats.length - 1, 1)) * 800
-                                                // Create a realistic heartbeat interval variance using sine/cosine waves
-                                                // so it has beautiful, premium curves instead of a plain straight line
-                                                const variance = Math.sin(index * 1.5) * 15 + Math.cos(index * 0.8) * 10
-                                                const baseProgress = (index / Math.max(sortedHeartbeats.length - 1, 1)) * 160
-                                                const y = 220 - baseProgress + variance
-                                                return { x, y: Math.max(20, Math.min(260, y)) }
-                                            })
-
-                                            if (points.length === 1) {
-                                                points.unshift({ x: 0, y: 240 })
-                                            }
-
-                                            // Generate smooth bezier curve path
-                                            let pathD = ''
-                                            if (points.length > 0) {
-                                                pathD = `M${points[0].x},${points[0].y}`
-                                                for (let i = 0; i < points.length - 1; i++) {
-                                                    const p0 = points[i]
-                                                    const p1 = points[i + 1]
-                                                    const cpX1 = p0.x + (p1.x - p0.x) / 2
-                                                    const cpY1 = p0.y
-                                                    const cpX2 = p0.x + (p1.x - p0.x) / 2
-                                                    const cpY2 = p1.y
-                                                    pathD += ` C${cpX1},${cpY1} ${cpX2},${cpY2} ${p1.x},${p1.y}`
-                                                }
-                                            }
-
-                                            const areaD = points.length > 0 ? `${pathD} L800,280 L0,280 Z` : ''
-
-                                            return (
-                                                <>
-                                                    <path d={pathD} fill="none" stroke="url(#lineGradient)" strokeLinecap="round" strokeWidth="4"></path>
-                                                    <path d={areaD} fill="url(#gradient)"></path>
-                                                    {points.map((point, i) => (
-                                                        <circle
-                                                            key={i}
-                                                            className="shadow-[0_0_15px_theme(colors.purple.500)]"
-                                                            cx={point.x}
-                                                            cy={point.y}
-                                                            fill={i === points.length - 1 ? "#ec4899" : "#8b5cf6"}
-                                                            r="6"
-                                                            stroke="#fff"
-                                                            strokeWidth="2"
-                                                        />
-                                                    ))}
-                                                </>
-                                            )
-                                        })()}
-                                    </svg>
-                                )}
-                                <div className="flex justify-between mt-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                    <span>Genesis</span><span>Pulse Evolution</span><span>Active Target</span>
+                            {loading ? (
+                                <div className="flex items-center justify-center h-[280px]">
+                                    <div className="text-slate-400 dark:text-slate-500">Loading data...</div>
                                 </div>
-                            </div>
+                            ) : heartbeats.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-[280px] text-center px-4">
+                                    <BoltIcon className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-4" />
+                                    <p className="text-slate-400 dark:text-slate-500 font-medium">No structural pings recorded yet.</p>
+                                    <p className="text-slate-500 dark:text-slate-600 text-sm mt-1">Sign your first heartbeat on the network to initialize your protocol timeline.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[280px]">
+                                    {/* Left Side: Live ECG Animation */}
+                                    <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-6 relative overflow-hidden">
+                                        <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-[9px] font-bold text-green-500 uppercase tracking-wider">
+                                            <span className="relative flex h-1.5 w-1.5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                                            </span>
+                                            LIVE MONITORING
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">Cryptographic Heartbeat</p>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">Proof of Life Pulse</h3>
+                                        </div>
+
+                                        {/* ECG SVG */}
+                                        <div className="w-full h-24 my-4 relative bg-slate-100/50 dark:bg-slate-900/20 rounded-xl border border-slate-150 dark:border-slate-800/40 p-2 flex items-center">
+                                            <svg className="w-full h-full overflow-hidden" viewBox="0 0 300 100" preserveAspectRatio="none">
+                                                {/* Grid background */}
+                                                <defs>
+                                                    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(147, 197, 253, 0.05)" strokeWidth="1" />
+                                                    </pattern>
+                                                </defs>
+                                                <rect width="100%" height="100%" fill="url(#grid)" />
+                                                {/* Glowing ECG Path */}
+                                                <path
+                                                    d="M 0 50 L 60 50 L 70 40 L 75 65 L 85 10 L 95 85 L 102 45 L 110 50 L 190 50 L 200 40 L 205 65 L 215 10 L 225 85 L 232 45 L 240 50 L 300 50"
+                                                    fill="none"
+                                                    stroke="#2563eb"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="animate-ecg-pulse"
+                                                    style={{
+                                                        strokeDasharray: 600,
+                                                        strokeDashoffset: 600,
+                                                    }}
+                                                />
+                                            </svg>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2 border-t border-slate-200 dark:border-slate-800/80 pt-4 text-center">
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">Rate Limit</p>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">30 Days</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">On-Chain</p>
+                                                <p className="text-xs font-bold text-green-500 mt-0.5">Active</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">Protocol</p>
+                                                <p className="text-xs font-bold text-blue-500 mt-0.5">Smart Will</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right Side: Uptime Grid Matrix */}
+                                    <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-6">
+                                        <div>
+                                            <p className="text-xs text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">Verification History</p>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">Audit Matrix</h3>
+                                        </div>
+
+                                        {/* Grid of Blocks */}
+                                        <div className="grid grid-cols-8 gap-2 my-4">
+                                            {Array.from({ length: 24 }).map((_, index) => {
+                                                const totalPings = heartbeats.length;
+                                                const isVerified = index < totalPings;
+                                                const isActive = index === totalPings;
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`aspect-square rounded-lg flex items-center justify-center border transition-all text-[9px] font-bold ${
+                                                            isVerified
+                                                                ? "bg-green-500/10 dark:bg-green-500/20 border-green-500/30 dark:border-green-500/40 text-green-600 dark:text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                                                                : isActive
+                                                                ? "bg-blue-600 border-blue-500 text-white animate-pulse shadow-[0_0_12px_rgba(59,130,246,0.4)]"
+                                                                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-700"
+                                                        }`}
+                                                        title={
+                                                            isVerified
+                                                                ? `Heartbeat Checkpoint ${index + 1}: VERIFIED`
+                                                                : isActive
+                                                                ? `Heartbeat Checkpoint ${index + 1}: CURRENT WINDOW`
+                                                                : `Heartbeat Checkpoint ${index + 1}: SCHEDULED`
+                                                        }
+                                                    >
+                                                        {index + 1}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium border-t border-slate-200 dark:border-slate-800/80 pt-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-2.5 h-2.5 rounded bg-green-500/25 border border-green-500/40"></span> Verified
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-2.5 h-2.5 rounded bg-blue-600 animate-pulse"></span> Active
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-2.5 h-2.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></span> Scheduled
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Recent Activity Section */}

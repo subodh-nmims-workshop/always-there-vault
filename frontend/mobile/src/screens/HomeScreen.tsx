@@ -150,74 +150,81 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
 
         {/* TIMELINE SECTION */}
-        <View style={styles.sectionCard}>
-           <View style={styles.sectionHeader}>
-             <View>
-               <Text style={styles.sectionTitle}>Protocol Pulse Timeline</Text>
-               <Text style={styles.sectionSub}>Proof of life cryptographic verifications</Text>
-             </View>
-             <View style={styles.pingCountBox}>
-               <Text style={styles.pingCountVal}>{stats.totalPings}</Text>
-               <Text style={styles.pingCountLabel}>Total Pings</Text>
-             </View>
-           </View>
-
-           <View style={styles.chartArea}>
-              {(() => {
-                 const totalPingsCount = stats.totalPings || 1;
-                 const pointsCount = Math.max(5, totalPingsCount);
-                 const points = Array.from({ length: pointsCount }).map((_, index) => {
-                    const x = (index / (pointsCount - 1)) * 300;
-                    // Beautiful curve using sine/cosine for variance
-                    const variance = Math.sin(index * 1.5) * 8 + Math.cos(index * 0.8) * 5;
-                    const baseProgress = (index / (pointsCount - 1)) * 80;
-                    const y = 120 - baseProgress + variance;
-                    return { x, y: Math.max(10, Math.min(140, y)) };
-                 });
-
-                 // Generate smooth bezier curve path
-                 let pathD = '';
-                 if (points.length > 0) {
-                    pathD = `M${points[0].x},${points[0].y}`;
-                    for (let i = 0; i < points.length - 1; i++) {
-                       const p0 = points[i];
-                       const p1 = points[i + 1];
-                       const cpX1 = p0.x + (p1.x - p0.x) / 2;
-                       const cpY1 = p0.y;
-                       const cpX2 = p0.x + (p1.x - p0.x) / 2;
-                       const cpY2 = p1.y;
-                       pathD += ` C${cpX1},${cpY1} ${cpX2},${cpY2} ${p1.x},${p1.y}`;
-                    }
-                 }
-
-                 const areaD = points.length > 0 ? `${pathD} L300,150 L0,150 Z` : '';
-                 const lastPoint = points[points.length - 1];
-
-                 return (
-                    <Svg width={width - 48} height={150} viewBox="0 0 300 150">
-                       <Defs>
-                          <SvgGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                             <Stop offset="0" stopColor={COLORS.secondary} stopOpacity="0.2" />
-                             <Stop offset="1" stopColor={COLORS.secondary} stopOpacity="0" />
-                          </SvgGradient>
-                       </Defs>
-                       {pathD ? (
-                          <>
-                             <Path d={areaD} fill="url(#grad)" />
-                             <Path d={pathD} fill="none" stroke={COLORS.primary} strokeWidth="3" strokeLinecap="round" />
-                             <Circle cx={lastPoint.x} cy={lastPoint.y} r={4} fill="#fff" stroke={COLORS.secondary} strokeWidth={2} />
-                          </>
-                       ) : null}
-                    </Svg>
-                 );
-              })()}
-              <View style={styles.chartLabels}>
-                <Text style={styles.chartLabel}>GENESIS</Text>
-                <Text style={styles.chartLabel}>EVOLUTION</Text>
-                <Text style={styles.chartLabel}>ACTIVE</Text>
+         {/* SECURITY & PULSE CENTER */}
+         <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>Security & Pulse Center</Text>
+                <Text style={styles.sectionSub}>Proof of life on-chain verification</Text>
               </View>
-           </View>
-        </View>
+              <View style={styles.pingCountBox}>
+                <Text style={styles.pingCountVal}>{stats.totalPings}</Text>
+                <Text style={styles.pingCountLabel}>Total Pings</Text>
+              </View>
+            </View>
+
+            {/* Mobile ECG Wave */}
+            <View style={styles.mobileEcgContainer}>
+               <View style={styles.liveBadge}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>PULSE ONLINE</Text>
+               </View>
+               <Svg width={width - 80} height={40} viewBox="0 0 300 40">
+                  <Path
+                   d="M0,20 L80,20 L90,12 L95,28 L105,4 L115,36 L122,16 L130,20 L210,20 L220,12 L225,28 L235,4 L245,36 L252,16 L260,20 L300,20"
+                   fill="none"
+                   stroke={COLORS.primary}
+                   strokeWidth="2.5"
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                  />
+               </Svg>
+            </View>
+
+            {/* Verification Grid */}
+            <Text style={styles.matrixTitle}>Verification Audit Matrix</Text>
+            <View style={styles.matrixGrid}>
+               {Array.from({ length: 16 }).map((_, index) => {
+                  const isVerified = index < stats.totalPings;
+                  const isActive = index === stats.totalPings;
+                  return (
+                     <View 
+                        key={index} 
+                        style={[
+                           styles.matrixBlock, 
+                           isVerified && styles.matrixBlockVerified,
+                           isActive && styles.matrixBlockActive,
+                        ]}
+                     >
+                        <Text 
+                           style={[
+                              styles.matrixBlockText,
+                              isVerified && styles.matrixBlockTextVerified,
+                              isActive && styles.matrixBlockTextActive,
+                           ]}
+                        >
+                           {index + 1}
+                        </Text>
+                     </View>
+                  );
+               })}
+            </View>
+
+            <View style={styles.matrixLegend}>
+               <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: COLORS.accent + '25', borderColor: COLORS.accent }]} />
+                  <Text style={styles.legendText}>Verified</Text>
+               </View>
+               <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]} />
+                  <Text style={styles.legendText}>Active</Text>
+               </View>
+               <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: COLORS.surface, borderColor: COLORS.border }]} />
+                  <Text style={styles.legendText}>Scheduled</Text>
+               </View>
+            </View>
+         </View>
 
         <View style={styles.mainGrid}>
            {/* DEAD MAN SWITCH CARD */}
@@ -338,9 +345,112 @@ const styles = StyleSheet.create({
   pingCountVal: { color: COLORS.text, fontSize: 20, fontFamily: FONTS.orbitron.black },
   pingCountLabel: { color: COLORS.textDim, fontSize: 8, fontFamily: FONTS.inter.bold },
 
-  chartArea: { height: 160, position: 'relative' },
-  chartLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  chartLabel: { color: COLORS.textDim, fontSize: 7, fontFamily: FONTS.inter.bold, letterSpacing: 1 },
+  mobileEcgContainer: {
+    height: 70,
+    backgroundColor: 'rgba(30, 41, 59, 0.2)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginVertical: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  liveBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.accent + '15',
+    borderColor: COLORS.accent + '30',
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  liveDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.accent,
+    marginRight: 4,
+  },
+  liveText: {
+    color: COLORS.accent,
+    fontSize: 6,
+    fontFamily: FONTS.inter.bold,
+  },
+  matrixTitle: {
+    color: COLORS.textDim,
+    fontSize: 10,
+    fontFamily: FONTS.inter.bold,
+    marginTop: 8,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  matrixGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  matrixBlock: {
+    width: '10.5%',
+    aspectRatio: 1,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  matrixBlockVerified: {
+    backgroundColor: COLORS.accent + '15',
+    borderColor: COLORS.accent + '40',
+  },
+  matrixBlockActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  matrixBlockText: {
+    fontSize: 8,
+    color: COLORS.textDim,
+    fontFamily: FONTS.inter.bold,
+  },
+  matrixBlockTextVerified: {
+    color: COLORS.accent,
+  },
+  matrixBlockTextActive: {
+    color: '#fff',
+  },
+  matrixLegend: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 2,
+    borderWidth: 1,
+  },
+  legendText: {
+    color: COLORS.textDim,
+    fontSize: 8,
+    fontFamily: FONTS.inter.medium,
+  },
 
   mainGrid: { gap: 20 },
   switchGradient: { borderRadius: RADIUS.xl, padding: 1 },
