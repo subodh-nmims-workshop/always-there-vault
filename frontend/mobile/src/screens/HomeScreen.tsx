@@ -163,23 +163,54 @@ const HomeScreen = ({ navigation }: any) => {
            </View>
 
            <View style={styles.chartArea}>
-              <Svg width={width - 48} height={150} viewBox="0 0 300 150">
-                 <Defs>
-                    <SvgGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                       <Stop offset="0" stopColor={COLORS.secondary} stopOpacity="0.2" />
-                       <Stop offset="1" stopColor={COLORS.secondary} stopOpacity="0" />
-                    </SvgGradient>
-                 </Defs>
-                 <Path 
-                  d="M0,120 L50,110 L100,90 L150,95 L200,60 L250,50 L300,40 L300,150 L0,150 Z" 
-                  fill="url(#grad)" 
-                 />
-                 <Path 
-                  d="M0,120 L50,110 L100,90 L150,95 L200,60 L250,50 L300,40" 
-                  fill="none" stroke={COLORS.primary} strokeWidth="3" strokeLinecap="round" 
-                 />
-                 <Circle cx={300} cy={40} r={4} fill="#fff" stroke={COLORS.secondary} strokeWidth={2} />
-              </Svg>
+              {(() => {
+                 const totalPingsCount = stats.totalPings || 1;
+                 const pointsCount = Math.max(5, totalPingsCount);
+                 const points = Array.from({ length: pointsCount }).map((_, index) => {
+                    const x = (index / (pointsCount - 1)) * 300;
+                    // Beautiful curve using sine/cosine for variance
+                    const variance = Math.sin(index * 1.5) * 8 + Math.cos(index * 0.8) * 5;
+                    const baseProgress = (index / (pointsCount - 1)) * 80;
+                    const y = 120 - baseProgress + variance;
+                    return { x, y: Math.max(10, Math.min(140, y)) };
+                 });
+
+                 // Generate smooth bezier curve path
+                 let pathD = '';
+                 if (points.length > 0) {
+                    pathD = `M${points[0].x},${points[0].y}`;
+                    for (let i = 0; i < points.length - 1; i++) {
+                       const p0 = points[i];
+                       const p1 = points[i + 1];
+                       const cpX1 = p0.x + (p1.x - p0.x) / 2;
+                       const cpY1 = p0.y;
+                       const cpX2 = p0.x + (p1.x - p0.x) / 2;
+                       const cpY2 = p1.y;
+                       pathD += ` C${cpX1},${cpY1} ${cpX2},${cpY2} ${p1.x},${p1.y}`;
+                    }
+                 }
+
+                 const areaD = points.length > 0 ? `${pathD} L300,150 L0,150 Z` : '';
+                 const lastPoint = points[points.length - 1];
+
+                 return (
+                    <Svg width={width - 48} height={150} viewBox="0 0 300 150">
+                       <Defs>
+                          <SvgGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                             <Stop offset="0" stopColor={COLORS.secondary} stopOpacity="0.2" />
+                             <Stop offset="1" stopColor={COLORS.secondary} stopOpacity="0" />
+                          </SvgGradient>
+                       </Defs>
+                       {pathD ? (
+                          <>
+                             <Path d={areaD} fill="url(#grad)" />
+                             <Path d={pathD} fill="none" stroke={COLORS.primary} strokeWidth="3" strokeLinecap="round" />
+                             <Circle cx={lastPoint.x} cy={lastPoint.y} r={4} fill="#fff" stroke={COLORS.secondary} strokeWidth={2} />
+                          </>
+                       ) : null}
+                    </Svg>
+                 );
+              })()}
               <View style={styles.chartLabels}>
                 <Text style={styles.chartLabel}>GENESIS</Text>
                 <Text style={styles.chartLabel}>EVOLUTION</Text>

@@ -262,20 +262,36 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                             // Generate path based on actual heartbeat accumulation dates
                                             const sortedHeartbeats = [...heartbeats].sort((a, b) => a.timestamp - b.timestamp)
 
-                                            const points = sortedHeartbeats.map((ping, index) => ({
-                                                x: (index / Math.max(sortedHeartbeats.length - 1, 1)) * 800,
-                                                y: 240 - (index * (180 / Math.max(sortedHeartbeats.length - 1, 1)))
-                                            }))
+                                            const points = sortedHeartbeats.map((ping, index) => {
+                                                const x = (index / Math.max(sortedHeartbeats.length - 1, 1)) * 800
+                                                // Create a realistic heartbeat interval variance using sine/cosine waves
+                                                // so it has beautiful, premium curves instead of a plain straight line
+                                                const variance = Math.sin(index * 1.5) * 15 + Math.cos(index * 0.8) * 10
+                                                const baseProgress = (index / Math.max(sortedHeartbeats.length - 1, 1)) * 160
+                                                const y = 220 - baseProgress + variance
+                                                return { x, y: Math.max(20, Math.min(260, y)) }
+                                            })
 
                                             if (points.length === 1) {
-                                                points.unshift({ x: 0, y: 260 })
+                                                points.unshift({ x: 0, y: 240 })
                                             }
 
-                                            const pathD = points.map((p, i) =>
-                                                i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`
-                                            ).join(' ')
+                                            // Generate smooth bezier curve path
+                                            let pathD = ''
+                                            if (points.length > 0) {
+                                                pathD = `M${points[0].x},${points[0].y}`
+                                                for (let i = 0; i < points.length - 1; i++) {
+                                                    const p0 = points[i]
+                                                    const p1 = points[i + 1]
+                                                    const cpX1 = p0.x + (p1.x - p0.x) / 2
+                                                    const cpY1 = p0.y
+                                                    const cpX2 = p0.x + (p1.x - p0.x) / 2
+                                                    const cpY2 = p1.y
+                                                    pathD += ` C${cpX1},${cpY1} ${cpX2},${cpY2} ${p1.x},${p1.y}`
+                                                }
+                                            }
 
-                                            const areaD = `${pathD} L800,280 L0,280 Z`
+                                            const areaD = points.length > 0 ? `${pathD} L800,280 L0,280 Z` : ''
 
                                             return (
                                                 <>
