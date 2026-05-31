@@ -5,8 +5,6 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  // Turbopack configuration (Next.js 16+)
-  turbopack: {},
   // Webpack fallback for compatibility
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -15,6 +13,8 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        '@react-native-async-storage/async-storage': false,
+        'pino-pretty': false,
       };
     }
     return config;

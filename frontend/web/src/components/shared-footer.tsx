@@ -13,8 +13,12 @@ export function SharedFooter() {
                 <div className="grid md:grid-cols-4 gap-8 mb-8">
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
-                             <Link href="/" className="flex items-center group hover:opacity-80 transition-opacity">
-                                 <img src="/logo.png" alt="AlwaysThere Logo" className="h-20 w-auto object-contain max-w-[320px] dark:invert-[0.05]" />
+                             <Link href="/" className="flex items-center gap-3 group hover:opacity-80 transition-opacity">
+                                <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+                                <div className="flex flex-col text-left">
+                                    <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+                                    <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+                                </div>
                              </Link>
                         </div>
                         <p className="text-sm">

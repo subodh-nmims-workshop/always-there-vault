@@ -32,8 +32,12 @@ export function SharedHeader() {
         <nav className="fixed w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all duration-300 py-3">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
-                    <Link href="/" className="flex items-center group">
-                        <img src="/logo.png" alt="AlwaysThere Logo" className="h-20 w-auto object-contain max-w-[320px] group-hover:scale-105 transition-transform duration-300 dark:invert-[0.05]" />
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+                        <div className="flex flex-col text-left">
+                            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+                            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+                        </div>
                     </Link>
 
                     <div className="hidden md:flex space-x-8 items-center">
