@@ -5,7 +5,8 @@ import {
   Text,
   StatusBar,
   ActivityIndicator,
-  LogBox
+  LogBox,
+  Image,
 } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -190,9 +191,12 @@ export default function App() {
     return (
       <View style={styles.splashContainer}>
         <StatusBar barStyle="light-content" />
-        <Shield size={80} color={COLORS.primary} style={styles.splashLogo} />
-        <Text style={styles.splashTitle}>DEADMAN</Text>
-        <Text style={styles.splashSubtitle}>PROTOCOL</Text>
+        <Image 
+          source={require('./assets/logo-simple.png')} 
+          style={{ width: 80, height: 80, resizeMode: 'contain', marginBottom: 20 }} 
+        />
+        <Text style={styles.splashTitle}>ALWAYS THERE</Text>
+        <Text style={[styles.splashSubtitle, { letterSpacing: 2, fontSize: 10 }]}>SECURE YOUR DIGITAL LEGACY</Text>
         <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 40 }} />
       </View>
     );

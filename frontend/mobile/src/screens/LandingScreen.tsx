@@ -8,6 +8,7 @@ import {
   ScrollView,
   StatusBar,
   Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -146,8 +147,16 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
       >
         {/* LOGO SECTION */}
         <Animated.View entering={FadeInUp.delay(300).duration(800)} style={styles.header}>
-            <PulsingShield />
-            <Text style={styles.headerLogoText}>AlwaysThere PROTOCOL</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <Image 
+                    source={require('../../assets/logo-simple.png')} 
+                    style={{ width: 44, height: 44, resizeMode: 'contain' }} 
+                />
+                <View style={{ alignItems: 'flex-start' }}>
+                    <Text style={{ color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 18, letterSpacing: 1.5, lineHeight: 22 }}>ALWAYS THERE</Text>
+                    <Text style={{ color: COLORS.textDim, fontFamily: FONTS.orbitron.bold, fontSize: 7, letterSpacing: 2, marginTop: 4 }}>SECURE YOUR DIGITAL LEGACY</Text>
+                </View>
+            </View>
             <View style={styles.versionBadge}>
                 <Text style={styles.versionText}>V2.4.0 ENCRYPTED</Text>
             </View>
