@@ -8,18 +8,22 @@ import { SharedFooter } from '@/components/shared-footer'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ALL_PLANS } from '@/types/subscription'
 import { useState } from 'react'
+import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/confirm-modal'
 
 export default function SubscriptionPage() {
     const router = useRouter()
     const { subscription, switchMode, cancelSubscription } = useSubscription()
     const [switching, setSwitching] = useState(false)
+    const [confirmCancelOpen, setConfirmCancelOpen] = useState(false)
+    const [confirmSwitchOpen, setConfirmSwitchOpen] = useState(false)
     const defaultTransition = { duration: 0.5, ease: "easeOut" as const }
 
     if (!subscription) {
         return (
             <div className="min-h-screen bg-white dark:bg-[#0a0c10] flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl text-slate-900 dark:text-white mb-4">No subscription found</h2>
+                    <h2 className="text-2xl text-slate-900 dark:text-white mb-4 font-bold">No subscription found</h2>
                     <Link 
                         href="/pricing"
                         className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-3 rounded-full font-bold transition-all"
@@ -38,38 +42,26 @@ export default function SubscriptionPage() {
     const limits = planDetails?.limits
 
     const handleSwitchMode = async () => {
-        if (!subscription.canSwitchMode) return
-
+        setConfirmSwitchOpen(false)
         const newMode = subscription.mode === 'centralized' ? 'decentralized' : 'centralized'
-        const confirmed = confirm(
-            `Switch to ${newMode} mode? This will migrate your data. Migration fee: $9.99`
-        )
-
-        if (!confirmed) return
-
         setSwitching(true)
         try {
             await switchMode(newMode)
-            alert('Mode switched successfully!')
+            toast.success('Mode switched successfully!')
         } catch (error) {
-            alert('Failed to switch mode')
+            toast.error('Failed to switch mode')
         } finally {
             setSwitching(false)
         }
     }
 
     const handleCancelSubscription = async () => {
-        const confirmed = confirm(
-            'Are you sure you want to cancel? Your data will be locked at the end of the billing period.'
-        )
-
-        if (!confirmed) return
-
+        setConfirmCancelOpen(false)
         try {
             await cancelSubscription()
-            alert('Subscription cancelled. You can still access your data until the end of the period.')
+            toast.success('Subscription cancelled. You can still access your data until the end of the period.')
         } catch (error) {
-            alert('Failed to cancel subscription')
+            toast.error('Failed to cancel subscription')
         }
     }
 
@@ -80,7 +72,7 @@ export default function SubscriptionPage() {
     return (
         <div className="min-h-screen bg-white dark:bg-[#0a0c10] font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
             {/* Navigation */}
-            <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0c10]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+            <nav className="sticky top-0 z-50 bg-white/85 dark:bg-[#0a0c10]/85 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Shield className="w-8 h-8" />
@@ -119,7 +111,7 @@ export default function SubscriptionPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...defaultTransition, delay: 0.2 }}
-                    className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8"
+                    className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8 shadow-lg"
                 >
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -142,7 +134,7 @@ export default function SubscriptionPage() {
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-4xl font-bold text-white">${price}</p>
+                            <p className="text-4xl font-bold text-slate-900 dark:text-white">${price}</p>
                             <p className="text-slate-400">per month</p>
                         </div>
                     </div>
@@ -181,9 +173,9 @@ export default function SubscriptionPage() {
                             </p>
                             {subscription.canSwitchMode && (
                                 <button
-                                    onClick={handleSwitchMode}
+                                    onClick={() => setConfirmSwitchOpen(true)}
                                     disabled={switching}
-                                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-all"
+                                    className="flex items-center gap-2 bg-purple-650 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-all"
                                 >
                                     <RefreshCw className={`w-4 h-4 ${switching ? 'animate-spin' : ''}`} />
                                     {switching ? 'Switching...' : 'Switch Mode ($9.99)'}
@@ -199,7 +191,7 @@ export default function SubscriptionPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ ...defaultTransition, delay: 0.3 }}
-                        className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8"
+                        className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8 shadow-lg"
                     >
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                             <TrendingUp className="w-6 h-6" />
@@ -207,11 +199,11 @@ export default function SubscriptionPage() {
                         </h2>
                         <div className="grid md:grid-cols-3 gap-6">
                             <div>
-                                <p className="text-slate-600 dark:text-slate-400 mb-2">Assets</p>
+                                <p className="text-slate-605 dark:text-slate-400 mb-2">Assets</p>
                                 <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                     0 / {limits.assets === Infinity ? '∞' : limits.assets}
                                 </p>
-                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
                                         style={{ width: '10%' }}
@@ -219,11 +211,11 @@ export default function SubscriptionPage() {
                                 </div>
                             </div>
                             <div>
-                                <p className="text-slate-600 dark:text-slate-400 mb-2">Beneficiaries</p>
+                                <p className="text-slate-605 dark:text-slate-400 mb-2">Beneficiaries</p>
                                 <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                     0 / {limits.beneficiaries === Infinity ? '∞' : limits.beneficiaries}
                                 </p>
-                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
                                         style={{ width: '10%' }}
@@ -231,11 +223,11 @@ export default function SubscriptionPage() {
                                 </div>
                             </div>
                             <div>
-                                <p className="text-slate-600 dark:text-slate-400 mb-2">Storage</p>
+                                <p className="text-slate-650 dark:text-slate-400 mb-2">Storage</p>
                                 <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                                     0 / {limits.storage}
                                 </p>
-                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-gradient-to-r from-orange-500 to-red-500"
                                         style={{ width: '10%' }}
@@ -251,7 +243,7 @@ export default function SubscriptionPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...defaultTransition, delay: 0.4 }}
-                    className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8"
+                    className="w-full bg-gradient-to-br from-slate-50 dark:from-white/5 to-slate-100/50 dark:to-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-lg"
                 >
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                         <CreditCard className="w-6 h-6" />
@@ -260,15 +252,15 @@ export default function SubscriptionPage() {
                     <div className="space-y-4">
                         <button
                             onClick={() => router.push('/pricing')}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-all font-semibold"
+                            className="w-full bg-[#1152d4] hover:bg-blue-650 text-white px-6 py-3 rounded-xl transition-all font-semibold"
                         >
                             Upgrade Plan
                         </button>
 
                         {subscription.status === 'active' && (
                             <button
-                                onClick={handleCancelSubscription}
-                                className="w-full bg-red-600/20 hover:bg-red-600/30 border border-red-500/50 text-red-400 px-6 py-3 rounded-xl transition-all font-semibold flex items-center justify-center gap-2"
+                                onClick={() => setConfirmCancelOpen(true)}
+                                className="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 px-6 py-3 rounded-xl transition-all font-semibold flex items-center justify-center gap-2"
                             >
                                 <XCircle className="w-5 h-5" />
                                 Cancel Subscription
@@ -287,6 +279,32 @@ export default function SubscriptionPage() {
                 </motion.div>
 
             </main>
+
+            {/* Switch Mode Custom Confirm Modal */}
+            <ConfirmModal
+                isOpen={confirmSwitchOpen}
+                onClose={() => setConfirmSwitchOpen(false)}
+                onConfirm={handleSwitchMode}
+                title="Migrate Storage Mode?"
+                description={`Are you sure you want to switch to ${subscription.mode === 'centralized' ? 'decentralized' : 'centralized'} mode? This will migrate your data. Migration fee: $9.99.`}
+                confirmText="Migrate Node"
+                cancelText="Keep Current"
+                variant="info"
+            />
+
+            {/* Cancel Subscription Custom Confirm Modal */}
+            <ConfirmModal
+                isOpen={confirmCancelOpen}
+                onClose={() => setConfirmCancelOpen(false)}
+                onConfirm={handleCancelSubscription}
+                title="Cancel Renewal Plans?"
+                description="Are you sure you want to cancel? Your data will be locked at the end of the billing period."
+                confirmText="Cancel Renewal"
+                cancelText="Keep Active"
+                variant="danger"
+                requiresVerification={true}
+                verificationText="cancel renewal"
+            />
 
             <SharedFooter />
         </div>

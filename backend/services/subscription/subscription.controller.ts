@@ -30,12 +30,17 @@ export class SubscriptionController {
     // userId from frontend is usually walletAddress for initial trial creation
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.userId);
     let userId = body.userId;
+    let user;
     if (!isUuid) {
-        const user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, body.userId) });
+        user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, body.userId) });
         if (!user) throw new BadRequestException('User not found');
         userId = user.id;
+    } else {
+        user = await this.db.query.users.findFirst({ where: eq(users.id, body.userId) });
     }
-    return this.subscriptionService.createSubscription(userId, 'trial', 'MONTHLY', 0);
+    const mode = body.mode || user?.storageEngine || 'decentralized';
+    const planId = mode === 'decentralized' || mode === 'web3' ? 'freedom_starter' : 'starter';
+    return this.subscriptionService.createSubscription(userId, planId, 'MONTHLY', 0);
   }
   @Get(':userId')
   async getSubscription(@Param('userId') userId: string) {

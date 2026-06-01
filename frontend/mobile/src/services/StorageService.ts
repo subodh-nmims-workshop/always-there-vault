@@ -437,6 +437,33 @@ class StorageService {
       };
     }
   }
+
+  /**
+   * Store diagnostic logs locally
+   */
+  async saveDiagnosticLog(log: { time: string; status: string; message: string; color: string }): Promise<void> {
+    try {
+      const existingStr = await AsyncStorage.getItem('dwp_diagnostic_logs');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+      existing.push(log);
+      if (existing.length > 50) {
+        existing.shift();
+      }
+      await AsyncStorage.setItem('dwp_diagnostic_logs', JSON.stringify(existing));
+    } catch (e) {
+      console.warn('Failed to save mobile diagnostic log:', e);
+    }
+  }
+
+  async getDiagnosticLogs(): Promise<any[]> {
+    try {
+      const existingStr = await AsyncStorage.getItem('dwp_diagnostic_logs');
+      return existingStr ? JSON.parse(existingStr) : [];
+    } catch (e) {
+      console.warn('Failed to retrieve mobile diagnostic logs:', e);
+      return [];
+    }
+  }
 }
 
 export default StorageService;

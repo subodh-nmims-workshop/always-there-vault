@@ -82,7 +82,7 @@ class WebStorageService {
   private static instance: WebStorageService;
   private crypto: WebCryptoService;
   private dbName = 'digital-will-db';
-  private dbVersion = 2;
+  private dbVersion = 3;
   private db: IDBDatabase | null = null;
   private dbInitPromise: Promise<void> | null = null;
 
@@ -134,6 +134,9 @@ class WebStorageService {
         if (!db.objectStoreNames.contains('keyDistributions')) {
           db.createObjectStore('keyDistributions', { keyPath: 'keyId' });
         }
+        if (!db.objectStoreNames.contains('diagnosticLogs')) {
+          db.createObjectStore('diagnosticLogs', { keyPath: 'id', autoIncrement: true });
+        }
       };
     });
   }
@@ -182,7 +185,12 @@ class WebStorageService {
       const request = store.put(asset);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('storage-asset-saved', { detail: asset }));
+        }
+        resolve();
+      };
     });
   }
 
@@ -206,7 +214,12 @@ class WebStorageService {
       const request = store.delete(id);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('storage-asset-deleted', { detail: { id } }));
+        }
+        resolve();
+      };
     });
   }
 
@@ -220,7 +233,12 @@ class WebStorageService {
       const store = transaction.objectStore('beneficiaries');
       store.put(beneficiary);
 
-      transaction.oncomplete = () => resolve();
+      transaction.oncomplete = () => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('storage-beneficiary-saved', { detail: beneficiary }));
+        }
+        resolve();
+      };
       transaction.onerror = () => reject(transaction.error);
     });
   }
@@ -244,7 +262,12 @@ class WebStorageService {
       const store = transaction.objectStore('beneficiaries');
       store.delete(id);
 
-      transaction.oncomplete = () => resolve();
+      transaction.oncomplete = () => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('storage-beneficiary-deleted', { detail: { id } }));
+        }
+        resolve();
+      };
       transaction.onerror = () => reject(transaction.error);
     });
   }
@@ -259,7 +282,12 @@ class WebStorageService {
       const store = transaction.objectStore('heartbeats');
       store.put(heartbeat);
 
-      transaction.oncomplete = () => resolve();
+      transaction.oncomplete = () => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('storage-heartbeat-saved', { detail: heartbeat }));
+        }
+        resolve();
+      };
       transaction.onerror = () => reject(transaction.error);
     });
   }
@@ -761,6 +789,47 @@ class WebStorageService {
 
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Diagnostic Logs Persistence
+   */
+  async saveDiagnosticLog(log: { time: string; status: string; message: string; color: string }): Promise<void> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['diagnosticLogs'], 'readwrite');
+      const store = transaction.objectStore('diagnosticLogs');
+      
+      // Clean up older logs if limit is exceeded (keep last 50)
+      store.openCursor(null, 'next').onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+        if (cursor) {
+          store.count().onsuccess = (countEvent) => {
+            const count = (countEvent.target as IDBRequest<number>).result;
+            if (count > 50) {
+              store.delete(cursor.primaryKey);
+            }
+          };
+        }
+      };
+
+      store.add(log);
+
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
+  async getDiagnosticLogs(): Promise<any[]> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['diagnosticLogs'], 'readonly');
+      const store = transaction.objectStore('diagnosticLogs');
+      const request = store.getAll();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || []);
     });
   }
 }

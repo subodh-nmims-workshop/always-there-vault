@@ -352,13 +352,27 @@ export default function HomePage() {
             </TabsList>
 
             <div className="bg-white/80 dark:bg-[#030712]/50 backdrop-blur-3xl border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 shadow-2xl">
-              <TabsContent value="overview" className="m-0"><OverviewDashboard onNavigate={setActiveTab} /></TabsContent>
-              <TabsContent value="assets" className="m-0"><AssetCreationForm /></TabsContent>
-              <TabsContent value="beneficiaries" className="m-0"><BeneficiaryManager /></TabsContent>
-              <TabsContent value="status" className="m-0"><StatusDashboard /></TabsContent>
-              <TabsContent value="heartbeat" className="m-0"><HeartbeatMonitor /></TabsContent>
-              <TabsContent value="subscription" className="m-0"><SubscriptionDashboard /></TabsContent>
-              <TabsContent value="settings" className="m-0"><SettingsDashboard /></TabsContent>
+              <TabsContent value="overview" className="m-0">
+                {activeTab === 'overview' && <OverviewDashboard onNavigate={setActiveTab} />}
+              </TabsContent>
+              <TabsContent value="assets" className="m-0">
+                {activeTab === 'assets' && <AssetCreationForm />}
+              </TabsContent>
+              <TabsContent value="beneficiaries" className="m-0">
+                {activeTab === 'beneficiaries' && <BeneficiaryManager />}
+              </TabsContent>
+              <TabsContent value="status" className="m-0">
+                {activeTab === 'status' && <StatusDashboard />}
+              </TabsContent>
+              <TabsContent value="heartbeat" className="m-0">
+                {activeTab === 'heartbeat' && <HeartbeatMonitor />}
+              </TabsContent>
+              <TabsContent value="subscription" className="m-0">
+                {activeTab === 'subscription' && <SubscriptionDashboard />}
+              </TabsContent>
+              <TabsContent value="settings" className="m-0">
+                {activeTab === 'settings' && <SettingsDashboard />}
+              </TabsContent>
             </div>
           </Tabs>
         </main>

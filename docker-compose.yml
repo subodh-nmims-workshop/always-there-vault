@@ -129,8 +129,6 @@ services:
       - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - ./monitoring:/etc/grafana/provisioning/dashboards
     depends_on:
       - prometheus
     networks:

@@ -43,7 +43,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 0,
     yearlyPrice: 0,
     features: ['500 MB Secure Cloud (Lifetime Free)', '1 Beneficiary', 'Daily Backups', 'Community Support'],
-    limits: { assets: 20, beneficiaries: 1, storage: '500MB', storageGB: 0.5, support: 'community', backup: 'daily' }
+    limits: { assets: -1, beneficiaries: 1, storage: '500MB', storageGB: 0.5, support: 'community', backup: 'daily' }
   },
   nano: {
     id: 'nano',
@@ -53,7 +53,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 0.09,
     yearlyPrice: 0.36,
     features: ['1 GB Secure Cloud', '2 Beneficiaries', 'Daily Backups', 'Email Support'],
-    limits: { assets: 20, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'email', backup: 'daily' }
+    limits: { assets: -1, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'email', backup: 'daily' }
   },
   lite: {
     id: 'lite',
@@ -63,7 +63,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 0.45,
     yearlyPrice: 1.80,
     features: ['5 GB Secure Cloud', '5 Beneficiaries', 'Daily Backups', 'Email Support'],
-    limits: { assets: 100, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'email', backup: 'daily' }
+    limits: { assets: -1, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'email', backup: 'daily' }
   },
   essential: {
     id: 'essential',
@@ -73,7 +73,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 1.35,
     yearlyPrice: 5.40,
     features: ['15 GB Secure Cloud', '10 Beneficiaries', 'Daily Backups', 'Standard Support'],
-    limits: { assets: 500, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'email', backup: 'daily' }
+    limits: { assets: -1, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'email', backup: 'daily' }
   },
   secure: {
     id: 'secure',
@@ -83,7 +83,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 4.50,
     yearlyPrice: 18.00,
     features: ['50 GB Secure Cloud', 'Unlimited Beneficiaries', 'Daily Backups', 'Priority Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '50GB', storageGB: 50, support: 'priority', backup: 'daily' }
+    limits: { assets: -1, beneficiaries: -1, storage: '50GB', storageGB: 50, support: 'priority', backup: 'daily' }
   },
   professional: {
     id: 'professional',
@@ -94,7 +94,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     yearlyPrice: 35.88,
     popular: true,
     features: ['100 GB Secure Cloud', 'Unlimited Everything', 'Hourly Backups', 'Priority Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '100GB', storageGB: 100, support: 'priority', backup: 'hourly' }
+    limits: { assets: -1, beneficiaries: -1, storage: '100GB', storageGB: 100, support: 'priority', backup: 'hourly' }
   },
   mega: {
     id: 'mega',
@@ -104,7 +104,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 44.85,
     yearlyPrice: 179.40,
     features: ['500 GB Secure Cloud', 'Full Family Protection', 'Real-time Backups', 'Priority Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '500GB', storageGB: 500, support: 'priority', backup: 'realtime' }
+    limits: { assets: -1, beneficiaries: -1, storage: '500GB', storageGB: 500, support: 'priority', backup: 'realtime' }
   },
   enterprise: {
     id: 'enterprise',
@@ -114,7 +114,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     quarterlyPrice: 89.70,
     yearlyPrice: 358.80,
     features: ['1 TB Secure Cloud', 'Dedicated Concierge', 'Legacy Counseling', 'SLA Guarantee'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '1TB', storageGB: 1024, support: 'dedicated', backup: 'realtime' }
+    limits: { assets: -1, beneficiaries: -1, storage: '1TB', storageGB: 1024, support: 'dedicated', backup: 'realtime' }
   }
 }
 
@@ -127,7 +127,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 0,
     yearlyPrice: 0,
     features: ['500 MB Arweave (Lifetime Free)', 'True Ownership', 'No Counterparty Risk', 'Community Support'],
-    limits: { assets: 20, beneficiaries: 1, storage: '500MB', storageGB: 0.5, support: 'community', chains: ['poly'] }
+    limits: { assets: -1, beneficiaries: 1, storage: '500MB', storageGB: 0.5, support: 'community', chains: ['poly'] }
   },
   freedom_nano: {
     id: 'freedom_nano',
@@ -137,7 +137,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 0.58,
     yearlyPrice: 2.34,
     features: ['1 GB Arweave (Permanent)', 'Censorship Resistant', 'Self-Custody Keys', 'Email Support'],
-    limits: { assets: 20, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'community', chains: ['poly'] }
+    limits: { assets: -1, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'community', chains: ['poly'] }
   },
   freedom_lite: {
     id: 'freedom_lite',
@@ -147,7 +147,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 2.92,
     yearlyPrice: 11.70,
     features: ['5 GB Arweave (Permanent)', 'True Ownership', 'No Counterparty Risk', 'Email Support'],
-    limits: { assets: 100, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'community', chains: ['poly', 'eth'] }
+    limits: { assets: -1, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'community', chains: ['poly', 'eth'] }
   },
   freedom_basic: {
     id: 'freedom_basic',
@@ -157,7 +157,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 8.77,
     yearlyPrice: 35.10,
     features: ['15 GB Arweave (Permanent)', 'Shard-Distributed', 'Quantum Ready', 'Priority Support'],
-    limits: { assets: 500, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'priority', chains: ['poly', 'eth'] }
+    limits: { assets: -1, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'priority', chains: ['poly', 'eth'] }
   },
   freedom_secure: {
     id: 'freedom_secure',
@@ -167,7 +167,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 29.25,
     yearlyPrice: 117.00,
     features: ['50 GB IPFS Storage', 'Decentralized Access', 'Zero Logs Policy', 'Priority Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '50GB', storageGB: 50, support: 'priority', chains: ['all'] }
+    limits: { assets: -1, beneficiaries: -1, storage: '50GB', storageGB: 50, support: 'priority', chains: ['all'] }
   },
   sovereign_pro: {
     id: 'sovereign_pro',
@@ -178,7 +178,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     yearlyPrice: 234.00,
     popular: true,
     features: ['100 GB IPFS Storage', 'Multi-Chain Release', 'Custom Heartbeat', 'Priority Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '100GB', storageGB: 100, support: 'priority', chains: ['all'] }
+    limits: { assets: -1, beneficiaries: -1, storage: '100GB', storageGB: 100, support: 'priority', chains: ['all'] }
   },
   sovereign_mega: {
     id: 'sovereign_mega',
@@ -188,7 +188,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 292.50,
     yearlyPrice: 1170.00,
     features: ['500 GB IPFS Storage', 'Family Node Access', 'Hardware Key Support', 'Dedicated Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '500GB', storageGB: 500, support: 'dedicated', chains: ['all'] }
+    limits: { assets: -1, beneficiaries: -1, storage: '500GB', storageGB: 500, support: 'dedicated', chains: ['all'] }
   },
   immortal_elite: {
     id: 'immortal_elite',
@@ -198,7 +198,7 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     quarterlyPrice: 585.00,
     yearlyPrice: 2340.00,
     features: ['1 TB IPFS Storage', 'Quantum Guard Vault', 'Multi-Sig Handover', 'Dedicated Support'],
-    limits: { assets: Infinity, beneficiaries: Infinity, storage: '1TB', storageGB: 1024, support: 'dedicated', chains: ['all'] }
+    limits: { assets: -1, beneficiaries: -1, storage: '1TB', storageGB: 1024, support: 'dedicated', chains: ['all'] }
   }
 }
 

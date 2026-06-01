@@ -1,7 +1,9 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, count, sum } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
 import { subscriptions, type Subscription, type NewSubscription } from '../../src/db/schema/subscriptions';
+import { files } from '../../src/db/schema/files';
+import { beneficiaries } from '../../src/db/schema/beneficiaries';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -52,18 +54,22 @@ export class SubscriptionService {
 
   async getSubscription(id: string) {
     try {
-      // Check if id is UUID (userId) or walletAddress
+      // Resolve wallet address → userId
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      
       let userId = id;
+
       if (!isUuid) {
-          const lowerAddress = id.toLowerCase();
-          const user = await this.usersService.findUserByWallet(lowerAddress);
-          if (!user) {
-              console.log('GetSubscription: User not found by wallet', lowerAddress);
-              return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: lowerAddress, mode: 'decentralized' };
-          }
-          userId = user.id;
+        const lowerAddress = id.toLowerCase();
+        const user = await this.usersService.findUserByWallet(lowerAddress);
+        if (!user) {
+          console.log('GetSubscription: User not found by wallet', lowerAddress);
+          return {
+            status: 'ACTIVE', planId: 'freedom_starter', storageLimit: 524288000,
+            userId: lowerAddress, mode: 'decentralized',
+            storageUsed: 0, assetsCount: 0, beneficiariesCount: 0,
+          };
+        }
+        userId = user.id;
       }
       console.log('GetSubscription: Fetching for userId', userId);
 
@@ -72,15 +78,42 @@ export class SubscriptionService {
         where: eq(subscriptions.userId, userId),
       });
 
+      // Fetch live counts from DB
+      const [assetCountRow] = await this.db
+        .select({ count: count() })
+        .from(files)
+        .where(eq(files.userId, userId));
+
+      const [storageSumRow] = await this.db
+        .select({ total: sum(files.size) })
+        .from(files)
+        .where(eq(files.userId, userId));
+
+      const [beneficiaryCountRow] = await this.db
+        .select({ count: count() })
+        .from(beneficiaries)
+        .where(eq(beneficiaries.userId, userId));
+
+      const assetsCount = Number(assetCountRow?.count || 0);
+      const storageUsed = Number(storageSumRow?.total || user?.storageUsed || 0);
+      const beneficiariesCount = Number(beneficiaryCountRow?.count || 0);
+
+      const mode = user?.storageEngine === 'web3' ? 'decentralized' : 'centralized';
+
       if (!sub) {
-          // Auto-create a trial for new users
-          const newSub = await this.createSubscription(userId, 'trial', 'MONTHLY', 0);
-          return { ...newSub, mode: user?.storageEngine === 'web3' ? 'decentralized' : 'centralized' };
+        const planId = mode === 'decentralized' ? 'freedom_starter' : 'starter';
+        const newSub = await this.createSubscription(userId, planId, 'MONTHLY', 0);
+        return { ...newSub, mode, assetsCount, storageUsed, beneficiariesCount };
       }
-      return { ...sub, mode: user?.storageEngine === 'web3' ? 'decentralized' : 'centralized' };
+
+      return { ...sub, mode, assetsCount, storageUsed, beneficiariesCount };
     } catch (error) {
       console.error('GetSubscription Error:', error);
-      return { status: 'ACTIVE', planId: 'free', storageLimit: 524288000, userId: id, mode: 'decentralized' };
+      return {
+        status: 'ACTIVE', planId: 'freedom_starter', storageLimit: 524288000,
+        userId: id, mode: 'decentralized',
+        storageUsed: 0, assetsCount: 0, beneficiariesCount: 0,
+      };
     }
   }
 

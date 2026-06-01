@@ -42,8 +42,9 @@ port_in_use() { (echo > /dev/tcp/127.0.0.1/"$1") >/dev/null 2>&1; }
 
 do_stop() {
     echo -e "\n${YELLOW}${BOLD}🛑 CLEANING ENVIRONMENT...${NC}"
-    # Force kill processes on key ports
+    # Force kill processes on key ports using fuser and lsof
     for port in 7000 7001 8081 8545 19000 19001 19002; do
+        fuser -k -9 ${port}/tcp 2>/dev/null || true
         PID=$(lsof -t -i :$port 2>/dev/null)
         if [ ! -z "$PID" ]; then
             kill -9 $PID 2>/dev/null || true
@@ -56,8 +57,13 @@ do_stop() {
     pkill -9 -f "expo" 2>/dev/null || true
     pkill -9 -f "metro" 2>/dev/null || true
     pkill -9 -f "next-dev" 2>/dev/null || true
+    pkill -9 -f "next-server" 2>/dev/null || true
+    pkill -9 -f "next dev" 2>/dev/null || true
+    pkill -9 -f "next" 2>/dev/null || true
     pkill -9 -f "nest" 2>/dev/null || true
     pkill -9 -f "hardhat" 2>/dev/null || true
+    pkill -9 -f "ts-node" 2>/dev/null || true
+    pkill -9 -f "backend/dist/main" 2>/dev/null || true
     
     docker compose down 2>/dev/null || true
 }
@@ -132,6 +138,7 @@ do_start() {
     step "3" "Deploying Web Command Center..."
     if [ -d "$ROOT/frontend/web" ]; then
         cd "$ROOT/frontend/web"
+        # Keep .next cache for instant startup and hot reloading
         nohup npm run dev > "$ROOT/logs/web.log" 2>&1 &
         info "Waiting for Dashboard to bind to port 7000..."
         # Wait for web dashboard

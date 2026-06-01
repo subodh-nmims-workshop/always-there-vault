@@ -421,7 +421,9 @@ export function HeartbeatMonitor() {
                 <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
                 </div>
-                <p className="text-sm font-medium text-amber-100">Protocol requires signature in <span className="text-amber-400 font-bold underline">{dueInfo.value} {dueInfo.unit.toLowerCase()}</span>.</p>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-100">
+                  Protocol requires signature in <span className="text-amber-600 dark:text-amber-400 font-bold underline">{dueInfo.value} {dueInfo.unit.toLowerCase()}</span>.
+                </p>
               </div>
             </motion.div>
           )}
@@ -433,9 +435,9 @@ export function HeartbeatMonitor() {
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-amber-100 uppercase tracking-tight">Rescue Window (Grace Period) Active</p>
-                  <p className="text-xs font-medium text-amber-200 mt-1">
-                    Protocol trigger in <span className="text-amber-400 font-bold text-base underline">{graceInfo.value} {graceInfo.unit.toLowerCase()}</span>. Sign now to abort.
+                  <p className="text-sm font-bold text-amber-800 dark:text-amber-100 uppercase tracking-tight">Rescue Window (Grace Period) Active</p>
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-200 mt-1">
+                    Protocol trigger in <span className="text-amber-600 dark:text-amber-400 font-bold text-base underline">{graceInfo.value} {graceInfo.unit.toLowerCase()}</span>. Sign now to abort.
                   </p>
                 </div>
               </div>
@@ -448,7 +450,7 @@ export function HeartbeatMonitor() {
                 <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse">
                   <ShieldAlert className="w-5 h-5 text-red-500" />
                 </div>
-                <p className="text-sm font-medium text-red-100 italic">AlwaysThere Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
+                <p className="text-sm font-medium text-red-800 dark:text-red-100 italic">AlwaysThere Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
               </div>
             </motion.div>
           )}
