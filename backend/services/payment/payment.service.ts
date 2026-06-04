@@ -83,10 +83,16 @@ export class PaymentService {
       }
 
       const tx = await provider.getTransaction(txHash);
-      const companyWallet = (process.env.CRYPTO_RECEIVE_WALLET || '').toLowerCase();
-      
-      if (companyWallet && tx.to?.toLowerCase() !== companyWallet) {
-          throw new Error('Transaction sent to invalid wallet address');
+      const companyWallet = (process.env.CRYPTO_RECEIVE_WALLET || this.configService.get<string>('CRYPTO_RECEIVE_WALLET') || '').toLowerCase();
+      const contractAddress = (this.configService.get<string>('CONTRACT_ADDRESS') || process.env.CONTRACT_ADDRESS || '').toLowerCase();
+      const targetAddress = tx.to?.toLowerCase();
+
+      const isValidRecipient = 
+        (companyWallet && targetAddress === companyWallet) ||
+        (contractAddress && targetAddress === contractAddress);
+
+      if (!isValidRecipient) {
+          throw new Error('Transaction sent to invalid wallet or contract address');
       }
 
       // Here you can also check tx.value (amount of ETH sent) matches the plan price
