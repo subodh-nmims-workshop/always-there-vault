@@ -21,18 +21,36 @@ interface ReceiptModalProps {
 function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
     const [qrDataUrl, setQrDataUrl] = useState<string>('')
     const [verificationUrl, setVerificationUrl] = useState<string>('')
+    const [originUrl, setOriginUrl] = useState<string>('')
     const { subscription } = useSubscription()
 
     useEffect(() => {
-        if (!invoice) return
-
-        const generateQr = async () => {
+        const fetchOrigin = async () => {
             try {
                 let origin = typeof window !== 'undefined' ? window.location.origin : 'https://will.alwaysthere.io'
                 if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-                    origin = 'https://a4ab-43-243-80-118.ngrok-free.app'
+                    const res = await fetch('/api/origin')
+                    if (res.ok) {
+                        const data = await res.json()
+                        if (data.origin) {
+                            origin = data.origin
+                        }
+                    }
                 }
-                const url = `${origin}/receipt?id=${invoice.id}&date=${encodeURIComponent(invoice.date)}&amount=${encodeURIComponent(invoice.amount)}&method=${encodeURIComponent(invoice.method)}&status=${encodeURIComponent(invoice.status)}&ref=${encodeURIComponent(invoice.reference)}&address=${encodeURIComponent(invoice.details?.address || '')}&plan=${encodeURIComponent(subscription?.plan || 'starter')}`
+                setOriginUrl(origin)
+            } catch (err) {
+                console.error('Failed to fetch origin:', err)
+            }
+        }
+        fetchOrigin()
+    }, [])
+
+    useEffect(() => {
+        if (!invoice || !originUrl) return
+
+        const generateQr = async () => {
+            try {
+                const url = `${originUrl}/receipt?id=${invoice.id}&date=${encodeURIComponent(invoice.date)}&amount=${encodeURIComponent(invoice.amount)}&method=${encodeURIComponent(invoice.method)}&status=${encodeURIComponent(invoice.status)}&ref=${encodeURIComponent(invoice.reference)}&address=${encodeURIComponent(invoice.details?.address || '')}&plan=${encodeURIComponent(subscription?.plan || 'starter')}`
 
                 setVerificationUrl(url)
 
@@ -51,7 +69,7 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
         }
 
         generateQr()
-    }, [invoice])
+    }, [invoice, originUrl])
 
     if (!isOpen || !invoice) return null
 

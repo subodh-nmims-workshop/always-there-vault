@@ -1,5 +1,7 @@
 'use client'
 
+import { ThemeToggle } from '@/components/theme-toggle'
+
 import { useState, useEffect, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -144,26 +146,30 @@ function BeneficiaryAssetsContent() {
 
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#080a0f]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Shield className="w-8 h-8" />
+        <Link href="/" className="flex items-center gap-2 group">
+          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+          <div className="flex flex-col text-left">
+            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
           </div>
-          <span className="font-bold text-xl tracking-tight">AlwaysThere</span>
         </Link>
         
-        {!isConnected ? (
-          <Button 
-            onClick={() => setShowWalletModal(true)}
-            className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white rounded-full px-6 shadow-[0_0_15px_rgba(17,82,212,0.4)]"
-          >
-            Connect Wallet
-          </Button>
-        ) : (
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-mono text-slate-300">{userAddress.slice(0, 6)}...{userAddress.slice(-4)}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          {!isConnected ? (
+            <Button 
+              onClick={() => setShowWalletModal(true)}
+              className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white rounded-full px-6 shadow-[0_0_15px_rgba(17,82,212,0.4)]"
+            >
+              Connect Wallet
+            </Button>
+          ) : (
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-xs font-mono text-slate-300">{userAddress.slice(0, 6)}...{userAddress.slice(-4)}</span>
+            </div>
+          )}
+        </div>
       </nav>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-4xl mx-auto w-full z-10">

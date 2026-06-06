@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ThemeToggle } from './theme-toggle';
 import { ChevronRight, Globe, Check } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { useState, useRef, useEffect } from 'react';
@@ -77,13 +78,16 @@ export function SharedHeader() {
                             )}
                         </div>
 
-                        <Link
-                            href="/"
-                            className="group relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-full hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]"
-                        >
-                            {t('nav_launch')}
-                            <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <ThemeToggle />
+                            <Link
+                                href="/"
+                                className="group relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-full hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                            >
+                                {t('nav_launch')}
+                                <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

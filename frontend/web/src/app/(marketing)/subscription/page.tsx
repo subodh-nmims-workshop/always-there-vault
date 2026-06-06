@@ -1,5 +1,7 @@
 'use client'
 
+import { ThemeToggle } from '@/components/theme-toggle'
+
 import { motion } from 'framer-motion'
 import { Shield, TrendingUp, Calendar, CreditCard, RefreshCw, XCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -73,15 +75,19 @@ export default function SubscriptionPage() {
         <div className="min-h-screen bg-white dark:bg-[#0a0c10] font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
             {/* Navigation */}
             <nav className="sticky top-0 z-50 bg-white/85 dark:bg-[#0a0c10]/85 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-3 group">
-                    <div className="text-[#1152d4] flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Shield className="w-8 h-8" />
-                    </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block text-slate-900 dark:text-white">AlwaysThere</span>
-                </Link>
-                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
+                <Link href="/" className="flex items-center gap-2 group">
+          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+          <div className="flex flex-col text-left">
+            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+          </div>
+        </Link>
+                <div className="flex items-center gap-4">
+                    <ThemeToggle />
+                    <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
                     Dashboard
                 </Link>
+                </div>
             </nav>
 
             <main className="flex-1 flex flex-col items-center px-4 py-16 max-w-6xl mx-auto w-full relative z-10">

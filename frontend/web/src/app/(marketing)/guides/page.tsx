@@ -1,4 +1,6 @@
-'use client';
+'use client'
+
+import { ThemeToggle } from '@/components/theme-toggle';
 
 import { motion } from 'framer-motion';
 import { Compass, Search, FileText, ArrowRight, BookOpen } from 'lucide-react';
@@ -55,20 +57,24 @@ export default function GuidesPage() {
 
             {/* Navigation */}
             <nav className="sticky top-0 z-50 bg-[#050a1a]/80 backdrop-blur-xl border-b border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-3 group">
-                    <div className="text-[#2b52ff] flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Compass className="w-8 h-8" />
-                    </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block">Always There Guides</span>
-                </Link>
+                <Link href="/" className="flex items-center gap-2 group">
+          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+          <div className="flex flex-col text-left">
+            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+          </div>
+        </Link>
                 <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                     <Link href="/docs" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Documentation</Link>
                     <Link href="/api-reference" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">API Reference</Link>
                     <Link href="/guides" className="text-white transition-colors text-sm font-medium">Guides</Link>
                 </div>
-                <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">
+                <div className="flex items-center gap-4">
+                    <ThemeToggle />
+                    <Link href="/" className="bg-[#2b52ff] hover:bg-[#2b52ff]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)]">
                     Dashboard
                 </Link>
+                </div>
             </nav>
 
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20 pb-32">
@@ -203,7 +209,9 @@ docker logs -f relayer-node-main`}</code></pre>
                                     <p className="mb-4">We wrap all AES-256-GCM logic in a strict client-side boundary, leveraging the \`window.crypto.subtle\` API which naturally cannot execute in a Node.js server context.</p>
 
                                     <div className="bg-[#0a0c10] border border-white/10 p-5 rounded-2xl font-mono text-sm text-[#5c8df6] overflow-x-auto shadow-inner">
-                                        <pre><code>{`'use client';
+                                        <pre><code>{`'use client'
+
+import { ThemeToggle } from '@/components/theme-toggle';
 
 import { useEffect, useState } from 'react';
 

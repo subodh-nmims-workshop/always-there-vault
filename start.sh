@@ -92,6 +92,9 @@ do_start() {
     trap 'do_stop; exit' SIGINT SIGTERM
     print_banner
     
+    info "Cleaning up old processes..."
+    do_stop
+    
     # Load .env safely (handling spaces in values)
     if [ -f "$ROOT/.env" ]; then
         set -a

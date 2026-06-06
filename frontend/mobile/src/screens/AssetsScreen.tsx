@@ -281,8 +281,8 @@ const AssetsScreen = () => {
                      <View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                            <Text style={styles.assetTitle}>{item.name}</Text>
-                           <View style={[styles.typeBadge, { color: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
-                              <Text style={[styles.typeBadgeText, { color: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
+                           <View style={[styles.typeBadge, { borderColor: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
+                              <Text style={[styles.typeBadgeText, { borderColor: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
                                 {CATEGORY_TEMPLATES[item.type as AssetCategory]?.label.toUpperCase()}
                               </Text>
                            </View>
