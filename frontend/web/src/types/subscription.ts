@@ -1,5 +1,11 @@
+/**
+ * Subscription & Mode Types for Dual-Mode System
+ */
+
 export type UserMode = 'centralized' | 'decentralized'
+
 export type SubscriptionStatus = 'trial' | 'active' | 'expired' | 'cancelled'
+
 export type BillingCycle = 'monthly' | 'quarterly' | 'yearly'
 
 export type CentralizedPlan = 'starter' | 'nano' | 'lite' | 'essential' | 'secure' | 'professional' | 'mega' | 'enterprise'
@@ -30,9 +36,8 @@ export interface PricingPlan {
 }
 
 /**
- * 65% PROFIT MARGIN MODEL
- * Prices adjusted to beat the market while ensuring high owner profit.
- * Centralized prices lowered for volume; Web3 prices optimized for blockchain costs.
+ * STANDARD PREMIUM PRICING MODEL
+ * Logical market-competitive prices that ensure sustainability and cover payment gateway costs.
  */
 export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
   starter: {
@@ -49,9 +54,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'nano',
     name: 'Nano Vault',
     mode: 'centralized',
-    price: 0.03,
-    quarterlyPrice: 0.09,
-    yearlyPrice: 0.36,
+    price: 1.00,
+    quarterlyPrice: 3.00,
+    yearlyPrice: 5.00,
     features: ['1 GB Secure Cloud', '2 Beneficiaries', 'Daily Backups', 'Email Support'],
     limits: { assets: -1, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'email', backup: 'daily' }
   },
@@ -59,9 +64,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'lite',
     name: 'Lite Vault',
     mode: 'centralized',
-    price: 0.15,
-    quarterlyPrice: 0.45,
-    yearlyPrice: 1.80,
+    price: 1.99,
+    quarterlyPrice: 4.99,
+    yearlyPrice: 9.99,
     features: ['5 GB Secure Cloud', '5 Beneficiaries', 'Daily Backups', 'Email Support'],
     limits: { assets: -1, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'email', backup: 'daily' }
   },
@@ -69,9 +74,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'essential',
     name: 'Essential Vault',
     mode: 'centralized',
-    price: 0.45,
-    quarterlyPrice: 1.35,
-    yearlyPrice: 5.40,
+    price: 3.99,
+    quarterlyPrice: 9.99,
+    yearlyPrice: 19.99,
     features: ['15 GB Secure Cloud', '10 Beneficiaries', 'Daily Backups', 'Standard Support'],
     limits: { assets: -1, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'email', backup: 'daily' }
   },
@@ -79,9 +84,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'secure',
     name: 'Secure Vault',
     mode: 'centralized',
-    price: 1.50,
-    quarterlyPrice: 4.50,
-    yearlyPrice: 18.00,
+    price: 6.99,
+    quarterlyPrice: 16.99,
+    yearlyPrice: 39.99,
     features: ['50 GB Secure Cloud', 'Unlimited Beneficiaries', 'Daily Backups', 'Priority Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '50GB', storageGB: 50, support: 'priority', backup: 'daily' }
   },
@@ -89,9 +94,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'professional',
     name: 'Pro Vault',
     mode: 'centralized',
-    price: 2.99,
-    quarterlyPrice: 8.97,
-    yearlyPrice: 35.88,
+    price: 12.99,
+    quarterlyPrice: 29.99,
+    yearlyPrice: 79.99,
     popular: true,
     features: ['100 GB Secure Cloud', 'Unlimited Everything', 'Hourly Backups', 'Priority Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '100GB', storageGB: 100, support: 'priority', backup: 'hourly' }
@@ -100,9 +105,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'mega',
     name: 'Mega Vault',
     mode: 'centralized',
-    price: 14.95,
-    quarterlyPrice: 44.85,
-    yearlyPrice: 179.40,
+    price: 19.99,
+    quarterlyPrice: 49.99,
+    yearlyPrice: 149.99,
     features: ['500 GB Secure Cloud', 'Full Family Protection', 'Real-time Backups', 'Priority Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '500GB', storageGB: 500, support: 'priority', backup: 'realtime' }
   },
@@ -110,9 +115,9 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
     id: 'enterprise',
     name: 'Elite Vault',
     mode: 'centralized',
-    price: 29.90,
-    quarterlyPrice: 89.70,
-    yearlyPrice: 358.80,
+    price: 34.99,
+    quarterlyPrice: 89.99,
+    yearlyPrice: 299.99,
     features: ['1 TB Secure Cloud', 'Dedicated Concierge', 'Legacy Counseling', 'SLA Guarantee'],
     limits: { assets: -1, beneficiaries: -1, storage: '1TB', storageGB: 1024, support: 'dedicated', backup: 'realtime' }
   }
@@ -121,7 +126,7 @@ export const CENTRALIZED_PLANS: Record<CentralizedPlan, PricingPlan> = {
 export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
   freedom_starter: {
     id: 'freedom_starter',
-    name: 'Web3 Lite',
+    name: 'Web3 Starter',
     mode: 'decentralized',
     price: 0,
     quarterlyPrice: 0,
@@ -133,9 +138,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'freedom_nano',
     name: 'Web3 Nano',
     mode: 'decentralized',
-    price: 0.19,
-    quarterlyPrice: 0.58,
-    yearlyPrice: 2.34,
+    price: 4.99,
+    quarterlyPrice: 12.99,
+    yearlyPrice: 49.99,
     features: ['1 GB Arweave (Permanent)', 'Censorship Resistant', 'Self-Custody Keys', 'Email Support'],
     limits: { assets: -1, beneficiaries: 2, storage: '1GB', storageGB: 1, support: 'community', chains: ['poly'] }
   },
@@ -143,9 +148,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'freedom_lite',
     name: 'Web3 Lite',
     mode: 'decentralized',
-    price: 0.97,
-    quarterlyPrice: 2.92,
-    yearlyPrice: 11.70,
+    price: 9.99,
+    quarterlyPrice: 29.99,
+    yearlyPrice: 99.99,
     features: ['5 GB Arweave (Permanent)', 'True Ownership', 'No Counterparty Risk', 'Email Support'],
     limits: { assets: -1, beneficiaries: 5, storage: '5GB', storageGB: 5, support: 'community', chains: ['poly', 'eth'] }
   },
@@ -153,9 +158,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'freedom_basic',
     name: 'Web3 Basic',
     mode: 'decentralized',
-    price: 2.92,
-    quarterlyPrice: 8.77,
-    yearlyPrice: 35.10,
+    price: 19.99,
+    quarterlyPrice: 49.99,
+    yearlyPrice: 199.99,
     features: ['15 GB Arweave (Permanent)', 'Shard-Distributed', 'Quantum Ready', 'Priority Support'],
     limits: { assets: -1, beneficiaries: 10, storage: '15GB', storageGB: 15, support: 'priority', chains: ['poly', 'eth'] }
   },
@@ -163,9 +168,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'freedom_secure',
     name: 'Web3 Secure',
     mode: 'decentralized',
-    price: 9.75,
-    quarterlyPrice: 29.25,
-    yearlyPrice: 117.00,
+    price: 12.99,
+    quarterlyPrice: 34.99,
+    yearlyPrice: 99.99,
     features: ['50 GB IPFS Storage', 'Decentralized Access', 'Zero Logs Policy', 'Priority Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '50GB', storageGB: 50, support: 'priority', chains: ['all'] }
   },
@@ -173,9 +178,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'sovereign_pro',
     name: 'Web3 Pro',
     mode: 'decentralized',
-    price: 19.50,
-    quarterlyPrice: 58.50,
-    yearlyPrice: 234.00,
+    price: 19.99,
+    quarterlyPrice: 49.99,
+    yearlyPrice: 149.99,
     popular: true,
     features: ['100 GB IPFS Storage', 'Multi-Chain Release', 'Custom Heartbeat', 'Priority Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '100GB', storageGB: 100, support: 'priority', chains: ['all'] }
@@ -184,9 +189,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'sovereign_mega',
     name: 'Web3 Mega',
     mode: 'decentralized',
-    price: 97.50,
-    quarterlyPrice: 292.50,
-    yearlyPrice: 1170.00,
+    price: 49.99,
+    quarterlyPrice: 129.99,
+    yearlyPrice: 499.99,
     features: ['500 GB IPFS Storage', 'Family Node Access', 'Hardware Key Support', 'Dedicated Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '500GB', storageGB: 500, support: 'dedicated', chains: ['all'] }
   },
@@ -194,9 +199,9 @@ export const DECENTRALIZED_PLANS: Record<DecentralizedPlan, PricingPlan> = {
     id: 'immortal_elite',
     name: 'Web3 Immortal',
     mode: 'decentralized',
-    price: 195.00,
-    quarterlyPrice: 585.00,
-    yearlyPrice: 2340.00,
+    price: 89.99,
+    quarterlyPrice: 199.99,
+    yearlyPrice: 899.99,
     features: ['1 TB IPFS Storage', 'Quantum Guard Vault', 'Multi-Sig Handover', 'Dedicated Support'],
     limits: { assets: -1, beneficiaries: -1, storage: '1TB', storageGB: 1024, support: 'dedicated', chains: ['all'] }
   }
@@ -211,7 +216,7 @@ export interface UserSubscription {
   id: string
   userId: string
   planId: PlanType | 'free' | 'pro_trial'
-  plan: PlanType // Added for backward compatibility in some components
+  plan: PlanType // Added for backward compatibility
   planName: string
   status: SubscriptionStatus
   mode: UserMode
@@ -229,3 +234,4 @@ export interface UserSubscription {
 }
 
 export const TRIAL_DURATION_DAYS = 30
+export const MIGRATION_FEE = 9.99

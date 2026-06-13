@@ -1,25 +1,25 @@
 # 📦 AlwaysThere Protocol: Storage Overview
 
-AlwaysThere Protocol (AlwaysThere) do tarah ke storage mechanism use karta hai taaki aapka data secure aur hamesha accessible rahe.
+AlwaysThere Protocol (AlwaysThere) uses two types of storage mechanisms to keep your data secure and always accessible.
 
 ## 🚀 Storage Types
 
 ### 1. Cloud Vault (Managed)
-- **Kyun:** Fast access aur instant preview ke liye.
-- **Backend:** Centralized nodes (MongoDB + AES-256 encryption).
-- **Security:** Data encrypted form me save hota hai, decryption sirf user ke wallet keys se hi possible hai.
+- **Why:** For fast access and instant previews.
+- **Backend:** Centralized nodes (PostgreSQL + AES-256 encryption).
+- **Security:** Data is stored in encrypted form; decryption is only possible using the user's wallet keys.
 
 ### 2. Web3 Vault (Decentralized)
-- **Kyun:** Immortality aur censorship resistance ke liye.
-- **Backend:** IPFS (InterPlanetary File System).
-- **Process:** Data ko shards me divide karke multiple nodes par distribute kiya jata hai.
-- **Feature:** Ye "Premium Only" feature hai.
+- **Why:** For permanence and censorship resistance.
+- **Backend:** IPFS (InterPlanetary File System) / Arweave.
+- **Process:** Data is split into shards and distributed across multiple nodes.
+- **Feature:** This is a "Premium Only" feature.
 
 ---
 
 ## 💎 Storage Tiers & Allocations
 
-Jab naya user login karta hai, toh use **Free Tier** automatically assign hota hai.
+When a new user logs in, they are automatically assigned the **Free Tier**.
 
 | Feature | Free Tier (Standard) | Premium Tier (Guardian) |
 |:--- |:--- |:--- |
@@ -34,17 +34,17 @@ Jab naya user login karta hai, toh use **Free Tier** automatically assign hota h
 ## 🛠 Technical Details
 
 - **Encryption Method:** AES-256-GCM (Browser-level encryption).
-- **Sync Logic:** Data pehle local IndexedDB me save hota hai, phir encrypted chunks backend/IPFS par sync hote hain.
-- **Payload Limit:** Single file upload limit abhi **50MB** set ki gayi hai (Performance ke liye).
+- **Sync Logic:** Data is first saved to the local IndexedDB, then encrypted chunks are synchronized to the backend/IPFS.
+- **Payload Limit:** The single-file upload limit is currently set to **50MB** (for performance optimization).
 
-## 📊 Actual Reality
+## 📊 Practical Reality
 
-Actually me, 500MB ek normal user ke liye kaafi hota hai kyunki:
-1. **Documents:** 1 PDF usually 1-2MB ka hota hai (200+ docs easily).
-2. **Photos:** Optimized images 2-3MB ki hoti hain.
-3. **Private Keys:** Kuch bytes me hoti hain.
+In practice, 500MB is more than sufficient for an average user because:
+1. **Documents:** 1 PDF is usually 1-2MB (allowing 200+ docs easily).
+2. **Photos:** Optimized images are 2-3MB each.
+3. **Private Keys:** These consume only a few bytes.
 
-Premium tier unke liye hai jo poora "Digital Identity Legacy" (Large Photo Albums, Private Videos, Business Secrets) save karna chahte hain.
+The Premium tier is designed for those who want to preserve their entire "Digital Identity Legacy" (large photo albums, private videos, and business secrets).
 
 ---
 *Protocol Version: v1.0.0-stable*

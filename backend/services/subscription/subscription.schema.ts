@@ -11,12 +11,22 @@ export enum ServiceMode {
 export enum PlanType {
   // Centralized
   STARTER = 'starter',
+  NANO = 'nano',
+  LITE = 'lite',
+  ESSENTIAL = 'essential',
+  SECURE = 'secure',
   PROFESSIONAL = 'professional',
+  MEGA = 'mega',
   ENTERPRISE = 'enterprise',
   // Decentralized
-  FREEDOM = 'freedom',
-  SOVEREIGN = 'sovereign',
-  IMMORTAL = 'immortal',
+  FREEDOM_STARTER = 'freedom_starter',
+  FREEDOM_NANO = 'freedom_nano',
+  FREEDOM_LITE = 'freedom_lite',
+  FREEDOM_BASIC = 'freedom_basic',
+  FREEDOM_SECURE = 'freedom_secure',
+  SOVEREIGN_PRO = 'sovereign_pro',
+  SOVEREIGN_MEGA = 'sovereign_mega',
+  IMMORTAL_ELITE = 'immortal_elite',
 }
 
 export enum SubscriptionStatus {

@@ -1,6 +1,6 @@
 # 🌐 Decentralized Storage (Web3) Actual Limits
 
-AlwaysThere Protocol me decentralized storage (IPFS/Arweave) ki limits purely technical constraints aur security parameters par based hain.
+In the AlwaysThere Protocol, the limits of decentralized storage (IPFS/Arweave) are based purely on technical constraints and security parameters.
 
 ## 📏 Actual Storage Limits (The Numbers)
 
@@ -9,19 +9,19 @@ AlwaysThere Protocol me decentralized storage (IPFS/Arweave) ki limits purely te
 | **Max Single File Size** | **50 MB** | Backend JSON payload limit (50MB) + Browser memory stability. |
 | **Primary Web3 Quota** | **5 GB** | **Web3.Storage** Free Tier integration. |
 | **Fallback Web3 Quota** | **1 GB** | **Pinata** Backend Bridge fallback. |
-| **Max Concurrent Uploads** | **3 Files** | Network congestion avoid. |
+| **Max Concurrent Uploads** | **3 Files** | Network congestion avoidance. |
 | **IPFS Hash Generation** | **SHA-256** | Standard CID v1 format for permanent linking. |
 
 ---
 
-## 🛠 Why 50MB Limit? (Technical Breakdown)
+## 🛠 Why the 50MB Limit? (Technical Breakdown)
 
-Aap soch rahe honge ki IPFS toh GBs me data store kar sakta hai, toh humne **50MB** kyun rakha hai?
+You might wonder why we have a **50MB** limit when IPFS can store gigabytes of data. Here are the reasons:
 
-1. **Memory Inflation:** Jab hum browser me file ko encrypt karte hain, toh wo `Uint8Array` se `Hex String` me convert hoti hai. Hex string original file size se **2x badi** hoti hai. 
-   - *Example:* 50MB ki file browser memory me **~100MB+** space leti hai process hote waqt.
-2. **Backend Handshake:** Hamara backend abhi `50MB` JSON limit support karta hai. Isse badi files "Payload Too Large" error degi.
-3. **Decryption Speed:** Decentralized storage se data download karke browser me decrypt karna computationally heavy hai. 50MB tak ki files instant (2-5 seconds) decrypt hoti hain.
+1. **Memory Inflation:** When we encrypt a file in the browser, it is converted from a `Uint8Array` to a `Hex String`. The Hex string is **twice the size** of the original file.
+   - *Example:* A 50MB file consumes **~100MB+** of space in the browser memory during processing.
+2. **Backend Handshake:** Our backend currently supports a `50MB` JSON limit. Any file larger than this will result in a "Payload Too Large" error.
+3. **Decryption Speed:** Downloading data from decentralized storage and decrypting it in the browser is computationally intensive. Files up to 50MB decrypt almost instantly (2-5 seconds).
 
 ---
 
@@ -35,9 +35,9 @@ Aap soch rahe honge ki IPFS toh GBs me data store kar sakta hai, toh humne **50M
 | **Limit** | **50MB / File** | No limit (but slow) | No limit (High Cost) |
 
 ## 💡 Future Roadmap for Larger Files
-Agar aapko **1GB+** ki videos ya large backups store karne hain, toh hum future me:
-1. **Streaming Uploads:** File ko chunks me divide karke upload karenge.
-2. **Dedicated Pinning Service:** Pinata ya Infura integration for enterprise-grade storage.
+If you need to store **1GB+** videos or large backups, we plan to implement:
+1. **Streaming Uploads:** Splitting the file into chunks and uploading them sequentially.
+2. **Dedicated Pinning Service:** Deeper Pinata or Infura integrations for enterprise-grade storage.
 
 ---
-*Note: Ye limits current stable version (v1.0.0) ke liye hain.*
+*Note: These limits apply to the current stable version (v1.0.0).*

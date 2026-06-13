@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 export function PricingPlans() {
   const [selectedMode, setSelectedMode] = useState<UserMode>('centralized')
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly')
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
   
   const plans = selectedMode === 'centralized' ? Object.values(CENTRALIZED_PLANS) : Object.values(DECENTRALIZED_PLANS)
 
@@ -40,7 +40,7 @@ export function PricingPlans() {
             Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-blue-500 dark:from-blue-400 dark:via-purple-400 dark:to-blue-500">Vault Capacity</span>
           </h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-medium">
-            Granular tiers designed for every stage of your digital life. 
+            Standard tiers designed for every stage of your digital life. 
             From master keys to massive family archives.
           </p>
         </div>
@@ -83,7 +83,7 @@ export function PricingPlans() {
           </div>
         </div>
 
-        {/* Granular Plans Grid */}
+        {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-24">
           <AnimatePresence mode="wait">
             {plans.map((plan, idx) => {
@@ -101,7 +101,7 @@ export function PricingPlans() {
                     isPopular ? 'bg-gradient-to-b from-blue-500 to-purple-600' : 'bg-slate-200 dark:bg-white/10 hover:bg-slate-300/50 dark:hover:bg-white/20'
                   }`}
                 >
-                  <div className="bg-white dark:bg-[#0f1115] border border-slate-200 dark:border-transparent rounded-[1.9rem] p-6 h-full flex flex-col relative overflow-hidden transition-colors duration-300">
+                  <div className="bg-white dark:bg-[#0f1115] border border-slate-200 dark:border-transparent rounded-[1.9rem] p-8 h-full flex flex-col relative overflow-hidden transition-colors duration-300">
                     {isPopular && (
                       <div className="absolute top-4 right-4 px-2 py-1 bg-blue-600 text-[8px] font-black uppercase tracking-widest text-white rounded-md">
                         Most Popular
@@ -111,8 +111,8 @@ export function PricingPlans() {
                     <div className="mb-6">
                       <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">{plan.name}</div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-slate-900 dark:text-white">{price}</span>
-                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                        <span className="text-4xl font-black text-slate-900 dark:text-white">${price}</span>
+                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">/{billingCycle === 'monthly' ? 'mo' : billingCycle === 'quarterly' ? 'qt' : 'yr'}</span>
                       </div>
                     </div>
 

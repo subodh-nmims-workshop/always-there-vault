@@ -46,7 +46,7 @@ function ReceiptContent() {
         document.body.appendChild(script)
     }
 
-    const items = id === 'REC-2026-001-STEM-S' || plan === 'starter' ? [
+    const items = id === 'REC-2026-001-STEM-S' || plan === 'starter' || plan === 'freedom_starter' ? [
         {
             name: 'AlwaysThere Vault Setup (Free Tier)',
             description: 'Decentralized secure heartbeat fail-safe digital will storage & beneficiary allocation.',

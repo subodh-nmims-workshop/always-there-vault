@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 
 export function AssetCreationForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [assetType, setAssetType] = useState<string>('')
   const [assetName, setAssetName] = useState<string>('')
   const [isEncrypting, setIsEncrypting] = useState(false)
@@ -147,6 +148,31 @@ export function AssetCreationForm() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      if (!assetName) setAssetName(file.name)
+
+      if (file.type.startsWith('image/')) setAssetType('photo')
+      else if (file.type.startsWith('video/')) setAssetType('photo')
+      else if (file.type.startsWith('audio/')) setAssetType('audio_message')
+      else if (file.type === 'application/pdf' || file.type.includes('document')) setAssetType('document')
+      else if (!assetType) setAssetType('document')
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
     if (file) {
       setSelectedFile(file)
       if (!assetName) setAssetName(file.name)
@@ -1368,20 +1394,51 @@ export function AssetCreationForm() {
                 <div className="space-y-6">
                   {/* Dropzone */}
                   <div>
-                    <div className={`relative border border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${selectedFile ? 'border-blue-500 bg-blue-500/5' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/[0.02] hover:border-slate-500'}`}>
-                      <input type="file" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <div 
+                      className={`relative border border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
+                        isDragging 
+                          ? 'border-blue-500 bg-blue-500/10 scale-[1.01] shadow-[0_0_25px_rgba(59,130,246,0.15)]' 
+                          : selectedFile 
+                            ? 'border-blue-500 bg-blue-500/5' 
+                            : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/[0.02] hover:border-slate-500'
+                      }`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <input 
+                        type="file" 
+                        onChange={handleFileSelect} 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                      />
                       {selectedFile ? (
                         <div className="flex flex-col items-center justify-center space-y-2">
                           <CheckCircle className="h-8 w-8 text-emerald-500 shadow-lg shadow-emerald-500/20 rounded-full mb-1" />
                           <p className="text-slate-800 dark:text-white font-bold truncate max-w-[200px] text-sm">{selectedFile.name}</p>
-                          <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedFile(null);
+                                setAssetName('');
+                              }}
+                              className="relative z-20 text-xs text-red-500 hover:text-red-400 font-semibold underline bg-transparent border-none p-0 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center justify-center">
                           <div className="w-12 h-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-3">
-                            <Upload className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+                            <Upload className={`w-5 h-5 transition-transform duration-300 ${isDragging ? 'translate-y-[-2px] text-blue-500' : 'text-blue-500 dark:text-blue-400'}`} />
                           </div>
-                          <p className="text-sm font-medium text-slate-800 dark:text-white mb-1">Select File to Encrypt</p>
+                          <p className="text-sm font-medium text-slate-800 dark:text-white mb-1">
+                            {isDragging ? 'Drop your file here' : 'Drag & drop file or click to browse'}
+                          </p>
                           <p className="text-xs text-slate-600 dark:text-slate-500">Max size 50MB</p>
                         </div>
                       )}

@@ -46,7 +46,7 @@ import { UpgradeModal } from '@/components/upgrade-modal'
 import { toast } from 'sonner'
 
 import { useSubscription } from '@/contexts/SubscriptionContext'
-import { ALL_PLANS } from '@/types/subscription'
+import { ALL_PLANS, PlanType } from '@/types/subscription'
 
 export function SettingsDashboard() {
   const [lang, setLang] = useState<Language>('en')
@@ -164,11 +164,10 @@ export function SettingsDashboard() {
       return appState.assets.reduce((acc, asset) => acc + (asset.size || 0), 0)
   }, [appState])
 
-  const isPremium = subscription?.plan === 'professional'
-  const quotaBytes = subscription?.storageLimit || (isPremium ? 5 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024)
-  const quotaGB = subscription?.plan && ALL_PLANS[subscription.plan]?.limits?.storageGB
-    ? ALL_PLANS[subscription.plan].limits.storageGB
-    : (quotaBytes / (1024 * 1024 * 1024))
+  const isPremium = subscription?.plan && subscription.plan !== 'starter' && subscription.plan !== 'freedom_starter'
+  const quotaBytes = subscription?.storageLimit || (isPremium ? 50 * 1024 * 1024 * 1024 : 500 * 1024 * 1024)
+  const planInfo = subscription?.plan ? ALL_PLANS[subscription.plan as PlanType] : null
+  const quotaGB = planInfo?.limits?.storageGB ?? (quotaBytes / (1024 * 1024 * 1024))
   const usagePercent = Math.min((totalUsedBytes / quotaBytes) * 100, 100)
   const isTrial = subscription?.status === 'trial'
 

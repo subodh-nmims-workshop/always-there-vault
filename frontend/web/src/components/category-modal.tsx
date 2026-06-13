@@ -25,6 +25,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
   const [template, setTemplate] = useState<CategoryTemplate | null>(null)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [selectedBens, setSelectedBens] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
@@ -42,6 +43,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
         setTemplate(tmpl)
         setFormData({})
         setSelectedFile(null)
+        setIsDragging(false)
         setSelectedBens([])
         setErrors([])
         setShowSuccess(false)
@@ -62,6 +64,24 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
     if (file) {
       setSelectedFile(file)
     }
@@ -393,20 +413,56 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                 <label className="block text-xs uppercase tracking-widest text-slate-700 dark:text-slate-400 font-bold">
                   Attach File (Optional)
                 </label>
-                <div className="relative">
+                <div 
+                  className={`relative border border-dashed rounded-2xl p-6 text-center transition-all duration-300 ${
+                    isDragging 
+                      ? 'border-blue-500 bg-blue-500/10 scale-[1.01] shadow-[0_0_20px_rgba(59,130,246,0.15)]' 
+                      : selectedFile 
+                        ? 'border-blue-500 bg-blue-500/5' 
+                        : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-white/[0.02] hover:border-slate-500'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <input
                     type="file"
                     onChange={handleFileSelect}
-                    className="hidden"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     id="category-file-upload"
                   />
-                  <label
-                    htmlFor="category-file-upload"
-                    className="flex items-center justify-center gap-3 w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 border-dashed rounded-xl px-4 py-6 text-sm text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-blue-500/50 transition-all cursor-pointer"
-                  >
-                    <Upload className="w-5 h-5" />
-                    <span>{selectedFile ? selectedFile.name : 'Click to upload supporting document'}</span>
-                  </label>
+                  {selectedFile ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center mb-1">
+                        <CheckCircle className="h-5 w-5 text-emerald-500 shadow-lg shadow-emerald-500/20" />
+                      </div>
+                      <p className="text-slate-800 dark:text-white font-bold truncate max-w-[250px] text-sm">{selectedFile.name}</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                          }}
+                          className="relative z-20 text-xs text-red-500 hover:text-red-400 font-semibold underline bg-transparent border-none p-0 cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-2">
+                        <Upload className={`w-5 h-5 transition-transform duration-300 ${isDragging ? 'translate-y-[-2px] text-blue-500' : 'text-slate-500'}`} />
+                      </div>
+                      <p className="text-sm font-medium text-slate-800 dark:text-white mb-1">
+                        {isDragging ? 'Drop your file here' : 'Drag & drop file or click to browse'}
+                      </p>
+                      <p className="text-[10px] text-slate-500">Supports documents, photos, keys up to 50MB</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -5,6 +5,8 @@ import { subscriptions, type Subscription, type NewSubscription } from '../../sr
 import { files } from '../../src/db/schema/files';
 import { beneficiaries } from '../../src/db/schema/beneficiaries';
 import { UsersService } from '../users/users.service';
+import { PLANS } from './plans.config';
+import { PlanType } from './subscription.schema';
 
 @Injectable()
 export class SubscriptionService {
@@ -17,17 +19,26 @@ export class SubscriptionService {
     const user = await this.usersService.findUserById(userId);
     if (!user) throw new NotFoundException('User not found');
     
-    // Map plan limits (simple for now)
-    let storageLimit = 524288000; // 500MB
-    if (planId === 'premium_10') storageLimit = 10 * 1024 * 1024 * 1024;
-    if (planId === 'pro_100') storageLimit = 100 * 1024 * 1024 * 1024;
+    // Resolve plan config dynamically
+    const planKey = (planId || '').toLowerCase() as PlanType;
+    const planConfig = PLANS[planKey] || PLANS[PlanType.STARTER];
+    
+    const isDecentralized = planConfig.mode === 'decentralized';
+    const storageLimitMB = isDecentralized 
+      ? planConfig.limits.decentralizedStorageMB 
+      : planConfig.limits.centralizedStorageMB;
+      
+    // Handle Infinity storage
+    const storageLimit = storageLimitMB === Infinity 
+      ? 1024 * 1024 * 1024 * 1024 * 10 // 10 TB default for unlimited
+      : storageLimitMB * 1024 * 1024;
 
     const [sub] = await this.db.insert(subscriptions).values({
       userId: user.id,
       planId,
-      planName: planId.toUpperCase(),
+      planName: planConfig.name,
       storageLimit,
-      billingCycle,
+      billingCycle: (billingCycle || 'MONTHLY').toUpperCase(),
       price: price.toString(),
       startDate: new Date(),
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 days
@@ -36,8 +47,9 @@ export class SubscriptionService {
       target: [subscriptions.userId],
       set: {
         planId,
+        planName: planConfig.name,
         storageLimit,
-        billingCycle,
+        billingCycle: (billingCycle || 'MONTHLY').toUpperCase(),
         price: price.toString(),
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         updatedAt: new Date(),
@@ -64,7 +76,7 @@ export class SubscriptionService {
         if (!user) {
           console.log('GetSubscription: User not found by wallet', lowerAddress);
           return {
-            status: 'ACTIVE', planId: 'freedom_starter', storageLimit: 524288000,
+            status: 'ACTIVE', planId: 'freedom_starter', storageLimit: 500 * 1024 * 1024,
             userId: lowerAddress, mode: 'decentralized',
             storageUsed: 0, assetsCount: 0, beneficiariesCount: 0,
           };
@@ -110,7 +122,7 @@ export class SubscriptionService {
     } catch (error) {
       console.error('GetSubscription Error:', error);
       return {
-        status: 'ACTIVE', planId: 'freedom_starter', storageLimit: 524288000,
+        status: 'ACTIVE', planId: 'freedom_starter', storageLimit: 500 * 1024 * 1024,
         userId: id, mode: 'decentralized',
         storageUsed: 0, assetsCount: 0, beneficiariesCount: 0,
       };
@@ -146,25 +158,34 @@ export class SubscriptionService {
   }
 
   async upgradeSubscription(userId: string, planType: string, mode: string): Promise<any> {
-    // Map plan limits
-    let storageLimit = 524288000; // 500MB
-    if (planType === 'professional') storageLimit = 10 * 1024 * 1024 * 1024;
-    if (planType === 'enterprise') storageLimit = 100 * 1024 * 1024 * 1024;
+    // Resolve plan config dynamically
+    const planKey = (planType || '').toLowerCase() as PlanType;
+    const planConfig = PLANS[planKey] || PLANS[PlanType.STARTER];
+    
+    const isDecentralized = planConfig.mode === 'decentralized';
+    const storageLimitMB = isDecentralized 
+      ? planConfig.limits.decentralizedStorageMB 
+      : planConfig.limits.centralizedStorageMB;
+      
+    // Handle Infinity storage
+    const storageLimit = storageLimitMB === Infinity 
+      ? 1024 * 1024 * 1024 * 1024 * 10 // 10 TB default for unlimited
+      : storageLimitMB * 1024 * 1024;
 
     const [sub] = await this.db.insert(subscriptions).values({
       userId,
       planId: planType,
-      planName: planType.toUpperCase(),
+      planName: planConfig.name,
       storageLimit,
       billingCycle: 'MONTHLY',
-      price: '0', // Stripe will manage actual billing
+      price: planConfig.price.toString(),
       startDate: new Date(),
       status: 'ACTIVE',
     }).onConflictDoUpdate({
       target: [subscriptions.userId],
       set: {
         planId: planType,
-        planName: planType.toUpperCase(),
+        planName: planConfig.name,
         storageLimit,
         status: 'ACTIVE',
         updatedAt: new Date(),
@@ -188,9 +209,12 @@ export class SubscriptionService {
       .where(eq(subscriptions.userId, userId))
       .returning();
 
-    // Reset storage quota to free tier?
+    // Reset storage quota to starter free tier
+    const starterConfig = PLANS[PlanType.STARTER];
+    const starterLimit = (starterConfig?.limits.centralizedStorageMB || 500) * 1024 * 1024;
+
     await this.db.update(users)
-      .set({ storageQuota: 524288000 })
+      .set({ storageQuota: starterLimit })
       .where(eq(users.id, userId));
 
     return sub;
