@@ -36,9 +36,9 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-center gap-4">
                     <ThemeToggle />
-                    <Link href="/dashboard" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
-                    Launch App
-                </Link>
+                    <Link href="/">
+                        <button className="px-6 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Go to App</button>
+                    </Link>
                 </div>
             </nav>
 

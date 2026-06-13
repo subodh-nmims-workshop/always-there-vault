@@ -139,7 +139,7 @@ export class AuthService {
             }
             // Log full stack for non-HTTP exceptions to help debug in Render logs
             console.error(e);
-            throw new UnauthorizedException('Authentication failed. Please try again.');
+            throw new UnauthorizedException(`Authentication failed: ${e.message}`);
         }
     }
 

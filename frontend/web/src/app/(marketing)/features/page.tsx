@@ -18,26 +18,35 @@ export default function FeaturesPage() {
     const defaultTransition = { duration: 0.6, ease: "easeOut" as const }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0a0c10] font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
+        <div className="min-h-screen bg-white dark:bg-[#030712] font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative transition-colors duration-300">
             {/* Navigation */}
-            <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0c10]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
+            <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors duration-300">
                 <Link href="/" className="flex items-center gap-2 group">
-          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
-          <div className="flex flex-col text-left">
-            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
-            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
-          </div>
-        </Link>
-                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-                    <Link href="/features" className="text-slate-900 dark:text-white transition-colors text-sm font-medium">Features</Link>
-                    <Link href="/docs" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium">Documentation</Link>
-                    <Link href="/security" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium">Security</Link>
+                    <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+                    <div className="flex flex-col text-left">
+                        <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+                        <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+                    </div>
+                </Link>
+                <div className="hidden md:flex items-center gap-8">
+                    <Link href="/investors" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                        Partners & Investors
+                    </Link>
+                    <Link href="/features" className="text-xs font-black uppercase tracking-[0.15em] text-slate-900 dark:text-white transition-colors">How it works</Link>
+                    <Link href="/security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Security</Link>
+                    <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Tech Guide</Link>
+                    <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</Link>
+                    <Link href="/donate" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#2b52ff]/10 border border-[#2b52ff]/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-[#2b52ff]/20 hover:text-white transition-all">Support Us</Link>
                 </div>
                 <div className="flex items-center gap-4">
                     <ThemeToggle />
-                    <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">
-                    Launch App
-                </Link>
+                    <Link href="/">
+                        <button className="px-6 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Go to App</button>
+                    </Link>
                 </div>
             </nav>
 
@@ -48,15 +57,15 @@ export default function FeaturesPage() {
                         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#1152d4]/20 blur-[120px] rounded-full"></div>
                     </div>
 
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="inline-flex items-center bg-white/[0.03] backdrop-blur-md px-4 py-1.5 rounded-full border border-[#1152d4]/30 mb-6">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="inline-flex items-center bg-slate-100 dark:bg-white/[0.03] backdrop-blur-md px-4 py-1.5 rounded-full border border-[#1152d4]/30 mb-6">
                         <span className="text-[10px] font-black tracking-[0.2em] text-[#1152d4]">TECHNICAL SPECIFICATIONS</span>
                     </motion.div>
 
-                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight text-slate-900 dark:text-white">
                         Core Protocol <span className="text-[#1152d4]">Features</span>
                     </motion.h1>
 
-                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="max-w-2xl mx-auto text-slate-400 text-lg leading-relaxed">
+                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="max-w-2xl mx-auto text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                         A trustless fail-safe mechanism for the decentralized future. Automated, secure, and permanent.
                     </motion.p>
                 </header>
@@ -74,7 +83,7 @@ export default function FeaturesPage() {
                             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 Automatically trigger encrypted payload transfers to designated beneficiary wallets if no activity is detected within your custom heartbeat interval. Fully non-custodial and secure.
                             </p>
-                            <Link href="/docs/smart-contract" className="inline-flex items-center gap-2 text-[#1152d4] font-bold text-sm hover:underline hover:gap-3 transition-all">
+                            <Link href="/docs" className="inline-flex items-center gap-2 text-[#1152d4] font-bold text-sm hover:underline hover:gap-3 transition-all">
                                 Explore Recovery Logic <ArrowRight className="w-4 h-4" />
                             </Link>
                         </motion.div>
@@ -103,7 +112,7 @@ export default function FeaturesPage() {
 
                     {/* Feature 2 */}
                     <section className="grid md:grid-cols-2 gap-12 items-center">
-                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-white/[0.02] backdrop-blur-md aspect-square max-h-[400px] rounded-3xl flex items-center justify-center relative overflow-hidden border border-[#8b5cf6]/20 shadow-2xl">
+                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md aspect-square max-h-[400px] rounded-3xl flex items-center justify-center relative overflow-hidden border border-slate-200 dark:border-[#8b5cf6]/20 shadow-2xl">
                             <div className="absolute inset-0 bg-[#8b5cf6]/5 group-hover:bg-[#8b5cf6]/10 transition-colors"></div>
                             <div className="relative flex items-center justify-center w-full h-full">
                                 <Key className="w-48 h-48 text-[#8b5cf6] opacity-20 blur-xl absolute" />
@@ -126,7 +135,7 @@ export default function FeaturesPage() {
                             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 Utilizing Shamir's Secret Sharing, your master encryption keys are split into multiple fragments distributed across our secure validator network. There is no single point of failure, and we never hold your complete key.
                             </p>
-                            <Link href="/docs/shamir-sdk" className="inline-flex items-center gap-2 text-[#8b5cf6] font-bold text-sm hover:underline hover:gap-3 transition-all">
+                            <Link href="/docs" className="inline-flex items-center gap-2 text-[#8b5cf6] font-bold text-sm hover:underline hover:gap-3 transition-all">
                                 View Sharding Protocol <ArrowRight className="w-4 h-4" />
                             </Link>
                         </motion.div>
@@ -142,12 +151,12 @@ export default function FeaturesPage() {
                             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 Update your protocol status via off-chain signatures wrapped in native ERC-4337 meta-transactions. Gasless heartbeats allow you to maintain your fail-safe without constant transaction fees.
                             </p>
-                            <Link href="/docs/zero-knowledge" className="inline-flex items-center gap-2 text-emerald-400 font-bold text-sm hover:underline hover:gap-3 transition-all">
+                            <Link href="/docs" className="inline-flex items-center gap-2 text-emerald-400 font-bold text-sm hover:underline hover:gap-3 transition-all">
                                 How it works <ArrowRight className="w-4 h-4" />
                             </Link>
                         </motion.div>
 
-                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-white/[0.02] backdrop-blur-md rounded-3xl p-10 border border-emerald-500/20 flex flex-col justify-center min-h-[320px] shadow-2xl relative group">
+                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-3xl p-10 border border-slate-200 dark:border-emerald-500/20 flex flex-col justify-center min-h-[320px] shadow-2xl relative group">
                             <div className="w-full h-40 relative flex items-end">
                                 <div className="absolute inset-0 grid grid-cols-8 grid-rows-4 opacity-[0.05] pointer-events-none">
                                     {Array.from({ length: 32 }).map((_, i) => (
@@ -165,7 +174,7 @@ export default function FeaturesPage() {
                                 </svg>
                             </div>
 
-                            <div className="mt-8 flex justify-between items-center text-xs uppercase font-bold text-slate-500 tracking-widest border-t border-white/5 pt-6">
+                            <div className="mt-8 flex justify-between items-center text-xs uppercase font-bold text-slate-500 tracking-widest border-t border-slate-200 dark:border-white/5 pt-6">
                                 <span className="flex items-center"><MonitorSmartphone className="w-4 h-4 mr-2" /> Liveness Check</span>
                                 <span className="text-emerald-500 flex items-center bg-emerald-500/10 px-3 py-1 rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-2"></div> Active Pulse</span>
                             </div>
@@ -174,14 +183,14 @@ export default function FeaturesPage() {
 
                     {/* Bottom CTA Overlay block */}
                     <section className="relative pt-16">
-                        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white/[0.03] backdrop-blur-xl p-12 rounded-[3rem] border border-white/10 text-center overflow-hidden relative shadow-2xl">
+                        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-slate-50 dark:bg-white/[0.03] backdrop-blur-xl p-12 rounded-[3rem] border border-slate-200 dark:border-white/10 text-center overflow-hidden relative shadow-2xl">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#1152d4]/10 via-transparent to-[#8b5cf6]/10 opacity-50 pointer-events-none"></div>
                             <h2 className="text-4xl font-black mb-6 relative z-10 tracking-tight text-slate-900 dark:text-white">Secure Your Legacy</h2>
                             <p className="text-slate-600 dark:text-slate-400 text-lg mb-10 max-w-2xl mx-auto relative z-10 leading-relaxed">
                                 Don't leave your digital assets in limbo. Deploy your Always There switch today and ensure your wealth reaches the right hands.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all">
+                                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all animate-pulse">
                                     Connect Wallet
                                 </Link>
                                 <Link href="/docs" className="bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white">
