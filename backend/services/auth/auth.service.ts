@@ -139,7 +139,8 @@ export class AuthService {
             }
             // Log full stack for non-HTTP exceptions to help debug in Render logs
             console.error(e);
-            throw new UnauthorizedException(`Authentication failed: ${e.message}`);
+            const detailMsg = [e.code, e.detail, e.hint].filter(Boolean).join(' - ');
+            throw new UnauthorizedException(`Authentication failed: ${e.message}${detailMsg ? ' | ' + detailMsg : ''}`);
         }
     }
 
