@@ -8,6 +8,14 @@ dotenv.config();
 const connectionString = process.env.DATABASE_URL!;
 const isProduction = process.env.NODE_ENV === 'production' || connectionString.includes('neon.tech');
 
+// Extract host for logging
+let dbHost = 'unknown';
+try {
+    const match = connectionString.match(/@([^/:]+)/);
+    if (match) dbHost = match[1];
+} catch (e) {}
+console.log(`[Database Init] Connecting to host: ${dbHost}`);
+
 // For migrations
 export const migrationClient = postgres(connectionString, { 
     max: 1,
