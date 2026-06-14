@@ -16,7 +16,8 @@ export const migrationClient = postgres(connectionString, {
 
 // For queries
 const queryClient = postgres(connectionString, {
-    ssl: isProduction ? 'require' : false
+    ssl: isProduction ? 'require' : false,
+    prepare: false // Disable prepared statements for PgBouncer / Neon connection pooling compatibility
 });
 export const db = drizzle(queryClient, { schema });
 
