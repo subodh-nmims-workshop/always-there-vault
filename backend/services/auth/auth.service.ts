@@ -134,6 +134,7 @@ export class AuthService {
             };
         } catch (e) {
             this.logger.error(`Authentication failed for ${walletAddress}: ${e.message}`);
+            console.error('FULL DATABASE AUTH ERROR:', e);
             if (e instanceof UnauthorizedException || e instanceof BadRequestException) {
                 throw e;
             }
