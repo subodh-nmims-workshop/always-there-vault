@@ -1,1 +1,13 @@
-{"version":"5","dialect":"pg","entries":[]}
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781453745219,
+      "tag": "0000_swift_scarlet_witch",
+      "breakpoints": true
+    }
+  ]
+}
