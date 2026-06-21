@@ -2,6 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  optimizeFonts: false,
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },

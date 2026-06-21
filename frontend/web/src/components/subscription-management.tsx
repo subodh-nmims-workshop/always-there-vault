@@ -220,7 +220,7 @@ export function SubscriptionManagement() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
             onClick={() => setShowCancelModal(false)}
           >
             <motion.div
@@ -228,7 +228,7 @@ export function SubscriptionManagement() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full"
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full my-8 md:my-16"
             >
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle className="w-8 h-8 text-red-400" />
@@ -269,7 +269,7 @@ export function SubscriptionManagement() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
             onClick={() => setShowChangeModal(false)}
           >
             <motion.div
@@ -277,7 +277,7 @@ export function SubscriptionManagement() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full"
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full my-8 md:my-16"
             >
               <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <RefreshCw className="w-8 h-8 text-blue-400" />

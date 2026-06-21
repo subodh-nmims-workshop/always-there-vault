@@ -73,4 +73,15 @@ export class MFAService {
         
         return codes;
     }
+
+    // Disable 2FA for user
+    async disable2FA(userId: string): Promise<void> {
+        await this.db.update(users)
+            .set({
+                twoFactorSecret: null,
+                twoFactorEnabled: false,
+                updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+    }
 }

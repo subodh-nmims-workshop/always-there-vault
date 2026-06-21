@@ -36,4 +36,15 @@ export class UsersController {
         const walletAddress = req.user.walletAddress;
         return this.usersService.createOrUpdateUser(walletAddress, email);
     }
+
+    @Post('recovery-key')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Link a recovery address to the user account' })
+    async linkRecoveryAddress(
+        @Req() req: any,
+        @Body('recoveryAddress') recoveryAddress: string | null
+    ) {
+        const userId = req.user.userId;
+        return this.usersService.updateRecoveryAddress(userId, recoveryAddress);
+    }
 }

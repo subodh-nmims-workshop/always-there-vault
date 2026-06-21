@@ -1,7 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { users, type User, type NewUser } from '../../src/db/schema/users';
 import { userStorageQuotas } from '../../src/db/schema/quotas';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, or } from 'drizzle-orm';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +15,29 @@ export class UsersService {
         });
         if (user) await this.ensureQuotasExist(user.id);
         return user || null;
+    }
+
+    async findUserByWalletOrRecovery(address: string): Promise<User | null> {
+        const lowerAddress = address.toLowerCase();
+        const user = await this.db.query.users.findFirst({
+            where: or(
+                eq(users.walletAddress, lowerAddress),
+                eq(users.recoveryAddress, lowerAddress)
+            ),
+        });
+        if (user) await this.ensureQuotasExist(user.id);
+        return user || null;
+    }
+
+    async updateRecoveryAddress(userId: string, recoveryAddress: string | null): Promise<{ success: boolean; recoveryAddress: string | null }> {
+        const lowerAddress = recoveryAddress ? recoveryAddress.toLowerCase() : null;
+        await this.db.update(users)
+            .set({ 
+                recoveryAddress: lowerAddress,
+                updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+        return { success: true, recoveryAddress: lowerAddress };
     }
 
     async createOrUpdateUser(walletAddress: string, email?: string): Promise<User> {

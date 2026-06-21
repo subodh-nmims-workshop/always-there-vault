@@ -27,6 +27,7 @@ export const users = pgTable('users', {
   
   encryptedEmail: text('encrypted_email'),
   encryptedWallet: text('encrypted_wallet'),
+  recoveryAddress: varchar('recovery_address', { length: 42 }).unique(),
 
   // Notifications
   expoPushToken: varchar('expo_push_token', { length: 255 }),

@@ -34,12 +34,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   History,
-  Info
+  Info,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useSignMessage, useDisconnect } from 'wagmi'
 import { toast } from 'sonner'
+import { ethers } from 'ethers'
 
 // Components
 import { PricingPlans } from '@/components/pricing-plans'
@@ -72,6 +74,9 @@ export default function HomePage() {
   const [showDevModal, setShowDevModal] = useState(false)
   const [devPasscode, setDevPasscode] = useState('')
   const [showWalletModal, setShowWalletModal] = useState(false)
+  const [pendingMfaData, setPendingMfaData] = useState<{ mfaToken: string; walletAddress: string } | null>(null)
+  const [mfaVerifyCode, setMfaVerifyCode] = useState('')
+  const [isVerifyingMfa, setIsVerifyingMfa] = useState(false)
 
   useEffect(() => {
     setHasMounted(true)
@@ -99,7 +104,7 @@ export default function HomePage() {
 
   const handleConnect = () => setShowWalletModal(true)
 
-  const handleWalletConnect = async (walletAddress: string) => {
+  const handleWalletConnect = async (walletAddress: string, customPrivateKey?: string) => {
     setIsConnecting(true)
     try {
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
@@ -116,7 +121,14 @@ export default function HomePage() {
         throw new Error('Server returned an empty authentication message')
       }
 
-      const signature = await signMessageAsync({ message })
+      let signature;
+      if (customPrivateKey) {
+        const wallet = new ethers.Wallet(customPrivateKey)
+        signature = await wallet.signMessage(message)
+      } else {
+        signature = await signMessageAsync({ message })
+      }
+
       const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,12 +148,17 @@ export default function HomePage() {
 
       const authData = await verifyRes.json()
       
-      if (authData?.token) {
+      if (authData?.status === 'PENDING_MFA') {
+        setPendingMfaData({ mfaToken: authData.mfaToken, walletAddress })
+        setMfaVerifyCode('')
+        setShowWalletModal(false)
+        toast.info('Two-Factor Authentication required.')
+      } else if (authData?.token) {
         setIsConnected(true)
         localStorage.setItem('dwp_wallet_connected', 'true')
-        localStorage.setItem('dwp_wallet_address', walletAddress)
+        localStorage.setItem('dwp_wallet_address', authData.walletAddress || walletAddress)
         localStorage.setItem('dwp_token', authData.token)
-        setAddress(walletAddress)
+        setAddress(authData.walletAddress || walletAddress)
         setShowWalletModal(false)
         toast.success('Authentication successful!')
       } else {
@@ -162,6 +179,47 @@ export default function HomePage() {
       }
     } finally {
       setIsConnecting(false)
+    }
+  }
+
+  const handleMfaVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pendingMfaData) return
+    if (!mfaVerifyCode.trim() || mfaVerifyCode.trim().length !== 6) {
+      toast.error('Please enter a valid 6-digit code.')
+      return
+    }
+
+    setIsVerifyingMfa(true)
+    try {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const verifyRes = await fetch(`${apiEndpoint}/api/auth/mfa/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mfaToken: pendingMfaData.mfaToken, code: mfaVerifyCode.trim() })
+      })
+
+      if (!verifyRes.ok) {
+        const errorData = await verifyRes.json().catch(() => null)
+        throw new Error(errorData?.message || 'Verification failed. Please check the code.')
+      }
+
+      const authData = await verifyRes.json()
+      if (authData?.token) {
+        setIsConnected(true)
+        localStorage.setItem('dwp_wallet_connected', 'true')
+        localStorage.setItem('dwp_wallet_address', authData.walletAddress || pendingMfaData.walletAddress)
+        localStorage.setItem('dwp_token', authData.token)
+        setAddress(authData.walletAddress || pendingMfaData.walletAddress)
+        setPendingMfaData(null)
+        toast.success('MFA Verification Successful!')
+      } else {
+        throw new Error('No authentication token received after MFA.')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'MFA Verification failed.')
+    } finally {
+      setIsVerifyingMfa(false)
     }
   }
 
@@ -253,8 +311,8 @@ export default function HomePage() {
 
           <AnimatePresence>
             {showDevModal && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#030712]/80 backdrop-blur-md">
-                <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#2b52ff]/30 rounded-3xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(43,82,255,0.1)] relative overflow-hidden">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-[#030712]/80 backdrop-blur-md overflow-y-auto">
+                <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#2b52ff]/30 rounded-3xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(43,82,255,0.1)] relative overflow-hidden my-8 md:my-16">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2b52ff] to-purple-500" />
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-[#2b52ff]/10 flex items-center justify-center border border-[#2b52ff]/20">
@@ -605,6 +663,72 @@ export default function HomePage() {
 
       <SharedFooter />
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} isConnecting={isConnecting} />
+
+      {/* 2FA Login Verification Modal */}
+      <AnimatePresence>
+        {pendingMfaData && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-md w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
+            >
+              <button 
+                onClick={() => setPendingMfaData(null)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+
+              <form onSubmit={handleMfaVerifySubmit} className="space-y-6">
+                <div className="text-center">
+                  <div className="icon-container w-12 h-12 mx-auto bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Fingerprint className="size-6 text-emerald-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Two-Factor Authentication</h3>
+                  <p className="text-xs text-slate-400 mt-1">Please enter the 6-digit verification code from your Authenticator App.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
+                    Verification Code
+                  </label>
+                  <input 
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={mfaVerifyCode}
+                    onChange={(e) => setMfaVerifyCode(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-blue-500"
+                    autoFocus
+                  />
+                  <p className="text-[10px] text-slate-500 text-center leading-normal">
+                    Enter the code currently displayed in your Google Authenticator or Microsoft Authenticator app.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setPendingMfaData(null)}
+                    className="flex-1 bg-transparent border border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isVerifyingMfa}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl shadow-lg transition-colors disabled:opacity-50"
+                  >
+                    Verify & Login
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

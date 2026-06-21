@@ -12,6 +12,7 @@ import {
   type CategoryField
 } from '@/lib/category-handlers'
 import { Shield, CheckCircle } from 'lucide-react'
+import { Portal } from '@/components/portal'
 
 interface CategoryModalProps {
   isOpen: boolean
@@ -218,19 +219,20 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
+        <Portal>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
+            onClick={onClose}
+          >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden my-8 md:my-16"
           >
             {/* Header */}
             <div className={`${template.bgColor} border-b border-slate-200 dark:border-white/10 p-6`}>
@@ -494,6 +496,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
             </div>
           </motion.div>
         </motion.div>
+        </Portal>
       )}
     </AnimatePresence>
   )

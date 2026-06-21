@@ -6,6 +6,7 @@ import { Share2, Link as LinkIcon, Copy, Check, X, Mail, Clock, Eye, Download, T
 import WebStorageService, { StoredAsset } from '@/lib/storage'
 import { ConfirmationDialog } from './confirmation-dialog'
 import { toast } from 'sonner'
+import { Portal } from './portal'
 
 interface ShareLink {
   id: string
@@ -161,19 +162,21 @@ export function AssetSharingModal({ asset, isOpen, onClose }: AssetSharingModalP
   return (
     <>
       <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
-        >
+        {isOpen && (
+          <Portal>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+              onClick={onClose}
+            >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[85vh] overflow-y-auto"
+            className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[85vh] overflow-y-auto my-8 md:my-16"
           >
             {/* Header */}
             <div className="flex justify-between items-start mb-8 border-b border-slate-800 pb-6">
@@ -356,7 +359,9 @@ export function AssetSharingModal({ asset, isOpen, onClose }: AssetSharingModalP
             </div>
           </motion.div>
         </motion.div>
-      </AnimatePresence>
+      </Portal>
+    )}
+  </AnimatePresence>
 
       {/* Revoke Confirmation Dialog */}
       <ConfirmationDialog

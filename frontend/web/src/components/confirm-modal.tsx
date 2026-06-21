@@ -4,6 +4,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, AlertTriangle, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Portal } from '@/components/portal'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -76,7 +77,8 @@ export function ConfirmModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <Portal>
+          <div className="fixed inset-0 z-[110] flex items-start justify-center p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -89,7 +91,7 @@ export function ConfirmModal({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl p-6 md:p-8"
+            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl p-6 md:p-8 my-8 md:my-16"
           >
             {/* Header Gradient */}
             <div className={`absolute top-0 left-0 right-0 h-24 bg-gradient-to-b ${getHeaderGradient()} pointer-events-none`} />
@@ -149,6 +151,7 @@ export function ConfirmModal({
             </div>
           </motion.div>
         </div>
+        </Portal>
       )}
     </AnimatePresence>
   )

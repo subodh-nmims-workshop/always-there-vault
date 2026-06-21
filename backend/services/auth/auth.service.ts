@@ -89,28 +89,30 @@ export class AuthService {
                 throw new UnauthorizedException('Signature format invalid or tampered.');
             }
 
+            let isRecoveryLogin = false;
             if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-                this.logger.warn(`ADDRESS MISMATCH: Recovered ${recoveredAddress} vs Expected ${walletAddress}`);
-                throw new UnauthorizedException('Invalid signature. Wallet address mismatch.');
+                const user = await this.usersService.findUserByWalletOrRecovery(walletAddress);
+                if (user && user.recoveryAddress && user.recoveryAddress.toLowerCase() === recoveredAddress.toLowerCase()) {
+                    isRecoveryLogin = true;
+                    this.logger.log(`RECOVERY LOGIN SUCCESSFUL: ${walletAddress} authenticated via recovery address ${recoveredAddress}`);
+                } else {
+                    this.logger.warn(`ADDRESS MISMATCH: Recovered ${recoveredAddress} vs Expected ${walletAddress}`);
+                    throw new UnauthorizedException('Invalid signature. Wallet address mismatch.');
+                }
             }
 
-            // 4. Check for 2FA
-            let user;
-            try {
-                user = await this.usersService.findUserByWallet(walletAddress);
-            } catch (e) {
-                user = null;
-            }
+            // 4. Find user by primary wallet address or recovery address
+            let dbUser = await this.usersService.findUserByWalletOrRecovery(walletAddress);
 
-            if (user && user.isLocked) {
+            if (dbUser && dbUser.isLocked) {
                 this.logger.warn(`LOCKED ACCOUNT ATTEMPTED LOGIN: ${walletAddress}`);
                 throw new UnauthorizedException('Your account has been locked due to suspicious activity.');
             }
 
-            if (user && user.twoFactorEnabled) {
+            if (dbUser && dbUser.twoFactorEnabled) {
                 const mfaToken = crypto.randomBytes(32).toString('hex');
                 // MFA sessions still use cache for now, but they are shorter-lived
-                this.cacheService.set(`mfa_pending:${mfaToken}`, { userId: user.id, walletAddress }, 10 * 60 * 1000);
+                this.cacheService.set(`mfa_pending:${mfaToken}`, { userId: dbUser.id, walletAddress: dbUser.walletAddress }, 10 * 60 * 1000);
                 return {
                     status: 'PENDING_MFA',
                     mfaToken
@@ -118,18 +120,24 @@ export class AuthService {
             }
 
             // 5. Regular login
-            const dbUser = await this.usersService.createOrUpdateUser(walletAddress);
+            if (!dbUser) {
+                // If user doesn't exist, create a new one using this walletAddress as primary
+                dbUser = await this.usersService.createOrUpdateUser(walletAddress);
+            } else {
+                // If user exists, update their profile/active timestamp using their primary wallet address
+                dbUser = await this.usersService.createOrUpdateUser(dbUser.walletAddress);
+            }
             
-            // Generate JWT
+            // Generate JWT using the primary walletAddress to maintain consistent session identity
             const token = jwt.sign(
-                { walletAddress, userId: dbUser.id },
+                { walletAddress: dbUser.walletAddress, userId: dbUser.id },
                 this.configService.get<string>('JWT_SECRET') || 'secret',
                 { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h' }
             );
 
             return {
                 authenticated: true,
-                walletAddress,
+                walletAddress: dbUser.walletAddress,
                 token
             };
         } catch (e) {

@@ -92,13 +92,13 @@ export function ConfirmationDialog({
           />
 
           {/* Dialog */}
-          <div className="fixed inset-0 flex items-center justify-center z-[101] p-4">
+          <div className="fixed inset-0 flex items-start justify-center z-[101] p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className={`relative w-full max-w-md bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl ${styles.glow} overflow-hidden`}
+              className={`relative w-full max-w-md bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl ${styles.glow} overflow-hidden my-8 md:my-16`}
             >
               {/* Animated gradient background */}
               <div className="absolute inset-0 opacity-5 dark:opacity-10">

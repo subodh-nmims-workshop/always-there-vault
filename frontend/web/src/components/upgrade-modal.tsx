@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 
+import { Portal } from '@/components/portal'
+
 interface UpgradeModalProps {
   isOpen: boolean
   onClose: () => void
@@ -35,21 +37,21 @@ export function UpgradeModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
-          />
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-blue-500/10"
-          >
+        <Portal>
+          <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-blue-500/10 my-8 md:my-16"
+            >
             {/* Header Gradient */}
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-blue-600/20 to-purple-600/20 pointer-events-none" />
             
@@ -164,8 +166,9 @@ export function UpgradeModal({
             {/* Bottom Glow */}
             <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+        </Portal>
       )}
     </AnimatePresence>
   )

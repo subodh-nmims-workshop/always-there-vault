@@ -29,13 +29,13 @@ export function TrialExpiredModal() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-start justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-3xl p-8 max-w-lg w-full relative shadow-[0_0_50px_rgba(245,158,11,0.3)]"
+          className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-amber-500/30 rounded-3xl p-8 max-w-lg w-full relative shadow-[0_0_50px_rgba(245,158,11,0.3)] my-8 md:my-16"
         >
           {/* Glow Effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl blur-xl opacity-20 -z-10" />

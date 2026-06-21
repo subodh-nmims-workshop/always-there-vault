@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --font-outfit: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-plus-jakarta: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     /* Clean Light Professional Theme */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -448,6 +450,13 @@ input:focus, textarea:focus, select:focus {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-outfit);
+  }
+  .font-outfit {
+    font-family: var(--font-outfit);
+  }
+  .font-plus-jakarta {
+    font-family: var(--font-plus-jakarta);
   }
 }
 

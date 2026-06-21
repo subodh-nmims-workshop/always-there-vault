@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ethers } from 'ethers'
+import QRCode from 'qrcode'
+import CryptoJS from 'crypto-js'
 import { Button } from '@/components/ui/button'
 import { useSendTransaction } from 'wagmi'
 import { parseEther } from 'viem'
@@ -38,12 +41,15 @@ import {
     RefreshCw,
     MessageSquare,
     Send,
-    Terminal
+    Terminal,
+    X,
+    Upload
 } from 'lucide-react'
 import { translations, Language, getLanguage, setLanguage, subscribeI18n } from '@/utils/i18n'
 import WebStorageService, { AppState } from '@/lib/storage'
 import { UpgradeModal } from '@/components/upgrade-modal'
 import { toast } from 'sonner'
+import { Portal } from '@/components/portal'
 
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ALL_PLANS, PlanType } from '@/types/subscription'
@@ -51,6 +57,227 @@ import { ALL_PLANS, PlanType } from '@/types/subscription'
 export function SettingsDashboard() {
   const [lang, setLang] = useState<Language>('en')
   const [t, setT] = useState<any>(translations.en)
+  const [profile, setProfile] = useState<any>(null)
+  const [isProfileLoading, setIsProfileLoading] = useState(true)
+  const [showRecoveryWizard, setShowRecoveryWizard] = useState(false)
+  const [generatedWallet, setGeneratedWallet] = useState<{ address: string; privateKey: string } | null>(null)
+  const [isLinking, setIsLinking] = useState(false)
+  const [showPrivateKey, setShowPrivateKey] = useState(false)
+  const [saveLocally, setSaveLocally] = useState(false)
+  const [localPin, setLocalPin] = useState('')
+  const [showMfaModal, setShowMfaModal] = useState(false)
+  const [mfaQrCode, setMfaQrCode] = useState('')
+  const [mfaSecret, setMfaSecret] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
+  const [isMfaLoading, setIsMfaLoading] = useState(false)
+
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('dwp_token')
+      if (!token) return
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setProfile(data)
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err)
+    } finally {
+      setIsProfileLoading(false)
+    }
+  }
+
+  const handleGenerateRecoveryKey = () => {
+    const w = ethers.Wallet.createRandom()
+    setGeneratedWallet({
+      address: w.address,
+      privateKey: w.privateKey
+    })
+    setShowPrivateKey(false)
+  }
+
+  const handleDownloadBackup = () => {
+    if (!generatedWallet) return
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+      address: generatedWallet.address,
+      privateKey: generatedWallet.privateKey,
+      createdAt: new Date().toISOString(),
+      note: "AlwaysThere Protocol Recovery Key. Keep this file offline on a secure external device (USB drive)."
+    }, null, 2))
+    const downloadAnchor = document.createElement('a')
+    downloadAnchor.setAttribute("href", dataStr)
+    downloadAnchor.setAttribute("download", `always-there-recovery-key.json`)
+    document.body.appendChild(downloadAnchor)
+    downloadAnchor.click()
+    downloadAnchor.remove()
+    toast.success("Backup file downloaded! Copy it to your physical USB drive / Pendrive.")
+  }
+
+  const handleLinkRecoveryKey = async () => {
+    if (!generatedWallet) return
+    if (saveLocally && !localPin.trim()) {
+      toast.error("Please enter a PIN/Password to secure your local vault.")
+      return
+    }
+    setIsLinking(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ recoveryAddress: generatedWallet.address })
+      })
+      if (res.ok) {
+        if (saveLocally) {
+          // Encrypt private key using CryptoJS
+          const encrypted = CryptoJS.AES.encrypt(generatedWallet.privateKey, localPin.trim()).toString()
+          localStorage.setItem('always_there_recovery_vault', JSON.stringify({
+            address: generatedWallet.address,
+            encrypted
+          }))
+          toast.success("Recovery key securely encrypted and saved to this device!")
+        }
+        toast.success("Recovery key linked to your account successfully!")
+        setGeneratedWallet(null)
+        setShowRecoveryWizard(false)
+        setSaveLocally(false)
+        setLocalPin('')
+        fetchProfile()
+      } else {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.message || "Failed to link recovery address")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error linking recovery key")
+    } finally {
+      setIsLinking(false)
+    }
+  }
+
+  const handleUnlinkRecoveryKey = async () => {
+    if (!confirm("Are you sure you want to unlink your recovery key? You will lose offline recovery access until you link a new key.")) return
+    setIsLinking(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ recoveryAddress: null })
+      })
+      if (res.ok) {
+        toast.success("Recovery key unlinked successfully.")
+        fetchProfile()
+      } else {
+        throw new Error("Failed to unlink key")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error unlinking key")
+    } finally {
+      setIsLinking(false)
+    }
+  }
+
+  const handleEnableMFASetup = async () => {
+    setIsMfaLoading(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const res = await fetch(`${apiEndpoint}/api/auth/mfa/enable`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setMfaSecret(data.secret)
+        setMfaQrCode(data.qrCode)
+        setShowMfaModal(true)
+        setMfaCode('')
+      } else {
+        throw new Error("Failed to generate MFA secret.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error enabling MFA setup")
+    } finally {
+      setIsMfaLoading(false)
+    }
+  }
+
+  const handleVerifyMFASetup = async () => {
+    if (!mfaCode.trim() || mfaCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit code.")
+      return
+    }
+    setIsMfaLoading(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const res = await fetch(`${apiEndpoint}/api/auth/mfa/verify-setup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: mfaCode.trim() })
+      })
+      if (res.ok) {
+        toast.success("Two-Factor Authentication enabled successfully!")
+        setShowMfaModal(false)
+        fetchProfile()
+      } else {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.message || "Invalid verification code.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error verifying 2FA code.")
+    } finally {
+      setIsMfaLoading(false)
+    }
+  }
+
+  const handleDisableMFA = async () => {
+    if (!confirm("Are you sure you want to disable Two-Factor Authentication? Your account will be less secure.")) return
+    setIsMfaLoading(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const res = await fetch(`${apiEndpoint}/api/auth/mfa/disable`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        toast.success("Two-Factor Authentication disabled.")
+        fetchProfile()
+      } else {
+        throw new Error("Failed to disable MFA.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error disabling MFA")
+    } finally {
+      setIsMfaLoading(false)
+    }
+  }
+
   const [appState, setAppState] = useState<AppState | null>(null)
   const [walletAddress, setWalletAddress] = useState('')
   const [copied, setCopied] = useState(false)
@@ -84,6 +311,26 @@ export function SettingsDashboard() {
     
     return unsubscribe
 }, [])
+
+  useEffect(() => {
+    if (generatedWallet && canvasRef.current) {
+      QRCode.toCanvas(
+        canvasRef.current,
+        generatedWallet.privateKey,
+        {
+          width: 180,
+          margin: 2,
+          color: {
+            dark: '#0f172a',
+            light: '#ffffff'
+          }
+        },
+        (err) => {
+          if (err) console.error("Error generating QR code:", err)
+        }
+      )
+    }
+  }, [generatedWallet, showRecoveryWizard])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(walletAddress)
@@ -237,6 +484,343 @@ export function SettingsDashboard() {
             </CardContent>
         </Card>
       </section>
+
+      {/* -- SECTION: HARDWARE RECOVERY & KEY BACKUP -- */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <Key className="size-5 text-blue-500" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Hardware Recovery & Key Backup</h2>
+        </div>
+
+        <Card className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+            <CardContent className="p-6 space-y-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            Offline Recovery Credentials
+                        </h3>
+                        <p className="text-sm text-slate-500 max-w-xl">
+                            Backup your authentication key to external physical hardware (USB drive/pendrive) or generate a printable QR recovery card to log in if you lose access to your primary Web3 wallet.
+                        </p>
+                    </div>
+                    {profile?.recoveryAddress ? (
+                        <Button 
+                            onClick={handleUnlinkRecoveryKey}
+                            disabled={isLinking}
+                            variant="outline" 
+                            className="bg-red-50 hover:bg-red-100 border-red-200 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-950/30 dark:border-red-800/30 dark:text-red-400 text-xs font-bold gap-2 whitespace-nowrap self-stretch md:self-auto"
+                        >
+                            Unlink Key
+                        </Button>
+                    ) : (
+                        <Button 
+                            onClick={() => {
+                                handleGenerateRecoveryKey()
+                                setShowRecoveryWizard(true)
+                            }}
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs gap-2 whitespace-nowrap self-stretch md:self-auto shadow-md"
+                        >
+                            <Key className="size-3.5" /> Setup Recovery Key
+                        </Button>
+                    )}
+                </div>
+
+                <div className="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className={`size-10 rounded-xl flex items-center justify-center ${profile?.recoveryAddress ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                            <Shield className="size-5" />
+                        </div>
+                        <div className="space-y-0.5">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Recovery Switch Status</span>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                                {profile?.recoveryAddress ? (
+                                    <span className="text-emerald-500 flex items-center gap-1.5 font-sans font-bold">
+                                        <ShieldCheck className="size-4" /> Linked Recovery Address: <span className="font-mono text-xs">{profile.recoveryAddress}</span>
+                                    </span>
+                                ) : (
+                                    <span className="text-amber-500 flex items-center gap-1.5 font-sans font-bold">
+                                        Inactive / No Backup Configured
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </section>
+
+      {/* 2FA Authenticator App Setup */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-2">
+            <Fingerprint className="size-5 text-emerald-500" />
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Two-Factor Authentication (MFA)</h2>
+        </div>
+
+        <Card className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+            <CardContent className="p-6 space-y-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            Authenticator App Integration
+                        </h3>
+                        <p className="text-sm text-slate-500 max-w-xl">
+                            Secure your account using standard TOTP authenticator apps like Google Authenticator or Microsoft Authenticator. Each login will require entering a rolling 6-digit code.
+                        </p>
+                    </div>
+                    {profile?.twoFactorEnabled ? (
+                        <Button 
+                            onClick={handleDisableMFA}
+                            disabled={isMfaLoading}
+                            variant="outline" 
+                            className="bg-red-50 hover:bg-red-100 border-red-200 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-950/30 dark:border-red-800/30 dark:text-red-400 text-xs font-bold gap-2 whitespace-nowrap self-stretch md:self-auto"
+                        >
+                            Disable 2FA
+                        </Button>
+                    ) : (
+                        <Button 
+                            onClick={handleEnableMFASetup}
+                            disabled={isMfaLoading}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs gap-2 whitespace-nowrap self-stretch md:self-auto shadow-md"
+                        >
+                            <Fingerprint className="size-3.5" /> Enable Authenticator 2FA
+                        </Button>
+                    )}
+                </div>
+
+                <div className="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className={`size-10 rounded-xl flex items-center justify-center ${profile?.twoFactorEnabled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                            <Shield className="size-5" />
+                        </div>
+                        <div className="space-y-0.5">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">MFA Status</span>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                                {profile?.twoFactorEnabled ? (
+                                    <span className="text-emerald-500 flex items-center gap-1.5 font-sans font-bold">
+                                        <ShieldCheck className="size-4" /> Enabled (Google / Microsoft Authenticator)
+                                    </span>
+                                ) : (
+                                    <span className="text-amber-500 flex items-center gap-1.5 font-sans font-bold">
+                                        Disabled / Setup recommended
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </section>
+
+      {/* MFA Setup & Verification Modal */}
+      <AnimatePresence>
+        {showMfaModal && (
+          <Portal>
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-lg w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
+            >
+              <button 
+                onClick={() => setShowMfaModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="icon-container w-12 h-12 mx-auto bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Fingerprint className="size-6 text-emerald-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Setup Authenticator App</h3>
+                  <p className="text-xs text-slate-400 mt-1">Scan the QR code with Google Authenticator or Microsoft Authenticator.</p>
+                </div>
+
+                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-200">
+                  <img src={mfaQrCode} alt="MFA QR Code" className="size-48" />
+                  <p className="text-[10px] text-slate-500 mt-2 font-mono select-all">Secret: {mfaSecret}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
+                    Verify Code
+                  </label>
+                  <input 
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-blue-500"
+                  />
+                  <p className="text-[10px] text-slate-500 text-center leading-normal">
+                    Enter the 6-digit rolling code generated in your app to confirm.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => setShowMfaModal(false)}
+                    variant="outline"
+                    className="flex-1 bg-transparent border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-5 rounded-xl hover:bg-white/5"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleVerifyMFASetup}
+                    disabled={isMfaLoading}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest py-5 rounded-xl shadow-lg"
+                  >
+                    Verify & Enable
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          </Portal>
+        )}
+      </AnimatePresence>
+
+      {/* Recovery Setup Wizard Dialog */}
+      <AnimatePresence>
+        {showRecoveryWizard && generatedWallet && (
+          <Portal>
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-lg w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
+            >
+              <button 
+                onClick={() => setShowRecoveryWizard(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="icon-container w-12 h-12 mx-auto bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Key className="size-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Setup Offline Recovery Key</h3>
+                  <p className="text-xs text-slate-400 mt-1">Export, download, or print your backup credentials.</p>
+                </div>
+
+                {/* Warning */}
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-xs text-amber-400/90 space-y-1">
+                  <p className="font-bold flex items-center gap-1">⚠️ IMPORTANT SECURITY WARNING</p>
+                  <p>Do NOT share this recovery key with anyone. This key grants full recovery access to your wills, digital assets, and sensitive files. Keep it offline in a secure physical location.</p>
+                </div>
+
+                {/* Key details */}
+                <div className="space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <div className="space-y-1">
+                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Generated Recovery Address</span>
+                    <p className="text-xs font-mono text-slate-300 break-all select-all">{generatedWallet.address}</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Recovery Private Key</span>
+                    {showPrivateKey ? (
+                      <p className="text-xs font-mono text-amber-400 break-all select-all">{generatedWallet.privateKey}</p>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-mono text-slate-500">••••••••••••••••••••••••</p>
+                        <button 
+                          onClick={() => setShowPrivateKey(true)} 
+                          className="text-[10px] font-bold text-blue-400 hover:text-blue-300 uppercase underline"
+                        >
+                          Reveal Key
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Save Locally Option */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      checked={saveLocally}
+                      onChange={(e) => {
+                        setSaveLocally(e.target.checked);
+                        if (!e.target.checked) setLocalPin('');
+                      }}
+                      className="rounded border-slate-700 bg-slate-800 text-blue-500 focus:ring-blue-500 size-4"
+                    />
+                    <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                      <Fingerprint className="size-4 text-emerald-400" /> Save to this device for Quick Login
+                    </span>
+                  </label>
+
+                  {saveLocally && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-2 pt-2 border-t border-slate-800"
+                    >
+                      <label className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
+                        Set secure PIN or Password
+                      </label>
+                      <input 
+                        type="password"
+                        placeholder="Enter PIN (e.g. 123456) or Password"
+                        value={localPin}
+                        onChange={(e) => setLocalPin(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                      <p className="text-[10px] text-slate-500 leading-normal">
+                        This encrypts your key locally in this browser. You will need this PIN/Password to decrypt and log in.
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Print / QR Display */}
+                <div className="flex flex-col items-center justify-center space-y-3 bg-white p-4 rounded-2xl">
+                  <canvas ref={canvasRef} />
+                  <span className="text-[10px] text-slate-800 font-bold uppercase tracking-wider">Printable Recovery QR Code</span>
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-3">
+                  <Button 
+                    onClick={handleDownloadBackup}
+                    className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-widest py-5 rounded-xl border border-slate-700 flex items-center justify-center gap-2"
+                  >
+                    <Upload className="size-4 rotate-180" /> Download Key Backup (.json)
+                  </Button>
+
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={() => setShowRecoveryWizard(false)}
+                      variant="outline"
+                      className="flex-1 bg-transparent border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-5 rounded-xl hover:bg-white/5"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleLinkRecoveryKey}
+                      disabled={isLinking}
+                      className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-widest py-5 rounded-xl shadow-lg"
+                    >
+                      {isLinking ? "Linking..." : "Confirm & Link"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          </Portal>
+        )}
+      </AnimatePresence>
 
       {/* -- SECTION: SUBSCRIPTION -- */}
       <section className="space-y-6">
