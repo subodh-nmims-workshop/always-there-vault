@@ -71,10 +71,22 @@ export function SettingsDashboard() {
   const [mfaCode, setMfaCode] = useState('')
   const [isMfaLoading, setIsMfaLoading] = useState(false)
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const fetchProfile = async () => {
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        setProfile({
+          id: 'demo-user-id',
+          walletAddress: '0xDemoSandbox77777777777777777777777777',
+          recoveryAddress: localStorage.getItem('demo_recovery_address') || null,
+          twoFactorEnabled: localStorage.getItem('demo_2fa_enabled') === 'true',
+          storageEngine: 'web3',
+        })
+        setIsProfileLoading(false)
+        return
+      }
+
       const token = localStorage.getItem('dwp_token')
       if (!token) return
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
@@ -128,6 +140,26 @@ export function SettingsDashboard() {
     }
     setIsLinking(true)
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        if (saveLocally) {
+          // Encrypt private key using CryptoJS
+          const encrypted = CryptoJS.AES.encrypt(generatedWallet.privateKey, localPin.trim()).toString()
+          localStorage.setItem('always_there_recovery_vault', JSON.stringify({
+            address: generatedWallet.address,
+            encrypted
+          }))
+        }
+        localStorage.setItem('demo_recovery_address', generatedWallet.address)
+        toast.success("Recovery key linked to your account successfully (Sandbox Demo)!")
+        setGeneratedWallet(null)
+        setShowRecoveryWizard(false)
+        setSaveLocally(false)
+        setLocalPin('')
+        fetchProfile()
+        return
+      }
+
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
@@ -169,6 +201,14 @@ export function SettingsDashboard() {
     if (!confirm("Are you sure you want to unlink your recovery key? You will lose offline recovery access until you link a new key.")) return
     setIsLinking(true)
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        localStorage.removeItem('demo_recovery_address')
+        toast.success("Recovery key unlinked successfully (Sandbox Demo).")
+        fetchProfile()
+        return
+      }
+
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
@@ -195,6 +235,15 @@ export function SettingsDashboard() {
   const handleEnableMFASetup = async () => {
     setIsMfaLoading(true)
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        setMfaSecret('JBSWY3DPEHPK3PXP')
+        setMfaQrCode('https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=otpauth://totp/AlwaysThere:DemoUser%3Fsecret%3DJBSWY3DPEHPK3PXP%26issuer%3DAlwaysThere')
+        setShowMfaModal(true)
+        setMfaCode('')
+        return
+      }
+
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/enable`, {
@@ -227,6 +276,15 @@ export function SettingsDashboard() {
     }
     setIsMfaLoading(true)
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        localStorage.setItem('demo_2fa_enabled', 'true')
+        toast.success("Two-Factor Authentication enabled successfully (Sandbox Demo)!")
+        setShowMfaModal(false)
+        fetchProfile()
+        return
+      }
+
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/verify-setup`, {
@@ -256,6 +314,14 @@ export function SettingsDashboard() {
     if (!confirm("Are you sure you want to disable Two-Factor Authentication? Your account will be less secure.")) return
     setIsMfaLoading(true)
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        localStorage.removeItem('demo_2fa_enabled')
+        toast.success("Two-Factor Authentication disabled (Sandbox Demo).")
+        fetchProfile()
+        return
+      }
+
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/disable`, {
@@ -312,25 +378,6 @@ export function SettingsDashboard() {
     return unsubscribe
 }, [])
 
-  useEffect(() => {
-    if (generatedWallet && canvasRef.current) {
-      QRCode.toCanvas(
-        canvasRef.current,
-        generatedWallet.privateKey,
-        {
-          width: 180,
-          margin: 2,
-          color: {
-            dark: '#0f172a',
-            light: '#ffffff'
-          }
-        },
-        (err) => {
-          if (err) console.error("Error generating QR code:", err)
-        }
-      )
-    }
-  }, [generatedWallet, showRecoveryWizard])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(walletAddress)
@@ -362,6 +409,27 @@ export function SettingsDashboard() {
     toast.info(`Processing ${method} payment...`)
     
     try {
+        const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+        if (isDemo) {
+          toast.success("Sandbox Demo: Payment bypassed and premium plan unlocked!")
+          const stored = localStorage.getItem('dwp_subscription')
+          if (stored) {
+            try {
+              const sub = JSON.parse(stored)
+              sub.plan = 'sovereign_pro'
+              sub.planId = 'sovereign_pro'
+              sub.planName = 'Web3 Pro (Demo Sandbox)'
+              sub.storageLimit = 100 * 1024 * 1024 * 1024
+              localStorage.setItem('dwp_subscription', JSON.stringify(sub))
+            } catch {}
+          }
+          setShowUpgradeModal(false)
+          setTimeout(() => {
+            window.location.reload()
+          }, 1000)
+          return
+        }
+
         let referenceStr = '';
         if (method === 'CRYPTO') {
             const companyWallet = process.env.NEXT_PUBLIC_CRYPTO_RECEIVE_WALLET || '0xFF38De9C8f7B6A4cf810EAcE53D3E8EA9Dac1178';
@@ -785,7 +853,25 @@ export function SettingsDashboard() {
 
                 {/* Print / QR Display */}
                 <div className="flex flex-col items-center justify-center space-y-3 bg-white p-4 rounded-2xl">
-                  <canvas ref={canvasRef} />
+                  <canvas ref={(el) => {
+                    if (el && generatedWallet) {
+                      QRCode.toCanvas(
+                        el,
+                        generatedWallet.privateKey,
+                        {
+                          width: 180,
+                          margin: 2,
+                          color: {
+                            dark: '#0f172a',
+                            light: '#ffffff'
+                          }
+                        },
+                        (err) => {
+                          if (err) console.error("Error generating QR code:", err)
+                        }
+                      )
+                    }
+                  }} />
                   <span className="text-[10px] text-slate-800 font-bold uppercase tracking-wider">Printable Recovery QR Code</span>
                 </div>
 

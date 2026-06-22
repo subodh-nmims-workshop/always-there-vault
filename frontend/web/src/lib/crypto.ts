@@ -165,18 +165,17 @@ class WebCryptoService {
       const keyId = await this.generateHash(keyHex).then(h => h.substring(0, 16));
       const shares: ShamirShare[] = [];
 
-      // Try to use Shamir Secret Sharing
-      let generatedShares: string[];
-      try {
-        const secretsModule = await import('secrets.js-grempe');
-        const secrets = secretsModule.default || secretsModule;
-        generatedShares = secrets.share(keyHex, totalShares, threshold);
-        console.log('✅ Using Shamir Secret Sharing');
-      } catch (importError) {
-        console.warn('⚠️ secrets.js-grempe not available, using fallback key splitting');
-        // Fallback: Simple share generation (for development only)
-        generatedShares = await this.fallbackSplitKey(keyHex, totalShares);
-      }
+      // Use shamirs-secret-sharing (fully supported in browser & node)
+      const sss = await import('shamirs-secret-sharing');
+      const { Buffer } = await import('buffer');
+      
+      const keyBuffer = Buffer.from(keyHex, 'hex');
+      const sssShares = sss.split(keyBuffer, {
+        shares: totalShares,
+        threshold: threshold,
+      });
+      const generatedShares = sssShares.map((s: any) => s.toString('hex'));
+      console.log('✅ Using shamirs-secret-sharing for key distribution');
 
       const holders = ['smart_contract', 'user_device', 'trusted_person', 'dao_oracle', 'hardware_wallet'];
       const distributionMethods = ['blockchain', 'secure_storage', 'encrypted_file', 'oracle_network', 'hardware_module'];
@@ -251,16 +250,14 @@ class WebCryptoService {
     }
 
     try {
-      // Try to use Shamir Secret Sharing
-      const secretsModule = await import('secrets.js-grempe');
-      const secrets = secretsModule.default || secretsModule;
+      const sss = await import('shamirs-secret-sharing');
+      const { Buffer } = await import('buffer');
       
-      const shareStrings = shares.map(s => s.shareData);
-      const combinedKeyHex = secrets.combine(shareStrings);
-      return combinedKeyHex;
-    } catch (importError) {
-      console.warn('⚠️ secrets.js-grempe not available, using fallback reconstruction');
-      // Fallback: XOR all shares together
+      const shareBuffers = shares.map(s => Buffer.from(s.shareData, 'hex'));
+      const recovered = sss.combine(shareBuffers);
+      return recovered.toString('hex');
+    } catch (error) {
+      console.warn('⚠️ shamirs-secret-sharing combine failed, trying fallback reconstruction', error);
       return this.fallbackReconstructKey(shares);
     }
   }

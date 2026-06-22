@@ -265,20 +265,24 @@ export function AssetCreationForm() {
       const saveResult = await modeService.saveAsset(asset)
       await storage.saveKeyDistribution(keyDistribution)
 
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+
       // Sync Key to Backend for cloud backup
-      try {
-        await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ shares: keyDistribution.shares })
-        })
-        console.log('✅ Key synced to backend for recovery')
-      } catch (syncErr) {
-        console.warn('⚠️ Key sync failed', syncErr)
+      if (!isDemo) {
+        try {
+          await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shares: keyDistribution.shares })
+          })
+          console.log('✅ Key synced to backend for recovery')
+        } catch (syncErr) {
+          console.warn('⚠️ Key sync failed', syncErr)
+        }
       }
 
       // 🕰️ Save Time Capsule to Backend if scheduled
-      if (isTimeCapsule && scheduledDate) {
+      if (isTimeCapsule && scheduledDate && !isDemo) {
         try {
           const token = localStorage.getItem('dwp_token')
           for (const benId of selectedBeneficiaries) {
@@ -367,7 +371,8 @@ export function AssetCreationForm() {
       let keyDist = allKeyDists.find(kd => kd.keyId === asset.keyId)
 
       // Self-Healing: If key not found locally, try to fetch from backend
-      if (!keyDist) {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+      if (!keyDist && !isDemo) {
         console.warn('⚠️ Key not found locally, attempting backend fetch...')
         try {
           const response = await fetch(`http://localhost:7001/api/assets/keys/${asset.keyId}`)
@@ -794,20 +799,24 @@ export function AssetCreationForm() {
       console.log('💾 Saving key distribution...', keyDistribution.keyId)
       await storage.saveKeyDistribution(keyDistribution)
 
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+
       // Sync Key to Backend for cloud backup (CRITICAL for multi-device support)
-      try {
-        await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ shares: keyDistribution.shares })
-        })
-        console.log('✅ Key synced to backend for recovery')
-      } catch (syncErr) {
-        console.warn('⚠️ Key sync to cloud failed (Offline mode?)', syncErr)
+      if (!isDemo) {
+        try {
+          await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shares: keyDistribution.shares })
+          })
+          console.log('✅ Key synced to backend for recovery')
+        } catch (syncErr) {
+          console.warn('⚠️ Key sync to cloud failed (Offline mode?)', syncErr)
+        }
       }
 
       // 🕰️ Save Time Capsule to Backend if scheduled
-      if (data.timeCapsule) {
+      if (data.timeCapsule && !isDemo) {
         try {
           const token = localStorage.getItem('dwp_token')
           for (const benId of beneficiaryIds) {

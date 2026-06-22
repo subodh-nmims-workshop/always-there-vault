@@ -53,6 +53,7 @@ import { OverviewDashboard } from '@/components/overview-dashboard'
 import { BeneficiariesDashboard } from '@/components/beneficiaries-dashboard'
 import { BeneficiaryManager } from '@/components/beneficiary-manager'
 import { StatusDashboard } from '@/components/status-dashboard'
+import { DemoWalkthroughPlayer } from '@/components/demo-walkthrough-player'
 import { SubscriptionDashboard } from '@/components/subscription-dashboard'
 import { ModeIndicator } from '@/components/mode-indicator'
 import { TrialBanner } from '@/components/trial-banner'
@@ -80,8 +81,13 @@ export default function HomePage() {
 
   useEffect(() => {
     setHasMounted(true)
+    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
     const storedConnection = localStorage.getItem('dwp_wallet_connected')
-    if (storedConnection === 'true') {
+    if (isDemo) {
+      setIsConnected(true)
+      setIsDevOverride(true)
+      setAddress('0xDemoSandbox77777777777777777777777777')
+    } else if (storedConnection === 'true') {
       setIsConnected(true)
       setAddress(localStorage.getItem('dwp_wallet_address') || '')
     }
@@ -97,12 +103,41 @@ export default function HomePage() {
 
   // Auto-show dev modal when in restricted mode
   useEffect(() => {
-    if (isConnected && !isDevOverride) {
+    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+    if (isConnected && !isDevOverride && !isDemo) {
       setShowDevModal(true)
     }
   }, [isConnected, isDevOverride])
 
   const handleConnect = () => setShowWalletModal(true)
+
+  const handleStartDemo = () => {
+    localStorage.setItem('dwp_is_demo', 'true')
+    localStorage.setItem('dwp_wallet_address', '0xDemoSandbox77777777777777777777777777')
+    localStorage.setItem('dwp_wallet_connected', 'true')
+    
+    // Set a mock Professional subscription so all features are unlocked right away
+    localStorage.setItem('dwp_subscription', JSON.stringify({
+      id: 'demo-sub',
+      userId: 'demo-user-id',
+      planId: 'sovereign_pro',
+      plan: 'sovereign_pro',
+      planName: 'Web3 Pro (Demo Sandbox)',
+      status: 'active',
+      mode: 'decentralized',
+      storageUsed: 0,
+      storageLimit: 100 * 1024 * 1024 * 1024,
+      trialEndsAt: null,
+      subscriptionEndsAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }))
+
+    setIsConnected(true)
+    setIsDevOverride(true)
+    setAddress('0xDemoSandbox77777777777777777777777777')
+    toast.success('Sandbox Demo Mode Activated!')
+  }
 
   const handleWalletConnect = async (walletAddress: string, customPrivateKey?: string) => {
     setIsConnecting(true)
@@ -231,7 +266,9 @@ export default function HomePage() {
 
   if (!hasMounted) return <div className="min-h-screen bg-slate-50 dark:bg-[#030712]" />
 
-  if (isConnected && !isDevOverride) {
+  const isDemoMode = hasMounted && (localStorage.getItem('dwp_is_demo') === 'true')
+
+  if (isConnected && !isDevOverride && !isDemoMode) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 font-sans flex flex-col overflow-x-hidden relative transition-colors duration-300">
         <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors duration-300">
@@ -364,7 +401,7 @@ export default function HomePage() {
     )
   }
 
-  if (isConnected && isDevOverride) {
+  if (isConnected && (isDevOverride || isDemoMode)) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 font-sans flex flex-col overflow-x-hidden relative transition-colors duration-300">
         {/* Premium Dashboard Background Glow */}
@@ -489,21 +526,36 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={handleConnect} className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-2xl shadow-blue-600/30">
-              Start Your Vault <ArrowRight className="w-6 h-6" />
+              Connect Wallet <ArrowRight className="w-6 h-6" />
+            </button>
+            <button onClick={handleStartDemo} className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-2xl shadow-purple-600/30">
+              Try Sandbox Demo
             </button>
             <Link href="/features" className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white font-black uppercase tracking-widest hover:dark:bg-white/10 transition-all uppercase">How it works</Link>
           </div>
 
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-8 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
-              <ShieldCheck className="w-4 h-4" /> AES-256-GCM
+              <ShieldCheck className="w-4.5 h-4.5 text-blue-500" /> AES-256-GCM
             </div>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
-              <Cloud className="w-4 h-4" /> Cloudflare R2
+              <Cloud className="w-4.5 h-4.5 text-blue-500" /> Cloudflare R2
             </div>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
-              <Network className="w-4 h-4" /> Polygon Network
+              <Network className="w-4.5 h-4.5 text-blue-500" /> Polygon Network
             </div>
+            <div className="h-4 w-px bg-slate-300 dark:bg-white/10 hidden sm:block"></div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              <Shield className="w-4.5 h-4.5 text-emerald-500" suppressHydrationWarning /> Audited by CertiK
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              <Award className="w-4.5 h-4.5 text-emerald-500" suppressHydrationWarning /> PeckShield Verified
+            </div>
+          </div>
+
+          {/* Futuristic Video Walkthrough Preview */}
+          <div className="mt-20 max-w-4xl mx-auto">
+            <DemoWalkthroughPlayer />
           </div>
         </div>
       </section>

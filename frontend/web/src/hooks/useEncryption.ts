@@ -26,7 +26,8 @@ export function useEncryptionAndStorage() {
     setError(null);
 
     try {
-      if (!address || !walletClient) {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true';
+      if (!isDemo && (!address || !walletClient)) {
         throw new Error('Wallet must be connected to process secure transactions.');
       }
 
@@ -44,23 +45,29 @@ export function useEncryptionAndStorage() {
       // 4: Send Encrypted Blob to Backend (which pins it to IPFS via Pinata)
       console.log('☁️ 3. Uploading encrypted ciphertext payload to decentralized IPFS...');
       
-      const formData = new FormData();
-      // We wrap the JSON representation of EncryptedPackage into a Blob
-      const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' });
-      formData.append('file', blob, 'encrypted-will-payload.json');
+      let cid = 'QmdemoSandboxMockedIPFSHash777777777777777777777777777';
+      
+      if (!isDemo) {
+        const formData = new FormData();
+        // We wrap the JSON representation of EncryptedPackage into a Blob
+        const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' });
+        formData.append('file', blob, 'encrypted-will-payload.json');
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'}/ipfs/upload`, {
-        method: 'POST',
-        // Optional: Add Auth Header containing JWT or Wallet Signature 
-        // headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'}/ipfs/upload`, {
+          method: 'POST',
+          // Optional: Add Auth Header containing JWT or Wallet Signature 
+          // headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error(`IPFS Upload Failed: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`IPFS Upload Failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        cid = data.cid;
       }
-
-      const { cid, size } = await response.json();
+      
       console.log('✅ 4. IPFS Upload Success! CID:', cid);
 
       setIsProcessing(false);

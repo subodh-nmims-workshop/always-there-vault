@@ -57,8 +57,10 @@ export function BeneficiaryManager() {
     setIsSubmitting(true)
 
     try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+
       // Step 1: Engage Decentralized Backend Wallet Config (if web3 presence exists)
-      if (formData.walletAddress) {
+      if (formData.walletAddress && !isDemo) {
         const txResult = await addBeneficiary(formData.walletAddress)
         if (!txResult.success) {
           toast.error(`Decentralized Registry Failed: ${txResult.error}`)
@@ -78,46 +80,50 @@ export function BeneficiaryManager() {
       await storage.saveBeneficiary(beneficiary)
       
       // Sync to Backend Postgres
-      try {
-        const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
-        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
-        const url = editingId 
-          ? `${apiEndpoint}/api/beneficiaries/${editingId}`
-          : `${apiEndpoint}/api/beneficiaries`
-        
-        await fetch(url, {
-          method: editingId ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ownerAddress: walletAddress,
-            name: beneficiary.name,
-            email: beneficiary.email,
-            walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
-            relationship: 'nominee'
+      if (!isDemo) {
+        try {
+          const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
+          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+          const url = editingId 
+            ? `${apiEndpoint}/api/beneficiaries/${editingId}`
+            : `${apiEndpoint}/api/beneficiaries`
+          
+          await fetch(url, {
+            method: editingId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ownerAddress: walletAddress,
+              name: beneficiary.name,
+              email: beneficiary.email,
+              walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
+              relationship: 'nominee'
+            })
           })
-        })
-      } catch (err) {
-        console.error('Failed to sync beneficiary to backend', err)
+        } catch (err) {
+          console.error('Failed to sync beneficiary to backend', err)
+        }
       }
 
       await refreshState()
       
-      try {
-        const emailReq = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            walletAddress: formData.walletAddress
+      if (!isDemo) {
+        try {
+          const emailReq = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: formData.name,
+              email: formData.email,
+              walletAddress: formData.walletAddress
+            })
           })
-        })
 
-        if (!emailReq.ok) {
-          console.error('Failed to trigger background email bridge')
+          if (!emailReq.ok) {
+            console.error('Failed to trigger background email bridge')
+          }
+        } catch (emailOutage) {
+          console.error('Email Bridge Unavailable:', emailOutage)
         }
-      } catch (emailOutage) {
-        console.error('Email Bridge Unavailable:', emailOutage)
       }
 
       // Reset form
@@ -126,7 +132,7 @@ export function BeneficiaryManager() {
       setEditingId(null)
 
       toast.success('Beneficiary Saved', {
-        description: 'Global database synced successfully.'
+        description: isDemo ? 'Saved locally in sandbox demo mode.' : 'Global database synced successfully.'
       })
 
     } catch (error) {
@@ -161,14 +167,17 @@ export function BeneficiaryManager() {
     try {
       await storage.deleteBeneficiary(deleteConfirmation.beneficiaryId)
       
-      // Delete from Backend Postgres
-      try {
-        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
-        await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
-          method: 'DELETE'
-        })
-      } catch (err) {
-        console.error('Failed to delete beneficiary from backend', err)
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (!isDemo) {
+        // Delete from Backend Postgres
+        try {
+          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+          await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
+            method: 'DELETE'
+          })
+        } catch (err) {
+          console.error('Failed to delete beneficiary from backend', err)
+        }
       }
 
       await refreshState()

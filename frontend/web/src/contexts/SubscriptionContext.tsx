@@ -111,10 +111,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const address = localStorage.getItem('dwp_wallet_address')
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
 
-      if (!address) {
-        // No wallet → show default free plan so dashboard isn't empty
+      if (isDemo || !address) {
+        // No wallet or demo mode → show default free plan so dashboard isn't empty
         const defSub = buildDefaultSubscription()
+        if (isDemo) {
+          defSub.planId = 'sovereign_pro' // Make them a Pro member in the demo!
+          defSub.plan = 'sovereign_pro'
+          defSub.planName = 'Web3 Pro (Demo Sandbox)'
+          defSub.storageLimit = 100 * 1024 * 1024 * 1024 // 100GB
+        }
         try {
           const storage = WebStorageService.getInstance()
           const appState = await storage.getAppState()

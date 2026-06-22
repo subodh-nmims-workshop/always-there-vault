@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { SharedFooter } from '@/components/shared-footer'
+import { SecuritySimulator } from '@/components/security-simulator'
 
 export default function SecurityPage() {
     const defaultTransition = { duration: 0.6, ease: "easeOut" as const }
@@ -73,6 +74,10 @@ export default function SecurityPage() {
 
                 {/* Security Content */}
                 <div className="space-y-24 px-6 pb-32 max-w-5xl w-full">
+                    {/* Cryptography Playground Simulator */}
+                    <section className="w-full">
+                        <SecuritySimulator />
+                    </section>
 
                     {/* Section 1 */}
                     <section className="grid md:grid-cols-2 gap-12 items-center">
