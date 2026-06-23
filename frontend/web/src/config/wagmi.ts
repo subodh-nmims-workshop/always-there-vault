@@ -9,12 +9,9 @@ const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUB
 // This prevents RainbowKit / Wagmi from defaulting to Ethereum Mainnet and querying eth.merkle.io on start.
 const getChains = () => {
   if (chainId === 1337 || chainId === 31337) {
-    return [hardhat, localhost, polygon, mainnet, optimism, arbitrum, base];
+    return [hardhat, localhost, polygon, mainnet];
   }
-  if (chainId === 137) {
-    return [polygon, mainnet, optimism, arbitrum, base];
-  }
-  return [polygon, mainnet, optimism, arbitrum, base];
+  return [polygon, mainnet];
 };
 
 export const config = getDefaultConfig({
