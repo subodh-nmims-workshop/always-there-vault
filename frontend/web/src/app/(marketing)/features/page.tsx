@@ -14,7 +14,7 @@ export default function FeaturesPage() {
     const defaultTransition = { duration: 0.6, ease: "easeOut" as const }
 
     return (
-        <div className="w-full font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 overflow-x-hidden relative transition-colors duration-300">
+        <div className="w-full font-sans dark:text-slate-100 selection:bg-[#1152d4]/30 relative transition-colors duration-300 bg-transparent text-slate-800">
             
             
 
@@ -25,15 +25,15 @@ export default function FeaturesPage() {
                         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#1152d4]/20 blur-[120px] rounded-full"></div>
                     </div>
 
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="inline-flex items-center bg-slate-100 dark:bg-white/[0.03] backdrop-blur-md px-4 py-1.5 rounded-full border border-[#1152d4]/30 mb-6">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="inline-flex items-center bg-slate-100 dark:bg-slate-50 dark:bg-white/[0.03] backdrop-blur-md px-4 py-1.5 rounded-full border border-[#1152d4]/30 mb-6">
                         <span className="text-[10px] font-black tracking-[0.2em] text-[#1152d4]">TECHNICAL SPECIFICATIONS</span>
                     </motion.div>
 
-                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight text-slate-900 dark:text-white">
+                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight text-slate-900 dark:text-slate-900 dark:text-white">
                         Core Protocol <span className="text-[#1152d4]">Features</span>
                     </motion.h1>
 
-                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="max-w-2xl mx-auto text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="max-w-2xl mx-auto text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                         A trustless fail-safe mechanism for the decentralized future. Automated, secure, and permanent.
                     </motion.p>
                 </header>
@@ -48,7 +48,7 @@ export default function FeaturesPage() {
                                 <Shield className="w-7 h-7" />
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Trustless Asset Recovery</h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                            <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 Automatically trigger encrypted payload transfers to designated beneficiary wallets if no activity is detected within your custom heartbeat interval. Fully non-custodial and secure.
                             </p>
                             <Link href="/docs" className="inline-flex items-center gap-2 text-[#1152d4] font-bold text-sm hover:underline hover:gap-3 transition-all">
@@ -56,7 +56,7 @@ export default function FeaturesPage() {
                             </Link>
                         </motion.div>
 
-                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-slate-900 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-6 font-mono text-sm text-emerald-500 overflow-hidden border border-slate-700 dark:border-white/5 shadow-2xl relative group hover:border-[#1152d4]/30 transition-colors">
+                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-slate-900 dark:bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-6 font-mono text-sm text-emerald-500 overflow-hidden border border-slate-700 dark:border-slate-200 dark:border-white/5 shadow-2xl relative group hover:border-[#1152d4]/30 transition-colors">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1152d4] to-emerald-500 opacity-50"></div>
                             <div className="flex gap-2 mb-6">
                                 <div className="w-3 h-3 rounded-full bg-red-500/30"></div>
@@ -68,7 +68,7 @@ export default function FeaturesPage() {
                                 <span className="text-yellow-300">require</span>(block.timestamp &gt; lastHeartbeat + timeout);
                                 <span className="text-yellow-300">require</span>(status == Status.Active);
 
-                                <span className="text-pink-500">for</span> (<span className="text-slate-300">uint</span> i = 0; i &lt; beneficiaries.length; i++) {'{'}
+                                <span className="text-pink-500">for</span> (<span className="text-slate-750 dark:text-slate-300">uint</span> i = 0; i &lt; beneficiaries.length; i++) {'{'}
                                 transfer(beneficiaries[i], allocation[i]);
                                 {'}'}
 
@@ -80,7 +80,7 @@ export default function FeaturesPage() {
 
                     {/* Feature 2 */}
                     <section className="grid md:grid-cols-2 gap-12 items-center">
-                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md aspect-square max-h-[400px] rounded-3xl flex items-center justify-center relative overflow-hidden border border-slate-200 dark:border-[#8b5cf6]/20 shadow-2xl">
+                        <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-slate-50 dark:bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md aspect-square max-h-[400px] rounded-3xl flex items-center justify-center relative overflow-hidden border border-slate-200 dark:border-[#8b5cf6]/20 shadow-2xl">
                             <div className="absolute inset-0 bg-[#8b5cf6]/5 group-hover:bg-[#8b5cf6]/10 transition-colors"></div>
                             <div className="relative flex items-center justify-center w-full h-full">
                                 <Key className="w-48 h-48 text-[#8b5cf6] opacity-20 blur-xl absolute" />
@@ -100,7 +100,7 @@ export default function FeaturesPage() {
                                 <ServerCrash className="w-7 h-7" />
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Decentralized Key Sharding</h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                            <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 Utilizing Shamir's Secret Sharing, your master encryption keys are split into multiple fragments distributed across our secure validator network. There is no single point of failure, and we never hold your complete key.
                             </p>
                             <Link href="/docs" className="inline-flex items-center gap-2 text-[#8b5cf6] font-bold text-sm hover:underline hover:gap-3 transition-all">
@@ -116,7 +116,7 @@ export default function FeaturesPage() {
                                 <Zap className="w-7 h-7" />
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Gasless Verifications</h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                            <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                                 Update your protocol status via off-chain signatures wrapped in native ERC-4337 meta-transactions. Gasless heartbeats allow you to maintain your fail-safe without constant transaction fees.
                             </p>
                             <Link href="/docs" className="inline-flex items-center gap-2 text-emerald-400 font-bold text-sm hover:underline hover:gap-3 transition-all">
@@ -124,7 +124,7 @@ export default function FeaturesPage() {
                             </Link>
                         </motion.div>
 
-                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-3xl p-10 border border-slate-200 dark:border-emerald-500/20 flex flex-col justify-center min-h-[320px] shadow-2xl relative group">
+                        <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-1 md:order-2 bg-slate-50 dark:bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-3xl p-10 border border-slate-200 dark:border-emerald-500/20 flex flex-col justify-center min-h-[320px] shadow-2xl relative group">
                             <div className="w-full h-40 relative flex items-end">
                                 <div className="absolute inset-0 grid grid-cols-8 grid-rows-4 opacity-[0.05] pointer-events-none">
                                     {Array.from({ length: 32 }).map((_, i) => (
@@ -142,7 +142,7 @@ export default function FeaturesPage() {
                                 </svg>
                             </div>
 
-                            <div className="mt-8 flex justify-between items-center text-xs uppercase font-bold text-slate-500 tracking-widest border-t border-slate-200 dark:border-white/5 pt-6">
+                            <div className="mt-8 flex justify-between items-center text-xs uppercase font-bold text-slate-500 tracking-widest border-t border-slate-200 dark:border-slate-200 dark:border-white/5 pt-6">
                                 <span className="flex items-center"><MonitorSmartphone className="w-4 h-4 mr-2" /> Liveness Check</span>
                                 <span className="text-emerald-500 flex items-center bg-emerald-500/10 px-3 py-1 rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-2"></div> Active Pulse</span>
                             </div>
@@ -151,17 +151,17 @@ export default function FeaturesPage() {
 
                     {/* Bottom CTA Overlay block */}
                     <section className="relative pt-16">
-                        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-slate-50 dark:bg-white/[0.03] backdrop-blur-xl p-12 rounded-[3rem] border border-slate-200 dark:border-white/10 text-center overflow-hidden relative shadow-2xl">
+                        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-slate-50 dark:bg-slate-50 dark:bg-white/[0.03] backdrop-blur-xl p-12 rounded-[3rem] border border-slate-200 dark:border-slate-200 dark:border-white/10 text-center overflow-hidden relative shadow-2xl">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#1152d4]/10 via-transparent to-[#8b5cf6]/10 opacity-50 pointer-events-none"></div>
-                            <h2 className="text-4xl font-black mb-6 relative z-10 tracking-tight text-slate-900 dark:text-white">Secure Your Legacy</h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg mb-10 max-w-2xl mx-auto relative z-10 leading-relaxed">
+                            <h2 className="text-4xl font-black mb-6 relative z-10 tracking-tight text-slate-900 dark:text-slate-900 dark:text-white">Secure Your Legacy</h2>
+                            <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg mb-10 max-w-2xl mx-auto relative z-10 leading-relaxed">
                                 Don't leave your digital assets in limbo. Deploy your Always There switch today and ensure your wealth reaches the right hands.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all animate-pulse">
+                                <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-slate-900 dark:text-slate-900 dark:text-white px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all animate-pulse">
                                     Connect Wallet
                                 </Link>
-                                <Link href="/docs" className="bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white">
+                                <Link href="/docs" className="bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-slate-300 dark:border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-900 dark:text-white">
                                     Read Documentation
                                 </Link>
                             </div>
@@ -169,11 +169,11 @@ export default function FeaturesPage() {
                     </section>
 
                     {/* Deep Explanation Section */}
-                    <section className="mt-32 border-t border-slate-200 dark:border-white/10 pt-20">
+                    <section className="mt-32 border-t border-slate-200 dark:border-slate-200 dark:border-white/10 pt-20">
                         <div className="max-w-4xl mx-auto space-y-12">
                             <div className="text-center space-y-4">
-                                <h2 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">How AlwaysThere Actually Works</h2>
-                                <p className="text-xl text-slate-600 dark:text-slate-400">A deep dive into the decentralized architecture securing your digital legacy.</p>
+                                <h2 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-900 dark:text-white">How AlwaysThere Actually Works</h2>
+                                <p className="text-xl text-slate-600 dark:text-slate-600 dark:text-slate-400">A deep dive into the decentralized architecture securing your digital legacy.</p>
                             </div>
 
                             <div className="space-y-16">
@@ -182,7 +182,7 @@ export default function FeaturesPage() {
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 text-sm">1</span>
                                         Asset Encryption Pipeline
                                     </h3>
-                                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-lg">
+                                    <p className="text-slate-700 dark:text-slate-650 dark:text-slate-750 dark:text-slate-300 leading-relaxed text-lg">
                                         When you upload an asset (like a private key, a legal document, or a seed phrase), the protocol never sees the raw data. It is instantly encrypted in your browser using AES-256-GCM encryption. The master key generated to encrypt this payload is then passed through our Shamir Secret Sharing algorithm, which shatters the key into multiple cryptographic shards.
                                     </p>
                                 </div>
@@ -192,7 +192,7 @@ export default function FeaturesPage() {
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 text-sm">2</span>
                                         Decentralized Storage (IPFS)
                                     </h3>
-                                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-lg">
+                                    <p className="text-slate-700 dark:text-slate-650 dark:text-slate-750 dark:text-slate-300 leading-relaxed text-lg">
                                         The securely encrypted payload is uploaded directly to the InterPlanetary File System (IPFS) via Storacha. IPFS ensures that your data is not stored on a centralized server that can be shut down, hacked, or censored. Your data becomes a permanent part of the decentralized web, accessible via a unique Content Identifier (CID).
                                     </p>
                                 </div>
@@ -202,7 +202,7 @@ export default function FeaturesPage() {
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">3</span>
                                         The Smart Contract Heartbeat
                                     </h3>
-                                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-lg">
+                                    <p className="text-slate-700 dark:text-slate-650 dark:text-slate-750 dark:text-slate-300 leading-relaxed text-lg">
                                         To prove you are alive, you periodically "check in" with the Ethereum/Polygon smart contract. This is known as a Heartbeat. You set the interval (e.g., every 3 months). If you fail to check in within this timeframe, the contract enters a "Grace Period". If the grace period expires, the smart contract officially flags your status as "Inactive".
                                     </p>
                                 </div>
@@ -212,7 +212,7 @@ export default function FeaturesPage() {
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 text-sm">4</span>
                                         Automated Beneficiary Release
                                     </h3>
-                                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-lg">
+                                    <p className="text-slate-700 dark:text-slate-650 dark:text-slate-750 dark:text-slate-300 leading-relaxed text-lg">
                                         Once the smart contract confirms your inactivity, it automatically triggers the release mechanism. The validating nodes compile the necessary key shards and encrypt them using the public keys of your designated beneficiaries. Your beneficiaries can then claim the IPFS payload, decrypt the master key with their private wallet, and finally unlock the inheritance. The system is 100% automated and zero-knowledge.
                                     </p>
                                 </div>

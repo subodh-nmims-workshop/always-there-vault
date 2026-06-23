@@ -13,7 +13,7 @@ export default function RoadmapPage() {
     const defaultTransition = { duration: 0.5, ease: "easeOut" as const }
 
     return (
-        <div className="w-full bg-[#0a0c10] font-sans text-slate-100 selection:bg-[#1152d4]/30 overflow-x-hidden relative">
+        <div className="w-full font-sans selection:bg-[#1152d4]/30 relative bg-transparent text-slate-800 dark:text-slate-100">
             
             
 
@@ -21,13 +21,13 @@ export default function RoadmapPage() {
 
                 {/* Header */}
                 <div className="text-center mb-24">
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={defaultTransition} className="inline-flex items-center justify-center p-4 rounded-full bg-white/[0.03] border border-white/10 mb-6">
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={defaultTransition} className="inline-flex items-center justify-center p-4 rounded-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 mb-6">
                         <Map className="w-8 h-8 text-[#1152d4]" />
                     </motion.div>
-                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white">
+                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-slate-900 dark:text-white">
                         Protocol <span className="text-[#1152d4]">Roadmap</span>
                     </motion.h1>
-                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="text-slate-400 max-w-xl mx-auto text-lg leading-relaxed">
+                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-lg leading-relaxed">
                         Our path towards delivering the definitive inheritance layer for web3.
                     </motion.p>
                 </div>
@@ -50,13 +50,13 @@ export default function RoadmapPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 group-hover:border-[#1152d4]/50 transition-colors">
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-slate-200 dark:border-white/10 group-hover:border-[#1152d4]/50 transition-colors">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-[#1152d4] bg-[#1152d4]/10 px-2 py-1 rounded">Completed</span>
                                     <span className="text-slate-500 font-mono text-sm">Q4 2025</span>
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 text-white">V1 Liveness Monitor</h3>
-                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">V1 Liveness Monitor</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm mb-4">
                                     Deployment of the core AES-256-GCM encryption client and base Ethereum smart contracts testing heartbeats.
                                 </p>
                             </div>
@@ -72,13 +72,13 @@ export default function RoadmapPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 group-hover:border-[#8b5cf6]/50 transition-colors">
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-slate-200 dark:border-white/10 group-hover:border-[#8b5cf6]/50 transition-colors">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-1 rounded">In Progress</span>
                                     <span className="text-slate-500 font-mono text-sm">Q1 2026</span>
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 text-white">Gasless Relayer Network</h3>
-                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Gasless Relayer Network</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm mb-4">
                                     Implementing EIP-4337 compatibility to allow users to sign heartbeat messages off-chain without paying gas fees directly.
                                 </p>
                             </div>
@@ -94,13 +94,13 @@ export default function RoadmapPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-slate-500/50">
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-slate-200 dark:border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-slate-500/50">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/10 px-2 py-1 rounded">Planned</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 bg-white/10 px-2 py-1 rounded">Planned</span>
                                     <span className="text-slate-500 font-mono text-sm">Q3 2026</span>
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 text-white">Cross-Chain Recovery</h3>
-                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Cross-Chain Recovery</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm mb-4">
                                     Rolling out automated disbursement layers for Solana, Arbitrum, and native Bitcoin integration via DLCs.
                                 </p>
                             </div>
@@ -116,13 +116,13 @@ export default function RoadmapPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-emerald-500/50">
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-slate-200 dark:border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-emerald-500/50">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/10 px-2 py-1 rounded group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors">Future</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 bg-white/10 px-2 py-1 rounded group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors">Future</span>
                                     <span className="text-slate-500 font-mono text-sm group-hover:text-emerald-500/70 transition-colors">Q4 2026</span>
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 text-white">Zero-Knowledge Beneficiary Proofs</h3>
-                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Zero-Knowledge Beneficiary Proofs</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm mb-4">
                                     Implementing zk-SNARKs so beneficiaries can prove their identity and right to claim assets without revealing their original wallet address to the public chain.
                                 </p>
                             </div>
@@ -138,13 +138,13 @@ export default function RoadmapPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-blue-500/50">
+                            <div className="ml-12 md:ml-0 md:w-[calc(50%-3rem)] bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-8 border border-slate-200 dark:border-white/10 opacity-70 group-hover:opacity-100 transition-all hover:border-blue-500/50">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/10 px-2 py-1 rounded group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">Future</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 bg-white/10 px-2 py-1 rounded group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">Future</span>
                                     <span className="text-slate-500 font-mono text-sm group-hover:text-blue-500/70 transition-colors">Q1 2027</span>
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 text-white">Institutional Decentralized Relayers</h3>
-                                <p className="text-slate-400 leading-relaxed text-sm mb-4">
+                                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Institutional Decentralized Relayers</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm mb-4">
                                     Allowing registered law firms, banks, and trusts to run their own dedicated relayers inside the consensus network for hybrid legal-smart-contract execution.
                                 </p>
                             </div>

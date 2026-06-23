@@ -14,13 +14,13 @@ export default function PrivacyPolicyPage() {
     const defaultTransition = { duration: 0.5, ease: "easeOut" as const }
 
     return (
-        <div className="w-full bg-[#0a0c10] font-sans text-slate-100 selection:bg-[#1152d4]/30 overflow-x-hidden relative">
+        <div className="w-full font-sans selection:bg-[#1152d4]/30 relative bg-transparent text-slate-800 dark:text-slate-100">
             
             
 
             {/* Header */}
             <header className="pt-16 pb-12 px-6 text-center max-w-4xl mx-auto relative z-10">
-                <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">
+                <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-slate-900 dark:text-white">
                     Privacy Policy
                 </motion.h1>
                 <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-slate-500 text-sm font-bold uppercase tracking-widest">
@@ -31,39 +31,18 @@ export default function PrivacyPolicyPage() {
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 lg:flex lg:gap-16 pb-32">
                 {/* Sticky Sidebar */}
                 <aside className="hidden lg:block w-64 shrink-0 relative z-10">
-                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="sticky top-28 p-6 rounded-2xl bg-white/[0.02] backdrop-blur-md border border-white/5">
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="sticky top-28 p-6 rounded-2xl bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md border border-slate-200 dark:border-white/5">
                         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Table of Contents</h3>
-                        <nav className="flex flex-col gap-4">
-                            <a href="#intro" className="text-[#1152d4] font-bold flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#1152d4] shadow-[0_0_8px_#1152d4]"></span>
-                                1. Introduction
-                            </a>
-                            <a href="#data" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                2. Data We Process
-                            </a>
-                            <a href="#crypto" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                3. Cryptography
-                            </a>
-                            <a href="#third-party" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                4. Third Parties
-                            </a>
-                            <a href="#cookies" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                5. Cookies
-                            </a>
-                        </nav>
+                        
                     </motion.div>
                 </aside>
 
                 {/* Content Area */}
                 <section className="flex-1 max-w-3xl lg:mx-0 relative z-10">
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="prose prose-invert prose-slate max-w-none text-slate-300 leading-relaxed">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="prose dark:prose-invert prose-slate max-w-none text-slate-650 dark:text-slate-750 dark:text-slate-300 leading-relaxed">
 
                         <div id="intro" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Info className="text-[#1152d4] w-6 h-6" />
                                 1. Introduction
                             </h2>
@@ -89,7 +68,7 @@ export default function PrivacyPolicyPage() {
                         </div>
 
                         <div id="data" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Database className="text-[#1152d4] w-6 h-6" />
                                 2. Data We Process
                             </h2>
@@ -97,32 +76,32 @@ export default function PrivacyPolicyPage() {
                                 We actively avoid collecting Personally Identifiable Information (PII) such as your name, physical address, or IP address logs. The AlwaysThere only interacts with the following technical data:
                             </p>
                             <ul className="space-y-4">
-                                <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                                <li className="flex gap-3 items-start bg-slate-50 dark:bg-white/[0.02] p-4 rounded-xl border border-slate-200 dark:border-white/5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#1152d4] mt-2.5 shrink-0 shadow-[0_0_8px_#1152d4]"></div>
                                     <div className="flex-1">
-                                        <strong className="text-white block mb-1">Public Wallet Addresses</strong>
-                                        <span className="text-slate-400 text-sm">Used exclusively to map ownership of vaults to your cryptographic identity, allowing the smart contract to verify heartbeat signatures.</span>
+                                        <strong className="text-slate-900 dark:text-slate-900 dark:text-white block mb-1">Public Wallet Addresses</strong>
+                                        <span className="text-slate-600 dark:text-slate-400 text-sm">Used exclusively to map ownership of vaults to your cryptographic identity, allowing the smart contract to verify heartbeat signatures.</span>
                                     </div>
                                 </li>
-                                <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                                <li className="flex gap-3 items-start bg-slate-50 dark:bg-white/[0.02] p-4 rounded-xl border border-slate-200 dark:border-white/5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] mt-2.5 shrink-0 shadow-[0_0_8px_#8b5cf6]"></div>
                                     <div className="flex-1">
-                                        <strong className="text-white block mb-1">Encrypted Payload Blobs (IPFS CIDs)</strong>
-                                        <span className="text-slate-400 text-sm">The content ID referencing your encrypted assets stored on decentralized networks. We cannot read the contents of these blobs.</span>
+                                        <strong className="text-slate-900 dark:text-slate-900 dark:text-white block mb-1">Encrypted Payload Blobs (IPFS CIDs)</strong>
+                                        <span className="text-slate-600 dark:text-slate-400 text-sm">The content ID referencing your encrypted assets stored on decentralized networks. We cannot read the contents of these blobs.</span>
                                     </div>
                                 </li>
-                                <li className="flex gap-3 items-start bg-white/[0.02] p-4 rounded-xl border border-white/5">
+                                <li className="flex gap-3 items-start bg-slate-50 dark:bg-white/[0.02] p-4 rounded-xl border border-slate-200 dark:border-white/5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2.5 shrink-0 shadow-[0_0_8px_#10b981]"></div>
                                     <div className="flex-1">
-                                        <strong className="text-white block mb-1">On-Chain Activity Metadata</strong>
-                                        <span className="text-slate-400 text-sm">Timestamps of your heartbeat transactions and the configured expiration interval to accurately trigger the Dead Man's Switch.</span>
+                                        <strong className="text-slate-900 dark:text-slate-900 dark:text-white block mb-1">On-Chain Activity Metadata</strong>
+                                        <span className="text-slate-600 dark:text-slate-400 text-sm">Timestamps of your heartbeat transactions and the configured expiration interval to accurately trigger the Dead Man's Switch.</span>
                                     </div>
                                 </li>
                             </ul>
                         </div>
 
                         <div id="crypto" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <LockKeyhole className="text-[#1152d4] w-6 h-6" />
                                 3. Cryptography Standards
                             </h2>
@@ -132,7 +111,7 @@ export default function PrivacyPolicyPage() {
                         </div>
 
                         <div id="third-party" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Network className="text-[#1152d4] w-6 h-6" />
                                 4. Third-Party Interactions
                             </h2>
@@ -140,18 +119,18 @@ export default function PrivacyPolicyPage() {
                                 By interacting with our interface, your browser must communicate with external decentralized infrastructure to function correctly. This is inherent to Web3 architecture:
                             </p>
                             <br />
-                            <h3 className="text-xl font-bold text-white mt-4 mb-2">RPC Providers</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mt-4 mb-2">RPC Providers</h3>
                             <p className="text-lg mb-4">
                                 Our frontend queries blockchain data (like contract state) via RPC providers (e.g., Alchemy, Infura, or public endpoints). These providers may log your IP address temporarily for DDoS protection, subject to their own respective privacy policies.
                             </p>
-                            <h3 className="text-xl font-bold text-white mt-4 mb-2">IPFS Pinning Services</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mt-4 mb-2">IPFS Pinning Services</h3>
                             <p className="text-lg">
                                 Your encrypted blobs are pinned using decentralized storage providers (such as Storacha or Web3.Storage). While the encrypted bytes reside on public networks, they remain indecipherable without the threshold of key shards held by the smart contract.
                             </p>
                         </div>
 
                         <div id="cookies" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Globe className="text-[#1152d4] w-6 h-6" />
                                 5. Cookies & Local Storage
                             </h2>

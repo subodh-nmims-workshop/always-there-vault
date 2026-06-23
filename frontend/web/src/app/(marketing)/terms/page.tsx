@@ -15,13 +15,13 @@ export default function TermsPage() {
     const defaultTransition = { duration: 0.5, ease: "easeOut" as const }
 
     return (
-        <div className="w-full bg-[#0a0c10] font-sans text-slate-100 selection:bg-[#1152d4]/30 overflow-x-hidden relative">
+        <div className="w-full font-sans selection:bg-[#1152d4]/30 relative bg-transparent text-slate-800 dark:text-slate-100">
             
             
 
             {/* Header */}
             <header className="pt-16 pb-12 px-6 text-center max-w-4xl mx-auto relative z-10">
-                <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">
+                <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={defaultTransition} className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-slate-900 dark:text-white">
                     Terms of Service
                 </motion.h1>
                 <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.1 }} className="text-slate-500 text-sm font-bold uppercase tracking-widest">
@@ -32,47 +32,18 @@ export default function TermsPage() {
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 lg:flex lg:gap-16 pb-32">
                 {/* Sticky Sidebar */}
                 <aside className="hidden lg:block w-64 shrink-0 relative z-10">
-                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="sticky top-28 p-6 rounded-2xl bg-white/[0.02] backdrop-blur-md border border-white/5">
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...defaultTransition, delay: 0.2 }} className="sticky top-28 p-6 rounded-2xl bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md border border-slate-200 dark:border-white/5">
                         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Table of Contents</h3>
-                        <nav className="flex flex-col gap-4">
-                            <a href="#acceptance" className="text-[#1152d4] font-bold flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#1152d4] shadow-[0_0_8px_#1152d4]"></span>
-                                1. Acceptance
-                            </a>
-                            <a href="#obligations" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                2. Obligations
-                            </a>
-                            <a href="#mechanics" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                3. Mechanics
-                            </a>
-                            <a href="#disclaimer" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                4. Disclaimer
-                            </a>
-                            <a href="#liability" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                5. Liability
-                            </a>
-                            <a href="#upgrades" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                6. Upgrades
-                            </a>
-                            <a href="#governing-law" className="text-slate-400 hover:text-white transition-all flex items-center gap-3 group text-sm">
-                                <span className="h-1.5 w-1.5 rounded-full bg-transparent group-hover:bg-white/50 transition-all"></span>
-                                7. Governing Law
-                            </a>
-                        </nav>
+                        
                     </motion.div>
                 </aside>
 
                 {/* Content Area */}
                 <section className="flex-1 max-w-3xl lg:mx-0 relative z-10">
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="prose prose-invert prose-slate max-w-none text-slate-300 leading-relaxed">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...defaultTransition, delay: 0.3 }} className="prose dark:prose-invert prose-slate max-w-none text-slate-650 dark:text-slate-750 dark:text-slate-300 leading-relaxed">
 
                         <div id="acceptance" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <FileText className="text-[#1152d4] w-6 h-6" />
                                 1. Acceptance of Terms
                             </h2>
@@ -98,7 +69,7 @@ export default function TermsPage() {
                         </div>
 
                         <div id="obligations" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Shield className="text-[#1152d4] w-6 h-6" />
                                 2. User Obligations & Security
                             </h2>
@@ -114,7 +85,7 @@ export default function TermsPage() {
                         </div>
 
                         <div id="mechanics" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Globe className="text-[#1152d4] w-6 h-6" />
                                 3. Smart Contract Mechanics
                             </h2>
@@ -127,7 +98,7 @@ export default function TermsPage() {
                         </div>
 
                         <div id="disclaimer" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <AlertCircle className="text-[#1152d4] w-6 h-6" />
                                 4. Protocol Disclaimer
                             </h2>
@@ -137,7 +108,7 @@ export default function TermsPage() {
                         </div>
 
                         <div id="liability" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Scale className="text-[#1152d4] w-6 h-6" />
                                 5. Limitation of Liability
                             </h2>
@@ -152,7 +123,7 @@ export default function TermsPage() {
                         </div>
 
                         <div id="upgrades" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Terminal className="text-[#1152d4] w-6 h-6" />
                                 6. Protocol Upgrades & Forks
                             </h2>
@@ -162,7 +133,7 @@ export default function TermsPage() {
                         </div>
 
                         <div id="governing-law" className="mb-16 scroll-mt-32">
-                            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-3 tracking-tight">
                                 <Scale className="text-[#1152d4] w-6 h-6" />
                                 7. Governing Law
                             </h2>

@@ -67,7 +67,7 @@ export default function BlogPage() {
     ];
 
     return (
-        <div className="w-full bg-[#0a0c10] font-sans selection:bg-[#2b52ff]/30 selection:text-white relative overflow-hidden">
+        <div className="w-full font-sans selection:bg-[#2b52ff]/30 selection:text-slate-900 dark:text-white relative overflow-hidden bg-transparent text-slate-800 dark:text-slate-100">
             {/* Ambient Background Glow */}
             <div className="fixed top-0 inset-x-0 h-[800px] pointer-events-none overflow-hidden z-0">
                 <div className="absolute top-[-20%] left-[20%] w-[600px] h-[600px] bg-[#1152d4]/10 blur-[130px] rounded-full mix-blend-screen"></div>
@@ -86,17 +86,17 @@ export default function BlogPage() {
                     variants={heroVariants}
                     className="mb-24 max-w-4xl"
                 >
-                    <motion.div variants={itemVariants} className="inline-flex items-center gap-3 mb-8 border border-white/10 bg-white/[0.03] backdrop-blur-xl px-4 py-2 rounded-full uppercase tracking-[0.2em] text-[10px] text-slate-300 font-semibold shadow-xl shadow-[#2b52ff]/5">
+                    <motion.div variants={itemVariants} className="inline-flex items-center gap-3 mb-8 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] backdrop-blur-xl px-4 py-2 rounded-full uppercase tracking-[0.2em] text-[10px] text-slate-750 dark:text-slate-300 font-semibold shadow-xl shadow-[#2b52ff]/5">
                         <BookOpen className="h-3 w-3 text-[#1152d4]" />
                         <span>The DWP Engineering Journal</span>
                     </motion.div>
 
-                    <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-8 leading-[1.05]">
+                    <motion.h1 variants={itemVariants} className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900 dark:text-slate-900 dark:text-white mb-8 leading-[1.05]">
                         <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 font-extrabold pb-2">Protocol</span>
                         Research & Insights.
                     </motion.h1>
 
-                    <motion.p variants={itemVariants} className="text-xl md:text-2xl text-slate-400 font-normal leading-relaxed max-w-2xl">
+                    <motion.p variants={itemVariants} className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 font-normal leading-relaxed max-w-2xl">
                         A rigorous exploration of the mathematics, distributed systems, and immutable architecture powering the world's most secure digital inheritance protocol.
                     </motion.p>
                 </motion.div>
@@ -109,7 +109,7 @@ export default function BlogPage() {
                     transition={defaultTransition}
                     className="mb-20"
                 >
-                    <Link href="#" className="group block relative w-full overflow-hidden rounded-[2rem] bg-white/[0.02] backdrop-blur-md shadow-2xl shadow-black/50 border border-white/5 transition-all duration-300 hover:border-white/20 hover:shadow-[#1152d4]/10">
+                    <Link href="#" className="group block relative w-full overflow-hidden rounded-[2rem] bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md shadow-2xl shadow-black/50 border border-slate-200 dark:border-white/5 transition-all duration-300 hover:border-white/20 hover:shadow-[#1152d4]/10">
                         <div className="grid lg:grid-cols-2 min-h-[500px]">
                             {/* Image Side with slow pan */}
                             <div className="relative overflow-hidden h-full min-h-[350px]">
@@ -121,31 +121,31 @@ export default function BlogPage() {
                             </div>
 
                             {/* Content Side */}
-                            <div className="relative p-10 lg:p-14 flex flex-col justify-center border-l-0 lg:border-l border-white/5 bg-[#0a0c10]/40 backdrop-blur-sm">
+                            <div className="relative p-10 lg:p-14 flex flex-col justify-center border-l-0 lg:border-l border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0a0c10]/40 backdrop-blur-sm">
                                 <div className="flex items-center gap-4 mb-8">
                                     <span className="bg-[#1152d4]/10 text-[#5c8df6] border border-[#1152d4]/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{posts[0].category}</span>
-                                    <span className="text-slate-400 text-xs tracking-wider flex items-center font-medium"><Clock className="w-3 h-3 mr-2" />{posts[0].readTime}</span>
+                                    <span className="text-slate-600 dark:text-slate-400 text-xs tracking-wider flex items-center font-medium"><Clock className="w-3 h-3 mr-2" />{posts[0].readTime}</span>
                                 </div>
 
-                                <h2 className="text-3xl lg:text-4xl font-bold text-white mb-5 leading-tight tracking-tight group-hover:text-[#5c8df6] transition-colors duration-300">
+                                <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-5 leading-tight tracking-tight group-hover:text-[#5c8df6] transition-colors duration-300">
                                     {posts[0].title}
                                 </h2>
 
-                                <p className="text-base text-slate-400 mb-10 font-normal leading-relaxed">
+                                <p className="text-base text-slate-600 dark:text-slate-400 mb-10 font-normal leading-relaxed">
                                     {posts[0].excerpt}
                                 </p>
 
-                                <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+                                <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-200 dark:border-white/5">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-black/40 rounded-full flex items-center justify-center border border-white/10">
-                                            <User className="h-4 w-4 text-slate-300" />
+                                        <div className="w-10 h-10 bg-black/40 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10">
+                                            <User className="h-4 w-4 text-slate-750 dark:text-slate-300" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-semibold text-white">{posts[0].author}</p>
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{posts[0].author}</p>
                                             <p className="text-xs text-slate-500 font-medium mt-0.5">{posts[0].date}</p>
                                         </div>
                                     </div>
-                                    <div className="w-10 h-10 rounded-full bg-[#1152d4]/20 border border-[#1152d4]/40 flex items-center justify-center shadow-lg group-hover:bg-[#1152d4] text-white transition-all duration-300 transform group-hover:scale-110">
+                                    <div className="w-10 h-10 rounded-full bg-[#1152d4]/20 border border-[#1152d4]/40 flex items-center justify-center shadow-lg group-hover:bg-[#1152d4] text-slate-900 dark:text-white transition-all duration-300 transform group-hover:scale-110">
                                         <ArrowUpRight className="h-4 w-4" />
                                     </div>
                                 </div>
@@ -164,7 +164,7 @@ export default function BlogPage() {
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ ...defaultTransition, delay: idx * 0.1 }}
                         >
-                            <Link href="#" className="group block bg-white/[0.02] backdrop-blur-md shadow-xl shadow-black/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-white/20 hover:-translate-y-2 transition-all duration-300 h-full flex flex-col">
+                            <Link href="#" className="group block bg-slate-50 dark:bg-white/[0.02] backdrop-blur-md shadow-xl shadow-black/40 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden hover:border-white/20 hover:-translate-y-2 transition-all duration-300 h-full flex flex-col">
                                 {/* Image Container */}
                                 <div className="relative h-64 overflow-hidden">
                                     <div
@@ -174,7 +174,7 @@ export default function BlogPage() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/50 to-transparent opacity-90"></div>
 
                                     <div className="absolute top-5 left-5">
-                                        <span className="bg-black/50 border border-white/10 backdrop-blur-xl text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                                        <span className="bg-black/50 border border-slate-200 dark:border-white/10 backdrop-blur-xl text-slate-900 dark:text-slate-900 dark:text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
                                             {post.category}
                                         </span>
                                     </div>
@@ -182,22 +182,22 @@ export default function BlogPage() {
 
                                 {/* Content Container */}
                                 <div className="p-8 flex flex-col flex-grow bg-gradient-to-b from-[#0a0c10]/0 to-[#0a0c10]">
-                                    <div className="flex items-center gap-3 text-xs text-slate-400 font-semibold mb-4">
+                                    <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 font-semibold mb-4">
                                         <span className="flex items-center"><Calendar className="w-3 h-3 mr-1.5" />{post.date}</span>
                                         <span className="w-1 h-1 rounded-full bg-slate-600"></span>
                                         <span>{post.readTime}</span>
                                     </div>
 
-                                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight leading-snug group-hover:text-[#5c8df6] transition-colors duration-300">
+                                    <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-3 tracking-tight leading-snug group-hover:text-[#5c8df6] transition-colors duration-300">
                                         {post.title}
                                     </h3>
 
-                                    <p className="text-slate-400 font-normal text-sm leading-relaxed mb-8 flex-grow">
+                                    <p className="text-slate-600 dark:text-slate-400 font-normal text-sm leading-relaxed mb-8 flex-grow">
                                         {post.excerpt}
                                     </p>
 
-                                    <div className="flex items-center justify-between pt-5 border-t border-white/10 mt-auto">
-                                        <p className="text-sm font-semibold text-slate-300">{post.author}</p>
+                                    <div className="flex items-center justify-between pt-5 border-t border-slate-200 dark:border-white/10 mt-auto">
+                                        <p className="text-sm font-semibold text-slate-750 dark:text-slate-300">{post.author}</p>
                                         <ArrowUpRight className="h-5 w-5 text-[#5c8df6] opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                                     </div>
                                 </div>
@@ -212,23 +212,23 @@ export default function BlogPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={defaultTransition}
-                    className="rounded-[2rem] p-10 lg:p-16 relative overflow-hidden bg-gradient-to-br from-[#1152d4]/10 to-purple-900/10 border border-white/10 shadow-2xl backdrop-blur-xl flex flex-col items-center mb-32"
+                    className="rounded-[2rem] p-10 lg:p-16 relative overflow-hidden bg-gradient-to-br from-[#1152d4]/10 to-purple-900/10 border border-slate-200 dark:border-white/10 shadow-2xl backdrop-blur-xl flex flex-col items-center mb-32"
                 >
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80')] opacity-5 mix-blend-overlay bg-cover bg-center pointer-events-none"></div>
                     <div className="w-16 h-16 bg-[#1152d4]/20 rounded-2xl flex items-center justify-center border border-[#1152d4]/30 mb-6 shadow-[0_0_30px_rgba(17,82,212,0.3)]">
                         <Tag className="w-8 h-8 text-[#5c8df6]" />
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4 text-center">Stay ahead of the curve.</h3>
-                    <p className="text-slate-400 text-base mb-10 max-w-xl text-center font-medium">
+                    <h3 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight mb-4 text-center">Stay ahead of the curve.</h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-base mb-10 max-w-xl text-center font-medium">
                         Subscribe to receive rare technical briefings on decentralized hardware, zero-knowledge proofs, and smart contract architecture.
                     </p>
                     <div className="relative w-full max-w-lg group">
                         <input
                             type="text"
-                            className="w-full bg-black/40 backdrop-blur-md border border-white/10 text-white rounded-2xl px-6 py-4 focus:outline-none focus:border-[#1152d4] focus:ring-1 focus:ring-[#1152d4] transition-all placeholder:text-slate-500 font-medium text-sm shadow-inner"
+                            className="w-full bg-black/40 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-900 dark:text-white rounded-2xl px-6 py-4 focus:outline-none focus:border-[#1152d4] focus:ring-1 focus:ring-[#1152d4] transition-all placeholder:text-slate-500 font-medium text-sm shadow-inner"
                             placeholder="YOUR EMAIL OR ENS..."
                         />
-                        <button className="absolute right-1.5 top-1.5 bottom-1.5 bg-[#1152d4] text-white hover:bg-[#1152d4]/80 font-bold px-6 rounded-xl transition-all flex items-center text-sm shadow-md">
+                        <button className="absolute right-1.5 top-1.5 bottom-1.5 bg-[#1152d4] text-slate-900 dark:text-slate-900 dark:text-white hover:bg-[#1152d4]/80 font-bold px-6 rounded-xl transition-all flex items-center text-sm shadow-md">
                             Subscribe
                         </button>
                     </div>
