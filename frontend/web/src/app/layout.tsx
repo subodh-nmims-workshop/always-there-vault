@@ -6,7 +6,7 @@ import Script from 'next/script'
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://decentralized-digital-will-protocol.vercel.app/'),
+  metadataBase: new URL('https://alwaystherevault.com/'),
   title: {
     default: 'AlwaysThere Protocol | The Decentralized Crypto Inheritance & Digital Will',
     template: '%s | AlwaysThere Protocol'
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AlwaysThere Protocol | Decentralized Crypto Inheritance',
     description: 'Ensure your crypto assets and private data are passed on securely. AlwaysThere is a trustless digital will protocol and dead man switch.',
-    url: 'https://decentralized-digital-will-protocol.vercel.app/',
+    url: 'https://alwaystherevault.com/',
     siteName: 'AlwaysThere Protocol',
     images: [
       {

@@ -17,7 +17,7 @@ const getChains = () => {
 export const config = getDefaultConfig({
   appName: 'AlwaysThere Protocol',
   appDescription: 'The Decentralized Digital Will & Crypto Inheritance Protocol',
-  appUrl: 'https://decentralized-digital-will-protocol.vercel.app/',
+  appUrl: 'https://alwaystherevault.com',
   projectId: 'c40b8a3e790f9e1564f269df12345678', // Default public project ID for testing
   chains: getChains() as any,
   transports: {
