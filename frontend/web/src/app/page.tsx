@@ -506,49 +506,60 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <button onClick={handleConnect} className="px-6 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Connect Wallet</button>
+          <button onClick={handleConnect} className="px-4 sm:px-6 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+            <span className="hidden sm:inline">Connect Wallet</span>
+            <span className="sm:hidden">Connect</span>
+          </button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-48 pb-32 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 mb-8 uppercase">
+      <section className="relative pt-28 sm:pt-40 md:pt-48 pb-20 sm:pb-32 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto text-center flex flex-col items-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 mb-6 sm:mb-8 uppercase">
             <Zap className="w-3 h-3" /> Secure Your Family&apos;s Future
           </motion.div>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-[0.9] mb-8 uppercase">
-            YOUR DIGITAL LEGACY, <br />
+          <h1 className="text-[28px] xs:text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-[1.0] sm:leading-[0.9] mb-6 sm:mb-8 uppercase">
+            YOUR DIGITAL LEGACY, <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-500 font-black">PROTECTED FOREVER.</span>
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed mb-12">
-            Every year, ₹35,000 Crore lies unclaimed in banks because families lose access. 
-            Store your Crypto, Wills, and Secrets here. We deliver them to your loved ones automatically.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={handleConnect} className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-2xl shadow-blue-600/30">
-              Connect Wallet <ArrowRight className="w-6 h-6" />
-            </button>
-            <button onClick={handleStartDemo} className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-2xl shadow-purple-600/30">
-              Try Sandbox Demo
-            </button>
-            <Link href="/features" className="w-full sm:w-auto px-10 py-6 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white font-black uppercase tracking-widest hover:dark:bg-white/10 transition-all uppercase">How it works</Link>
+
+          {/* Highlighted Stat Card */}
+          <div className="inline-flex flex-col items-center justify-center px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 mb-8 max-w-md mx-auto animate-pulse">
+            <span className="text-2xl sm:text-3xl font-black text-red-500 tracking-tight">₹35,000 CRORE</span>
+            <span className="text-[9px] sm:text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mt-1 text-center">Unclaimed in banks & financial institutions every year</span>
           </div>
 
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-8 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
-              <ShieldCheck className="w-4.5 h-4.5 text-blue-500" /> AES-256-GCM
+          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-8 sm:mb-12">
+            Don&apos;t let your life&apos;s work be lost to chance. Store your Crypto, Wills, and Secrets securely. We deliver them to your loved ones automatically when you go offline.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-lg sm:max-w-none mx-auto">
+            <button onClick={handleConnect} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-blue-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-xl sm:shadow-2xl shadow-blue-600/30">
+              Connect Wallet <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+            <button onClick={handleStartDemo} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-xl sm:shadow-2xl shadow-purple-600/30">
+              Try Sandbox Demo
+            </button>
+            <Link href="/features" className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white text-xs sm:text-sm font-black uppercase tracking-widest hover:dark:bg-white/10 transition-all text-center">
+              How it works
+            </Link>
+          </div>
+
+          <div className="mt-12 sm:mt-16 flex flex-wrap items-center justify-center gap-4 sm:gap-8 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+              <ShieldCheck className="w-4 h-4 text-blue-500" /> AES-256-GCM
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
-              <Cloud className="w-4.5 h-4.5 text-blue-500" /> Cloudflare R2
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+              <Cloud className="w-4 h-4 text-blue-500" /> Cloudflare R2
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
-              <Network className="w-4.5 h-4.5 text-blue-500" /> Polygon Network
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
+              <Network className="w-4 h-4 text-blue-500" /> Polygon Network
             </div>
             <div className="h-4 w-px bg-slate-300 dark:bg-white/10 hidden sm:block"></div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
               <Shield className="w-4.5 h-4.5 text-emerald-500" suppressHydrationWarning /> Audited by CertiK
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
               <Award className="w-4.5 h-4.5 text-emerald-500" suppressHydrationWarning /> PeckShield Verified
             </div>
           </div>
