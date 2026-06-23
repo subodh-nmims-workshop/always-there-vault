@@ -25,7 +25,7 @@ class ModeService {
 
     this.config = {
       mode: this.currentMode,
-      apiEndpoint: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001',
+      apiEndpoint: process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */,
       contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
       ipfsGateway: 'https://ipfs.io/ipfs/'
     }

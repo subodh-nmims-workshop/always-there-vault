@@ -2,7 +2,7 @@
 
 import WebStorageService from '@/lib/storage'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
 
 export interface HeartbeatPayload {
     walletAddress: string
@@ -26,7 +26,7 @@ export async function recordHeartbeat(payload: HeartbeatPayload) {
 
         // SYNC TO BACKEND for email alerts and cron monitoring
         try {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             const token = localStorage.getItem('dwp_token')
             if (!token) throw new Error('No authentication token found')
 
@@ -149,7 +149,7 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
 
         // SYNC TO BACKEND
         try {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             const email = localStorage.getItem('dwp_user_email') || ''
             const token = localStorage.getItem('dwp_token')
             if (!token) throw new Error('No authentication token found')

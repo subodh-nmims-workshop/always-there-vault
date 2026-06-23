@@ -142,7 +142,7 @@ export default function HomePage() {
   const handleWalletConnect = async (walletAddress: string, customPrivateKey?: string) => {
     setIsConnecting(true)
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
       
       if (!nonceRes.ok) {
@@ -227,7 +227,7 @@ export default function HomePage() {
 
     setIsVerifyingMfa(true)
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const verifyRes = await fetch(`${apiEndpoint}/api/auth/mfa/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

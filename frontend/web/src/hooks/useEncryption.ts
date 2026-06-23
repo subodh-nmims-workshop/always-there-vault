@@ -53,7 +53,7 @@ export function useEncryptionAndStorage() {
         const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' });
         formData.append('file', blob, 'encrypted-will-payload.json');
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'}/ipfs/upload`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */}/ipfs/upload`, {
           method: 'POST',
           // Optional: Add Auth Header containing JWT or Wallet Signature 
           // headers: { Authorization: `Bearer ${token}` },

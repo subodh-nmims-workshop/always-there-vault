@@ -104,7 +104,7 @@ class OfflineService {
   }
 
   private async executeAction(action: QueuedAction): Promise<void> {
-    const API_URL = 'http://localhost:7001'; // Replace with actual API URL
+    const API_URL = 'https://always-there-protocol-api.onrender.com'; // Replace with 'http://localhost:7001' for local testing
 
     const endpoint = this.getEndpoint(action);
     const method = this.getMethod(action.type);

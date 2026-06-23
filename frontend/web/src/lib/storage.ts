@@ -499,7 +499,7 @@ class WebStorageService {
           const mode = localStorage.getItem('dwp_mode') || 'centralized'
           const walletAddress = localStorage.getItem('dwp_wallet_address')
           if (mode === 'centralized' && walletAddress) {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             await fetch(`${apiEndpoint}/api/assets/folders`, {
               method: 'POST',
               headers: {
@@ -583,7 +583,7 @@ class WebStorageService {
           const mode = localStorage.getItem('dwp_mode') || 'centralized'
           const walletAddress = localStorage.getItem('dwp_wallet_address')
           if (mode === 'centralized' && walletAddress) {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             await fetch(`${apiEndpoint}/api/assets/folders/${id}`, {
               method: 'PATCH',
               headers: {
@@ -672,7 +672,7 @@ class WebStorageService {
     try {
       const mode = localStorage.getItem('dwp_mode') || 'centralized'
       if (mode === 'centralized') {
-        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
         for (const ben of updatedBeneficiaries) {
           // Sync with centralized node per beneficiary
           await fetch(`${apiEndpoint}/api/assets/folders/${folderId}/share`, {

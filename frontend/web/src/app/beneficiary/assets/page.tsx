@@ -67,7 +67,7 @@ function BeneficiaryAssetsContent() {
     setStatus('checking')
     
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const response = await fetch(`${apiEndpoint}/api/heartbeat/public-status/${ownerAddress}`)
       
       if (!response.ok) throw new Error('Failed to fetch status')
@@ -121,7 +121,7 @@ function BeneficiaryAssetsContent() {
       // 3. Download/Decrypt assets
       
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       
       // We'll iterate through assets and claim them
       // For this UI demo, we'll mark as claimed after status update

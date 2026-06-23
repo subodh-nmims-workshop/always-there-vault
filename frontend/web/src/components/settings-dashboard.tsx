@@ -89,7 +89,7 @@ export function SettingsDashboard() {
 
       const token = localStorage.getItem('dwp_token')
       if (!token) return
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -161,7 +161,7 @@ export function SettingsDashboard() {
       }
 
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
         method: 'POST',
         headers: {
@@ -210,7 +210,7 @@ export function SettingsDashboard() {
       }
 
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
         method: 'POST',
         headers: {
@@ -245,7 +245,7 @@ export function SettingsDashboard() {
       }
 
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/enable`, {
         method: 'POST',
         headers: {
@@ -286,7 +286,7 @@ export function SettingsDashboard() {
       }
 
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/verify-setup`, {
         method: 'POST',
         headers: {
@@ -323,7 +323,7 @@ export function SettingsDashboard() {
       }
 
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/disable`, {
         method: 'POST',
         headers: {

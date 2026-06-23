@@ -83,7 +83,7 @@ export function BeneficiaryManager() {
       if (!isDemo) {
         try {
           const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
-          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
           const url = editingId 
             ? `${apiEndpoint}/api/beneficiaries/${editingId}`
             : `${apiEndpoint}/api/beneficiaries`
@@ -171,7 +171,7 @@ export function BeneficiaryManager() {
       if (!isDemo) {
         // Delete from Backend Postgres
         try {
-          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
           await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
             method: 'DELETE'
           })

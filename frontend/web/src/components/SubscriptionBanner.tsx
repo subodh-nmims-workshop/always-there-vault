@@ -34,7 +34,7 @@ export default function SubscriptionBanner() {
     }
 
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const [trialRes, subRes] = await Promise.all([
         fetch(`${apiEndpoint}/subscription/${userId}/trial-status`),
         fetch(`${apiEndpoint}/subscription/${userId}`),

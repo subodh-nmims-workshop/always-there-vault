@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { UserSubscription, UserMode, PlanType, ALL_PLANS } from '@/types/subscription'
 import WebStorageService from '@/lib/storage'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
 
 interface SubscriptionContextType {
   subscription: UserSubscription | null

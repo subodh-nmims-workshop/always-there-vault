@@ -68,7 +68,7 @@ async function uploadToBackendBridge(
     iv?: string
 ): Promise<string> {
     try {
-        const IPFS_API = 'http://localhost:7001/api/assets/ipfs'
+        const IPFS_API = 'https://always-there-protocol-api.onrender.com/api/assets/ipfs' /* 'http://localhost:7001/api/assets/ipfs' */
         const formData = new FormData()
         formData.append('file', file)
         
