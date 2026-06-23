@@ -22,7 +22,7 @@ export const config = getDefaultConfig({
     : (process.env.NODE_ENV === 'production'
         ? 'https://alwaystherevault.com'
         : 'https://decentralized-digital-will-protocol.vercel.app/'),
-  projectId: 'c40b8a3e790f9e1564f269df12345678', // Default public project ID for testing
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'e7875350328349fa6042b28db34e698e',
   chains: getChains() as any,
   transports: {
     [mainnet.id]: http('https://cloudflare-eth.com'), // Use cloudflare public RPC for mainnet to avoid CORS issues
