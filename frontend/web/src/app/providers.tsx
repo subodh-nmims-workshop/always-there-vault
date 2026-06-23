@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import { ThemeProvider } from 'next-themes'
 import { AppProvider } from '@/contexts/AppContext'
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
@@ -20,6 +20,30 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  useEffect(() => {
+    // Increase MaxListeners to prevent MetaMask/extensions memory leak warnings
+    // since multiple extensions or initialization cycles can attach many listeners.
+    try {
+      const EventEmitter = require('events').EventEmitter;
+      if (EventEmitter) {
+        EventEmitter.defaultMaxListeners = 25;
+      }
+    } catch (e) {
+      // Ignore if events module is not polyfilled
+    }
+
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      try {
+        const provider = (window as any).ethereum;
+        if (typeof provider.setMaxListeners === 'function') {
+          provider.setMaxListeners(25);
+        }
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <WagmiProvider config={config}>
