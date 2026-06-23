@@ -161,15 +161,18 @@ async function bootstrap() {
   const port = process.env.PORT || 7001;
   await app.listen(port);
 
+  const hostUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  const rpcUrl = process.env.RPC_URL || process.env.ETHEREUM_RPC_URL || 'http://localhost:8545';
+
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🚀 AlwaysThere Protocol - Backend Server');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
-  console.log(`✅ Server running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
-  console.log(`🔷 Primary Backend (Hardhat): http://localhost:8545`);
-  console.log(`🔶 Secondary Backend (NestJS): http://localhost:${port}`);
+  console.log(`✅ Server running on: ${hostUrl}`);
+  console.log(`📚 API Documentation: ${hostUrl}/api/docs`);
+  console.log(`🔷 Blockchain RPC: ${rpcUrl}`);
+  console.log(`🔶 Backend Port: ${port}`);
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
