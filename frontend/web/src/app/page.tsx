@@ -523,15 +523,9 @@ export default function HomePage() {
             YOUR DIGITAL LEGACY, <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-500 font-black">PROTECTED FOREVER.</span>
           </h1>
-
-          {/* Highlighted Stat Card */}
-          <div className="inline-flex flex-col items-center justify-center px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 mb-8 max-w-md mx-auto animate-pulse">
-            <span className="text-2xl sm:text-3xl font-black text-red-500 tracking-tight">₹35,000 CRORE</span>
-            <span className="text-[9px] sm:text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mt-1 text-center">Unclaimed in banks & financial institutions every year</span>
-          </div>
-
           <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-8 sm:mb-12">
-            Don&apos;t let your life&apos;s work be lost to chance. Store your Crypto, Wills, and Secrets securely. We deliver them to your loved ones automatically when you go offline.
+            Every year, ₹35,000 Crore lies unclaimed in banks because families lose access. 
+            Store your Crypto, Wills, and Secrets here. We deliver them to your loved ones automatically.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-lg sm:max-w-none mx-auto">
             <button onClick={handleConnect} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-blue-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-xl sm:shadow-2xl shadow-blue-600/30">

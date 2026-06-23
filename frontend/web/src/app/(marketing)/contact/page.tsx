@@ -1,34 +1,13 @@
 'use client'
 
-import { ThemeToggle } from '@/components/theme-toggle'
-
 import { motion } from 'framer-motion'
 import { Shield, MessageSquare, Mail, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
-import { SharedFooter } from '@/components/shared-footer'
-
 export default function ContactPage() {
     const dt = { duration: 0.5, ease: "easeOut" as const }
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0a0c10] font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 flex flex-col overflow-x-hidden relative">
-            <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0c10]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-8 py-4 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 group">
-          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
-          <div className="flex flex-col text-left">
-            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
-            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
-          </div>
-        </Link>
-                <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-                    <Link href="/features" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium">Features</Link>
-                    <Link href="/docs" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium">Documentation</Link>
-                    <Link href="/contact" className="text-slate-900 dark:text-white transition-colors text-sm font-medium">Contact</Link>
-                </div>
-                <div className="flex items-center gap-4">
-                    <ThemeToggle />
-                    <Link href="/" className="bg-[#1152d4] hover:bg-[#1152d4]/80 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-[0_0_20px_rgba(17,82,212,0.4)]">Launch App</Link>
-                </div>
-            </nav>
+        <div className="w-full font-sans text-slate-800 dark:text-slate-100 selection:bg-[#1152d4]/30 overflow-x-hidden relative">
+            
             <main className="flex-1 flex flex-col items-center px-4 py-20 max-w-4xl mx-auto w-full relative z-10">
                 <div className="text-center mb-16">
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={dt} className="inline-flex items-center justify-center p-4 rounded-full bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 mb-6">
@@ -71,7 +50,7 @@ export default function ContactPage() {
                     </motion.div>
                 </div>
             </main>
-            <SharedFooter />
+            
         </div>
     )
 }
