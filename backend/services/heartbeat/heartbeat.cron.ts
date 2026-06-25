@@ -247,7 +247,12 @@ export class HeartbeatCronService {
                         // All buffers exhausted
                         this.logger.error(`Protocol Triggered for ${user.walletAddress}! Buffer completely exhausted after ${maxBuffer} misses.`);
                         try {
-                            await this.blockchainService.triggerAlwaysThere(user.walletAddress);
+                            try {
+                                await this.blockchainService.triggerAlwaysThere(user.walletAddress);
+                                this.logger.log(`✅ On-chain trigger transaction completed successfully for user: ${user.walletAddress}`);
+                            } catch (blockchainError) {
+                                this.logger.error(`⚠️ Smart contract trigger failed (expected in Demo/Simulation mode or if on-chain interval checks reject the call): ${blockchainError.message}`);
+                            }
                             
                             // Notify user
                             if (user.email) {
@@ -294,10 +299,11 @@ export class HeartbeatCronService {
                                         1, // Default to 1 asset for now (can be expanded)
                                         claimUrl
                                     );
+                                    this.logger.log(`📧 Asset release email dispatched successfully to nominee: ${nominee.email}`);
                                 }
                             }
-                        } catch (e) {
-                            this.logger.error(`Blockchain Trigger/Notification Failed: ${e.message}`);
+                        } catch (notificationError) {
+                            this.logger.error(`Notification dispatch flow failed: ${notificationError.message}`);
                         }
                     }
                 }

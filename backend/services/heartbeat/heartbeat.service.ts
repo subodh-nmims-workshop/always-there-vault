@@ -54,6 +54,7 @@ export class HeartbeatService {
         minutesUntilDue: 0,
         interval: 30,
         gracePeriod: 7,
+        bufferMisses: 3,
         lastHeartbeat: null
       };
     }
@@ -71,6 +72,7 @@ export class HeartbeatService {
     const common = {
       interval,
       gracePeriod: grace,
+      bufferMisses: config.bufferMisses,
       lastHeartbeat: config.lastHeartbeat
     };
 

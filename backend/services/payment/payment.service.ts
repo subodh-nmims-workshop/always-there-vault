@@ -51,12 +51,13 @@ export class PaymentService {
    * Process PayPal Payment with Real Verification
    */
   async processPayPalPayment(walletAddress: string, orderId: string, planId: string, billingCycle: string = 'YEARLY'): Promise<any> {
-    this.logger.log(`🔍 Verifying PayPal Order: ${orderId} for ${walletAddress} [Cycle: ${billingCycle}]`);
+    const normalizedWalletAddress = walletAddress.toLowerCase();
+    this.logger.log(`🔍 Verifying PayPal Order: ${orderId} for ${normalizedWalletAddress} [Cycle: ${billingCycle}]`);
     
     try {
       if (!this.paypalClientId || !this.paypalSecret || orderId.startsWith('mock-')) {
         this.logger.log(`✅ Sandbox / Mock PayPal Order approved: ${orderId}`);
-        return await this.activatePremium(walletAddress, 'PAYPAL', orderId, planId, billingCycle);
+        return await this.activatePremium(normalizedWalletAddress, 'PAYPAL', orderId, planId, billingCycle);
       }
 
       const accessToken = await this.getAccessToken();
@@ -69,7 +70,7 @@ export class PaymentService {
       const orderData = response.data;
       if (orderData.status === 'COMPLETED' || orderData.status === 'APPROVED') {
         this.logger.log(`✅ PayPal Order ${orderId} Verified! Status: ${orderData.status}`);
-        return await this.activatePremium(walletAddress, 'PAYPAL', orderId, planId, billingCycle);
+        return await this.activatePremium(normalizedWalletAddress, 'PAYPAL', orderId, planId, billingCycle);
       } else {
         this.logger.error(`❌ PayPal Order ${orderId} NOT COMPLETED. Current status: ${orderData.status}`);
         throw new Error(`Payment status: ${orderData.status}`);
@@ -78,18 +79,20 @@ export class PaymentService {
       this.logger.error(`❌ PayPal Verification Error: ${error.response?.data?.message || error.message}`);
       if (!this.paypalClientId || !this.paypalSecret || orderId.startsWith('mock-')) {
         this.logger.log(`⚠️ Falling back to sandbox activation for ${orderId}`);
-        return await this.activatePremium(walletAddress, 'PAYPAL', orderId, planId, billingCycle);
+        return await this.activatePremium(normalizedWalletAddress, 'PAYPAL', orderId, planId, billingCycle);
       }
       throw new Error('PayPal verification failed. Please contact support.');
     }
   }
 
   async processCryptoPayment(walletAddress: string, txHash: string, planId: string, billingCycle: string = 'YEARLY'): Promise<any> {
-    this.logger.log(`⛓️ Processing Crypto Payment for ${walletAddress}, TX: ${txHash}, Cycle: ${billingCycle}`);
+    const normalizedWalletAddress = walletAddress.toLowerCase();
+    this.logger.log(`⛓️ Processing Crypto Payment for ${normalizedWalletAddress}, TX: ${txHash}, Cycle: ${billingCycle}`);
     
     try {
       const { ethers } = require('ethers');
-      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com');
+      const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL') || this.configService.get<string>('RPC_URL') || 'https://ethereum-sepolia.publicnode.com';
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
       
       // Wait for transaction to be mined (max 30 seconds)
       const receipt = await provider.waitForTransaction(txHash, 1, 30000);
@@ -100,11 +103,13 @@ export class PaymentService {
       const tx = await provider.getTransaction(txHash);
       const companyWallet = (process.env.CRYPTO_RECEIVE_WALLET || this.configService.get<string>('CRYPTO_RECEIVE_WALLET') || '').toLowerCase();
       const contractAddress = (this.configService.get<string>('CONTRACT_ADDRESS') || process.env.CONTRACT_ADDRESS || '').toLowerCase();
+      const subscriptionContractAddress = (this.configService.get<string>('SUBSCRIPTION_CONTRACT_ADDRESS') || process.env.SUBSCRIPTION_CONTRACT_ADDRESS || '').toLowerCase();
       const targetAddress = tx.to?.toLowerCase();
 
       const isValidRecipient = 
         (companyWallet && targetAddress === companyWallet) ||
-        (contractAddress && targetAddress === contractAddress);
+        (contractAddress && targetAddress === contractAddress) ||
+        (subscriptionContractAddress && targetAddress === subscriptionContractAddress);
 
       if (!isValidRecipient) {
           throw new Error('Transaction sent to invalid wallet or contract address');
@@ -115,7 +120,7 @@ export class PaymentService {
       // if (tx.value < requiredAmount) throw new Error('Insufficient payment amount');
 
       this.logger.log(`✅ Crypto Payment Verified on Blockchain: ${txHash}`);
-      return await this.activatePremium(walletAddress, 'CRYPTO', txHash, planId, billingCycle);
+      return await this.activatePremium(normalizedWalletAddress, 'CRYPTO', txHash, planId, billingCycle);
     } catch (error) {
       this.logger.error(`❌ Crypto Verification Failed: ${error.message}`);
       throw new Error(`Crypto Verification Failed: ${error.message}`);

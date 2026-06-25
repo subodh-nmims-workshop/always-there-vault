@@ -28,6 +28,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [selectedBens, setSelectedBens] = useState<string[]>([])
+  const [skipBens, setSkipBens] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
@@ -46,6 +47,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
         setSelectedFile(null)
         setIsDragging(false)
         setSelectedBens([])
+        setSkipBens(false)
         setErrors([])
         setShowSuccess(false)
         setIsTimeCapsule(false)
@@ -117,7 +119,7 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
         type: category,
         structuredData,
         file: selectedFile || undefined,
-        beneficiaryIds: selectedBens,
+        beneficiaryIds: skipBens ? [] : selectedBens,
         timeCapsule: isTimeCapsule && scheduledDate ? { scheduledDate, customMessage } : undefined
       })
 
@@ -316,39 +318,61 @@ export function CategoryModal({ isOpen, onClose, category, beneficiaries, onSubm
                     </p>
                   </div>
                   <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">
-                    {selectedBens.length} selected
+                    {skipBens ? 'None (Assign Later)' : `${selectedBens.length} selected`}
                   </span>
                 </div>
 
-                {beneficiaries.length === 0 ? (
-                  <p className="text-xs text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
-                    No nominees configured. Go to 'Beneficiaries' to add them.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
-                    {beneficiaries.map(b => (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={() => setSelectedBens(prev => 
-                          prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
-                        )}
-                        className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${
-                          selectedBens.includes(b.id)
-                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
-                            : 'bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
-                        }`}
-                      >
-                        <span className="text-xs font-semibold truncate flex-1 mr-2">{b.name}</span>
-                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ${
-                          selectedBens.includes(b.id)
-                            ? 'bg-blue-500 border-blue-400'
-                            : 'bg-white dark:bg-white/5 border-slate-300 dark:border-white/10'
-                        }`}>
-                          {selectedBens.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
-                        </div>
-                      </button>
-                    ))}
+                <div className="flex items-center gap-2 p-3 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/5 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="skip-category-nominee"
+                    checked={skipBens}
+                    onChange={(e) => {
+                      setSkipBens(e.target.checked)
+                      if (e.target.checked) {
+                        setSelectedBens([])
+                      }
+                    }}
+                    className="rounded border-slate-300 dark:border-white/10 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                  />
+                  <label htmlFor="skip-category-nominee" className="text-xs font-semibold text-slate-700 dark:text-slate-350 cursor-pointer select-none">
+                    None (Assign Nominee Later)
+                  </label>
+                </div>
+
+                {!skipBens && (
+                  <div>
+                    {beneficiaries.length === 0 ? (
+                      <p className="text-xs text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+                        No nominees configured. Go to 'Beneficiaries' to add them.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+                        {beneficiaries.map(b => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setSelectedBens(prev => 
+                              prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                            )}
+                            className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${
+                              selectedBens.includes(b.id)
+                                ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
+                                : 'bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
+                            }`}
+                          >
+                            <span className="text-xs font-semibold truncate flex-1 mr-2">{b.name}</span>
+                            <div className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ${
+                              selectedBens.includes(b.id)
+                                ? 'bg-blue-500 border-blue-400'
+                                : 'bg-white dark:bg-white/5 border-slate-300 dark:border-white/10'
+                            }`}>
+                              {selectedBens.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -60,6 +60,8 @@ export class HeartbeatController {
     return this.heartbeatService.recordHeartbeat(walletAddress, method);
   }
   
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get('status')
   @ApiOperation({ summary: 'Get heartbeat status for a user' })
   @ApiResponse({ status: 200, description: 'Heartbeat status retrieved successfully' })
@@ -68,6 +70,8 @@ export class HeartbeatController {
     return this.heartbeatService.getHeartbeatStatus(walletAddress);
   }
   
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get('settings')
   @ApiOperation({ summary: 'Get user heartbeat settings' })
   @ApiResponse({ status: 200, description: 'Settings retrieved successfully' })
@@ -78,10 +82,13 @@ export class HeartbeatController {
       success: true,
       interval: status.interval || 30,
       gracePeriod: status.gracePeriod || 7,
+      bufferMisses: status.bufferMisses || 3,
       status: status.status
     };
   }
   
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Put('settings')
   @ApiOperation({ summary: 'Update user heartbeat settings' })
   @ApiBody({ type: HeartbeatSettingsDto })
@@ -96,6 +103,8 @@ export class HeartbeatController {
     return this.heartbeatService.updateConfig(walletAddress, interval, gracePeriod, bufferMisses);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get('test-email')
   @ApiOperation({ summary: 'Send a test heartbeat alert email to preview the template' })
   @ApiResponse({ status: 200, description: 'Test email sent' })

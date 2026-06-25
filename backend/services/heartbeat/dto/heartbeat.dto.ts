@@ -63,6 +63,13 @@ export class HeartbeatSettingsDto {
   @Min(1)
   @Max(90)
   gracePeriod: number;
+
+  @ApiProperty({ description: 'Number of warnings / buffer misses before trigger', minimum: 1, maximum: 5, default: 3, required: false })
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  bufferMisses?: number;
 }
 
 export class HeartbeatStatusDto {

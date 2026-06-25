@@ -69,6 +69,14 @@ async function main() {
     console.log("✅ Added USDC (Polygon):", usdcPolygon);
     console.log("✅ Added USDT (Polygon):", usdtPolygon);
     console.log("✅ Added DAI (Polygon):", daiPolygon);
+  } else {
+    // Local / Development chain support
+    const usdcPolygon = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+    const usdcMumbai = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23";
+    await subscriptionManager.addSupportedToken(usdcPolygon);
+    await subscriptionManager.addSupportedToken(usdcMumbai);
+    console.log("✅ [Local/Dev] Added USDC (Polygon):", usdcPolygon);
+    console.log("✅ [Local/Dev] Added USDC (Mumbai):", usdcMumbai);
   }
 
   // Summary

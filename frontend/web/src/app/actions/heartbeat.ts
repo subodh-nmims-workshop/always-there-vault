@@ -134,18 +134,43 @@ export async function getHeartbeatHistory(walletAddress: string) {
 export async function getHeartbeatSettings(walletAddress: string) {
     try {
         const storage = WebStorageService.getInstance()
+        
+        try {
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+            const token = localStorage.getItem('dwp_token')
+            if (token) {
+                const res = await fetch(`${apiEndpoint}/api/heartbeat/settings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data && data.success) {
+                        storage.saveSettings({
+                            heartbeatInterval: data.interval,
+                            gracePeriod: data.gracePeriod,
+                            bufferMisses: data.bufferMisses
+                        })
+                    }
+                }
+            }
+        } catch (syncErr) {
+            console.warn('⚠️ Settings sync from backend failed (offline fallback)', syncErr)
+        }
+
         const settings = storage.getSettings()
-        return { success: true, interval: settings.heartbeatInterval, gracePeriod: settings.gracePeriod }
+        return { success: true, interval: settings.heartbeatInterval, gracePeriod: settings.gracePeriod, bufferMisses: settings.bufferMisses }
     } catch (error) {
         console.error('Settings fetch error:', error)
-        return { success: false, interval: 30, gracePeriod: 14 }
+        return { success: false, interval: 30, gracePeriod: 14, bufferMisses: 3 }
     }
 }
 
-export async function updateHeartbeatSettings(walletAddress: string, interval: number, gracePeriod: number) {
+export async function updateHeartbeatSettings(walletAddress: string, interval: number, gracePeriod: number, bufferMisses: number = 3) {
     try {
         const storage = WebStorageService.getInstance()
-        storage.saveSettings({ heartbeatInterval: interval, gracePeriod })
+        storage.saveSettings({ heartbeatInterval: interval, gracePeriod, bufferMisses })
 
         // SYNC TO BACKEND
         try {
@@ -174,7 +199,7 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
                 body: JSON.stringify({ 
                     interval, 
                     gracePeriod,
-                    bufferMisses: 3 // default
+                    bufferMisses
                 })
             })
             console.log('✅ Settings synced to backend')

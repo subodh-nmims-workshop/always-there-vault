@@ -59,6 +59,7 @@ export interface AppState {
   settings: {
     heartbeatInterval: number;
     gracePeriod: number;
+    bufferMisses: number;
     timeLock: number;
     multiSig: 'off' | '2of3' | '3of5';
     sessionTimeout: number;
@@ -338,6 +339,7 @@ class WebStorageService {
     const defaultSettings: AppState['settings'] = {
       heartbeatInterval: 7,
       gracePeriod: 30,
+      bufferMisses: 3,
       timeLock: 24,
       multiSig: 'off',
       sessionTimeout: 30,

@@ -20,7 +20,8 @@ export function HeartbeatMonitor() {
 
   const [settings, setSettings] = useState({
     heartbeatInterval: 30,
-    gracePeriod: 14
+    gracePeriod: 14,
+    bufferMisses: 3
   })
   const [showSettings, setShowSettings] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -60,13 +61,25 @@ export function HeartbeatMonitor() {
     setIsLoading(true)
     try {
       const setRes = await getHeartbeatSettings(walletAddress)
-      if (setRes.success) setSettings({ heartbeatInterval: setRes.interval, gracePeriod: setRes.gracePeriod })
+      if (setRes.success) {
+        setSettings({ 
+          heartbeatInterval: setRes.interval, 
+          gracePeriod: setRes.gracePeriod, 
+          bufferMisses: setRes.bufferMisses || 3 
+        })
+      }
 
       const statRes = await getHeartbeatStatus(walletAddress)
       if (statRes.success && statRes.status !== 'Not Found' && statRes.status !== 'inactive') {
         setStatusInfo({ status: statRes.status || 'unknown', daysUntilDue: statRes.daysUntilDue || 0, isOverdue: statRes.isOverdue || false })
         if (statRes.lastHeartbeat) setLastHeartbeat(new Date(statRes.lastHeartbeat))
-        if (statRes.interval && statRes.gracePeriod) setSettings({ heartbeatInterval: statRes.interval, gracePeriod: statRes.gracePeriod })
+        if (statRes.interval && statRes.gracePeriod) {
+          setSettings(prev => ({ 
+            ...prev,
+            heartbeatInterval: statRes.interval, 
+            gracePeriod: statRes.gracePeriod
+          }))
+        }
       } else if (statRes.status === 'inactive' || statRes.status === 'Not Found') {
         setStatusInfo({ status: 'active', daysUntilDue: settings.heartbeatInterval, isOverdue: false })
       }
@@ -157,7 +170,7 @@ export function HeartbeatMonitor() {
       }
 
       // Always persist settings locally so the app behaves correctly
-      const res = await updateHeartbeatSettings(walletAddress || 'local', settings.heartbeatInterval, settings.gracePeriod)
+      const res = await updateHeartbeatSettings(walletAddress || 'local', settings.heartbeatInterval, settings.gracePeriod, settings.bufferMisses)
       if (!res.success) {
         throw new Error('Failed to update local protocol settings.')
       }
@@ -647,6 +660,22 @@ export function HeartbeatMonitor() {
                       <option value={30}>30 days Rescue Window</option>
                       <option value={60}>60 days Rescue Window</option>
                     </optgroup>
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Warning Stages (Notification Cycles)</label>
+                  <p className="text-xs text-slate-500">Number of alert cycles sent before the switch is triggered.</p>
+                  <select
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    value={settings.bufferMisses}
+                    onChange={(e) => setSettings(prev => ({ ...prev, bufferMisses: parseInt(e.target.value) }))}
+                  >
+                    <option value={1}>1 Stage (Immediate alert then Trigger)</option>
+                    <option value={2}>2 Stages (1 Warning alert then Trigger)</option>
+                    <option value={3}>3 Stages (2 Warning alerts then Trigger)</option>
+                    <option value={4}>4 Stages (3 Warning alerts then Trigger)</option>
+                    <option value={5}>5 Stages (4 Warning alerts then Trigger)</option>
                   </select>
                 </div>
               </div>

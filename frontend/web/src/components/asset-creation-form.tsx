@@ -72,6 +72,7 @@ export function AssetCreationForm() {
   })
   const [renameInput, setRenameInput] = useState('')
   const [selectedBeneficiaries, setSelectedBeneficiaries] = useState<string[]>([])
+  const [skipNominee, setSkipNominee] = useState(false)
   
   // Time Capsule State for generic upload
   const [isTimeCapsule, setIsTimeCapsule] = useState(false)
@@ -189,10 +190,10 @@ export function AssetCreationForm() {
   const handleCreateAsset = async () => {
     if (!selectedFile || !assetType || !assetName) return
 
-    // Ensure at least one beneficiary is selected
-    if (selectedBeneficiaries.length === 0) {
+    // Ensure at least one beneficiary is selected (unless skipped)
+    if (!skipNominee && selectedBeneficiaries.length === 0) {
       toast.error('No Nominee Selected', {
-        description: 'Please select at least one nominee for this asset.'
+        description: 'Please select at least one nominee for this asset, or check "None (Assign Later)".'
       })
       return
     }
@@ -767,16 +768,9 @@ export function AssetCreationForm() {
       }
 
       // Get beneficiary IDs from modal or fallback to global state
-      const beneficiaryIds = data.beneficiaryIds && data.beneficiaryIds.length > 0 
-        ? data.beneficiaryIds 
+      const beneficiaryIds = data.beneficiaryIds !== undefined
+        ? data.beneficiaryIds
         : (selectedBeneficiaries.length > 0 ? selectedBeneficiaries : [])
-
-      if (beneficiaryIds.length === 0) {
-        toast.error('No Nominee Selected', {
-          description: 'Please select at least one nominee for this asset.'
-        })
-        throw new Error('No nominee selected')
-      }
 
       const asset: StoredAsset = {
         id: storage.generateId(),
@@ -1482,44 +1476,67 @@ export function AssetCreationForm() {
                     <div>
                       <label className="block text-[10px] uppercase tracking-widest text-slate-555 dark:text-slate-400 font-bold mb-3 flex justify-between">
                         <span>Assign Nominees <span className="text-red-500">*</span></span>
-                        <span className="text-blue-600 dark:text-blue-500">{selectedBeneficiaries.length} selected</span>
+                        <span className="text-blue-600 dark:text-blue-500">{skipNominee ? 'None (Assign Later)' : `${selectedBeneficiaries.length} selected`}</span>
                       </label>
-                      {beneficiaries.length === 0 ? (
-                        <div className="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl text-center">
-                          <p className="text-xs text-yellow-600 dark:text-yellow-500 mb-2">No nominees found!</p>
-                          <button
-                            type="button"
-                            onClick={() => window.location.href = '/vault/beneficiaries'}
-                            className="text-[10px] bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-200 px-3 py-1 rounded-full border border-yellow-500/30 hover:bg-yellow-500/30 transition-all"
-                          >
-                            Add Nominees First
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
-                          {beneficiaries.map(b => (
-                            <button
-                              key={b.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedBeneficiaries(prev =>
-                                  prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
-                                )
-                              }}
-                              className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-left transition-all ${selectedBeneficiaries.includes(b.id)
-                                ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400'
-                                : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
-                                }`}
-                            >
-                              <span className="text-xs font-semibold truncate">{b.name}</span>
-                              <div className={`w-4 h-4 rounded-md border flex items-center justify-center ${selectedBeneficiaries.includes(b.id)
-                                ? 'bg-blue-500 border-blue-400'
-                                : 'bg-white/5 border-slate-300 dark:border-white/10'
-                                }`}>
-                                {selectedBeneficiaries.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
-                              </div>
-                            </button>
-                          ))}
+
+                      <div className="flex items-center gap-2 mb-3 p-3 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl">
+                        <input
+                          type="checkbox"
+                          id="skip-nominee-checkbox"
+                          checked={skipNominee}
+                          onChange={(e) => {
+                            setSkipNominee(e.target.checked)
+                            if (e.target.checked) {
+                              setSelectedBeneficiaries([])
+                            }
+                          }}
+                          className="rounded border-slate-300 dark:border-white/10 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                        />
+                        <label htmlFor="skip-nominee-checkbox" className="text-xs font-semibold text-slate-705 dark:text-slate-300 cursor-pointer select-none">
+                          None (Assign Nominee Later)
+                        </label>
+                      </div>
+
+                      {!skipNominee && (
+                        <div>
+                          {beneficiaries.length === 0 ? (
+                            <div className="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl text-center">
+                              <p className="text-xs text-yellow-600 dark:text-yellow-500 mb-2">No nominees found!</p>
+                              <button
+                                type="button"
+                                onClick={() => window.location.href = '/vault/beneficiaries'}
+                                className="text-[10px] bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-200 px-3 py-1 rounded-full border border-yellow-500/30 hover:bg-yellow-500/30 transition-all"
+                              >
+                                Add Nominees First
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                              {beneficiaries.map(b => (
+                                <button
+                                  key={b.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedBeneficiaries(prev =>
+                                      prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                                    )
+                                  }}
+                                  className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-left transition-all ${selectedBeneficiaries.includes(b.id)
+                                    ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400'
+                                    : 'bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/10'
+                                    }`}
+                                >
+                                  <span className="text-xs font-semibold truncate">{b.name}</span>
+                                  <div className={`w-4 h-4 rounded-md border flex items-center justify-center ${selectedBeneficiaries.includes(b.id)
+                                    ? 'bg-blue-500 border-blue-400'
+                                    : 'bg-white/5 border-slate-300 dark:border-white/10'
+                                    }`}>
+                                    {selectedBeneficiaries.includes(b.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

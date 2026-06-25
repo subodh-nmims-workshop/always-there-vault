@@ -7,19 +7,17 @@ describe("SubscriptionManager", function () {
   let owner: any;
   let user1: any;
   let user2: any;
-  let profitWallet: any;
-  let operationalWallet: any;
 
   const parseUSDC = (amount: string) => ethers.parseUnits(amount, 6);
 
   beforeEach(async function () {
-    [owner, user1, user2, profitWallet, operationalWallet] = await ethers.getSigners();
+    [owner, user1, user2] = await ethers.getSigners();
 
     const MockERC20 = await ethers.getContractFactory("MockERC20");
     mockToken = await MockERC20.deploy("Mock USDC", "USDC", parseUSDC("1000000"));
 
     const SubscriptionManager = await ethers.getContractFactory("SubscriptionManager");
-    subscriptionManager = await SubscriptionManager.deploy(profitWallet.address, operationalWallet.address);
+    subscriptionManager = await SubscriptionManager.deploy();
 
     await subscriptionManager.addSupportedToken(await mockToken.getAddress());
     await mockToken.transfer(user1.address, parseUSDC("10000"));
@@ -31,146 +29,128 @@ describe("SubscriptionManager", function () {
       expect(await subscriptionManager.owner()).to.equal(owner.address);
     });
 
-    it("Should set profit and operational wallets", async function () {
-      expect(await subscriptionManager.profitWallet()).to.equal(profitWallet.address);
-      expect(await subscriptionManager.operationalWallet()).to.equal(operationalWallet.address);
-    });
-
     it("Should initialize Starter plan", async function () {
-      const plan = await subscriptionManager.plans(0);
+      const plan = await subscriptionManager.plans(0); // PlanType.STARTER
       expect(plan.name).to.equal("Starter");
-      expect(plan.pricePerMonth).to.equal(parseUSDC("9.99"));
-      expect(plan.storageGB).to.equal(2);
+      expect(plan.pricePerMonth).to.equal(parseUSDC("4.99"));
+      expect(plan.pricePerYear).to.equal(parseUSDC("49.90"));
+      expect(plan.active).to.be.true;
     });
   });
 
-  describe("Free Trial", function () {
-    it("Should activate trial", async function () {
-      await subscriptionManager.connect(user1).activateTrial();
-      expect(await subscriptionManager.hasActiveTrial(user1.address)).to.be.true;
+  describe("Token Management", function () {
+    it("Should allow owner to add and remove supported tokens", async function () {
+      const randomToken = ethers.Wallet.createRandom().address;
+      
+      await subscriptionManager.addSupportedToken(randomToken);
+      expect(await subscriptionManager.supportedTokens(randomToken)).to.be.true;
+
+      await subscriptionManager.removeSupportedToken(randomToken);
+      expect(await subscriptionManager.supportedTokens(randomToken)).to.be.false;
     });
 
-    it("Should not allow trial twice", async function () {
-      await subscriptionManager.connect(user1).activateTrial();
-      await expect(subscriptionManager.connect(user1).activateTrial()).to.be.revertedWith("Trial already used");
-    });
+    it("Should not allow non-owner to add or remove tokens", async function () {
+      const randomToken = ethers.Wallet.createRandom().address;
+      
+      await expect(
+        subscriptionManager.connect(user1).addSupportedToken(randomToken)
+      ).to.be.revertedWithCustomError(subscriptionManager, "OwnableUnauthorizedAccount");
 
-    it("Should provide 500MB storage for trial", async function () {
-      await subscriptionManager.connect(user1).activateTrial();
-      expect(await subscriptionManager.getStorageLimit(user1.address)).to.equal(500);
-    });
-
-    it("Should allow service during trial", async function () {
-      await subscriptionManager.connect(user1).activateTrial();
-      expect(await subscriptionManager.canUseService(user1.address)).to.be.true;
+      await expect(
+        subscriptionManager.connect(user1).removeSupportedToken(randomToken)
+      ).to.be.revertedWithCustomError(subscriptionManager, "OwnableUnauthorizedAccount");
     });
   });
 
-  describe("Monthly Subscription", function () {
+  describe("Subscription Flow", function () {
     it("Should subscribe to Starter monthly", async function () {
-      const price = parseUSDC("9.99");
+      const price = parseUSDC("4.99");
       await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price);
-      await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress());
+      
+      await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress()); // PlanType.STARTER
 
       const sub = await subscriptionManager.subscriptions(user1.address);
       expect(sub.active).to.be.true;
       expect(sub.plan).to.equal(0);
+      expect(await subscriptionManager.hasActiveSubscription(user1.address)).to.be.true;
     });
 
-    it("Should split payment 60/40", async function () {
-      const price = parseUSDC("9.99");
+    it("Should subscribe to Starter yearly", async function () {
+      const price = parseUSDC("49.90");
       await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price);
+      
+      await subscriptionManager.connect(user1).subscribeYearly(0, await mockToken.getAddress()); // PlanType.STARTER
 
-      const profitBefore = await mockToken.balanceOf(profitWallet.address);
-      const opBefore = await mockToken.balanceOf(operationalWallet.address);
-
-      await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress());
-
-      const profitAfter = await mockToken.balanceOf(profitWallet.address);
-      const opAfter = await mockToken.balanceOf(operationalWallet.address);
-
-      expect(profitAfter - profitBefore).to.equal(parseUSDC("5.994"));
-      expect(opAfter - opBefore).to.equal(parseUSDC("3.996"));
+      const sub = await subscriptionManager.subscriptions(user1.address);
+      expect(sub.active).to.be.true;
+      expect(sub.plan).to.equal(0);
+      expect(await subscriptionManager.hasActiveSubscription(user1.address)).to.be.true;
     });
 
     it("Should not allow double subscription", async function () {
-      const price = parseUSDC("9.99");
+      const price = parseUSDC("4.99");
       await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price * 2n);
+      
       await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress());
 
       await expect(
         subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress())
       ).to.be.revertedWith("Already subscribed");
     });
-  });
 
-  describe("Yearly Subscription", function () {
-    it("Should subscribe to Guardian yearly", async function () {
-      const price = parseUSDC("249");
-      await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price);
-      await subscriptionManager.connect(user1).subscribeYearly(1, await mockToken.getAddress());
-
-      const sub = await subscriptionManager.subscriptions(user1.address);
-      expect(sub.active).to.be.true;
-      expect(sub.plan).to.equal(1);
-    });
-
-    it("Should provide 10GB storage", async function () {
-      const price = parseUSDC("249");
-      await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price);
-      await subscriptionManager.connect(user1).subscribeYearly(1, await mockToken.getAddress());
-
-      expect(await subscriptionManager.getStorageLimit(user1.address)).to.equal(10240);
-    });
-  });
-
-  describe("Plan Upgrade", function () {
-    it("Should upgrade from Starter to Guardian", async function () {
-      await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), parseUSDC("1000"));
-      await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress());
-      await subscriptionManager.connect(user1).upgradePlan(1, await mockToken.getAddress());
-
-      const sub = await subscriptionManager.subscriptions(user1.address);
-      expect(sub.plan).to.equal(1);
-    });
-
-    it("Should not allow downgrade", async function () {
-      await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), parseUSDC("1000"));
-      await subscriptionManager.connect(user1).subscribeMonthly(1, await mockToken.getAddress());
-
+    it("Should not allow subscribing with unsupported token", async function () {
+      const unsupportedToken = ethers.Wallet.createRandom().address;
+      
       await expect(
-        subscriptionManager.connect(user1).upgradePlan(0, await mockToken.getAddress())
-      ).to.be.revertedWith("Can only upgrade to higher plan");
+        subscriptionManager.connect(user1).subscribeMonthly(0, unsupportedToken)
+      ).to.be.revertedWith("Payment token not supported");
     });
   });
 
-  describe("Storage Tracking", function () {
-    it("Should update storage usage", async function () {
-      await subscriptionManager.connect(user1).activateTrial();
-      await subscriptionManager.updateStorageUsage(user1.address, 250);
+  describe("Renewal and Cancellation", function () {
+    beforeEach(async function () {
+      const price = parseUSDC("4.99");
+      await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price * 10n);
+      await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress());
+    });
 
-      const trial = await subscriptionManager.trials(user1.address);
-      expect(trial.storageUsedMB).to.equal(250);
+    it("Should renew subscription", async function () {
+      const subBefore = await subscriptionManager.subscriptions(user1.address);
+      
+      await subscriptionManager.connect(user1).renewSubscription(false, await mockToken.getAddress());
+      
+      const subAfter = await subscriptionManager.subscriptions(user1.address);
+      expect(subAfter.endTime).to.be.greaterThan(subBefore.endTime);
+    });
+
+    it("Should cancel subscription", async function () {
+      await subscriptionManager.connect(user1).cancelSubscription();
+      
+      const sub = await subscriptionManager.subscriptions(user1.address);
+      expect(sub.active).to.be.false;
+      expect(await subscriptionManager.hasActiveSubscription(user1.address)).to.be.false;
     });
   });
 
-  describe("Admin Functions", function () {
-    it("Should update wallets", async function () {
-      await subscriptionManager.updateWallets(user1.address, user2.address);
-      expect(await subscriptionManager.profitWallet()).to.equal(user1.address);
-      expect(await subscriptionManager.operationalWallet()).to.equal(user2.address);
-    });
-
-    it("Should add supported token", async function () {
-      const newToken = ethers.Wallet.createRandom().address;
-      await subscriptionManager.addSupportedToken(newToken);
-      expect(await subscriptionManager.supportedTokens(newToken)).to.be.true;
-    });
-
-    it("Should update plan pricing", async function () {
-      await subscriptionManager.updatePlan(0, parseUSDC("12.99"), parseUSDC("120"), 5, 5, 20, true);
+  describe("Admin and Withdrawal Functions", function () {
+    it("Should allow owner to update plan details", async function () {
+      await subscriptionManager.updatePlan(0, parseUSDC("6.99"), parseUSDC("69.90"), true);
+      
       const plan = await subscriptionManager.plans(0);
-      expect(plan.pricePerMonth).to.equal(parseUSDC("12.99"));
+      expect(plan.pricePerMonth).to.equal(parseUSDC("6.99"));
+      expect(plan.pricePerYear).to.equal(parseUSDC("69.90"));
+    });
+
+    it("Should allow owner to withdraw funds", async function () {
+      const price = parseUSDC("4.99");
+      await mockToken.connect(user1).approve(await subscriptionManager.getAddress(), price);
+      await subscriptionManager.connect(user1).subscribeMonthly(0, await mockToken.getAddress());
+
+      const balanceBefore = await mockToken.balanceOf(owner.address);
+      await subscriptionManager.withdraw(await mockToken.getAddress(), price);
+      const balanceAfter = await mockToken.balanceOf(owner.address);
+
+      expect(balanceAfter - balanceBefore).to.equal(price);
     });
   });
 });
