@@ -1,7 +1,7 @@
 {
   "name": "digital-will-web",
   "version": "1.0.0",
-  "description": "Web frontend for Decentralized AlwaysThere Protocol",
+  "description": "Web frontend for Decentralized AlwaysThere Vault",
   "private": true,
   "scripts": {
     "dev": "next dev -p 7000",

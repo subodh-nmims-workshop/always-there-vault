@@ -306,7 +306,7 @@ function CryptoPaymentContent() {
               <span className="text-[10px] bg-blue-500/30 px-2.5 py-0.5 rounded-full text-blue-100 uppercase font-black tracking-wider border border-blue-400/20">Secure</span>
             </div>
             
-            <h3 className="text-xl font-bold mb-2">AlwaysThere Protocol</h3>
+            <h3 className="text-xl font-bold mb-2">AlwaysThere Vault</h3>
             <p className="text-[11px] text-blue-200/60 font-mono tracking-tight mb-6 select-all">Order ID: {orderId}</p>
 
             <div className="space-y-3 border-t border-blue-400/20 pt-4">

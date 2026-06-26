@@ -36,7 +36,7 @@ export default function DocsPage() {
           </motion.div>
           <h1 className="text-5xl font-black text-slate-900 dark:text-slate-900 dark:text-slate-900 dark:text-white mb-6 uppercase tracking-tight">The <span className="text-blue-500">Infrastructure</span> of Legacy</h1>
           <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg leading-relaxed font-medium">
-            Deep-dive into the security, architecture, and logic that powers the AlwaysThere Protocol.
+            Deep-dive into the security, architecture, and logic that powers the AlwaysThere Vault.
             Designed for durability, anonymity, and zero-trust execution.
           </p>
         </div>

@@ -1,7 +1,7 @@
 {
   "name": "@digital-will/core",
   "version": "1.0.0",
-  "description": "Core libraries for Decentralized AlwaysThere Protocol",
+  "description": "Core libraries for Decentralized AlwaysThere Vault",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

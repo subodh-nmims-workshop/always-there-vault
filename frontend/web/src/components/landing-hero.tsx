@@ -126,7 +126,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
       <div className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Choose AlwaysThere Protocol?</h2>
+            <h2 className="text-4xl font-bold mb-4">Why Choose AlwaysThere Vault?</h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
               The most secure and user-friendly way to protect your digital legacy
             </p>

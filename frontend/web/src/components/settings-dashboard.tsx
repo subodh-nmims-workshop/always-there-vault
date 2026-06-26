@@ -50,6 +50,7 @@ import WebStorageService, { AppState } from '@/lib/storage'
 import { UpgradeModal } from '@/components/upgrade-modal'
 import { toast } from 'sonner'
 import { Portal } from '@/components/portal'
+import { updateHeartbeatSettings } from '@/app/actions/heartbeat'
 
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ALL_PLANS, PlanType } from '@/types/subscription'
@@ -121,7 +122,7 @@ export function SettingsDashboard() {
       address: generatedWallet.address,
       privateKey: generatedWallet.privateKey,
       createdAt: new Date().toISOString(),
-      note: "AlwaysThere Protocol Recovery Key. Keep this file offline on a secure external device (USB drive)."
+      note: "AlwaysThere Vault Recovery Key. Keep this file offline on a secure external device (USB drive)."
     }, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute("href", dataStr)
@@ -345,6 +346,7 @@ export function SettingsDashboard() {
   }
 
   const [appState, setAppState] = useState<AppState | null>(null)
+  const [emailInput, setEmailInput] = useState('')
   const [walletAddress, setWalletAddress] = useState('')
   const [copied, setCopied] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -365,6 +367,9 @@ export function SettingsDashboard() {
     const loadState = async () => {
         const state = await storage.getAppState()
         setAppState(state)
+        if (state?.settings?.emailNotification) {
+          setEmailInput(state.settings.emailNotification)
+        }
     }
 
     loadState()
@@ -378,6 +383,11 @@ export function SettingsDashboard() {
     return unsubscribe
 }, [])
 
+  useEffect(() => {
+    if (appState?.settings?.emailNotification && !emailInput) {
+      setEmailInput(appState.settings.emailNotification)
+    }
+  }, [appState])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(walletAddress)
@@ -390,7 +400,53 @@ export function SettingsDashboard() {
     storage.saveSettings({ [key]: value })
     const newState = await storage.getAppState()
     setAppState(newState)
+    
+    // Auto-sync select options and toggle switch changes immediately to backend
+    if (['timeLock', 'multiSig', 'sessionTimeout', 'storageProvider', 'testnetMode', 'gasPrice'].includes(key)) {
+      await syncHeartbeatSettings(undefined, newState.settings.heartbeatInterval, newState.settings.gracePeriod)
+    }
+    
     setTimeout(() => setIsUpdating(false), 500)
+  }
+
+  const syncHeartbeatSettings = async (email?: string, interval?: number, grace?: number) => {
+    try {
+      const activeAddress = walletAddress || localStorage.getItem('dwp_wallet_address') || 'local'
+      const activeEmail = email !== undefined ? email : emailInput
+      const activeInterval = interval !== undefined ? interval : (appState?.settings?.heartbeatInterval || 7)
+      const activeGrace = grace !== undefined ? grace : (appState?.settings?.gracePeriod || 30)
+      const activeBuffer = appState?.settings?.bufferMisses || 3
+
+      // Update local storage settings
+      storage.saveSettings({ 
+        emailNotification: activeEmail,
+        heartbeatInterval: activeInterval,
+        gracePeriod: activeGrace,
+        bufferMisses: activeBuffer
+      })
+      
+      const newState = await storage.getAppState()
+      setAppState(newState)
+
+      // If email is explicitly provided or updated, keep dwp_user_email in sync
+      if (activeEmail) {
+        localStorage.setItem('dwp_user_email', activeEmail)
+      }
+
+      setIsUpdating(true)
+      const res = await updateHeartbeatSettings(activeAddress, activeInterval, activeGrace, activeBuffer)
+      setIsUpdating(false)
+
+      if (res.success) {
+        toast.success('Protocol configuration updated')
+      } else {
+        toast.error('Sync to backend failed', { description: res.error })
+      }
+    } catch (err: any) {
+      setIsUpdating(false)
+      console.error('Failed to sync settings:', err)
+      toast.error('Sync failed', { description: err.message })
+    }
   }
 
   const heartbeatDaysLeft = useMemo(() => {
@@ -977,6 +1033,8 @@ export function SettingsDashboard() {
                                 type="range" min="1" max="90" 
                                 value={appState.settings.heartbeatInterval}
                                 onChange={(e) => updateSetting('heartbeatInterval', parseInt(e.target.value))}
+                                onMouseUp={() => syncHeartbeatSettings(undefined, appState.settings.heartbeatInterval, appState.settings.gracePeriod)}
+                                onTouchEnd={() => syncHeartbeatSettings(undefined, appState.settings.heartbeatInterval, appState.settings.gracePeriod)}
                                 className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
                             />
                         </div>
@@ -990,6 +1048,8 @@ export function SettingsDashboard() {
                                 type="range" min="1" max="60" 
                                 value={appState.settings.gracePeriod}
                                 onChange={(e) => updateSetting('gracePeriod', parseInt(e.target.value))}
+                                onMouseUp={() => syncHeartbeatSettings(undefined, appState.settings.heartbeatInterval, appState.settings.gracePeriod)}
+                                onTouchEnd={() => syncHeartbeatSettings(undefined, appState.settings.heartbeatInterval, appState.settings.gracePeriod)}
                                 className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full appearance-none cursor-pointer accent-orange-500"
                             />
                         </div>
@@ -1180,11 +1240,46 @@ export function SettingsDashboard() {
                                 <input 
                                     type="email" 
                                     placeholder="Enter backup email"
-                                    value={appState.settings.emailNotification}
-                                    onChange={(e) => updateSetting('emailNotification', e.target.value)}
+                                    value={emailInput}
+                                    onChange={(e) => setEmailInput(e.target.value)}
+                                    onBlur={() => syncHeartbeatSettings(emailInput)}
                                     className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors"
                                 />
-                                <Button className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black px-4 h-10 rounded-xl">VERIFY</Button>
+                                <Button 
+                                    onClick={async () => {
+                                      // First make sure the latest email input is synced to the backend
+                                      await syncHeartbeatSettings(emailInput)
+                                      
+                                      // Then request the backend to dispatch a test email
+                                      try {
+                                        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                                        const token = localStorage.getItem('dwp_token')
+                                        if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
+                                        
+                                        toast.info('Sending test email...')
+                                        const testRes = await fetch(`${apiEndpoint}/api/heartbeat/test-email`, {
+                                          headers: {
+                                            'Authorization': `Bearer ${token}`
+                                          }
+                                        })
+                                        if (testRes.ok) {
+                                          const data = await testRes.json()
+                                          if (data.sent) {
+                                            toast.success('Test email sent!', { description: `Sent to: ${emailInput}` })
+                                          } else {
+                                            toast.error('Failed to send test email', { description: data.preview || 'Error' })
+                                          }
+                                        } else {
+                                          toast.error('Server error triggering test email')
+                                        }
+                                      } catch (err: any) {
+                                        toast.error('Failed to trigger test email', { description: err.message })
+                                      }
+                                    }}
+                                    className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black px-4 h-10 rounded-xl"
+                                >
+                                  TEST MAIL
+                                </Button>
                             </div>
                         </div>
 

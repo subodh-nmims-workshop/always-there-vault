@@ -695,7 +695,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4">The Crypto Dead Man Switch</h3>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
-                In the rapidly evolving world of Web3, securing your digital assets is paramount. But what happens to your cryptocurrency and seed phrases if you lose access? <strong>AlwaysThere Protocol</strong> solves the multi-billion dollar problem of lost digital wealth through an automated, trustless, and immutable crypto dead man switch. Every year, massive amounts of Bitcoin are permanently lost because physical wills fail to transfer self-custodial wealth securely. Our <strong>Web3 succession planning</strong> tools ensure that your <strong>decentralized digital assets recovery</strong> is handled by code, not intermediaries.
+                In the rapidly evolving world of Web3, securing your digital assets is paramount. But what happens to your cryptocurrency and seed phrases if you lose access? <strong>AlwaysThere Vault</strong> solves the multi-billion dollar problem of lost digital wealth through an automated, trustless, and immutable crypto dead man switch. Every year, massive amounts of Bitcoin are permanently lost because physical wills fail to transfer self-custodial wealth securely. Our <strong>Web3 succession planning</strong> tools ensure that your <strong>decentralized digital assets recovery</strong> is handled by code, not intermediaries.
               </p>
             </div>
 

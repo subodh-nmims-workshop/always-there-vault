@@ -93,7 +93,7 @@ check_dependencies() {
 start_services() {
     trap cleanup SIGINT SIGTERM
     
-    print_info "Starting AlwaysThere Protocol..."
+    print_info "Starting AlwaysThere Vault..."
     echo ""
     
     check_dependencies

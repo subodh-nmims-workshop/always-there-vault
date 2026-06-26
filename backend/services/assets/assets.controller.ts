@@ -15,6 +15,7 @@ import {
   MaxFileSizeValidator,
   Patch,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -25,6 +26,9 @@ import { Asset } from './schemas/asset.schema';
 import { UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
+import { TokenService } from '../auth/token.service';
+import { eq } from 'drizzle-orm';
+import { users } from '../../src/db/schema/users';
 
 @ApiTags('assets')
 @ApiBearerAuth()
@@ -140,10 +144,11 @@ export class AssetsController {
   @ApiOperation({ summary: 'Get folder contents (subfolders and assets)' })
   async getContents(
     @Req() req: any,
-    @Query('folderId') folderId?: string
+    @Query('folderId') folderId?: string,
+    @Query('ownerAddress') ownerAddress?: string,
   ) {
     const wallet = req.user.walletAddress;
-    return this.assetsService.getFolderContents(wallet, folderId);
+    return this.assetsService.getFolderContents(wallet, folderId, ownerAddress);
   }
 
   @Post('folders/:id/share')
@@ -193,5 +198,89 @@ export class AssetsController {
     @Body('beneficiaries') beneficiaries?: string[]
   ) {
     return this.assetsService.updateFolder(id, req.user.walletAddress, { name, parentId, beneficiaries });
+  }
+}
+
+/**
+ * PUBLIC endpoint — no JWT required.
+ * Beneficiaries use their CLAIM_ACCESS token (from email) to access assets.
+ */
+@ApiTags('claim-assets')
+@Controller('api/claim-assets')
+export class ClaimAssetsController {
+  constructor(
+    private readonly assetsService: AssetsService,
+    private readonly tokenService: TokenService,
+    @Inject('DRIZZLE_DB') private db: any,
+  ) {}
+
+  @Get('contents')
+  @ApiOperation({ summary: 'Get owner assets using a CLAIM_ACCESS token (public, no JWT)' })
+  async getClaimContents(
+    @Query('claimToken') claimToken: string,
+    @Query('folderId') folderId?: string,
+  ) {
+    if (!claimToken) throw new BadRequestException('claimToken is required');
+
+    // Verify the claim token WITHOUT marking it as used (peek)
+    const records = await this.db.query.verificationTokens?.findMany
+      ? await this.db.query.verificationTokens.findMany({
+          where: (vt: any, { and, eq: deq, gt }: any) => and(
+            deq(vt.token, claimToken),
+            deq(vt.type, 'CLAIM_ACCESS'),
+            deq(vt.isUsed, false),
+            gt(vt.expiresAt, new Date())
+          ),
+          limit: 1
+        })
+      : [];
+
+    if (!records || records.length === 0) {
+      throw new BadRequestException('Invalid or expired claim token.');
+    }
+
+    const record = records[0];
+
+    // Get owner wallet address from userId
+    const owner = await this.db.query.users.findFirst({
+      where: eq(users.id, record.userId)
+    });
+
+    if (!owner) throw new BadRequestException('Owner account not found.');
+
+    const nomineeWallet = record.targetAddress;
+
+    // getFolderContents with nominee check (already verifies heartbeat status)
+    return this.assetsService.getFolderContents(nomineeWallet, folderId, owner.walletAddress);
+  }
+
+  @Get('download/:id')
+  @ApiOperation({ summary: 'Get download URL for an asset using a CLAIM_ACCESS token (public)' })
+  async getClaimDownload(
+    @Param('id') assetId: string,
+    @Query('claimToken') claimToken: string,
+  ) {
+    if (!claimToken) throw new BadRequestException('claimToken is required');
+
+    const records = await this.db.query.verificationTokens?.findMany
+      ? await this.db.query.verificationTokens.findMany({
+          where: (vt: any, { and, eq: deq, gt }: any) => and(
+            deq(vt.token, claimToken),
+            deq(vt.type, 'CLAIM_ACCESS'),
+            deq(vt.isUsed, false),
+            gt(vt.expiresAt, new Date())
+          ),
+          limit: 1
+        })
+      : [];
+
+    if (!records || records.length === 0) {
+      throw new BadRequestException('Invalid or expired claim token.');
+    }
+
+    const record = records[0];
+    const nomineeWallet = record.targetAddress;
+
+    return this.assetsService.getDownloadUrl(assetId, nomineeWallet);
   }
 }

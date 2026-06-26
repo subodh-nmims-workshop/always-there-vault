@@ -8,23 +8,23 @@ import Script from 'next/script'
 export const metadata: Metadata = {
   metadataBase: new URL('https://alwaystherevault.com/'),
   title: {
-    default: 'AlwaysThere Protocol | The Decentralized Crypto Inheritance & Digital Will',
-    template: '%s | AlwaysThere Protocol'
+    default: 'AlwaysThere Vault | The Decentralized Crypto Inheritance & Digital Will',
+    template: '%s | AlwaysThere Vault'
   },
-  description: 'Secure your digital legacy with AlwaysThere Protocol. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files. Automated, trustless inheritance on the blockchain.',
-  keywords: ['crypto inheritance', 'digital will', 'dead man switch crypto', 'decentralized inheritance', 'secure seed phrase storage', 'blockchain will', 'AlwaysThere protocol', 'crypto estate planning', 'digital asset management', 'web3 legacy'],
+  description: 'Secure your digital legacy with AlwaysThere Vault. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files. Automated, trustless inheritance on the blockchain.',
+  keywords: ['crypto inheritance', 'digital will', 'dead man switch crypto', 'decentralized inheritance', 'secure seed phrase storage', 'blockchain will', 'AlwaysThere Vault', 'crypto estate planning', 'digital asset management', 'web3 legacy'],
   authors: [{ name: 'AlwaysThere Team' }],
   openGraph: {
-    title: 'AlwaysThere Protocol | Decentralized Crypto Inheritance',
-    description: 'Ensure your crypto assets and private data are passed on securely. AlwaysThere is a trustless digital will protocol and dead man switch.',
+    title: 'AlwaysThere Vault | Decentralized Crypto Inheritance',
+    description: 'Ensure your crypto assets and private data are passed on securely. AlwaysThere Vault is a trustless digital will and dead man switch.',
     url: 'https://alwaystherevault.com/',
-    siteName: 'AlwaysThere Protocol',
+    siteName: 'AlwaysThere Vault',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AlwaysThere Protocol Banner',
+        alt: 'AlwaysThere Vault Banner',
       },
     ],
     locale: 'en_US',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AlwaysThere Protocol | Decentralized Crypto Inheritance',
+    title: 'AlwaysThere Vault | Decentralized Crypto Inheritance',
     description: 'Secure your digital legacy with the ultimate decentralized dead man switch.',
   },
   robots: {
@@ -71,10 +71,10 @@ export default function RootLayout({
             {
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              "name": "AlwaysThere Protocol",
+              "name": "AlwaysThere Vault",
               "operatingSystem": "Web, Android, iOS",
               "applicationCategory": "FinanceApplication",
-              "description": "Secure your digital legacy with AlwaysThere Protocol. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files.",
+              "description": "Secure your digital legacy with AlwaysThere Vault. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files.",
               "offers": {
                 "@type": "Offer",
                 "price": "0",

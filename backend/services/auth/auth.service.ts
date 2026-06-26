@@ -32,7 +32,7 @@ export class AuthService {
             .substring(0, 32); // 32 chars
             
         const fullNonce = nonceBase + hmac; // 64 chars total
-        const message = `Welcome to AlwaysThere Protocol.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${fullNonce}\nTimestamp: ${timestamp}`;
+        const message = `Welcome to AlwaysThere Vault.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${fullNonce}\nTimestamp: ${timestamp}`;
 
         return message;
     }

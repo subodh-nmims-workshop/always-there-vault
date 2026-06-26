@@ -1,6 +1,6 @@
 # 🌐 Decentralized Storage (Web3) Actual Limits
 
-In the AlwaysThere Protocol, the limits of decentralized storage (IPFS/Arweave) are based purely on technical constraints and security parameters.
+In the AlwaysThere Vault, the limits of decentralized storage (IPFS/Arweave) are based purely on technical constraints and security parameters.
 
 ## 📏 Actual Storage Limits (The Numbers)
 
@@ -27,7 +27,7 @@ You might wonder why we have a **50MB** limit when IPFS can store gigabytes of d
 
 ## 🌍 Global Comparison
 
-| Feature | AlwaysThere Protocol | Standard IPFS Gateway | Arweave (Permaweb) |
+| Feature | AlwaysThere Vault | Standard IPFS Gateway | Arweave (Permaweb) |
 |:--- |:--- |:--- |:--- |
 | **Privacy** | **Encrypted (AES-256)** | Public by default | Public by default |
 | **Access** | **Shamir Secret Sharing** | Single Hash | Single Hash |

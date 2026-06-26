@@ -141,8 +141,8 @@ async function bootstrap() {
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
-    .setTitle('AlwaysThere Protocol API')
-    .setDescription('Decentralized AlwaysThere Protocol - Backend API Documentation')
+    .setTitle('AlwaysThere Vault API')
+    .setDescription('Decentralized AlwaysThere Vault - Backend API Documentation')
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management')
@@ -166,7 +166,7 @@ async function bootstrap() {
 
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🚀 AlwaysThere Protocol - Backend Server');
+  console.log('🚀 AlwaysThere Vault - Backend Server');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
   console.log(`✅ Server running on: ${hostUrl}`);

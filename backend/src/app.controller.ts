@@ -8,7 +8,7 @@ export class AppController {
   @ApiOperation({ summary: 'API root endpoint' })
   getRoot(): object {
     return {
-      service: 'AlwaysThere Protocol API',
+      service: 'AlwaysThere Vault API',
       version: '2.0.0',
       status: 'operational',
       documentation: '/api/docs',

@@ -2,8 +2,12 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 function ClaimPortalContent({ token }: { token: string }) {
+  const searchParams = useSearchParams();
+  const ownerAddress = searchParams?.get('owner') || '';
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-lg w-full shadow-2xl relative overflow-hidden">
@@ -44,7 +48,7 @@ function ClaimPortalContent({ token }: { token: string }) {
         </div>
         
         <Link 
-          href={`/beneficiary/assets?claimToken=${token}`}
+          href={`/beneficiary/assets?claimToken=${token}${ownerAddress ? `&owner=${ownerAddress}` : ''}`}
           className="block w-full text-center py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-purple-900/20"
         >
           Verify & Access Document

@@ -17,7 +17,7 @@ export class MFAService {
     // Enable 2FA for user
     async enable2FA(userId: string): Promise<{ secret: string; qrCode: string }> {
         const secret = speakeasy.generateSecret({
-            name: `AlwaysThere Protocol:${userId}`,
+            name: `AlwaysThere Vault:${userId}`,
             length: 20
         });
         

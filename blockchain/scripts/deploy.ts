@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  console.log("🚀 Starting deployment of AlwaysThere Protocol contracts...\n");
+  console.log("🚀 Starting deployment of AlwaysThere Vault contracts...\n");
 
   // Get deployer account
   const [deployer] = await ethers.getSigners();

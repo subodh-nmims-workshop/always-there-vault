@@ -28,9 +28,9 @@ export async function recordHeartbeat(payload: HeartbeatPayload) {
         try {
             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             const token = localStorage.getItem('dwp_token')
-            if (!token) throw new Error('No authentication token found')
+            if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
 
-            await fetch(`${apiEndpoint}/api/heartbeat`, {
+            const response = await fetch(`${apiEndpoint}/api/heartbeat`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -38,15 +38,23 @@ export async function recordHeartbeat(payload: HeartbeatPayload) {
                 },
                 body: JSON.stringify({ method: payload.method, signature: payload.signature })
             })
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('dwp_token')
+                    throw new Error('Authentication expired. Please reconnect your wallet.')
+                }
+                throw new Error(`Heartbeat sync failed: ${response.statusText}`)
+            }
             console.log('✅ Heartbeat synced to backend')
-        } catch (syncErr) {
-            console.warn('⚠️ Backend sync failed (Offline Mode active)', syncErr)
+        } catch (syncErr: any) {
+            console.warn('⚠️ Backend sync failed', syncErr)
+            return { success: false, error: syncErr.message || 'Failed to sync heartbeat with protocol cloud.' }
         }
 
         return { success: true, data: heartbeat }
-    } catch (error) {
+    } catch (error: any) {
         console.error('Heartbeat action error:', error)
-        return { success: false, error: 'Failed to communicate with protocol network.' }
+        return { success: false, error: error.message || 'Failed to communicate with protocol network.' }
     }
 }
 
@@ -153,6 +161,8 @@ export async function getHeartbeatSettings(walletAddress: string) {
                             bufferMisses: data.bufferMisses
                         })
                     }
+                } else if (res.status === 401) {
+                    localStorage.removeItem('dwp_token')
                 }
             }
         } catch (syncErr) {
@@ -177,10 +187,10 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             const email = localStorage.getItem('dwp_user_email') || ''
             const token = localStorage.getItem('dwp_token')
-            if (!token) throw new Error('No authentication token found')
+            if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
             
             // First update/create user profile (ensure email is in backend)
-            await fetch(`${apiEndpoint}/api/users/profile`, {
+            const profileRes = await fetch(`${apiEndpoint}/api/users/profile`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -188,9 +198,16 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
                 },
                 body: JSON.stringify({ email })
             })
+            if (!profileRes.ok) {
+                if (profileRes.status === 401) {
+                    localStorage.removeItem('dwp_token')
+                    throw new Error('Authentication expired. Please reconnect your wallet.')
+                }
+                throw new Error(`Profile sync failed: ${profileRes.statusText}`)
+            }
 
             // Then update heartbeat config
-            await fetch(`${apiEndpoint}/api/heartbeat/settings`, {
+            const settingsRes = await fetch(`${apiEndpoint}/api/heartbeat/settings`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -202,14 +219,22 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
                     bufferMisses
                 })
             })
+            if (!settingsRes.ok) {
+                if (settingsRes.status === 401) {
+                    localStorage.removeItem('dwp_token')
+                    throw new Error('Authentication expired. Please reconnect your wallet.')
+                }
+                throw new Error(`Settings sync failed: ${settingsRes.statusText}`)
+            }
             console.log('✅ Settings synced to backend')
-        } catch (syncErr) {
-            console.warn('⚠️ Settings sync failed (Offline Mode active)', syncErr)
+        } catch (syncErr: any) {
+            console.warn('⚠️ Settings sync failed', syncErr)
+            return { success: false, error: syncErr.message || 'Failed to sync settings with protocol cloud.' }
         }
 
         return { success: true }
-    } catch (error) {
+    } catch (error: any) {
         console.error('Settings update error:', error)
-        return { success: false }
+        return { success: false, error: error.message || 'Failed to update protocol settings.' }
     }
 }

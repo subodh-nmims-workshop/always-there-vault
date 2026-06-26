@@ -1,5 +1,5 @@
 /**
- * Core Library Exports for Decentralized AlwaysThere Protocol
+ * Core Library Exports for Decentralized AlwaysThere Vault
  */
 
 // Core types (original)

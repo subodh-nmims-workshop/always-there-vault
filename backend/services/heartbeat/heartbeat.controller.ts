@@ -44,9 +44,9 @@ export class HeartbeatController {
       // Record heartbeat for this user/wallet
       await this.heartbeatService.recordHeartbeat(record.targetAddress || '', 'Email Token Verification');
       
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/heartbeat-success`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:7000'}/heartbeat-success`);
     } catch (e) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=invalid_token`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:7000'}/dashboard?error=invalid_token`);
     }
   }
 

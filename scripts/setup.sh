@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Decentralized AlwaysThere Protocol - Setup Script
+# Decentralized AlwaysThere Vault - Setup Script
 # This script sets up the entire development environment
 
 set -e
 
-echo "🚀 Setting up Decentralized AlwaysThere Protocol..."
+echo "🚀 Setting up Decentralized AlwaysThere Vault..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -121,11 +121,11 @@ print_status "Creating environment configuration files..."
 # Root .env
 if [ ! -f ".env" ]; then
     cat > .env << EOF
-# Decentralized AlwaysThere Protocol - Environment Configuration
+# Decentralized AlwaysThere Vault - Environment Configuration
 
 # Application
 NODE_ENV=development
-APP_NAME="Decentralized AlwaysThere Protocol"
+APP_NAME="Decentralized AlwaysThere Vault"
 APP_VERSION=1.0.0
 
 # API Configuration
@@ -204,7 +204,7 @@ ARWEAVE_API_URL=https://arweave.net
 
 # Notifications
 SENDGRID_API_KEY=
-EMAIL_FROM=noreply@digitalwill.protocol
+EMAIL_FROM=noreply@digitalwill.vault
 EOF
     print_success "Created backend/.env file ✓"
 else
@@ -215,7 +215,7 @@ fi
 if [ ! -f "frontend/web/.env.local" ]; then
     cat > frontend/web/.env.local << EOF
 # Frontend Environment
-NEXT_PUBLIC_APP_NAME="Decentralized AlwaysThere Protocol"
+NEXT_PUBLIC_APP_NAME="Decentralized AlwaysThere Vault"
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
 

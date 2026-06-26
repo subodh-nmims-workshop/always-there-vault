@@ -57,19 +57,50 @@ export class AssetsService {
     return folder;
   }
 
-  async getFolderContents(walletAddress: string, folderId?: string) {
-    const user = await this.usersService.findUserByWallet(walletAddress);
+  async getFolderContents(walletAddress: string, folderId?: string, ownerAddress?: string) {
+    let targetUserId: string;
+
+    if (ownerAddress && ownerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      // Requester is checking another user's assets (nominee check)
+      const owner = await this.usersService.findUserByWallet(ownerAddress);
+      if (!owner) throw new NotFoundException('Owner not found');
+
+      // Verify nominee status
+      const isNominee = await this.db.query.beneficiaries.findFirst({
+        where: and(
+          eq(beneficiaries.userId, owner.id),
+          eq(beneficiaries.walletAddress, walletAddress)
+        )
+      });
+
+      if (!isNominee) {
+        throw new BadRequestException('Access denied. You are not a beneficiary of this wallet.');
+      }
+
+      // Check heartbeat status of the owner
+      const status: any = await this.heartbeatService.getHeartbeatStatus(ownerAddress);
+      if (status.status !== 'overdue' && status.status !== 'grace_period') {
+        throw new BadRequestException('Access denied. Protocol has not been triggered yet.');
+      }
+
+      targetUserId = owner.id;
+    } else {
+      // User is checking their own assets
+      const user = await this.usersService.findUserByWallet(walletAddress);
+      if (!user) throw new NotFoundException('User not found');
+      targetUserId = user.id;
+    }
 
     const folderList = await this.db.query.folders.findMany({
       where: and(
-        eq(folders.userId, user.id),
+        eq(folders.userId, targetUserId),
         folderId ? eq(folders.parentId, folderId) : isNull(folders.parentId)
       ),
     });
 
     const fileList = await this.db.query.files.findMany({
       where: and(
-        eq(files.userId, user.id),
+        eq(files.userId, targetUserId),
         folderId ? eq(files.folderId, folderId) : isNull(files.folderId)
       ),
     });
@@ -170,11 +201,40 @@ export class AssetsService {
 
   async getDownloadUrl(id: string, walletAddress: string) {
     const user = await this.usersService.findUserByWallet(walletAddress);
-    const file = await this.db.query.files.findFirst({
+    let file = await this.db.query.files.findFirst({
       where: and(eq(files.id, id), eq(files.userId, user.id)),
     });
 
-    if (!file) throw new NotFoundException('Asset not found');
+    if (!file) {
+      // Check if it belongs to someone else and requester is a nominee
+      const fileToClaim = await this.db.query.files.findFirst({
+        where: eq(files.id, id),
+      });
+
+      if (fileToClaim) {
+        const owner = await this.db.query.users.findFirst({
+          where: eq(users.id, fileToClaim.userId),
+        });
+
+        if (owner) {
+          const isNominee = await this.db.query.beneficiaries.findFirst({
+            where: and(
+              eq(beneficiaries.userId, owner.id),
+              eq(beneficiaries.walletAddress, walletAddress)
+            )
+          });
+
+          if (isNominee) {
+            const status: any = await this.heartbeatService.getHeartbeatStatus(owner.walletAddress);
+            if (status.status === 'overdue' || status.status === 'grace_period') {
+              file = fileToClaim;
+            }
+          }
+        }
+      }
+    }
+
+    if (!file) throw new NotFoundException('Asset not found or access denied');
 
     if (file.metadata?.storageProvider === 'backblaze-b2') {
       const url = await this.b2Service.getDownloadUrl(file.location);

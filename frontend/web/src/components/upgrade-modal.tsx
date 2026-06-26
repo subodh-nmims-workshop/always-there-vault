@@ -128,7 +128,7 @@ export function UpgradeModal({
                               return actions.order.create({
                                   intent: "CAPTURE",
                                   purchase_units: [{
-                                      description: "AlwaysThere Protocol - Premium Vault",
+                                      description: "AlwaysThere Vault - Premium Vault",
                                       amount: { currency_code: "USD", value: "49.99" }
                                   }]
                               });

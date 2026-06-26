@@ -1,5 +1,5 @@
 /**
- * Advanced Key Management for Decentralized AlwaysThere Protocol
+ * Advanced Key Management for Decentralized AlwaysThere Vault
  * 
  * Implements military-grade key splitting and distribution
  */

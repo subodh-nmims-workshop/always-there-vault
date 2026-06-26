@@ -13,16 +13,18 @@ interface EmailOptions {
 export class EmailService {
   private transporter: nodemailer.Transporter;
   private fromEmail: string;
+  private frontendUrl: string;
 
   constructor(private configService: ConfigService) {
-    const host = this.configService.get<string>('SMTP_HOST') || 'smtp.ethereal.email';
-    const port = parseInt(this.configService.get<string>('SMTP_PORT') || '587');
-    const user = this.configService.get<string>('SMTP_USER');
-    const pass = this.configService.get<string>('SMTP_PASS');
-    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Protocol" <${user}>`;
+    const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.ethereal.email';
+    const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
+    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
+    const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
+    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${user}>`;
+    this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000';
 
-    if (!user || user.includes('example')) {
-      console.warn('⚠️  SMTP_USER or SMTP_PASS not configured. Using temporary Ethereal account logic.');
+    if (!user || user.includes('example') || user.includes('your-email') || user.includes('paste-your-16-digit')) {
+      console.warn('⚠️  SMTP/EMAIL user or pass not configured. Using temporary Ethereal account logic.');
     }
 
     this.transporter = nodemailer.createTransport({
@@ -40,10 +42,10 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    const user = this.configService.get<string>('SMTP_USER');
+    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
     
     // If no real email provided, use Ethereal for a REAL preview without credentials
-    if (!user || user.includes('your-email') || user.includes('paste-your-16-digit')) {
+    if (!user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example')) {
        try {
          const testAccount = await nodemailer.createTestAccount();
          const testTransporter = nodemailer.createTransport({
@@ -54,7 +56,7 @@ export class EmailService {
          });
 
          const info = await testTransporter.sendMail({
-           from: `"AlwaysThere Protocol Test" <${user}>`,
+           from: `"AlwaysThere Vault Test" <${user}>`,
            to: options.to,
            subject: options.subject,
            html: options.html,
@@ -89,12 +91,12 @@ export class EmailService {
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     return this.sendEmail({
       to: email,
-      subject: 'Welcome to AlwaysThere Protocol',
+      subject: 'Welcome to AlwaysThere Vault',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1152d4;">Welcome to AlwaysThere Protocol! 🎉</h1>
+          <h1 style="color: #1152d4;">Welcome to AlwaysThere Vault! 🎉</h1>
           <p>Hi ${name},</p>
-          <p>Thank you for joining AlwaysThere Protocol. Your digital legacy is now secure.</p>
+          <p>Thank you for joining AlwaysThere Vault. Your digital legacy is now secure.</p>
           <h2>What's Next?</h2>
           <ul>
             <li>Upload your first digital asset</li>
@@ -103,7 +105,7 @@ export class EmailService {
             <li>Explore premium features</li>
           </ul>
           <p>You have 30 days of free trial to explore all features!</p>
-          <a href="https://alwaysthereprotocol.com/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="${this.frontendUrl}/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Go to Dashboard
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -111,7 +113,7 @@ export class EmailService {
           </p>
         </div>
       `,
-      text: `Welcome to AlwaysThere Protocol! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
+      text: `Welcome to AlwaysThere Vault! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
     });
   }
 
@@ -123,7 +125,7 @@ export class EmailService {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1152d4;">You're a Beneficiary 🎁</h1>
           <p>Hi ${name},</p>
-          <p><strong>${ownerName}</strong> has added you as a beneficiary in their AlwaysThere Protocol account.</p>
+          <p><strong>${ownerName}</strong> has added you as a beneficiary in their AlwaysThere Vault account.</p>
           <h2>What does this mean?</h2>
           <p>You will receive access to designated digital assets if the owner's heartbeat is not detected within the specified timeframe.</p>
           <h2>Important Information:</h2>
@@ -133,12 +135,12 @@ export class EmailService {
             <li>All assets are encrypted and secure</li>
             <li>You can create your own account anytime</li>
           </ul>
-          <a href="https://alwaysthereprotocol.com" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="${this.frontendUrl}" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Learn More
           </a>
         </div>
       `,
-      text: `Hi ${name}, ${ownerName} has added you as a beneficiary in AlwaysThere Protocol. You'll be notified if action is required.`,
+      text: `Hi ${name}, ${ownerName} has added you as a beneficiary in AlwaysThere Vault. You'll be notified if action is required.`,
     });
   }
 
@@ -157,7 +159,7 @@ export class EmailService {
             </p>
           </div>
           <p>If you don't submit a heartbeat within the grace period, your designated assets will be released to your beneficiaries.</p>
-          <a href="https://alwaysthereprotocol.com/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="${this.frontendUrl}/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             Submit Heartbeat Now
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -185,7 +187,7 @@ export class EmailService {
             <p><strong>Status:</strong> Active</p>
           </div>
           <p>You now have access to all premium features!</p>
-          <a href="https://alwaysthereprotocol.com/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="${this.frontendUrl}/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             View Subscription
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">
@@ -224,7 +226,7 @@ export class EmailService {
     <div style="padding: 35px 30px;">
       <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Greetings <strong>${name}</strong>,</p>
       <p style="color: #cbd5e1; font-size: 15px;">
-        The AlwaysThere Protocol heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
+        The AlwaysThere Vault heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
       </p>
 
       <div style="background: #0f172a; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #334155; text-align: center;">
@@ -252,7 +254,7 @@ export class EmailService {
     <!-- Footer -->
     <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
       <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-        Secured by AlwaysThere Protocol<br/>
+        Secured by AlwaysThere Vault<br/>
         End-to-End Encrypted Proof-of-Trust Distribution
       </p>
     </div>
@@ -272,7 +274,7 @@ export class EmailService {
           <h1 style="color: #f59e0b;">⏰ Trial Ending Soon</h1>
           <p>Hi ${name},</p>
           <p>Your free trial will end in <strong>${daysRemaining} days</strong>.</p>
-          <p>To continue using AlwaysThere Protocol and keep your digital legacy secure, please upgrade to a paid plan.</p>
+          <p>To continue using AlwaysThere Vault and keep your digital legacy secure, please upgrade to a paid plan.</p>
           <h2>Why Upgrade?</h2>
           <ul>
             <li>Unlimited asset storage</li>
@@ -280,7 +282,7 @@ export class EmailService {
             <li>Priority support</li>
             <li>Automatic heartbeat reminders</li>
           </ul>
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
+          <a href="${this.frontendUrl}/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
             View Plans
           </a>
           <p style="color: #666; font-size: 12px; margin-top: 40px;">

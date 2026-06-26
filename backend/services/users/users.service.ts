@@ -1,6 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { users, type User, type NewUser } from '../../src/db/schema/users';
 import { userStorageQuotas } from '../../src/db/schema/quotas';
+import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 import { eq, sql, and, or } from 'drizzle-orm';
 
 @Injectable()
@@ -13,7 +14,10 @@ export class UsersService {
         const user = await this.db.query.users.findFirst({
             where: eq(users.id, id),
         });
-        if (user) await this.ensureQuotasExist(user.id);
+        if (user) {
+            await this.ensureQuotasExist(user.id);
+            await this.ensureHeartbeatConfigExists(user.id);
+        }
         return user || null;
     }
 
@@ -25,7 +29,10 @@ export class UsersService {
                 eq(users.recoveryAddress, lowerAddress)
             ),
         });
-        if (user) await this.ensureQuotasExist(user.id);
+        if (user) {
+            await this.ensureQuotasExist(user.id);
+            await this.ensureHeartbeatConfigExists(user.id);
+        }
         return user || null;
     }
 
@@ -48,6 +55,7 @@ export class UsersService {
 
         if (existingUser) {
             await this.ensureQuotasExist(existingUser.id);
+            await this.ensureHeartbeatConfigExists(existingUser.id);
             const [updatedUser] = await this.db.update(users)
                 .set({
                     email: email || existingUser.email,
@@ -81,6 +89,9 @@ export class UsersService {
             }
         ]);
 
+        // AUTO-PROVISION HEARTBEAT CONFIG
+        await this.ensureHeartbeatConfigExists(newUser.id);
+
         return newUser;
     }
 
@@ -92,6 +103,9 @@ export class UsersService {
         if (!user) {
             throw new NotFoundException(`User with wallet ${walletAddress} not found`);
         }
+
+        await this.ensureQuotasExist(user.id);
+        await this.ensureHeartbeatConfigExists(user.id);
 
         const subResult = await this.db.select().from(require('../../src/db/schema/subscriptions').subscriptions).where(eq(require('../../src/db/schema/subscriptions').subscriptions.userId, user.id));
         const subscription = subResult[0];
@@ -231,6 +245,23 @@ export class UsersService {
                 storageType: 'web3',
                 allocatedBytes: 524288000,
                 usedBytes: 0
+            });
+        }
+    }
+
+    private async ensureHeartbeatConfigExists(userId: string): Promise<void> {
+        const existingConfig = await this.db.select().from(heartbeatConfigs)
+            .where(eq(heartbeatConfigs.userId, userId));
+        
+        if (existingConfig.length === 0) {
+            await this.db.insert(heartbeatConfigs).values({
+                userId,
+                intervalDays: 30,
+                gracePeriodDays: 7,
+                bufferMisses: 3,
+                lastHeartbeat: new Date(),
+                missedCount: 0,
+                isActive: true,
             });
         }
     }

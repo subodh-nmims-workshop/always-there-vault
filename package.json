@@ -34,7 +34,7 @@
     "ethereum",
     "polygon"
   ],
-  "author": "AlwaysThere Protocol Team",
+  "author": "AlwaysThere Vault Team",
   "license": "MIT",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",

@@ -7,9 +7,8 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-/**
  * @title DigitalWillCore
- * @dev Core smart contract for Decentralized AlwaysThere Protocol
+ * @dev Core smart contract for Decentralized AlwaysThere Vault
  */
 contract DigitalWillCore is ReentrancyGuard, AccessControl, Pausable {
     using ECDSA for bytes32;

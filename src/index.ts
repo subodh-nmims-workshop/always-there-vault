@@ -1,5 +1,5 @@
 /**
- * Main entry point for the Decentralized AlwaysThere Protocol
+ * Main entry point for the Decentralized AlwaysThere Vault
  */
 
 export * from './types';
@@ -12,13 +12,13 @@ export * from './heartbeat/tracker';
 export * from './beneficiary/manager';
 
 /**
- * AlwaysThere Protocol main class
+ * AlwaysThere Vault main class
  */
-export class DigitalWillProtocol {
+export class DigitalWillVault {
   private version = '1.0.0';
 
   constructor() {
-    console.log(`AlwaysThere Protocol v${this.version} initialized`);
+    console.log(`AlwaysThere Vault v${this.version} initialized`);
   }
 
   getVersion(): string {

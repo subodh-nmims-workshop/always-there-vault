@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AssetsController } from './assets.controller';
+import { AssetsController, ClaimAssetsController } from './assets.controller';
 import { AssetsService } from './assets.service';
 import { IpfsService } from './ipfs.service';
 import { UsersModule } from '../users/users.module';
@@ -9,6 +9,7 @@ import { HeartbeatModule } from '../heartbeat/heartbeat.module';
 import { MalwareScannerService } from './malware-scanner.service';
 import { Folder, FolderSchema } from './schemas/folder.schema';
 import { Asset, AssetSchema } from './schemas/asset.schema';
+import { AuthModule } from '../auth/auth.module';
 
 import { B2Service } from './b2.service';
 
@@ -17,9 +18,11 @@ import { B2Service } from './b2.service';
     UsersModule,
     CryptoModule,
     HeartbeatModule,
+    AuthModule,
   ],
-  controllers: [AssetsController],
+  controllers: [AssetsController, ClaimAssetsController],
   providers: [AssetsService, IpfsService, MalwareScannerService, B2Service],
   exports: [AssetsService, MalwareScannerService, B2Service],
 })
 export class AssetsModule { }
+

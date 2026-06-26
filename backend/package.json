@@ -1,7 +1,7 @@
 {
   "name": "digital-will-backend",
   "version": "1.0.0",
-  "description": "Backend API for Decentralized AlwaysThere Protocol",
+  "description": "Backend API for Decentralized AlwaysThere Vault",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",

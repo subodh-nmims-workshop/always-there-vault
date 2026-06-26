@@ -1,6 +1,6 @@
-# 📦 AlwaysThere Protocol: Storage Overview
+# 📦 AlwaysThere Vault: Storage Overview
 
-AlwaysThere Protocol (AlwaysThere) uses two types of storage mechanisms to keep your data secure and always accessible.
+AlwaysThere Vault (AlwaysThere) uses two types of storage mechanisms to keep your data secure and always accessible.
 
 ## 🚀 Storage Types
 
@@ -47,4 +47,4 @@ In practice, 500MB is more than sufficient for an average user because:
 The Premium tier is designed for those who want to preserve their entire "Digital Identity Legacy" (large photo albums, private videos, and business secrets).
 
 ---
-*Protocol Version: v1.0.0-stable*
+*Vault Version: v1.0.0-stable*

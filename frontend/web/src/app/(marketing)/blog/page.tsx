@@ -39,7 +39,7 @@ export default function BlogPage() {
         },
         {
             title: "The Fallacy of Traditional Estate Planning",
-            excerpt: "The fundamental flaw in giving a lawyer your seed phrase, and why programmatic legal execution is the only sovereign path forward. We breakdown exactly how the AlwaysThere Protocol bypasses the probate process entirely via autonomous execution.",
+            excerpt: "The fundamental flaw in giving a lawyer your seed phrase, and why programmatic legal execution is the only sovereign path forward. We breakdown exactly how the AlwaysThere Vault bypasses the probate process entirely via autonomous execution.",
             date: "Sep 28, 2026",
             author: "Governance DAO",
             category: "Philosophy",
@@ -97,7 +97,7 @@ export default function BlogPage() {
                     </motion.h1>
 
                     <motion.p variants={itemVariants} className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 font-normal leading-relaxed max-w-2xl">
-                        A rigorous exploration of the mathematics, distributed systems, and immutable architecture powering the world's most secure digital inheritance protocol.
+                        A rigorous exploration of the mathematics, distributed systems, and immutable architecture powering the world's most secure digital inheritance vault.
                     </motion.p>
                 </motion.div>
 

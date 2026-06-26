@@ -201,7 +201,7 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
                                         <span className="text-lg font-black text-slate-900 tracking-tight">AlwaysThere</span>
                                     </div>
                                     <div className="text-[10px] text-slate-500 leading-relaxed font-semibold print:text-[9px] print:leading-normal">
-                                        AlwaysThere Protocol Inc.<br />
+                                        AlwaysThere Vault Inc.<br />
                                         Decentralized Smart Will Storage & Recovery Node<br />
                                         will.alwaysthere.io | support@alwaysthere.io
                                     </div>
@@ -350,7 +350,7 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
                                 <span>|</span>
                                 <a href="#" className="hover:underline">Contact Support</a>
                             </div>
-                            <p className="font-semibold">© AlwaysThere Protocol Inc. - All Rights Reserved</p>
+                            <p className="font-semibold">© AlwaysThere Vault Inc. - All Rights Reserved</p>
                         </div>
 
                         {/* Bottom Orange Accent Bar */}

@@ -37,7 +37,7 @@ export default function InvestorsPage() {
             </span>
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
-            Billions of dollars in digital assets are lost forever when owners pass away. AlwaysThere is building the ultimate decentralized digital will protocol to solve the internet's biggest generational wealth transfer problem.
+            Billions of dollars in digital assets are lost forever when owners pass away. AlwaysThere Vault is building the ultimate decentralized digital will to solve the internet's biggest generational wealth transfer problem.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="mailto:subodhram3350@gmail.com?subject=Investor Inquiry - AlwaysThere">
@@ -180,7 +180,7 @@ export default function InvestorsPage() {
 
       {/* FOOTER */}
       <footer className="py-12 border-t border-slate-200 dark:border-slate-200 dark:border-white/5 text-center relative z-10 bg-slate-50 dark:bg-[#0a0c12]">
-        <p className="text-slate-500 dark:text-slate-600 text-sm font-medium">© 2026 AlwaysThere Protocol. Currently in closed Beta.</p>
+        <p className="text-slate-500 dark:text-slate-600 text-sm font-medium">© 2026 AlwaysThere Vault. Currently in closed Beta.</p>
       </footer>
     </div>
   )

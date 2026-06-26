@@ -1,5 +1,5 @@
 /**
- * Core type definitions for the Decentralized AlwaysThere Protocol
+ * Core type definitions for the Decentralized AlwaysThere Vault
  */
 
 export type UserStatus = 'active' | 'grace_period' | 'triggered' | 'emergency_override';

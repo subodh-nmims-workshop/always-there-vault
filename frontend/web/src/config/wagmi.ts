@@ -15,8 +15,8 @@ const getChains = () => {
 };
 
 export const config = getDefaultConfig({
-  appName: 'AlwaysThere Protocol',
-  appDescription: 'The Decentralized Digital Will & Crypto Inheritance Protocol',
+  appName: 'AlwaysThere Vault',
+  appDescription: 'The Decentralized Digital Will & Crypto Inheritance Vault',
   appUrl: typeof window !== 'undefined'
     ? window.location.origin
     : (process.env.NODE_ENV === 'production'

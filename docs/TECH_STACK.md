@@ -1,6 +1,6 @@
-# AlwaysThere Protocol: Technology Stack & Architecture
+# AlwaysThere Vault: Technology Stack & Architecture
 
-This document outlines the complete technology stack used across the Frontend, Backend, Database, Blockchain, and Third-Party Service layers of the AlwaysThere Protocol.
+This document outlines the complete technology stack used across the Frontend, Backend, Database, Blockchain, and Third-Party Service layers of the AlwaysThere Vault.
 
 ---
 

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# AlwaysThere Protocol - Complete Setup Script
+# AlwaysThere Vault - Complete Setup Script
 # This script sets up the entire project from scratch
 
 set -e  # Exit on error
 
-echo "🚀 AlwaysThere Protocol - Complete Setup"
+echo "🚀 AlwaysThere Vault - Complete Setup"
 echo "=========================================="
 echo ""
 

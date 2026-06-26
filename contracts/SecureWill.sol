@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
  * @title SecureWill Protocol
- * @dev Enhanced security implementation for AlwaysThere Protocol
+ * @dev Enhanced security implementation for AlwaysThere Vault
  */
 contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
     using EnumerableSet for EnumerableSet.AddressSet;

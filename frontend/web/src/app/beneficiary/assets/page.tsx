@@ -32,6 +32,7 @@ import { useSearchParams } from 'next/navigation'
 
 function BeneficiaryAssetsContent() {
   const searchParams = useSearchParams()
+  const claimToken = searchParams?.get('claimToken') || ''
   const [ownerAddress, setOwnerAddress] = useState(searchParams?.get('owner') || '')
   const [isConnected, setIsConnected] = useState(false)
   const [userAddress, setUserAddress] = useState('')
@@ -49,6 +50,14 @@ function BeneficiaryAssetsContent() {
       setIsConnected(true)
     }
   }, [])
+
+  // Auto-trigger check when arriving from email claim link
+  useEffect(() => {
+    if (claimToken && ownerAddress && isConnected && userAddress && status === 'idle') {
+      checkEligibility()
+    }
+  }, [claimToken, ownerAddress, isConnected, userAddress]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const handleWalletConnect = async (walletAddress: string) => {
     setUserAddress(walletAddress)
@@ -75,30 +84,46 @@ function BeneficiaryAssetsContent() {
       const data = await response.json()
       
       if (data.status === 'overdue' || data.status === 'grace_period') {
-        // Fetch owner info and assets for this beneficiary
-        const beneficiaryResponse = await fetch(`${apiEndpoint}/api/beneficiaries/in-wills?walletAddress=${userAddress}`)
-        const myWills = await beneficiaryResponse.json()
-        const myWill = myWills.find((w: any) => w.ownerAddress.toLowerCase() === ownerAddress.toLowerCase())
+        let ownerName = 'The account owner'
+        let assetList: any[] = []
 
-        if (!myWill) {
-          setStatus('not_eligible')
-          toast.error('You are not registered as a beneficiary for this address.')
-          return
+        if (claimToken) {
+          // ✅ Use public claim-token endpoint — no JWT needed for beneficiaries
+          const claimRes = await fetch(`${apiEndpoint}/api/claim-assets/contents?claimToken=${claimToken}`)
+          if (claimRes.ok) {
+            const claimData = await claimRes.json()
+            assetList = claimData.assets || []
+          } else {
+            const errData = await claimRes.json().catch(() => ({}))
+            console.warn('Claim assets fetch failed:', errData)
+          }
+        } else {
+          // Fallback: fetch owner info and assets via JWT (owner viewing their own)
+          const beneficiaryResponse = await fetch(`${apiEndpoint}/api/beneficiaries/in-wills?walletAddress=${userAddress}`)
+          const myWills = await beneficiaryResponse.json()
+          const myWill = myWills.find((w: any) => w.ownerAddress.toLowerCase() === ownerAddress.toLowerCase())
+
+          if (!myWill) {
+            setStatus('not_eligible')
+            toast.error('You are not registered as a beneficiary for this address.')
+            return
+          }
+
+          ownerName = myWill.ownerName
+          const token = localStorage.getItem('dwp_token')
+          const assetsResponse = await fetch(`${apiEndpoint}/api/assets/contents?ownerAddress=${ownerAddress}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+          })
+          const assetsData = await assetsResponse.json()
+          assetList = assetsData.assets || []
         }
-
-        // Fetch assets from backend (need auth)
-        const token = localStorage.getItem('dwp_token')
-        const assetsResponse = await fetch(`${apiEndpoint}/api/assets/contents?ownerAddress=${ownerAddress}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        const assetsData = await assetsResponse.json()
 
         setStatus('ready')
         setInheritanceData({
-          ownerName: myWill.ownerName,
+          ownerName,
           lastHeartbeat: data.lastHeartbeat ? new Date(data.lastHeartbeat).toLocaleDateString() : 'Unknown',
           status: 'Triggered',
-          assets: assetsData.assets || []
+          assets: assetList
         })
         toast.success('Protocol verified. Inheritance is ready for claim.')
       } else {
@@ -108,7 +133,7 @@ function BeneficiaryAssetsContent() {
     } catch (error) {
       console.error(error)
       setStatus('idle')
-      toast.error('Failed to verify eligibility. Please ensure you are logged in.')
+      toast.error('Failed to verify eligibility.')
     }
   }
 
@@ -181,7 +206,7 @@ function BeneficiaryAssetsContent() {
             Secure Asset Retrieval
           </h1>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
-            Verify your clearance and claim designated digital assets through the AlwaysThere Protocol's trustless distribution sequence.
+            Verify your clearance and claim designated digital assets through the AlwaysThere Vault's trustless distribution sequence.
           </p>
         </div>
 

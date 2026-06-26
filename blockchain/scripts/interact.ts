@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  console.log("🔗 Interacting with AlwaysThere Protocol contracts...\n");
+  console.log("🔗 Interacting with AlwaysThere Vault contracts...\n");
 
   // Get signer
   const [signer] = await ethers.getSigners();

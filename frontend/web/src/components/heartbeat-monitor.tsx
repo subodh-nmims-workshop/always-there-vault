@@ -463,7 +463,7 @@ export function HeartbeatMonitor() {
                 <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse">
                   <ShieldAlert className="w-5 h-5 text-red-500" />
                 </div>
-                <p className="text-sm font-medium text-red-800 dark:text-red-100 italic">AlwaysThere Protocol TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
+                <p className="text-sm font-medium text-red-800 dark:text-red-100 italic">AlwaysThere Vault TRIGGERED. All buffers exhausted. Assets are being distributed.</p>
               </div>
             </motion.div>
           )}

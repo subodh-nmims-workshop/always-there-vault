@@ -1,5 +1,5 @@
 /**
- * Input validation utilities for the AlwaysThere Protocol
+ * Input validation utilities for the AlwaysThere Vault
  * Implements validation for heartbeat intervals, wallet addresses, and JSON configurations
  */
 

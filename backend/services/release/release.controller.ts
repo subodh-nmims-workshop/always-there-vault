@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Param, Body, Res, Query } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Res, Query, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TokenService } from '../auth/token.service';
 import { ReleaseService } from './release.service';
+import { eq } from 'drizzle-orm';
+import { users } from '../../src/db/schema/users';
 
 @ApiTags('release')
 @Controller('api/release')
@@ -24,7 +26,10 @@ export class ReleaseController {
 @ApiTags('claim')
 @Controller('api/claim')
 export class ClaimController {
-    constructor(private readonly tokenService: TokenService) { }
+    constructor(
+        private readonly tokenService: TokenService,
+        @Inject('DRIZZLE_DB') private db: any
+    ) { }
 
     @Get(':token')
     @ApiOperation({ summary: 'Verify claim access via email token' })
@@ -32,11 +37,18 @@ export class ClaimController {
     async verifyClaim(@Param('token') token: string, @Res() res: any): Promise<any> {
         try {
             const record = await this.tokenService.verifyToken(token, 'CLAIM_ACCESS');
-            // Redirect to frontend claim portal with the token
-            // The frontend claim portal will use the token/record to fetch will/assets
-            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/claim/${token}`);
+            
+            // Find owner user details to get their wallet address
+            const owner = await this.db.query.users.findFirst({
+                where: eq(users.id, record.userId)
+            });
+            const ownerAddress = owner?.walletAddress || '';
+            
+            // Redirect to frontend claim portal with the token and owner details
+            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:7000'}/claim/${token}?owner=${ownerAddress}`);
         } catch (e) {
-            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/?error=invalid_claim_token`);
+            console.error('VerifyClaim Error:', e);
+            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:7000'}/?error=invalid_claim_token`);
         }
     }
 }

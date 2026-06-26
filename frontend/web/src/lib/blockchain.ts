@@ -67,6 +67,13 @@ export async function submitHeartbeat() {
     const signer = await provider.getSigner()
     const config = getContractConfig()
 
+    if (!config.HEARTBEAT_TRACKER) {
+      return {
+        success: false,
+        error: 'Heartbeat contract is not configured on this network.'
+      }
+    }
+
     const contract = new ethers.Contract(
       config.HEARTBEAT_TRACKER,
       HEARTBEAT_ABI,
@@ -98,6 +105,13 @@ export async function configureHeartbeat(intervalDays: number, gracePeriodDays: 
     const provider = await getProvider()
     const signer = await provider.getSigner()
     const config = getContractConfig()
+
+    if (!config.HEARTBEAT_TRACKER) {
+      return {
+        success: false,
+        error: 'Heartbeat contract is not configured on this network.'
+      }
+    }
 
     const contract = new ethers.Contract(
       config.HEARTBEAT_TRACKER,
@@ -132,6 +146,13 @@ export async function getHeartbeatStatus(address: string) {
   try {
     const provider = getReadOnlyProvider()
     const config = getContractConfig()
+
+    if (!config.HEARTBEAT_TRACKER) {
+      return {
+        success: false,
+        error: 'Heartbeat contract is not configured on this network.'
+      }
+    }
 
     const contract = new ethers.Contract(
       config.HEARTBEAT_TRACKER,
@@ -170,6 +191,13 @@ export async function registerWill(intervalDays: number) {
     const signer = await provider.getSigner()
     const config = getContractConfig()
 
+    if (!config.DIGITAL_WILL) {
+      return {
+        success: false,
+        error: 'Digital Will contract is not configured on this network.'
+      }
+    }
+
     const contract = new ethers.Contract(
       config.DIGITAL_WILL,
       DIGITAL_WILL_ABI,
@@ -201,6 +229,13 @@ export async function addBeneficiary(beneficiaryAddress: string) {
     const provider = await getProvider()
     const signer = await provider.getSigner()
     const config = getContractConfig()
+
+    if (!config.DIGITAL_WILL) {
+      return {
+        success: false,
+        error: 'Digital Will contract is not configured on this network.'
+      }
+    }
 
     const contract = new ethers.Contract(
       config.DIGITAL_WILL,
@@ -237,6 +272,13 @@ export async function registerTokenAsset(
     const provider = await getProvider()
     const signer = await provider.getSigner()
     const config = getContractConfig()
+
+    if (!config.DIGITAL_WILL) {
+      return {
+        success: false,
+        error: 'Digital Will contract is not configured on this network.'
+      }
+    }
 
     const contract = new ethers.Contract(
       config.DIGITAL_WILL,
@@ -277,6 +319,13 @@ export async function storeEncryptedPayload(ipfsCID: string) {
     const signer = await provider.getSigner()
     const config = getContractConfig()
 
+    if (!config.DIGITAL_WILL) {
+      return {
+        success: false,
+        error: 'Digital Will contract is not configured on this network.'
+      }
+    }
+
     const contract = new ethers.Contract(
       config.DIGITAL_WILL,
       DIGITAL_WILL_ABI,
@@ -306,6 +355,13 @@ export async function isWillTriggered(address: string) {
   try {
     const provider = getReadOnlyProvider()
     const config = getContractConfig()
+
+    if (!config.DIGITAL_WILL) {
+      return {
+        success: false,
+        error: 'Digital Will contract is not configured on this network.'
+      }
+    }
 
     const contract = new ethers.Contract(
       config.DIGITAL_WILL,
