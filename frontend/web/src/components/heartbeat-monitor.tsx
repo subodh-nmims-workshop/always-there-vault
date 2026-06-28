@@ -89,6 +89,7 @@ export function HeartbeatMonitor() {
           const remaining = Math.ceil((15000 - diff) / 1000)
           if (remaining > 0) {
             setResendCooldown(remaining)
+            setShowOtpField(true)
             return
           }
         }
@@ -803,7 +804,8 @@ export function HeartbeatMonitor() {
                         onChange={(e) => {
                           setInputEmail(e.target.value)
                         }}
-                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm"
+                        disabled={showOtpField || isSendingOtp}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                       />
                     </div>
                     {inputEmail && (inputEmail !== profileEmail || !emailVerified) && (
@@ -856,6 +858,17 @@ export function HeartbeatMonitor() {
                           ) : (
                             'Verify OTP'
                           )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowOtpField(false)
+                            setResendCooldown(0)
+                            setOtpCode('')
+                          }}
+                          className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs px-3 rounded-xl transition-all"
+                        >
+                          Change
                         </button>
                       </div>
                     </motion.div>
