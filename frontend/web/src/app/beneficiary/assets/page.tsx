@@ -96,6 +96,7 @@ function BeneficiaryAssetsContent() {
           } else {
             const errData = await claimRes.json().catch(() => ({}))
             console.warn('Claim assets fetch failed:', errData)
+            throw new Error(errData.message || 'Failed to authorize claim token. It may be expired or invalid.')
           }
         } else {
           // Fallback: fetch owner info and assets via JWT (owner viewing their own)
