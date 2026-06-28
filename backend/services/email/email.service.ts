@@ -33,10 +33,43 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
+    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+    if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
+      try {
+        const from = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <onboarding@resend.dev>';
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from,
+            to: options.to,
+            subject: options.subject,
+            html: options.html
+          })
+        });
+        if (res.ok) {
+          console.log('✅ Email sent via Resend API to:', options.to);
+          return true;
+        } else {
+          const errText = await res.text();
+          console.error('❌ Resend API error:', errText);
+        }
+      } catch (err) {
+        console.error('❌ Resend dispatch failed:', err);
+      }
+    }
+
     const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
     const isUnconfigured = !user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example');
 
     if (isUnconfigured) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('❌ CRITICAL ERROR: SMTP credentials (SMTP_USER / SMTP_PASS) are not configured or are placeholder values in Render environment variables! Real emails cannot be delivered.');
+        return false;
+      }
       try {
         const testAccount = await nodemailer.createTestAccount();
         const testTransporter = nodemailer.createTransport({
@@ -340,5 +373,95 @@ export class EmailService {
       }),
       text: `Hi ${name}, your trial ends in ${daysRemaining} days. Upgrade to continue using all features.`,
     });
+  }
+
+  async diagnoseSmtp(toEmail: string) {
+    const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp-relay.brevo.com';
+    const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
+    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
+    const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
+    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+
+    const diagnostics: any = {
+      timestamp: new Date().toISOString(),
+      nodeEnv: process.env.NODE_ENV,
+      config: {
+        host,
+        port,
+        user,
+        hasPass: !!pass,
+        passLength: pass ? pass.length : 0,
+        hasResendKey: !!resendKey,
+        resendKeyLength: resendKey ? resendKey.length : 0,
+        fromEmail: this.fromEmail,
+      },
+      smtpVerify: null,
+      emailSent: null,
+      error: null
+    };
+
+    if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
+      diagnostics.emailMode = 'Resend API';
+      try {
+        const from = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <onboarding@resend.dev>';
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from,
+            to: toEmail,
+            subject: 'AlwaysThere Vault SMTP Diagnostic Test (Resend)',
+            html: '<b>Diagnostic Test from Resend API</b>'
+          })
+        });
+        diagnostics.resendStatus = res.status;
+        diagnostics.resendStatusText = res.statusText;
+        if (res.ok) {
+          diagnostics.emailSent = true;
+          return { success: true, diagnostics };
+        } else {
+          diagnostics.resendError = await res.text();
+          return { success: false, diagnostics };
+        }
+      } catch (err: any) {
+        diagnostics.error = err.message || err;
+        return { success: false, diagnostics };
+      }
+    }
+
+    diagnostics.emailMode = 'Nodemailer SMTP';
+    try {
+      try {
+        await this.transporter.verify();
+        diagnostics.smtpVerify = 'Success';
+      } catch (verifyErr: any) {
+        diagnostics.smtpVerify = `Failed: ${verifyErr.message || verifyErr}`;
+        throw verifyErr;
+      }
+
+      const info = await this.transporter.sendMail({
+        from: this.fromEmail,
+        to: toEmail,
+        subject: 'AlwaysThere Vault SMTP Diagnostic Test (Nodemailer)',
+        text: 'Nodemailer SMTP test email.',
+        html: '<b>Diagnostic Test from Nodemailer SMTP</b>'
+      });
+      diagnostics.emailSent = 'Success';
+      diagnostics.messageId = info.messageId;
+      return { success: true, diagnostics };
+    } catch (err: any) {
+      diagnostics.emailSent = 'Failed';
+      diagnostics.error = {
+        message: err.message,
+        code: err.code,
+        command: err.command,
+        response: err.response,
+        stack: err.stack
+      };
+      return { success: false, diagnostics };
+    }
   }
 }

@@ -1,9 +1,20 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query } from '@nestjs/common';
 import { EmailService } from './email.service';
 
 @Controller('email')
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}
+
+  @Get('test-diagnose')
+  async testDiagnose(@Query('email') email: string) {
+    if (!email) {
+      return {
+        success: false,
+        error: 'Email parameter is required. Usage: /api/email/test-diagnose?email=your-email@example.com',
+      };
+    }
+    return await this.emailService.diagnoseSmtp(email);
+  }
 
   @Post('welcome')
   async sendWelcome(@Body() body: { email: string; name: string }) {
