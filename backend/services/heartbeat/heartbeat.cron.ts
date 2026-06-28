@@ -182,52 +182,6 @@ export class HeartbeatCronService {
                         if (user.expoPushToken) {
                             await this.notificationsService.sendHeartbeatReminder(user.expoPushToken, status.daysUntilDue);
                         }
-
-                        // Notify nominees on EVERY miss in demo mode, only on final miss in production
-                        if (newMissCount === maxBuffer || isDemo) {
-                            const nominees = await this.beneficiariesService.getAllBeneficiaries(user.walletAddress);
-                            this.logger.log(`Notifying ${nominees.length} nominees for ${user.walletAddress} (Stage ${newMissCount}/${maxBuffer}, demo=${isDemo})`);
-                            for (const nominee of nominees) {
-                                if (nominee.email) {
-                                    const isFinalStage = newMissCount === maxBuffer;
-                                    await this.emailService.sendEmail({
-                                        to: nominee.email,
-                                        subject: isFinalStage
-                                            ? '🚨 URGENT: Vault Protocol Has Been Triggered'
-                                            : `⚠️ Alert: Your benefactor's heartbeat is overdue (Stage ${newMissCount}/${maxBuffer})`,
-                                        html: buildEmailShell({
-                                            accentColor: isFinalStage ? '#ef4444' : '#f97316',
-                                            accentGlow: isFinalStage ? 'rgba(239,68,68,0.3)' : 'rgba(249,115,22,0.3)',
-                                            icon: isFinalStage ? '🚨' : '⚠️',
-                                            headline: isFinalStage ? 'Protocol Triggered' : 'Heartbeat Overdue Alert',
-                                            subline: `Stage ${newMissCount} of ${maxBuffer} — ${isFinalStage ? 'Final' : 'Warning'}`,
-                                            body: `
-                                              <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hi <strong>${nominee.name || 'Beneficiary'}</strong>,</p>
-                                              <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
-                                                The AlwaysThere Vault heartbeat for <strong style="color:#ffffff;">${user.name || user.walletAddress}</strong> has been missed.
-                                                ${isFinalStage
-                                                  ? ' The protocol has fully triggered and asset distribution is underway. You will receive a separate claim email shortly.'
-                                                  : ' The owner still has time to check in and abort the protocol.'}
-                                              </p>
-                                              ${infoBox(`
-                                                ${statRow('Vault Owner', user.name || 'Unknown', '#e2e8f0')}
-                                                ${statRow('Buffer Status', newMissCount + ' of ' + maxBuffer + ' missed', isFinalStage ? '#ef4444' : '#f97316', true)}
-                                              `)}
-                                              ${alertStrip(isFinalStage ? '#ef4444' : '#f97316',
-                                                isFinalStage
-                                                  ? 'The inheritance protocol is now executing. Watch your inbox for a separate asset claim notification.'
-                                                  : 'No action required from you at this time. You will be notified when the protocol fully triggers.'
-                                              )}
-                                            `,
-                                            footerNote: 'You are receiving this because you are a registered beneficiary in an AlwaysThere Vault.',
-                                        }),
-                                    });
-                                    this.logger.log(`📧 Nominee alert sent to ${nominee.email} (Stage ${newMissCount}/${maxBuffer})`);
-                                } else {
-                                    this.logger.warn(`Nominee ${nominee.name} has no email`);
-                                }
-                            }
-                        }
                     } else {
                         // All buffers exhausted — protocol trigger
                         if (currentMisses > maxBuffer) {
