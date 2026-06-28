@@ -118,9 +118,9 @@ export class HeartbeatCronService {
                     const unitsSinceLastHeartbeat = Math.floor((now.getTime() - lastHeartbeatTime.getTime()) / timeUnit);
 
                     // How many alerts should have been sent so far = units since last heartbeat - interval
-                    // If currentMisses already covers the expected count, throttle
+                    // If currentMisses already covers the expected count, throttle (only applies to warnings, not the final trigger)
                     const expectedMisses = Math.max(0, unitsSinceLastHeartbeat - config.intervalDays);
-                    if (currentMisses >= expectedMisses && currentMisses > 0) {
+                    if (currentMisses < maxBuffer && currentMisses >= expectedMisses && currentMisses > 0) {
                         this.logger.debug(`Throttling alert for ${user.walletAddress}: misses(${currentMisses}) already covers expected(${expectedMisses}) for this time period.`);
                         continue;
                     }

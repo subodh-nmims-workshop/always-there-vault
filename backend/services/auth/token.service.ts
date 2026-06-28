@@ -25,7 +25,7 @@ export class TokenService {
     return token;
   }
 
-  async verifyToken(tokenString: string, type: 'HEARTBEAT_VERIFY' | 'EMAIL_VERIFY' | 'CLAIM_ACCESS'): Promise<any> {
+  async verifyToken(tokenString: string, type: 'HEARTBEAT_VERIFY' | 'EMAIL_VERIFY' | 'CLAIM_ACCESS', markAsUsed = true): Promise<any> {
     const records = await this.db.select().from(verificationTokens).where(
       and(
         eq(verificationTokens.token, tokenString),
@@ -41,10 +41,12 @@ export class TokenService {
 
     const tokenRecord = records[0];
 
-    // Mark as used
-    await this.db.update(verificationTokens)
-      .set({ isUsed: true })
-      .where(eq(verificationTokens.id, tokenRecord.id));
+    if (markAsUsed) {
+      // Mark as used
+      await this.db.update(verificationTokens)
+        .set({ isUsed: true })
+        .where(eq(verificationTokens.id, tokenRecord.id));
+    }
 
     return tokenRecord;
   }

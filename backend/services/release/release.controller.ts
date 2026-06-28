@@ -36,7 +36,7 @@ export class ClaimController {
     @ApiResponse({ status: 200, description: 'Claim verified' })
     async verifyClaim(@Param('token') token: string, @Res() res: any): Promise<any> {
         try {
-            const record = await this.tokenService.verifyToken(token, 'CLAIM_ACCESS');
+            const record = await this.tokenService.verifyToken(token, 'CLAIM_ACCESS', false);
             
             // Find owner user details to get their wallet address
             const owner = await this.db.query.users.findFirst({

@@ -59,6 +59,7 @@ export class AssetsService {
 
   async getFolderContents(walletAddress: string, folderId?: string, ownerAddress?: string) {
     let targetUserId: string;
+    let nomineeRecord: any = null;
 
     if (ownerAddress && ownerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
       // Requester is checking another user's assets (nominee check)
@@ -84,6 +85,7 @@ export class AssetsService {
       }
 
       targetUserId = owner.id;
+      nomineeRecord = isNominee;
     } else {
       // User is checking their own assets
       const user = await this.usersService.findUserByWallet(walletAddress);
@@ -101,6 +103,7 @@ export class AssetsService {
     const fileList = await this.db.query.files.findMany({
       where: and(
         eq(files.userId, targetUserId),
+        nomineeRecord ? eq(files.assignedBeneficiaryId, nomineeRecord.id) : undefined,
         folderId ? eq(files.folderId, folderId) : isNull(files.folderId)
       ),
     });
@@ -227,7 +230,9 @@ export class AssetsService {
           if (isNominee) {
             const status: any = await this.heartbeatService.getHeartbeatStatus(owner.walletAddress);
             if (status.status === 'overdue' || status.status === 'grace_period') {
-              file = fileToClaim;
+              if (fileToClaim.assignedBeneficiaryId === isNominee.id) {
+                file = fileToClaim;
+              }
             }
           }
         }

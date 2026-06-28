@@ -93,7 +93,7 @@ export function buildEmailShell(opts: {
               </p>
             </td>
             <td align="right" valign="top">
-              <p style="margin:0;font-size:10px;color:#1e3a5f;text-transform:uppercase;letter-spacing:1px;">© 2025 AlwaysThere</p>
+              <p style="margin:0;font-size:10px;color:#1e3a5f;text-transform:uppercase;letter-spacing:1px;">© 2026 AlwaysThere</p>
             </td>
           </tr>
         </table>
