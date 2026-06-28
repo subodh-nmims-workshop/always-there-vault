@@ -63,6 +63,49 @@ export class EmailService {
     }
 
     const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
+    const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
+    const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST');
+
+    if (pass && (pass.startsWith('xsmtpkey') || host?.includes('brevo'))) {
+      try {
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || user || 'ks5093654@gmail.com';
+        let senderEmail = fromEmail;
+        let senderName = 'AlwaysThere Vault';
+        if (fromEmail.includes('<')) {
+          const match = fromEmail.match(/(.*)<(.*)>/);
+          if (match) {
+            senderName = match[1].replace(/"/g, '').trim();
+            senderEmail = match[2].trim();
+          }
+        }
+        
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': pass,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: options.to }],
+            subject: options.subject,
+            htmlContent: options.html
+          })
+        });
+
+        if (res.ok) {
+          console.log('✅ Email sent via Brevo API to:', options.to);
+          return true;
+        } else {
+          const errText = await res.text();
+          console.error('❌ Brevo API error:', errText);
+        }
+      } catch (err) {
+        console.error('❌ Brevo API dispatch failed:', err);
+      }
+    }
+
     const isUnconfigured = !user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example');
 
     if (isUnconfigured) {
@@ -399,6 +442,53 @@ export class EmailService {
       emailSent: null,
       error: null
     };
+
+    if (pass && (pass.startsWith('xsmtpkey') || host?.includes('brevo'))) {
+      diagnostics.emailMode = 'Brevo API';
+      try {
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || user || 'ks5093654@gmail.com';
+        let senderEmail = fromEmail;
+        let senderName = 'AlwaysThere Vault';
+        if (fromEmail.includes('<')) {
+          const match = fromEmail.match(/(.*)<(.*)>/);
+          if (match) {
+            senderName = match[1].replace(/"/g, '').trim();
+            senderEmail = match[2].trim();
+          }
+        }
+
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': pass,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: toEmail }],
+            subject: 'AlwaysThere Vault SMTP Diagnostic Test (Brevo API)',
+            htmlContent: '<b>Diagnostic Test from Brevo HTTP API</b>'
+          })
+        });
+
+        diagnostics.brevoStatus = res.status;
+        diagnostics.brevoStatusText = res.statusText;
+        if (res.ok) {
+          diagnostics.emailSent = 'Success';
+          diagnostics.response = await res.json();
+          return { success: true, diagnostics };
+        } else {
+          diagnostics.emailSent = 'Failed';
+          diagnostics.error = await res.text();
+          return { success: false, diagnostics };
+        }
+      } catch (err: any) {
+        diagnostics.emailSent = 'Failed';
+        diagnostics.error = err.message || err;
+        return { success: false, diagnostics };
+      }
+    }
 
     if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
       diagnostics.emailMode = 'Resend API';
