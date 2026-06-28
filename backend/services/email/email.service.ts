@@ -195,7 +195,7 @@ export class EmailService {
       <div style="background:#060d1a;border:1px solid rgba(14,165,233,0.3);border-radius:12px;padding:28px;margin:24px 0;text-align:center;">
         <p style="margin:0 0 12px;font-size:11px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;">Your Verification Code</p>
         <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(14,165,233,0.5);">${code}</div>
-        <p style="margin:12px 0 0;font-size:12px;color:#475569;">Expires in <strong style="color:#f59e0b;">15 minutes</strong></p>
+        <p style="margin:12px 0 0;font-size:12px;color:#475569;">Expires in <strong style="color:#f59e0b;">5 minutes</strong></p>
       </div>
       ${alertStrip('#f59e0b', 'If you did not request this code, please ignore this email. Your account remains secure.')}
     `;
@@ -209,9 +209,9 @@ export class EmailService {
         headline: 'Verify Your Email',
         subline: 'One-Time Verification Code',
         body,
-        footerNote: 'This code expires in 15 minutes. Do not share it with anyone.',
+        footerNote: 'This code expires in 5 minutes. Do not share it with anyone.',
       }),
-      text: `Your AlwaysThere verification code is: ${code}. Expires in 15 minutes.`,
+      text: `Your AlwaysThere verification code is: ${code}. Expires in 5 minutes.`,
     });
   }
 

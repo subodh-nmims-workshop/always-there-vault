@@ -187,9 +187,9 @@ export class UsersService {
             return { success: false, message: 'No verification request pending' };
         }
 
-        // Check if OTP has expired (60 seconds validity)
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 60000)) {
-            return { success: false, message: 'Verification code has expired (60s limit). Please request a new code.' };
+        // Check if OTP has expired (5 minutes validity)
+        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
+            return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
         if (user.emailVerificationToken !== code) {
