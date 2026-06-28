@@ -66,7 +66,7 @@ export class EmailService {
     const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
     const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST');
 
-    if (pass && (pass.startsWith('xsmtpkey') || host?.includes('brevo'))) {
+    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
       try {
         const fromEmail = this.configService.get<string>('SMTP_FROM') || user || 'ks5093654@gmail.com';
         let senderEmail = fromEmail;
@@ -443,7 +443,7 @@ export class EmailService {
       error: null
     };
 
-    if (pass && (pass.startsWith('xsmtpkey') || host?.includes('brevo'))) {
+    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
       diagnostics.emailMode = 'Brevo API';
       try {
         const fromEmail = this.configService.get<string>('SMTP_FROM') || user || 'ks5093654@gmail.com';
