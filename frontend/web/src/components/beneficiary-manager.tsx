@@ -29,8 +29,113 @@ export function BeneficiaryManager() {
     beneficiaryName: ''
   })
 
+  // Beneficiary Verification States
+  const [verifyingBeneficiary, setVerifyingBeneficiary] = useState<StoredBeneficiary | null>(null)
+  const [verificationOtp, setVerificationOtp] = useState('')
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
+
   const { subscription } = useSubscription()
   const storage = WebStorageService.getInstance()
+
+  const fetchAndSyncBeneficiaries = async () => {
+    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+    if (isDemo) return
+    try {
+      const walletAddress = localStorage.getItem('dwp_wallet_address')
+      if (!walletAddress) return
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/beneficiaries?ownerAddress=${walletAddress}`)
+      if (res.ok) {
+        const data = await res.json()
+        
+        // Sync local IndexedDB
+        for (const item of data) {
+          await storage.saveBeneficiary({
+            id: item.id,
+            name: item.name || '',
+            email: item.email || '',
+            walletAddress: item.walletAddress || '',
+            createdAt: new Date(item.createdAt).getTime(),
+            enabled: item.isActive ?? true,
+            isVerified: item.isVerified ?? false,
+          })
+        }
+        
+        // Remove locally deleted ones if they are not in backend
+        const backendIds = data.map((b: any) => b.id)
+        for (const localBen of beneficiaries) {
+          if (!backendIds.includes(localBen.id)) {
+            await storage.deleteBeneficiary(localBen.id)
+          }
+        }
+        
+        await refreshState()
+      }
+    } catch (err) {
+      console.error('Failed to sync beneficiaries from backend', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchAndSyncBeneficiaries()
+  }, [])
+
+  const handleSendVerificationCode = async (beneficiary: StoredBeneficiary) => {
+    setIsSendingCode(true)
+    try {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/beneficiaries/${beneficiary.id}/send-verification`, {
+        method: 'POST'
+      })
+      if (res.ok) {
+        toast.success('Verification Code Sent', {
+          description: `A 6-digit code has been sent to ${beneficiary.email}.`
+        })
+      } else {
+        const errData = await res.json()
+        toast.error('Failed to send code', {
+          description: errData.message || 'Error occurred.'
+        })
+      }
+    } catch (err) {
+      console.error('Error sending beneficiary code', err)
+      toast.error('Failed to send code')
+    } finally {
+      setIsSendingCode(false)
+    }
+  }
+
+  const handleVerifyBeneficiary = async () => {
+    if (!verifyingBeneficiary || !verificationOtp) return
+    setIsVerifyingCode(true)
+    try {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: verificationOtp })
+      })
+      if (res.ok) {
+        toast.success('Beneficiary Verified', {
+          description: `${verifyingBeneficiary.name} is now a verified nominee.`
+        })
+        setVerifyingBeneficiary(null)
+        setVerificationOtp('')
+        await fetchAndSyncBeneficiaries()
+      } else {
+        const errData = await res.json()
+        toast.error('Verification Failed', {
+          description: errData.message || 'Incorrect OTP code.'
+        })
+      }
+    } catch (err) {
+      console.error('Error verifying beneficiary', err)
+      toast.error('Verification Failed')
+    } finally {
+      setIsVerifyingCode(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,7 +193,7 @@ export function BeneficiaryManager() {
             ? `${apiEndpoint}/api/beneficiaries/${editingId}`
             : `${apiEndpoint}/api/beneficiaries`
           
-          await fetch(url, {
+          const syncRes = await fetch(url, {
             method: editingId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -99,12 +204,22 @@ export function BeneficiaryManager() {
               relationship: 'nominee'
             })
           })
+          if (syncRes.ok && !editingId) {
+            const createdBen = await syncRes.json()
+            await storage.deleteBeneficiary(beneficiary.id)
+            await storage.saveBeneficiary({
+              ...beneficiary,
+              id: createdBen.id,
+              isVerified: createdBen.isVerified || false
+            })
+          }
         } catch (err) {
           console.error('Failed to sync beneficiary to backend', err)
         }
       }
 
       await refreshState()
+      await fetchAndSyncBeneficiaries()
       
       if (!isDemo) {
         try {
@@ -254,9 +369,20 @@ export function BeneficiaryManager() {
                       </div>
                       <div>
                         <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{beneficiary.name}</h3>
-                        {beneficiary.enabled && (
-                          <span className="badge-premium badge-success-premium text-xs">Active</span>
-                        )}
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {beneficiary.enabled && (
+                            <span className="badge-premium badge-success-premium text-[10px] py-0.5 px-2">Active</span>
+                          )}
+                          {beneficiary.isVerified ? (
+                            <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              <Check className="size-3" /> Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-450 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              Pending
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -278,15 +404,27 @@ export function BeneficiaryManager() {
                   </div>
 
                   <div className="flex flex-col space-y-2 ml-4">
+                    {!beneficiary.isVerified && (
+                      <button
+                        onClick={() => {
+                          setVerifyingBeneficiary(beneficiary)
+                          handleSendVerificationCode(beneficiary)
+                        }}
+                        className="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-450 text-xs font-semibold transition-colors border border-amber-200 dark:border-amber-500/20 hover:border-amber-500/50"
+                        title="Verify Nominee Email"
+                      >
+                        Verify
+                      </button>
+                    )}
                     <button
                       onClick={() => handleEdit(beneficiary)}
-                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors border border-slate-200 dark:border-slate-700 hover:border-blue-500/50"
+                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 flex items-center justify-center"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(beneficiary.id, beneficiary.name)}
-                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20 hover:border-red-500/50"
+                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20 hover:border-red-500/50 flex items-center justify-center"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -444,6 +582,115 @@ export function BeneficiaryManager() {
         cancelText="Cancel"
         type="danger"
       />
+      {/* Beneficiary Email Verification Modal */}
+      <AnimatePresence>
+        {verifyingBeneficiary && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-lg w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
+            >
+              <button
+                onClick={() => {
+                  setVerifyingBeneficiary(null)
+                  setVerificationOtp('')
+                }}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="icon-container w-12 h-12 mx-auto bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Mail className="size-6 text-amber-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Verify Nominee Email</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    We sent a 6-digit verification code to <span className="text-white font-bold">{verifyingBeneficiary.email}</span>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
+                    Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={verificationOtp}
+                    onChange={(e) => setVerificationOtp(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-amber-500"
+                  />
+                  <div className="flex justify-between items-center px-1">
+                    <p className="text-[10px] text-slate-550">
+                      Enter the code sent to your nominee's email.
+                    </p>
+                    <button
+                      onClick={() => handleSendVerificationCode(verifyingBeneficiary)}
+                      disabled={isSendingCode}
+                      className="text-[10px] text-amber-400 hover:text-amber-300 font-bold underline disabled:opacity-50"
+                    >
+                      {isSendingCode ? "Sending..." : "Resend Code"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setVerifyingBeneficiary(null)
+                      setVerificationOtp('')
+                    }}
+                    className="flex-1 bg-transparent border border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-4 rounded-xl hover:bg-white/5 font-bold transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleVerifyBeneficiary}
+                    disabled={isVerifyingCode || !verificationOtp}
+                    className="flex-1 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/40 text-white font-bold text-xs uppercase tracking-widest py-4 rounded-xl shadow-lg transition-all"
+                  >
+                    {isVerifyingCode ? "Verifying..." : "Verify & Activate"}
+                  </button>
+                </div>
+
+                <div className="text-center pt-2">
+                  <button
+                    onClick={async () => {
+                      if (confirm(`Discard this nominee registration and remove ${verifyingBeneficiary.name}?`)) {
+                        setVerifyingBeneficiary(null)
+                        setVerificationOtp('')
+                        await storage.deleteBeneficiary(verifyingBeneficiary.id)
+                        const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+                        if (!isDemo) {
+                          try {
+                            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                            await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}`, {
+                              method: 'DELETE'
+                            })
+                          } catch (err) {
+                            console.error('Failed to delete beneficiary from backend', err)
+                          }
+                        }
+                        await refreshState()
+                        await fetchAndSyncBeneficiaries()
+                        toast.success('Nominee registration discarded')
+                      }
+                    }}
+                    className="text-[10px] text-red-400 hover:text-red-300 font-bold underline cursor-pointer"
+                  >
+                    Discard nominee registration
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,13 +1,15 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { users, type User, type NewUser } from '../../src/db/schema/users';
 import { userStorageQuotas } from '../../src/db/schema/quotas';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 import { eq, sql, and, or } from 'drizzle-orm';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class UsersService {
     constructor(
         @Inject('DRIZZLE_DB') private db: any,
+        private readonly emailService: EmailService,
     ) { }
 
     async findUserById(id: string): Promise<User | null> {
@@ -47,7 +49,21 @@ export class UsersService {
         return { success: true, recoveryAddress: lowerAddress };
     }
 
-    async createOrUpdateUser(walletAddress: string, email?: string): Promise<User> {
+    async deleteEmail(walletAddress: string): Promise<{ success: boolean }> {
+        const lowerAddress = walletAddress.toLowerCase();
+        await this.db.update(users)
+            .set({
+                email: null,
+                pendingEmail: null,
+                emailVerified: false,
+                emailVerificationToken: null,
+                updatedAt: new Date(),
+            })
+            .where(eq(users.walletAddress, lowerAddress));
+        return { success: true };
+    }
+
+    async createOrUpdateUser(walletAddress: string, email?: string): Promise<User & { verificationRequired?: boolean; pendingEmail?: string }> {
         const lowerAddress = walletAddress.toLowerCase();
         const existingUser = await this.db.query.users.findFirst({
             where: eq(users.walletAddress, lowerAddress),
@@ -56,9 +72,58 @@ export class UsersService {
         if (existingUser) {
             await this.ensureQuotasExist(existingUser.id);
             await this.ensureHeartbeatConfigExists(existingUser.id);
+
+            // Handle email deletion/clearing if empty string is supplied
+            if (email === '') {
+                const [updatedUser] = await this.db.update(users)
+                    .set({
+                        email: null,
+                        pendingEmail: null,
+                        emailVerified: false,
+                        emailVerificationToken: null,
+                        updatedAt: new Date(),
+                    })
+                    .where(eq(users.walletAddress, lowerAddress))
+                    .returning();
+                return updatedUser;
+            }
+
+            // If a different email is specified or it is not yet verified, initiate verification
+            if (email && (email.toLowerCase() !== existingUser.email?.toLowerCase() || !existingUser.emailVerified)) {
+                const lowerEmail = email.toLowerCase();
+
+                // Check 15-second cooldown if requesting for the same pending email
+                if (existingUser.pendingEmail?.toLowerCase() === lowerEmail) {
+                    if (existingUser.updatedAt && (new Date().getTime() - new Date(existingUser.updatedAt).getTime() < 15000)) {
+                        throw new BadRequestException('Please wait 15 seconds before requesting another code.');
+                    }
+                }
+
+                const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                await this.db.update(users)
+                    .set({
+                        pendingEmail: lowerEmail,
+                        emailVerificationToken: verificationCode,
+                        updatedAt: new Date(),
+                    })
+                    .where(eq(users.walletAddress, lowerAddress));
+
+                // Send verification email asynchronously
+                this.emailService.sendVerificationEmail(lowerEmail, verificationCode).catch(err => {
+                    console.error('Error sending verification email:', err);
+                });
+                
+                return {
+                    ...existingUser,
+                    verificationRequired: true,
+                    pendingEmail: lowerEmail,
+                };
+            }
+
+            // Otherwise standard update
             const [updatedUser] = await this.db.update(users)
                 .set({
-                    email: email || existingUser.email,
                     updatedAt: new Date(),
                 })
                 .where(eq(users.walletAddress, lowerAddress))
@@ -66,12 +131,25 @@ export class UsersService {
             return updatedUser;
         }
 
+        // New user creation
+        const lowerEmail = email ? email.toLowerCase() : null;
+        const verificationCode = lowerEmail ? Math.floor(100000 + Math.random() * 900000).toString() : null;
+
         const [newUser] = await this.db.insert(users)
             .values({
                 walletAddress: lowerAddress,
-                email,
-            } as NewUser)
+                email: null, // Keep verified email null until verified
+                pendingEmail: lowerEmail,
+                emailVerificationToken: verificationCode,
+                emailVerified: false,
+            } as any)
             .returning();
+
+        if (lowerEmail && verificationCode) {
+            this.emailService.sendVerificationEmail(lowerEmail, verificationCode).catch(err => {
+                console.error('Error sending verification email for new user:', err);
+            });
+        }
 
         // AUTO-PROVISION STORAGE QUOTAS (Multi-Slot approach)
         await this.db.insert(userStorageQuotas).values([
@@ -92,7 +170,70 @@ export class UsersService {
         // AUTO-PROVISION HEARTBEAT CONFIG
         await this.ensureHeartbeatConfigExists(newUser.id);
 
-        return newUser;
+        return {
+            ...newUser,
+            verificationRequired: !!lowerEmail,
+            pendingEmail: lowerEmail || undefined,
+        };
+    }
+
+    async verifyEmail(userId: string, code: string): Promise<{ success: boolean; message: string; email?: string }> {
+        const user = await this.findUserById(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        if (!user.emailVerificationToken || !user.pendingEmail) {
+            return { success: false, message: 'No verification request pending' };
+        }
+
+        if (user.emailVerificationToken !== code) {
+            return { success: false, message: 'Invalid verification code' };
+        }
+
+        // Verification successful: promote pendingEmail to primary email
+        await this.db.update(users)
+            .set({
+                email: user.pendingEmail,
+                emailVerified: true,
+                pendingEmail: null,
+                emailVerificationToken: null,
+                updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+
+        return { success: true, message: 'Email verified successfully', email: user.pendingEmail };
+    }
+
+    async resendVerificationCode(userId: string): Promise<{ success: boolean; message: string }> {
+        const user = await this.findUserById(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        // Check 15-second cooldown
+        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() < 15000)) {
+            throw new BadRequestException('Please wait 15 seconds before requesting another code.');
+        }
+
+        const emailToVerify = user.pendingEmail || (!user.emailVerified ? user.email : null);
+        if (!emailToVerify) {
+            return { success: false, message: 'No pending email to verify' };
+        }
+
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await this.db.update(users)
+            .set({
+                pendingEmail: emailToVerify,
+                emailVerificationToken: verificationCode,
+                updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+
+        await this.emailService.sendVerificationEmail(emailToVerify, verificationCode);
+
+        return { success: true, message: 'Verification code resent successfully' };
     }
 
     async findUserByWallet(walletAddress: string): Promise<User & { isPremium: boolean }> {

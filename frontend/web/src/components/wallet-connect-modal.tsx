@@ -330,7 +330,7 @@ export function WalletConnectModal({ isOpen, onClose, onConnect, isConnecting }:
               {process.env.NODE_ENV === 'development' && (
                 <button
                   type="button"
-                  onClick={() => onConnect('0x70997970C51812dc3A010C7d01b50e0d17dc79C8')}
+                  onClick={() => onConnect('0x70997970C51812dc3A010C7d01b50e0d17dc79C8', '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d')}
                   className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
                 >
                   🛠️ Dev Quick Login (Skip Wallet)

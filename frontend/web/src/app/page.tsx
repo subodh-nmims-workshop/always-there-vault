@@ -111,32 +111,109 @@ export default function HomePage() {
 
   const handleConnect = () => setShowWalletModal(true)
 
-  const handleStartDemo = () => {
-    localStorage.setItem('dwp_is_demo', 'true')
-    localStorage.setItem('dwp_wallet_address', '0xDemoSandbox77777777777777777777777777')
-    localStorage.setItem('dwp_wallet_connected', 'true')
-    
-    // Set a mock Professional subscription so all features are unlocked right away
-    localStorage.setItem('dwp_subscription', JSON.stringify({
-      id: 'demo-sub',
-      userId: 'demo-user-id',
-      planId: 'sovereign_pro',
-      plan: 'sovereign_pro',
-      planName: 'Web3 Pro (Demo Sandbox)',
-      status: 'active',
-      mode: 'decentralized',
-      storageUsed: 0,
-      storageLimit: 100 * 1024 * 1024 * 1024,
-      trialEndsAt: null,
-      subscriptionEndsAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }))
+  const handleStartDemo = async () => {
+    setIsConnecting(true)
+    try {
+      let privateKey = localStorage.getItem('dwp_demo_private_key')
+      if (!privateKey) {
+        const wallet = ethers.Wallet.createRandom()
+        privateKey = wallet.privateKey
+        localStorage.setItem('dwp_demo_private_key', privateKey)
+      }
+      const wallet = new ethers.Wallet(privateKey)
+      const walletAddress = wallet.address
 
-    setIsConnected(true)
-    setIsDevOverride(true)
-    setAddress('0xDemoSandbox77777777777777777777777777')
-    toast.success('Sandbox Demo Mode Activated!')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
+      
+      if (!nonceRes.ok) {
+        throw new Error('Failed to fetch authentication nonce')
+      }
+
+      const nonceData = await nonceRes.json()
+      const message = nonceData?.nonce
+      if (!message) {
+        throw new Error('Empty authentication message')
+      }
+
+      const signature = await wallet.signMessage(message)
+
+      const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress, message, signature })
+      })
+
+      if (!verifyRes.ok) {
+        throw new Error('Verification failed')
+      }
+
+      const authData = await verifyRes.json()
+      
+      if (authData?.token) {
+        localStorage.setItem('dwp_is_demo', 'true')
+        localStorage.setItem('dwp_wallet_address', authData.walletAddress || walletAddress)
+        localStorage.setItem('dwp_wallet_connected', 'true')
+        localStorage.setItem('dwp_token', authData.token)
+        
+        if (!localStorage.getItem('dwp_user_email')) {
+          localStorage.setItem('dwp_user_email', 'nothingsubodh@gmail.com')
+        }
+
+        // Set a mock Professional subscription so all features are unlocked right away
+        localStorage.setItem('dwp_subscription', JSON.stringify({
+          id: 'demo-sub',
+          userId: 'demo-user-id',
+          planId: 'sovereign_pro',
+          plan: 'sovereign_pro',
+          planName: 'Web3 Pro (Demo Sandbox)',
+          status: 'active',
+          mode: 'decentralized',
+          storageUsed: 0,
+          storageLimit: 100 * 1024 * 1024 * 1024,
+          trialEndsAt: null,
+          subscriptionEndsAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }))
+
+        setIsConnected(true)
+        setIsDevOverride(true)
+        setAddress(authData.walletAddress || walletAddress)
+        toast.success('Sandbox Demo Mode Activated with Backend Sync!')
+      } else {
+        throw new Error('No authentication token received')
+      }
+    } catch (error: any) {
+      console.warn('Demo backend sync failed:', error)
+      // Fallback for offline demo
+      localStorage.setItem('dwp_is_demo', 'true')
+      localStorage.setItem('dwp_wallet_address', '0xDemoSandbox77777777777777777777777777')
+      localStorage.setItem('dwp_wallet_connected', 'true')
+      
+      localStorage.setItem('dwp_subscription', JSON.stringify({
+        id: 'demo-sub',
+        userId: 'demo-user-id',
+        planId: 'sovereign_pro',
+        plan: 'sovereign_pro',
+        planName: 'Web3 Pro (Demo Sandbox)',
+        status: 'active',
+        mode: 'decentralized',
+        storageUsed: 0,
+        storageLimit: 100 * 1024 * 1024 * 1024,
+        trialEndsAt: null,
+        subscriptionEndsAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }))
+
+      setIsConnected(true)
+      setIsDevOverride(true)
+      setAddress('0xDemoSandbox77777777777777777777777777')
+      toast.success('Sandbox Demo Mode Activated (Offline Fallback)')
+    } finally {
+      setIsConnecting(false)
+    }
   }
 
   const handleWalletConnect = async (walletAddress: string, customPrivateKey?: string) => {

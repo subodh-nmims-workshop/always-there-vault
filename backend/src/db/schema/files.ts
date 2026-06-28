@@ -2,6 +2,7 @@ import { pgTable, uuid, varchar, bigint, boolean, timestamp, jsonb, text } from 
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 import { folders } from './folders';
+import { beneficiaries } from './beneficiaries';
 
 export const files = pgTable('files', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
@@ -31,6 +32,9 @@ export const files = pgTable('files', {
   // Relations
   folderId: uuid('folder_id').references(() => folders.id, { onDelete: 'set null' }),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+
+  // Inheritance assignment — which nominee receives this specific file on protocol trigger
+  assignedBeneficiaryId: uuid('assigned_beneficiary_id').references(() => beneficiaries.id, { onDelete: 'set null' }),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

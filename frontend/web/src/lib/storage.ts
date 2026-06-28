@@ -40,6 +40,7 @@ export interface StoredBeneficiary {
   walletAddress: string;
   createdAt: number;
   enabled: boolean;
+  isVerified?: boolean;
 }
 
 export interface StoredHeartbeat {

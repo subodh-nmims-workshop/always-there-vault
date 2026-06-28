@@ -47,6 +47,7 @@ export function AssetCreationForm() {
   const [isShareAssetModalOpen, setIsShareAssetModalOpen] = useState(false)
   const [shareAssetTarget, setShareAssetTarget] = useState<StoredAsset | null>(null)
   const [shareAssetSelection, setShareAssetSelection] = useState<string[]>([])
+  const [assignedBeneficiaryId, setAssignedBeneficiaryId] = useState<string>('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isOnChainModalOpen, setIsOnChainModalOpen] = useState(false)
   const [onChainForm, setOnChainForm] = useState({
@@ -539,6 +540,8 @@ export function AssetCreationForm() {
   const openShareAssetModal = (asset: StoredAsset) => {
     setShareAssetTarget(asset)
     setShareAssetSelection(asset.beneficiaries || [])
+    // Preset the single-nominee assignment if already set
+    setAssignedBeneficiaryId((asset as any).assignedBeneficiaryId || '')
     setIsShareAssetModalOpen(true)
   }
 
@@ -568,10 +571,29 @@ export function AssetCreationForm() {
   const handleSaveAssetSharing = async () => {
     if (!shareAssetTarget) return
     try {
+      // Persist multi-select sharing locally (for display/UI purposes)
       await storage.updateAssetBeneficiaries(shareAssetTarget.id, shareAssetSelection)
+
+      // Persist single-nominee inheritance assignment to backend
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      try {
+        await fetch(`${apiEndpoint}/api/assets/${shareAssetTarget.id}/assign-nominee`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ assignedBeneficiaryId: assignedBeneficiaryId || null })
+        })
+      } catch (apiErr) {
+        console.warn('⚠️ Could not sync nominee assignment to backend:', apiErr)
+      }
+
       setIsShareAssetModalOpen(false)
       setShareAssetTarget(null)
       setShareAssetSelection([])
+      setAssignedBeneficiaryId('')
       await loadAssets()
       toast.success('Asset permissions updated')
     } catch (error) {
@@ -1980,34 +2002,72 @@ export function AssetCreationForm() {
                     <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">No beneficiaries configured yet.</p>
                   </div>
                 ) : (
-                  <div className="max-h-64 overflow-y-auto space-y-2 custom-scrollbar">
-                    {beneficiaries.map((b: any) => {
-                      const checked = shareAssetSelection.includes(b.id)
-                      return (
+                  <div className="space-y-3">
+                    {/* Inheritance Assignment — single nominee */}
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Assign Inheritance To</p>
+                      <div className="max-h-52 overflow-y-auto space-y-2 custom-scrollbar">
+                        {/* None option */}
                         <button
-                          key={b.id}
+                          key="none"
                           type="button"
-                          onClick={() => toggleAssetShareSelection(b.id)}
-                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${checked
-                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400'
-                            : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
-                            }`}
+                          onClick={() => setAssignedBeneficiaryId('')}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${
+                            assignedBeneficiaryId === ''
+                              ? 'bg-slate-200/60 dark:bg-slate-700/60 border-slate-400 dark:border-slate-500 text-slate-700 dark:text-slate-200'
+                              : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
+                          }`}
                         >
                           <div>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{b.name}</p>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{b.email}</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">None (No Inheritance Assignment)</p>
+                            <p className="text-[11px] text-slate-400">This file will not be sent to any nominee</p>
                           </div>
-                          <div
-                            className={`w-5 h-5 rounded-md border flex items-center justify-center ${checked
-                              ? 'bg-blue-500 border-blue-400'
-                              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'
-                              }`}
-                          >
-                            {checked && <CheckCircle className="w-3 h-3 text-white" />}
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            assignedBeneficiaryId === '' ? 'border-blue-500 bg-blue-500' : 'border-slate-400'
+                          }`}>
+                            {assignedBeneficiaryId === '' && <div className="w-2 h-2 rounded-full bg-white" />}
                           </div>
                         </button>
-                      )
-                    })}
+
+                        {beneficiaries.map((b: any) => {
+                          const selected = assignedBeneficiaryId === b.id
+                          return (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => setAssignedBeneficiaryId(b.id)}
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all ${
+                                selected
+                                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+                                  : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
+                              }`}
+                            >
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{b.name}</p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400">{b.email}</p>
+                              </div>
+                              {/* Radio button indicator */}
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                selected ? 'border-emerald-500 bg-emerald-500' : 'border-slate-400'
+                              }`}>
+                                {selected && <div className="w-2 h-2 rounded-full bg-white" />}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Info note */}
+                    {assignedBeneficiaryId && (
+                      <div className="flex items-start gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-4 py-3">
+                        <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-[11px] text-emerald-300 leading-relaxed">
+                          On heartbeat timeout, this file will be sent exclusively to{' '}
+                          <strong>{beneficiaries.find((b: any) => b.id === assignedBeneficiaryId)?.name}</strong>.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

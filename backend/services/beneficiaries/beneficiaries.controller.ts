@@ -59,6 +59,24 @@ export class BeneficiariesController {
   async deleteBeneficiary(@Param('id') id: string): Promise<void> {
     return this.beneficiariesService.deleteBeneficiary(id);
   }
+
+  @Post(':id/send-verification')
+  @ApiOperation({ summary: 'Send verification code to beneficiary email' })
+  @ApiResponse({ status: 200, description: 'Verification email sent successfully' })
+  async sendVerificationCode(@Param('id') id: string): Promise<any> {
+    return this.beneficiariesService.sendVerificationCode(id);
+  }
+
+  @Post(':id/verify')
+  @ApiOperation({ summary: 'Verify beneficiary with code' })
+  @ApiResponse({ status: 200, description: 'Beneficiary verified successfully' })
+  async verifyBeneficiary(
+    @Param('id') id: string,
+    @Body('code') code: string,
+  ): Promise<any> {
+    return this.beneficiariesService.verifyBeneficiary(id, code);
+  }
+
   @Get('in-wills')
   @ApiOperation({ summary: 'Get all owners who designated this wallet as beneficiary' })
   @ApiResponse({ status: 200, description: 'Owners retrieved successfully' })

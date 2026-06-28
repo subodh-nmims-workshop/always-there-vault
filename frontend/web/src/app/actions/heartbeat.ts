@@ -184,6 +184,24 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
 
         // SYNC TO BACKEND
         try {
+            const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+            if (isDemo) {
+                const email = typeof window !== 'undefined' ? localStorage.getItem('dwp_user_email') || '' : ''
+                const prevDemoEmail = typeof window !== 'undefined' ? localStorage.getItem('demo_user_email') || '' : ''
+                if (email && email !== prevDemoEmail) {
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('demo_user_email_pending', email)
+                        localStorage.setItem('demo_user_email_verified', 'false')
+                    }
+                    return {
+                        success: true,
+                        verificationRequired: true,
+                        pendingEmail: email
+                    }
+                }
+                return { success: true }
+            }
+
             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             const email = localStorage.getItem('dwp_user_email') || ''
             const token = localStorage.getItem('dwp_token')
@@ -203,8 +221,10 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
                     localStorage.removeItem('dwp_token')
                     throw new Error('Authentication expired. Please reconnect your wallet.')
                 }
-                throw new Error(`Profile sync failed: ${profileRes.statusText}`)
+                const errorData = await profileRes.json().catch(() => ({}))
+                throw new Error(errorData.message || `Profile sync failed: ${profileRes.statusText}`)
             }
+            const profileData = await profileRes.json();
 
             // Then update heartbeat config
             const settingsRes = await fetch(`${apiEndpoint}/api/heartbeat/settings`, {
@@ -227,12 +247,15 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
                 throw new Error(`Settings sync failed: ${settingsRes.statusText}`)
             }
             console.log('✅ Settings synced to backend')
+            return { 
+                success: true, 
+                verificationRequired: profileData.verificationRequired, 
+                pendingEmail: profileData.pendingEmail 
+            }
         } catch (syncErr: any) {
             console.warn('⚠️ Settings sync failed', syncErr)
             return { success: false, error: syncErr.message || 'Failed to sync settings with protocol cloud.' }
         }
-
-        return { success: true }
     } catch (error: any) {
         console.error('Settings update error:', error)
         return { success: false, error: error.message || 'Failed to update protocol settings.' }

@@ -80,11 +80,12 @@ export const heartbeatConfigsRelations = relations(heartbeatConfigs, ({ one }) =
 }));
 
 // Beneficiaries relations
-export const beneficiariesRelations = relations(beneficiaries, ({ one }) => ({
+export const beneficiariesRelations = relations(beneficiaries, ({ one, many }) => ({
   user: one(users, {
     fields: [beneficiaries.userId],
     references: [users.id],
   }),
+  assignedFiles: many(files),  // files assigned to this beneficiary for inheritance
 }));
 
 export const verificationTokensRelations = relations(verificationTokens, ({ one }) => ({

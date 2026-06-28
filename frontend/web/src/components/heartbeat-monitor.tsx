@@ -28,6 +28,160 @@ export function HeartbeatMonitor() {
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
+  // Email OTP Verification States
+  const [profileEmail, setProfileEmail] = useState<string>('')
+  const [pendingEmail, setPendingEmail] = useState<string>('')
+  const [emailVerified, setEmailVerified] = useState<boolean>(false)
+  const [inputEmail, setInputEmail] = useState<string>('')
+  const [otpCode, setOtpCode] = useState<string>('')
+  const [showOtpField, setShowOtpField] = useState<boolean>(false)
+  const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState<boolean>(false)
+  const [resendCooldown, setResendCooldown] = useState<number>(0)
+  const [updatedAt, setUpdatedAt] = useState<string>('')
+
+  const fetchProfileInfo = async () => {
+    try {
+      const token = localStorage.getItem('dwp_token')
+      if (!token) return
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setProfileEmail(data.email || '')
+        setPendingEmail(data.pendingEmail || '')
+        setEmailVerified(data.emailVerified || false)
+        setInputEmail(data.pendingEmail || data.email || '')
+        setUpdatedAt(data.updatedAt || '')
+      }
+    } catch (err) {
+      console.error("Error fetching profile in heartbeat monitor:", err)
+    }
+  }
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
+
+  useEffect(() => {
+    if (showSettings) {
+      fetchProfileInfo()
+      setOtpCode('')
+      setShowOtpField(false)
+    }
+  }, [showSettings])
+
+  useEffect(() => {
+    if (showSettings) {
+      if (updatedAt) {
+        const lastUpdated = new Date(updatedAt).getTime()
+        const diff = Date.now() - lastUpdated
+        if (diff > 0 && diff < 15000) {
+          const remaining = Math.ceil((15000 - diff) / 1000)
+          if (remaining > 0) {
+            setResendCooldown(remaining)
+            return
+          }
+        }
+        setResendCooldown(0)
+      }
+    }
+  }, [showSettings, updatedAt])
+
+  const handleSendOtp = async () => {
+    if (!inputEmail) {
+      toast.error("Please enter a valid email address first.")
+      return
+    }
+    setIsSendingOtp(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      
+      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email: inputEmail })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setPendingEmail(data.pendingEmail || inputEmail)
+        setEmailVerified(false)
+        setShowOtpField(true)
+        setUpdatedAt(data.updatedAt || '')
+        setResendCooldown(15)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_user_email', inputEmail)
+        }
+        toast.success("Verification code sent to your email address!")
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Error sending verification code.")
+    } finally {
+      setIsSendingOtp(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP code.")
+      return
+    }
+    setIsVerifyingOtp(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: otpCode.trim() })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          toast.success("Email verified successfully!")
+          setProfileEmail(pendingEmail || inputEmail)
+          setEmailVerified(true)
+          setShowOtpField(false)
+          setOtpCode('')
+          setResendCooldown(0)
+          await fetchProfileInfo()
+        } else {
+          toast.error(data.message || "Invalid verification code.")
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message || "Failed to verify email code.")
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Error verifying email code.")
+    } finally {
+      setIsVerifyingOtp(false)
+    }
+  }
+
   useEffect(() => {
     const address = localStorage.getItem('dwp_wallet_address')
     if (address) {
@@ -136,7 +290,7 @@ export function HeartbeatMonitor() {
         toast.success('Heartbeat Recorded', {
           description: 'Proof-of-life verified successfully.'
         })
-      } else throw new Error('Local Context Rejected Pulse')
+      } else throw new Error(res.error || 'Local Context Rejected Pulse')
 
     } catch (error: any) {
       console.error('Failed to record heartbeat:', error)
@@ -149,6 +303,13 @@ export function HeartbeatMonitor() {
   }
 
   const handleSettingsUpdate = async () => {
+    if (inputEmail && (inputEmail !== profileEmail || !emailVerified)) {
+      toast.error('Email Verification Required', {
+        description: 'Please verify your notification email address using the Send OTP button.'
+      })
+      return
+    }
+
     setIsSavingSettings(true)
 
     try {
@@ -604,34 +765,117 @@ export function HeartbeatMonitor() {
               </div>
 
               <div className="space-y-6 mb-8">
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Alert Notification Email</label>
-                  <p className="text-xs text-slate-500">Protocol warnings will be sent here.</p>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
-                    defaultValue={typeof window !== 'undefined' ? localStorage.getItem('dwp_user_email') || '' : ''}
-                    onChange={(e) => {
-                      if (typeof window !== 'undefined') localStorage.setItem('dwp_user_email', e.target.value)
-                    }}
-                  />
+                {/* Alert Notification Email with verification status and OTP flow */}
+                <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black tracking-wider text-slate-800 dark:text-slate-100 uppercase">
+                      Alert Notification Email
+                    </label>
+                    {inputEmail && (
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        emailVerified && inputEmail === profileEmail
+                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      }`}>
+                        {emailVerified && inputEmail === profileEmail ? (
+                          <>
+                            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                            Verified
+                          </>
+                        ) : (
+                          <>
+                            <ShieldAlert className="w-3 h-3 text-amber-400" />
+                            Pending Verification
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">
+                    Protocol warnings will be sent here.
+                  </p>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="email"
+                        placeholder="your@email.com"
+                        value={inputEmail}
+                        onChange={(e) => {
+                          setInputEmail(e.target.value)
+                        }}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm"
+                      />
+                    </div>
+                    {inputEmail && (inputEmail !== profileEmail || !emailVerified) && (
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={isSendingOtp || resendCooldown > 0}
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs px-4 rounded-xl border border-blue-500/30 transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSendingOtp ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : resendCooldown > 0 ? (
+                          `Resend OTP (${resendCooldown}s)`
+                        ) : showOtpField ? (
+                          'Resend OTP'
+                        ) : (
+                          'Send OTP'
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* OTP Field */}
+                  {showOtpField && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-2.5"
+                    >
+                      <p className="text-xs text-blue-400 font-black">
+                        Enter the 6-digit OTP code sent to your email:
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="000000"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                          className="w-28 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-3 py-2 outline-none text-center font-mono text-base font-black tracking-[0.2em]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyOtp}
+                          disabled={isVerifyingOtp}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
+                        >
+                          {isVerifyingOtp ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            'Verify OTP'
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Heartbeat Interval</label>
-                  <p className="text-xs text-slate-500">How frequently you must check in.</p>
+                  <label className="block text-xs font-black tracking-wider text-slate-800 dark:text-slate-100 uppercase">Heartbeat Interval</label>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">How frequently you must check in.</p>
                   <select
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-850 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm"
                     value={settings.heartbeatInterval}
                     onChange={(e) => setSettings(prev => ({ ...prev, heartbeatInterval: parseInt(e.target.value) }))}
                   >
-                    <optgroup label="── Demo / Testing ──">
+                    <optgroup label="── Demo / Testing ──" className="text-slate-900 dark:text-slate-100 font-bold">
                       <option value={1}>⚡ 1 Minute (Demo)</option>
                       <option value={2}>⚡ 2 Minutes (Demo)</option>
                       <option value={5}>⚡ 5 Minutes (Demo) </option>
                     </optgroup>
-                    <optgroup label="── Production ──">
+                    <optgroup label="── Production ──" className="text-slate-900 dark:text-slate-100 font-bold">
                       <option value={7}>7 days (Weekly)</option>
                       <option value={14}>14 days (Bi-weekly)</option>
                       <option value={30}>30 days (Monthly)</option>
@@ -642,19 +886,19 @@ export function HeartbeatMonitor() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Grace Period</label>
-                  <p className="text-xs text-slate-500">Time before asset release triggers after overdue.</p>
+                  <label className="block text-xs font-black tracking-wider text-slate-800 dark:text-slate-100 uppercase">Grace Period</label>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Time before asset release triggers after overdue.</p>
                   <select
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-850 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm"
                     value={settings.gracePeriod}
                     onChange={(e) => setSettings(prev => ({ ...prev, gracePeriod: parseInt(e.target.value) }))}
                   >
-                    <optgroup label="── Demo / Testing ──">
+                    <optgroup label="── Demo / Testing ──" className="text-slate-900 dark:text-slate-100 font-bold">
                       <option value={1}>1 Minute Rescue Window (Demo)</option>
                       <option value={2}>2 Minute Rescue Window (Demo)</option>
                       <option value={3}>3 Minute Rescue Window (Demo)</option>
                     </optgroup>
-                    <optgroup label="── Production ──">
+                    <optgroup label="── Production ──" className="text-slate-900 dark:text-slate-100 font-bold">
                       <option value={7}>7 days Rescue Window</option>
                       <option value={14}>14 days Rescue Window</option>
                       <option value={30}>30 days Rescue Window</option>
@@ -664,10 +908,10 @@ export function HeartbeatMonitor() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Warning Stages (Notification Cycles)</label>
-                  <p className="text-xs text-slate-500">Number of alert cycles sent before the switch is triggered.</p>
+                  <label className="block text-xs font-black tracking-wider text-slate-800 dark:text-slate-100 uppercase">Warning Stages (Notification Cycles)</label>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Number of alert cycles sent before the switch is triggered.</p>
                   <select
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-850 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm"
                     value={settings.bufferMisses}
                     onChange={(e) => setSettings(prev => ({ ...prev, bufferMisses: parseInt(e.target.value) }))}
                   >

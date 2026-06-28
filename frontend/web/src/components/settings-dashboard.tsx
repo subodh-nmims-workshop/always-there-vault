@@ -43,7 +43,8 @@ import {
     Send,
     Terminal,
     X,
-    Upload
+    Upload,
+    Mail
 } from 'lucide-react'
 import { translations, Language, getLanguage, setLanguage, subscribeI18n } from '@/utils/i18n'
 import WebStorageService, { AppState } from '@/lib/storage'
@@ -72,22 +73,43 @@ export function SettingsDashboard() {
   const [mfaCode, setMfaCode] = useState('')
   const [isMfaLoading, setIsMfaLoading] = useState(false)
 
+  // Email Verification States
+  const [showEmailVerifyModal, setShowEmailVerifyModal] = useState(false)
+  const [emailVerifyCode, setEmailVerifyCode] = useState('')
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
+  const [verificationPendingEmail, setVerificationPendingEmail] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
+
+  useEffect(() => {
+    if (showEmailVerifyModal) {
+      if (profile?.updatedAt) {
+        const lastUpdated = new Date(profile.updatedAt).getTime()
+        const diff = Date.now() - lastUpdated
+        if (diff > 0 && diff < 15000) {
+          const remaining = Math.ceil((15000 - diff) / 1000)
+          if (remaining > 0) {
+            setResendCooldown(remaining)
+            return
+          }
+        }
+        setResendCooldown(0)
+      } else {
+        setResendCooldown(15)
+      }
+    }
+  }, [showEmailVerifyModal, profile?.updatedAt])
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
 
   const fetchProfile = async () => {
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        setProfile({
-          id: 'demo-user-id',
-          walletAddress: '0xDemoSandbox77777777777777777777777777',
-          recoveryAddress: localStorage.getItem('demo_recovery_address') || null,
-          twoFactorEnabled: localStorage.getItem('demo_2fa_enabled') === 'true',
-          storageEngine: 'web3',
-        })
-        setIsProfileLoading(false)
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       if (!token) return
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
@@ -345,6 +367,118 @@ export function SettingsDashboard() {
     }
   }
 
+  const handleVerifyEmailCode = async () => {
+    if (!emailVerifyCode.trim() || emailVerifyCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit code.")
+      return
+    }
+    setIsVerifyingEmail(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: emailVerifyCode.trim() })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          toast.success("Email verified successfully!")
+          setShowEmailVerifyModal(false)
+          setEmailVerifyCode('')
+          fetchProfile()
+        } else {
+          toast.error(data.message || "Invalid verification code.")
+        }
+      } else {
+        throw new Error("Failed to verify email code.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error verifying email code.")
+    } finally {
+      setIsVerifyingEmail(false)
+    }
+  }
+
+  const handleResendEmailCode = async () => {
+    if (resendCooldown > 0) return
+    setIsVerifyingEmail(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        toast.success("Verification code resent successfully!")
+        setResendCooldown(15)
+      } else {
+        throw new Error("Failed to resend code.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error resending code.")
+    } finally {
+      setIsVerifyingEmail(false)
+    }
+  }
+
+  const handleDeleteEmail = async () => {
+    try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        localStorage.removeItem('demo_user_email_pending')
+        localStorage.removeItem('demo_user_email_verified')
+        localStorage.removeItem('dwp_user_email')
+        
+        storage.saveSettings({ emailNotification: '' })
+        const newState = await storage.getAppState()
+        setAppState(newState)
+        
+        setEmailInput('')
+        setProfile((prev: any) => prev ? { ...prev, email: null, pendingEmail: null, emailVerified: false } : null)
+        toast.success('Email removed successfully')
+        return
+      }
+
+      const token = localStorage.getItem('dwp_token')
+      if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
+
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      setIsUpdating(true)
+      const res = await fetch(`${apiEndpoint}/api/users/delete-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      setIsUpdating(false)
+
+      if (res.ok) {
+        storage.saveSettings({ emailNotification: '' })
+        localStorage.removeItem('dwp_user_email')
+        const newState = await storage.getAppState()
+        setAppState(newState)
+        
+        toast.success('Email removed successfully')
+        setEmailInput('')
+        fetchProfile()
+      } else {
+        toast.error('Failed to remove email')
+      }
+    } catch (err: any) {
+      setIsUpdating(false)
+      console.error('Failed to delete email:', err)
+      toast.error('Error removing email', { description: err.message })
+    }
+  }
+
   const [appState, setAppState] = useState<AppState | null>(null)
   const [emailInput, setEmailInput] = useState('')
   const [walletAddress, setWalletAddress] = useState('')
@@ -373,6 +507,7 @@ export function SettingsDashboard() {
     }
 
     loadState()
+    fetchProfile()
 
     const unsubscribe = subscribeI18n(() => {
       const newLang = getLanguage()
@@ -384,10 +519,12 @@ export function SettingsDashboard() {
 }, [])
 
   useEffect(() => {
-    if (appState?.settings?.emailNotification && !emailInput) {
+    if (profile) {
+      setEmailInput(profile.pendingEmail || profile.email || '')
+    } else if (appState?.settings?.emailNotification && !emailInput) {
       setEmailInput(appState.settings.emailNotification)
     }
-  }, [appState])
+  }, [appState, profile])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(walletAddress)
@@ -439,6 +576,13 @@ export function SettingsDashboard() {
 
       if (res.success) {
         toast.success('Protocol configuration updated')
+        if (res.verificationRequired) {
+          setVerificationPendingEmail(res.pendingEmail || activeEmail)
+          setShowEmailVerifyModal(true)
+          setResendCooldown(15)
+          toast.info('Verification code sent to your new email address!')
+        }
+        fetchProfile()
       } else {
         toast.error('Sync to backend failed', { description: res.error })
       }
@@ -809,6 +953,96 @@ export function SettingsDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Email Verification Modal */}
+      <AnimatePresence>
+        {showEmailVerifyModal && (
+          <Portal>
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-lg w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
+            >
+              <button 
+                onClick={() => setShowEmailVerifyModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="icon-container w-12 h-12 mx-auto bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Mail className="size-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Verify Your Email</h3>
+                  <p className="text-xs text-slate-400 mt-1">We sent a 6-digit verification code to <span className="text-white font-bold">{verificationPendingEmail}</span></p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
+                    Verification Code
+                  </label>
+                  <input 
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={emailVerifyCode}
+                    onChange={(e) => setEmailVerifyCode(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-blue-500"
+                  />
+                  <div className="flex justify-between items-center px-1">
+                    <p className="text-[10px] text-slate-500">
+                      Enter the code to verify your address.
+                    </p>
+                    <button 
+                      onClick={handleResendEmailCode}
+                      disabled={isVerifyingEmail || resendCooldown > 0}
+                      className="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline disabled:opacity-50"
+                    >
+                      {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : "Resend Code"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => setShowEmailVerifyModal(false)}
+                    variant="outline"
+                    className="flex-1 bg-transparent border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-5 rounded-xl hover:bg-white/5"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleVerifyEmailCode}
+                    disabled={isVerifyingEmail}
+                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-widest py-5 rounded-xl shadow-lg"
+                  >
+                    {isVerifyingEmail ? "Verifying..." : "Verify & Save"}
+                  </Button>
+                </div>
+
+                <div className="text-center pt-2">
+                  <button
+                    onClick={async () => {
+                      if (confirm("Discard this verification and reset the email?")) {
+                        setShowEmailVerifyModal(false)
+                        await handleDeleteEmail()
+                      }
+                    }}
+                    className="text-[10px] text-red-400 hover:text-red-300 font-bold underline cursor-pointer"
+                  >
+                    Discard verification request & clear email
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          </Portal>
+        )}
+      </AnimatePresence>
+
       {/* Recovery Setup Wizard Dialog */}
       <AnimatePresence>
         {showRecoveryWizard && generatedWallet && (
@@ -1010,14 +1244,14 @@ export function SettingsDashboard() {
         <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-4">
           <Shield className="w-5 h-5 text-[#2b52ff]" />
           <div>
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">AlwaysThere Core</h2>
+            <h2 className="text-base font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">AlwaysThere Core (Protocol Lifecycle Config)</h2>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10 backdrop-blur-xl">
                 <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2 text-slate-900 dark:text-white">
+                    <CardTitle className="text-base flex items-center gap-2 font-black text-slate-950 dark:text-white">
                         <Clock className="size-4 text-blue-500 dark:text-blue-400" />
                         Heartbeat Parameters
                     </CardTitle>
@@ -1026,8 +1260,8 @@ export function SettingsDashboard() {
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Heartbeat Interval</label>
-                                <span className="text-blue-600 dark:text-blue-400 font-mono font-bold text-sm">{appState.settings.heartbeatInterval} Days</span>
+                                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Heartbeat Interval</label>
+                                <span className="text-blue-600 dark:text-blue-400 font-mono font-black text-base">{appState.settings.heartbeatInterval} Days</span>
                             </div>
                             <input 
                                 type="range" min="1" max="90" 
@@ -1041,8 +1275,8 @@ export function SettingsDashboard() {
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Grace Period</label>
-                                <span className="text-orange-600 dark:text-orange-400 font-mono font-bold text-sm">{appState.settings.gracePeriod} Days</span>
+                                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Grace Period</label>
+                                <span className="text-orange-600 dark:text-orange-400 font-mono font-black text-base">{appState.settings.gracePeriod} Days</span>
                             </div>
                             <input 
                                 type="range" min="1" max="60" 
@@ -1233,53 +1467,103 @@ export function SettingsDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                <MessageSquare className="size-3" /> Email Alerts (Verification Required)
-                            </label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <MessageSquare className="size-3" /> Email Alerts (Verification Required)
+                                </label>
+                                {profile?.email && profile?.emailVerified && profile.email === emailInput && (
+                                  <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                    VERIFIED
+                                  </span>
+                                )}
+                                {profile?.pendingEmail && profile.pendingEmail === emailInput && (
+                                  <button 
+                                    onClick={() => {
+                                      setVerificationPendingEmail(profile.pendingEmail || '')
+                                      setShowEmailVerifyModal(true)
+                                    }}
+                                    className="text-[9px] font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/20 flex items-center gap-1 cursor-pointer transition-colors"
+                                  >
+                                    PENDING VERIFICATION (VERIFY NOW)
+                                  </button>
+                                )}
+                            </div>
                             <div className="flex gap-2">
                                 <input 
                                     type="email" 
                                     placeholder="Enter backup email"
                                     value={emailInput}
                                     onChange={(e) => setEmailInput(e.target.value)}
-                                    onBlur={() => syncHeartbeatSettings(emailInput)}
                                     className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors"
                                 />
-                                <Button 
-                                    onClick={async () => {
-                                      // First make sure the latest email input is synced to the backend
-                                      await syncHeartbeatSettings(emailInput)
-                                      
-                                      // Then request the backend to dispatch a test email
-                                      try {
-                                        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-                                        const token = localStorage.getItem('dwp_token')
-                                        if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
-                                        
-                                        toast.info('Sending test email...')
-                                        const testRes = await fetch(`${apiEndpoint}/api/heartbeat/test-email`, {
-                                          headers: {
-                                            'Authorization': `Bearer ${token}`
+                                {profile?.email === emailInput && profile?.emailVerified ? (
+                                  <div className="flex gap-2">
+                                    <Button 
+                                        onClick={async () => {
+                                          try {
+                                            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                                            const token = localStorage.getItem('dwp_token')
+                                            if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
+                                            
+                                            toast.info('Sending test email...')
+                                            const testRes = await fetch(`${apiEndpoint}/api/heartbeat/test-email`, {
+                                              headers: {
+                                                'Authorization': `Bearer ${token}`
+                                              }
+                                            })
+                                            if (testRes.ok) {
+                                              const data = await testRes.json()
+                                              if (data.sent) {
+                                                toast.success('Test email sent!', { description: `Sent to: ${emailInput}` })
+                                              } else {
+                                                toast.error('Failed to send test email', { description: data.preview || 'Error' })
+                                              }
+                                            } else {
+                                              toast.error('Server error triggering test email')
+                                            }
+                                          } catch (err: any) {
+                                            toast.error('Failed to trigger test email', { description: err.message })
                                           }
-                                        })
-                                        if (testRes.ok) {
-                                          const data = await testRes.json()
-                                          if (data.sent) {
-                                            toast.success('Test email sent!', { description: `Sent to: ${emailInput}` })
-                                          } else {
-                                            toast.error('Failed to send test email', { description: data.preview || 'Error' })
-                                          }
-                                        } else {
-                                          toast.error('Server error triggering test email')
-                                        }
-                                      } catch (err: any) {
-                                        toast.error('Failed to trigger test email', { description: err.message })
-                                      }
-                                    }}
-                                    className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black px-4 h-10 rounded-xl"
-                                >
-                                  TEST MAIL
-                                </Button>
+                                        }}
+                                        className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[10px] font-black px-4 h-10 rounded-xl"
+                                    >
+                                      TEST MAIL
+                                    </Button>
+                                    <Button 
+                                        onClick={handleDeleteEmail}
+                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[10px] font-black px-3 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-colors"
+                                        title="Remove Email"
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </Button>
+                                  </div>
+                                ) : profile?.pendingEmail === emailInput ? (
+                                  <div className="flex gap-2">
+                                    <Button 
+                                        onClick={() => {
+                                          setVerificationPendingEmail(emailInput)
+                                          setShowEmailVerifyModal(true)
+                                        }}
+                                        className="bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-black px-4 h-10 rounded-xl shadow-md"
+                                    >
+                                      VERIFY
+                                    </Button>
+                                    <Button 
+                                        onClick={handleDeleteEmail}
+                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[10px] font-black px-3 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-colors"
+                                        title="Discard Verification"
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button 
+                                      onClick={() => syncHeartbeatSettings(emailInput)}
+                                      className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 h-10 rounded-xl shadow-md"
+                                  >
+                                    SAVE & VERIFY
+                                  </Button>
+                                )}
                             </div>
                         </div>
 

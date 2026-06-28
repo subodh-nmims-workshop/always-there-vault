@@ -20,13 +20,13 @@ async function dump() {
     console.log('--- HEARTBEAT CONFIGS ---');
     console.table(configs);
 
+    const subs = await sql`SELECT * FROM subscriptions;`;
+    console.log('--- SUBSCRIPTIONS ---');
+    console.table(subs);
+
     const beneficiaries = await sql`SELECT * FROM beneficiaries;`;
     console.log('--- BENEFICIARIES ---');
     console.table(beneficiaries);
-
-    const tokens = await sql`SELECT * FROM verification_tokens;`;
-    console.log('--- VERIFICATION TOKENS ---');
-    console.table(tokens);
 
   } catch (err) {
     console.error(err);

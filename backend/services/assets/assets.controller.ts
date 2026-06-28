@@ -199,6 +199,17 @@ export class AssetsController {
   ) {
     return this.assetsService.updateFolder(id, req.user.walletAddress, { name, parentId, beneficiaries });
   }
+
+  @Patch(':id/assign-nominee')
+  @ApiOperation({ summary: 'Assign a specific nominee to receive this file on heartbeat timeout' })
+  async assignNominee(
+    @Param('id') id: string,
+    @Body('assignedBeneficiaryId') assignedBeneficiaryId: string | null,
+    @Req() req: any,
+  ) {
+    const walletAddress = req.user.walletAddress;
+    return this.assetsService.assignNomineeToFile(id, walletAddress, assignedBeneficiaryId ?? null);
+  }
 }
 
 /**

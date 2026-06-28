@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { buildEmailShell, statRow, infoBox, alertStrip, ctaButton } from './email-templates';
 
 interface EmailOptions {
   to: string;
@@ -23,52 +24,35 @@ export class EmailService {
     this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${user}>`;
     this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000';
 
-    if (!user || user.includes('example') || user.includes('your-email') || user.includes('paste-your-16-digit')) {
-      console.warn('⚠️  SMTP/EMAIL user or pass not configured. Using temporary Ethereal account logic.');
-    }
-
     this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465, 
-      auth: {
-        user,
-        pass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
+      host, port,
+      secure: port === 465,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
     });
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
-    
-    // If no real email provided, use Ethereal for a REAL preview without credentials
-    if (!user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example')) {
-       try {
-         const testAccount = await nodemailer.createTestAccount();
-         const testTransporter = nodemailer.createTransport({
-           host: 'smtp.ethereal.email',
-           port: 587,
-           secure: false,
-           auth: { user: testAccount.user, pass: testAccount.pass }
-         });
+    const isUnconfigured = !user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example');
 
-         const info = await testTransporter.sendMail({
-           from: `"AlwaysThere Vault Test" <${user}>`,
-           to: options.to,
-           subject: options.subject,
-           html: options.html,
-         });
-
-         console.log('📬 REAL TEST MAIL SENT!');
-         console.log('🔗 VIEW PREVIEW HERE:', nodemailer.getTestMessageUrl(info));
-         return true;
-       } catch (err) {
-         console.error('Test account creation failed:', err);
-         return false;
-       }
+    if (isUnconfigured) {
+      try {
+        const testAccount = await nodemailer.createTestAccount();
+        const testTransporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email', port: 587, secure: false,
+          auth: { user: testAccount.user, pass: testAccount.pass }
+        });
+        const info = await testTransporter.sendMail({
+          from: `"AlwaysThere Vault" <${testAccount.user}>`,
+          to: options.to, subject: options.subject, html: options.html,
+        });
+        console.log('📬 TEST EMAIL SENT — Preview:', nodemailer.getTestMessageUrl(info));
+        return true;
+      } catch (err) {
+        console.error('Test account creation failed:', err);
+        return false;
+      }
     }
 
     try {
@@ -79,8 +63,7 @@ export class EmailService {
         text: options.text,
         html: options.html,
       });
-
-      console.log('✅ Email sent successfully to:', options.to);
+      console.log('✅ Email sent to:', options.to);
       return true;
     } catch (error) {
       console.error('Email service error:', error);
@@ -88,208 +71,273 @@ export class EmailService {
     }
   }
 
+  // ─────────────────────────────────────────
+  //  WELCOME
+  // ─────────────────────────────────────────
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Welcome, <strong>${name}</strong>.</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        Your AlwaysThere Vault is now active. You hold the most powerful tool for securing your digital legacy —
+        a decentralized, encrypted, and automated inheritance protocol.
+      </p>
+      ${infoBox(`
+        ${statRow('Trial Period', '30 Days Free', '#38bdf8')}
+        ${statRow('Encryption', 'AES-256 End-to-End', '#22c55e')}
+        ${statRow('Assets', 'Unlimited Uploads', '#a78bfa')}
+        ${statRow('Beneficiaries', 'Up to 5 Nominees', '#f59e0b', true)}
+      `)}
+      ${alertStrip('#22c55e', '<strong>Next Steps:</strong> Upload your first asset, add your beneficiaries, and configure your heartbeat schedule to activate the protocol.')}
+      ${ctaButton(`${this.frontendUrl}/dashboard`, 'Open Your Vault →', '#0ea5e9')}
+    `;
     return this.sendEmail({
       to: email,
-      subject: 'Welcome to AlwaysThere Vault',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1152d4;">Welcome to AlwaysThere Vault! 🎉</h1>
-          <p>Hi ${name},</p>
-          <p>Thank you for joining AlwaysThere Vault. Your digital legacy is now secure.</p>
-          <h2>What's Next?</h2>
-          <ul>
-            <li>Upload your first digital asset</li>
-            <li>Add beneficiaries</li>
-            <li>Set up your heartbeat schedule</li>
-            <li>Explore premium features</li>
-          </ul>
-          <p>You have 30 days of free trial to explore all features!</p>
-          <a href="${this.frontendUrl}/dashboard" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-            Go to Dashboard
-          </a>
-          <p style="color: #666; font-size: 12px; margin-top: 40px;">
-            If you have any questions, reply to this email or visit our support center.
-          </p>
-        </div>
-      `,
-      text: `Welcome to AlwaysThere Vault! Hi ${name}, thank you for joining. Start by uploading your first asset and adding beneficiaries.`,
+      subject: 'Your AlwaysThere Vault is Ready',
+      html: buildEmailShell({
+        accentColor: '#0ea5e9',
+        accentGlow: 'rgba(14,165,233,0.25)',
+        icon: '🔐',
+        headline: 'Vault Activated',
+        subline: 'Your Digital Legacy is Now Secured',
+        body,
+        footerNote: 'You are receiving this because you created an AlwaysThere account.',
+      }),
+      text: `Welcome ${name}! Your AlwaysThere Vault is active. Start by uploading your first asset.`,
     });
   }
 
-  async sendBeneficiaryAddedEmail(email: string, name: string, ownerName: string): Promise<boolean> {
+  // ─────────────────────────────────────────
+  //  EMAIL VERIFICATION OTP
+  // ─────────────────────────────────────────
+  async sendVerificationEmail(email: string, code: string): Promise<boolean> {
+    const body = `
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        To protect your vault, please verify your email address. This address will receive
+        all critical heartbeat alerts and inheritance execution notifications.
+      </p>
+      <div style="background:#060d1a;border:1px solid rgba(14,165,233,0.3);border-radius:12px;padding:28px;margin:24px 0;text-align:center;">
+        <p style="margin:0 0 12px;font-size:11px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;">Your Verification Code</p>
+        <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(14,165,233,0.5);">${code}</div>
+        <p style="margin:12px 0 0;font-size:12px;color:#475569;">Expires in <strong style="color:#f59e0b;">15 minutes</strong></p>
+      </div>
+      ${alertStrip('#f59e0b', 'If you did not request this code, please ignore this email. Your account remains secure.')}
+    `;
     return this.sendEmail({
       to: email,
-      subject: 'You have been added as a beneficiary',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1152d4;">You're a Beneficiary 🎁</h1>
-          <p>Hi ${name},</p>
-          <p><strong>${ownerName}</strong> has added you as a beneficiary in their AlwaysThere Vault account.</p>
-          <h2>What does this mean?</h2>
-          <p>You will receive access to designated digital assets if the owner's heartbeat is not detected within the specified timeframe.</p>
-          <h2>Important Information:</h2>
-          <ul>
-            <li>You don't need to do anything right now</li>
-            <li>We'll notify you if action is required</li>
-            <li>All assets are encrypted and secure</li>
-            <li>You can create your own account anytime</li>
-          </ul>
-          <a href="${this.frontendUrl}" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-            Learn More
-          </a>
-        </div>
-      `,
+      subject: 'AlwaysThere Vault — Email Verification Code',
+      html: buildEmailShell({
+        accentColor: '#0ea5e9',
+        accentGlow: 'rgba(14,165,233,0.2)',
+        icon: '✉️',
+        headline: 'Verify Your Email',
+        subline: 'One-Time Verification Code',
+        body,
+        footerNote: 'This code expires in 15 minutes. Do not share it with anyone.',
+      }),
+      text: `Your AlwaysThere verification code is: ${code}. Expires in 15 minutes.`,
+    });
+  }
+
+  async sendBeneficiaryVerificationEmail(email: string, name: string, code: string, ownerName: string): Promise<boolean> {
+    const body = `
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        To activate your status as a nominee beneficiary in <strong>${ownerName}</strong>'s Digital Will Vault, please provide the verification code below to the vault owner, or enter it in your dashboard verification panel.
+      </p>
+      <div style="background:#060d1a;border:1px solid rgba(167,139,250,0.3);border-radius:12px;padding:28px;margin:24px 0;text-align:center;">
+        <p style="margin:0 0 12px;font-size:11px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;">Beneficiary OTP Code</p>
+        <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(167,139,250,0.5);">${code}</div>
+        <p style="margin:12px 0 0;font-size:12px;color:#475569;">Expires in <strong style="color:#f59e0b;">15 minutes</strong></p>
+      </div>
+      ${alertStrip('#f59e0b', 'If you did not request this, you can ignore this email. Your status is secured.')}
+    `;
+    return this.sendEmail({
+      to: email,
+      subject: `AlwaysThere Vault — Beneficiary Verification Code`,
+      html: buildEmailShell({
+        accentColor: '#a78bfa',
+        accentGlow: 'rgba(167,139,250,0.2)',
+        icon: '🔑',
+        headline: 'Nominee Verification',
+        subline: 'Verify Beneficiary Status',
+        body,
+        footerNote: 'This code expires in 15 minutes. Do not share it with unauthorized users.',
+      }),
+      text: `Your AlwaysThere beneficiary verification code is: ${code}. Expires in 15 minutes.`,
+    });
+  }
+
+  // ─────────────────────────────────────────
+  //  BENEFICIARY ADDED
+  // ─────────────────────────────────────────
+  async sendBeneficiaryAddedEmail(email: string, name: string, ownerName: string): Promise<boolean> {
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hello, <strong>${name}</strong>.</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        <strong style="color:#ffffff;">${ownerName}</strong> has designated you as a beneficiary
+        in their AlwaysThere Vault — a secure, blockchain-backed digital inheritance protocol.
+      </p>
+      ${infoBox(`
+        ${statRow('Designated By', ownerName, '#e2e8f0')}
+        ${statRow('Status', 'Active Beneficiary', '#22c55e')}
+        ${statRow('Action Required', 'None at this time', '#64748b', true)}
+      `)}
+      ${alertStrip('#a78bfa', 'You will receive an automatic notification if the vault owner\'s heartbeat goes undetected for the configured duration. At that point, you will be granted access to assets assigned specifically to you.')}
+      ${ctaButton(`${this.frontendUrl}`, 'Learn About AlwaysThere →', '#a78bfa')}
+    `;
+    return this.sendEmail({
+      to: email,
+      subject: `${ownerName} has named you as a Vault Beneficiary`,
+      html: buildEmailShell({
+        accentColor: '#a78bfa',
+        accentGlow: 'rgba(167,139,250,0.2)',
+        icon: '🎖️',
+        headline: 'You Are a Beneficiary',
+        subline: 'Vault Inheritance Protocol — Active',
+        body,
+        footerNote: `You were designated as a beneficiary by ${ownerName}. No action required.`,
+      }),
       text: `Hi ${name}, ${ownerName} has added you as a beneficiary in AlwaysThere Vault. You'll be notified if action is required.`,
     });
   }
 
+  // ─────────────────────────────────────────
+  //  HEARTBEAT REMINDER
+  // ─────────────────────────────────────────
   async sendHeartbeatReminderEmail(email: string, name: string, daysOverdue: number): Promise<boolean> {
+    const urgency = daysOverdue >= 5 ? '#ef4444' : '#f59e0b';
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${name}</strong>,</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        Your vault heartbeat is overdue by <strong style="color:${urgency};">${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}</strong>.
+        Submit a proof-of-life heartbeat immediately to prevent automatic asset distribution.
+      </p>
+      ${infoBox(`
+        ${statRow('Days Overdue', `${daysOverdue} Day${daysOverdue !== 1 ? 's' : ''}`, urgency)}
+        ${statRow('Risk Level', daysOverdue >= 5 ? 'CRITICAL' : 'WARNING', urgency)}
+        ${statRow('Required Action', 'Submit Heartbeat Now', '#f8fafc', true)}
+      `)}
+      ${alertStrip(urgency, 'If you do not submit a heartbeat before the buffer is exhausted, your protocol will trigger automatically and distribute your designated assets to your nominees.')}
+      ${ctaButton(`${this.frontendUrl}/dashboard`, 'Submit Heartbeat Now →', urgency)}
+    `;
     return this.sendEmail({
       to: email,
-      subject: `⚠️ Heartbeat Required - ${daysOverdue} days overdue`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #f59e0b;">⚠️ Heartbeat Required</h1>
-          <p>Hi ${name},</p>
-          <p>Your heartbeat is <strong>${daysOverdue} days overdue</strong>.</p>
-          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e;">
-              <strong>Action Required:</strong> Please submit your heartbeat to prevent asset release to beneficiaries.
-            </p>
-          </div>
-          <p>If you don't submit a heartbeat within the grace period, your designated assets will be released to your beneficiaries.</p>
-          <a href="${this.frontendUrl}/dashboard" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-            Submit Heartbeat Now
-          </a>
-          <p style="color: #666; font-size: 12px; margin-top: 40px;">
-            This is an automated reminder. If you're unable to access your account, please contact support immediately.
-          </p>
-        </div>
-      `,
-      text: `Hi ${name}, your heartbeat is ${daysOverdue} days overdue. Please submit your heartbeat to prevent asset release.`,
+      subject: `⚠️ Action Required — Heartbeat ${daysOverdue} Day${daysOverdue !== 1 ? 's' : ''} Overdue`,
+      html: buildEmailShell({
+        accentColor: urgency,
+        accentGlow: `rgba(239,68,68,0.2)`,
+        icon: '⏳',
+        headline: 'Heartbeat Overdue',
+        subline: 'Immediate Action Required',
+        body,
+        footerNote: 'Automated heartbeat monitoring alert from AlwaysThere Vault Protocol.',
+      }),
+      text: `Hi ${name}, your heartbeat is ${daysOverdue} days overdue. Submit your heartbeat now to prevent asset distribution.`,
     });
   }
 
+  // ─────────────────────────────────────────
+  //  PAYMENT SUCCESS
+  // ─────────────────────────────────────────
   async sendPaymentSuccessEmail(email: string, name: string, plan: string, amount: number): Promise<boolean> {
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Thank you, <strong>${name}</strong>.</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        Your payment has been processed successfully and your subscription is now active.
+        Full vault access has been unlocked.
+      </p>
+      ${infoBox(`
+        ${statRow('Plan', plan, '#22c55e')}
+        ${statRow('Amount Charged', `$${amount.toFixed(2)}`, '#e2e8f0')}
+        ${statRow('Billing Status', 'Paid & Active', '#22c55e')}
+        ${statRow('Next Renewal', 'Auto-renews monthly', '#64748b', true)}
+      `)}
+      ${ctaButton(`${this.frontendUrl}/dashboard`, 'Go to Your Vault →', '#22c55e')}
+    `;
     return this.sendEmail({
       to: email,
-      subject: 'Payment Successful - Subscription Activated',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #10b981;">✅ Payment Successful!</h1>
-          <p>Hi ${name},</p>
-          <p>Thank you for your payment. Your subscription has been activated.</p>
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">Subscription Details</h3>
-            <p><strong>Plan:</strong> ${plan}</p>
-            <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
-            <p><strong>Status:</strong> Active</p>
-          </div>
-          <p>You now have access to all premium features!</p>
-          <a href="${this.frontendUrl}/subscription" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-            View Subscription
-          </a>
-          <p style="color: #666; font-size: 12px; margin-top: 40px;">
-            Receipt and invoice details are available in your account dashboard.
-          </p>
-        </div>
-      `,
-      text: `Hi ${name}, your payment of $${amount.toFixed(2)} was successful. Your ${plan} subscription is now active.`,
+      subject: `Payment Confirmed — ${plan} Plan Activated`,
+      html: buildEmailShell({
+        accentColor: '#22c55e',
+        accentGlow: 'rgba(34,197,94,0.2)',
+        icon: '✅',
+        headline: 'Payment Successful',
+        subline: `${plan} Subscription — Active`,
+        body,
+        footerNote: 'Receipt available in your account dashboard. Contact support@alwaysthere.app for billing queries.',
+      }),
+      text: `Hi ${name}, your payment of $${amount.toFixed(2)} was successful. ${plan} subscription is now active.`,
     });
   }
 
-  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number, verificationUrl: string): Promise<boolean> {
+  // ─────────────────────────────────────────
+  //  ASSET RELEASE (Nominee)
+  // ─────────────────────────────────────────
+  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number, claimUrl: string): Promise<boolean> {
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Greetings, <strong>${name}</strong>.</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        The AlwaysThere Vault belonging to <strong style="color:#ffffff;">${ownerName}</strong> has
+        triggered the inheritance protocol. All heartbeat buffers were exhausted and smart contract
+        instructions have been executed. Assets designated to you are now available.
+      </p>
+      ${infoBox(`
+        ${statRow('Vault Owner', ownerName, '#e2e8f0')}
+        ${statRow('Wallet', ownerAddress.slice(0, 10) + '...' + ownerAddress.slice(-8), '#38bdf8')}
+        ${statRow('Assets Assigned to You', `${assetCount} Digital Asset${assetCount !== 1 ? 's' : ''}`, '#22c55e')}
+        ${statRow('Claim Window', '7 Days from this email', '#f59e0b', true)}
+      `)}
+      ${alertStrip('#38bdf8', '<strong>Important:</strong> Your unique claim link below expires in 7 days. Click it to access your secure vault portal and download the assets designated to you.')}
+      ${ctaButton(claimUrl, 'Claim Your Inheritance →', '#0ea5e9')}
+      <p style="font-size:11px;color:#334155;text-align:center;margin:16px 0 0;word-break:break-all;">
+        Secure link: <a href="${claimUrl}" style="color:#475569;">${claimUrl}</a>
+      </p>
+    `;
     return this.sendEmail({
       to: email,
-      subject: 'Assets Released - Action Required',
-      html: `
-<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
-  
-  <!-- Premium Card Container -->
-  <div style="background: #1e293b; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(56, 189, 248, 0.2); overflow: hidden;">
-    
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 2px solid #38bdf8; padding: 30px; text-align: center;">
-      <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid #38bdf8; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);">
-        💎
-      </div>
-      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">
-        VAULT UNLOCKED
-      </h1>
-      <p style="margin: 10px 0 0 0; color: #38bdf8; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-        Assets Released Successfully
-      </p>
-    </div>
-
-    <!-- Body -->
-    <div style="padding: 35px 30px;">
-      <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Greetings <strong>${name}</strong>,</p>
-      <p style="color: #cbd5e1; font-size: 15px;">
-        The AlwaysThere Vault heartbeat for Commander <strong>${ownerName}</strong> has ceased and the maximum time buffer has been exhausted. Protocol instructions have been executed securely via Smart Contract.
-      </p>
-
-      <div style="background: #0f172a; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #334155; text-align: center;">
-        <h3 style="margin: 0 0 10px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Inheritance Granted</h3>
-        <p style="margin: 0; font-size: 28px; font-weight: bold; color: #38bdf8;">
-          ${assetCount} <span style="font-size: 18px; color: #64748b;">Digital Asset(s)</span>
-        </p>
-      </div>
-
-      <div style="background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 16px; margin: 25px 0; border-radius: 4px;">
-        <p style="margin: 0; color: #e0f2fe; font-size: 14.5px;">
-          <strong style="color: #38bdf8;">Authorization Required:</strong> You now hold cryptographic clearance. Access your secure dashboard to decipher and claim the allocated assets.
-        </p>
-      </div>
-
-      <!-- Action Button -->
-      <div style="text-align: center; margin-top: 35px;">
-        <a href="${verificationUrl}"
-           style="display: inline-block; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px rgba(56, 189, 248, 0.3); transition: all 0.3s ease;">
-          Claim Digital Assets
-        </a>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
-      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-        Secured by AlwaysThere Vault<br/>
-        End-to-End Encrypted Proof-of-Trust Distribution
-      </p>
-    </div>
-  </div>
-</div>
-      `,
-      text: `Hi ${name}, assets from ${ownerName} have been released. You have access to ${assetCount} digital asset(s). Log in to view them.`,
+      subject: `🔓 Vault Unlocked — ${assetCount} Asset${assetCount !== 1 ? 's' : ''} Assigned to You`,
+      html: buildEmailShell({
+        accentColor: '#38bdf8',
+        accentGlow: 'rgba(56,189,248,0.25)',
+        icon: '💎',
+        headline: 'Vault Protocol Triggered',
+        subline: `${assetCount} Digital Asset${assetCount !== 1 ? 's' : ''} Released to You`,
+        body,
+        footerNote: 'This is a one-time inheritance notification. Your claim link is unique and expires in 7 days.',
+      }),
+      text: `Hi ${name}, assets from ${ownerName} have been released to you. You have ${assetCount} asset(s). Claim here: ${claimUrl}`,
     });
   }
 
+  // ─────────────────────────────────────────
+  //  TRIAL EXPIRING
+  // ─────────────────────────────────────────
   async sendTrialExpiringEmail(email: string, name: string, daysRemaining: number): Promise<boolean> {
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hi <strong>${name}</strong>,</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        Your free trial expires in <strong style="color:#f59e0b;">${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}</strong>.
+        Upgrade now to ensure your digital legacy remains protected without interruption.
+      </p>
+      ${infoBox(`
+        ${statRow('Days Remaining', `${daysRemaining} Day${daysRemaining !== 1 ? 's' : ''}`, '#f59e0b')}
+        ${statRow('Current Plan', 'Free Trial', '#64748b')}
+        ${statRow('Action Required', 'Upgrade to continue', '#ef4444', true)}
+      `)}
+      ${alertStrip('#f59e0b', 'After your trial expires, you will not be able to add new assets. Existing assets and your heartbeat schedule will remain intact.')}
+      ${ctaButton(`${this.frontendUrl}/pricing`, 'View Plans & Upgrade →', '#f59e0b')}
+    `;
     return this.sendEmail({
       to: email,
-      subject: `Trial Ending Soon - ${daysRemaining} days left`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #f59e0b;">⏰ Trial Ending Soon</h1>
-          <p>Hi ${name},</p>
-          <p>Your free trial will end in <strong>${daysRemaining} days</strong>.</p>
-          <p>To continue using AlwaysThere Vault and keep your digital legacy secure, please upgrade to a paid plan.</p>
-          <h2>Why Upgrade?</h2>
-          <ul>
-            <li>Unlimited asset storage</li>
-            <li>Advanced encryption</li>
-            <li>Priority support</li>
-            <li>Automatic heartbeat reminders</li>
-          </ul>
-          <a href="${this.frontendUrl}/pricing" style="display: inline-block; background: #1152d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0;">
-            View Plans
-          </a>
-          <p style="color: #666; font-size: 12px; margin-top: 40px;">
-            Your data will remain secure even after trial expiration, but you won't be able to add new assets.
-          </p>
-        </div>
-      `,
+      subject: `Your AlwaysThere Trial Ends in ${daysRemaining} Day${daysRemaining !== 1 ? 's' : ''}`,
+      html: buildEmailShell({
+        accentColor: '#f59e0b',
+        accentGlow: 'rgba(245,158,11,0.2)',
+        icon: '⏰',
+        headline: 'Trial Ending Soon',
+        subline: `${daysRemaining} Day${daysRemaining !== 1 ? 's' : ''} Remaining`,
+        body,
+        footerNote: 'You are receiving this because your trial period is nearing its end.',
+      }),
       text: `Hi ${name}, your trial ends in ${daysRemaining} days. Upgrade to continue using all features.`,
     });
   }

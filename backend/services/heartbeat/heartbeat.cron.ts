@@ -9,6 +9,8 @@ import { TokenService } from '../auth/token.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { eq, sql } from 'drizzle-orm';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
+import { files } from '../../src/db/schema/files';
+import { buildEmailShell, infoBox, statRow, alertStrip, ctaButton } from '../email/email-templates';
 
 interface HeartbeatAlertEmailParams {
     name: string;
@@ -25,95 +27,48 @@ interface HeartbeatAlertEmailParams {
 
 function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
     const urgencyColor = p.isFinalWarning ? '#ef4444' : p.missCount === 1 ? '#eab308' : '#f97316';
-    const glowColor = p.isFinalWarning ? 'rgba(239, 68, 68, 0.4)' : p.missCount === 1 ? 'rgba(234, 179, 8, 0.4)' : 'rgba(249, 115, 22, 0.4)';
-    const stageLabel = `Stage ${p.missCount} of ${p.maxBuffer}`;
+    const glowColor = p.isFinalWarning ? 'rgba(239,68,68,0.3)' : p.missCount === 1 ? 'rgba(234,179,8,0.3)' : 'rgba(249,115,22,0.3)';
     const progressPct = Math.round((p.missCount / p.maxBuffer) * 100);
 
-    return `
-<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
-  
-  <!-- Premium Card Container -->
-  <div style="background: #1e293b; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px ${glowColor}; overflow: hidden;">
-    
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 2px solid ${urgencyColor}; padding: 30px; text-align: center;">
-      <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid ${urgencyColor}; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px ${glowColor};">
-        ${p.isFinalWarning ? '💀' : '⏳'}
-      </div>
-      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">
-        ${p.isFinalWarning ? 'PROTOCOL TRIGGER IMMINENT' : 'HEARTBEAT OVERDUE'}
-      </h1>
-      <p style="margin: 10px 0 0 0; color: #94a3b8; font-size: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px;">
-        ${stageLabel}
+    const body = `
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${p.name}</strong>,</p>
+      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+        ${p.isFinalWarning
+          ? `<strong style="color:${urgencyColor};">This is your final warning.</strong> If you do not verify your status immediately, the AlwaysThere Vault will irreversibly distribute your assigned assets to your nominees.`
+          : 'Your cryptographic heartbeat signal has been missed. Submit a proof-of-life verification immediately to halt the asset distribution sequence.'}
       </p>
-    </div>
-
-    <!-- Body -->
-    <div style="padding: 35px 30px;">
-      <p style="font-size: 18px; margin-top: 0; color: #e2e8f0;">Commander <strong>${p.name}</strong>,</p>
-      <p style="color: #cbd5e1; font-size: 15px;">
-        Your cryptographic heartbeat has been missed. ${p.isFinalWarning
-        ? '<span style="color: #ef4444; font-weight: bold;">This is your absolute final warning.</span> If you do not check in, the AlwaysThere Vault will irreversibly distribute your assigned assets.'
-        : 'Please sign a proof-of-life heartbeat transaction immediately to halt asset distribution sequences.'}
-      </p>
-
-      <!-- Status Dashboard -->
-      <div style="background: #0f172a; border-radius: 12px; padding: 20px; margin: 30px 0; border: 1px solid #334155; position: relative;">
-        <h3 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center;">
-          <span style="display:inline-block; width:8px; height:8px; background:${urgencyColor}; border-radius:50%; margin-right:8px; box-shadow: 0 0 10px ${urgencyColor};"></span>
-          System Telemetry
-        </h3>
-        
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      ${infoBox(`
+        ${statRow('Wallet', p.walletAddress.slice(0,10)+'...'+p.walletAddress.slice(-8), '#38bdf8')}
+        ${statRow('Last Heartbeat', p.lastHeartbeat, '#e2e8f0')}
+        ${statRow('Interval / Grace', `${p.intervalDays}d / ${p.gracePeriodDays}d`, '#e2e8f0')}
+        ${statRow('Buffer Exhausted', `${p.missCount} of ${p.maxBuffer} missed`, urgencyColor, true)}
+      `)}
+      <div style="margin:20px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
           <tr>
-            <td style="padding: 10px 0; color: #94a3b8; border-bottom: 1px solid #1e293b;">Wallet Address</td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; font-family: 'Courier New', Courier, monospace; color: #38bdf8; word-break: break-all; text-align: right;">${p.walletAddress}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px 0; color: #94a3b8; border-bottom: 1px solid #1e293b;">Last Heartbeat</td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; color: #f1f5f9; text-align: right;">${p.lastHeartbeat}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px 0; color: #94a3b8; border-bottom: 1px solid #1e293b;">Interval / Grace</td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #1e293b; color: #f1f5f9; text-align: right;">${p.intervalDays}d / ${p.gracePeriodDays}d</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px 0; color: #94a3b8;">Missed Count</td>
-            <td style="padding: 10px 0; color: ${urgencyColor}; font-weight: bold; text-align: right;">${p.missCount} / ${p.maxBuffer}</td>
+            <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Buffer Exhaustion</td>
+            <td align="right" style="font-size:12px;font-weight:700;color:${urgencyColor};">${progressPct}%</td>
           </tr>
         </table>
-      </div>
-
-      <!-- Cyber Progress Bar -->
-      <div style="margin: 25px 0 35px 0;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Time Buffer Exhaustion</span>
-          <span style="font-size: 12px; font-weight: bold; color: ${urgencyColor};">${progressPct}%</span>
-        </div>
-        <div style="background: #0f172a; border-radius: 4px; height: 12px; border: 1px solid #334155; overflow: hidden; padding: 2px;">
-          <div style="background: linear-gradient(90deg, ${urgencyColor}40, ${urgencyColor}); width: ${progressPct}%; height: 100%; border-radius: 2px; box-shadow: 0 0 10px ${urgencyColor};"></div>
+        <div style="background:#060d1a;border:1px solid rgba(255,255,255,0.06);border-radius:6px;height:10px;overflow:hidden;padding:2px;">
+          <div style="background:linear-gradient(90deg,${urgencyColor}80,${urgencyColor});width:${progressPct}%;height:100%;border-radius:3px;box-shadow:0 0 8px ${urgencyColor};"></div>
         </div>
       </div>
+      ${ctaButton(p.verificationUrl, p.isFinalWarning ? '🚨 Verify Status Immediately' : '✅ Confirm I\'m Active', urgencyColor)}
+    `;
 
-      <!-- Action Button -->
-      <div style="text-align: center;">
-        <a href="${p.verificationUrl}"
-           style="display: inline-block; background: linear-gradient(135deg, ${urgencyColor}, #991b1b); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 20px ${glowColor}; transition: all 0.3s ease;">
-          Verify My Status
-        </a>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
-      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-        Secured by AlwaysThere Vault<br/>
-        End-to-End Encrypted Web3 Inheritance
-      </p>
-    </div>
-  </div>
-</div>`;
+    return buildEmailShell({
+        accentColor: urgencyColor,
+        accentGlow: glowColor,
+        icon: p.isFinalWarning ? '💀' : '⏳',
+        headline: p.isFinalWarning ? 'Protocol Trigger Imminent' : 'Heartbeat Overdue',
+        subline: `Stage ${p.missCount} of ${p.maxBuffer} — ${p.isFinalWarning ? 'Final Warning' : 'Action Required'}`,
+        body,
+        footerNote: 'Automated heartbeat monitoring from AlwaysThere Vault Protocol.',
+    });
 }
+
+
 
 @Injectable()
 export class HeartbeatCronService {
@@ -181,7 +136,7 @@ export class HeartbeatCronService {
                         const newMissCount = currentMisses + 1;
                         this.logger.warn(`User ${user.walletAddress} missed heartbeat. Stage: Missed${newMissCount} (${newMissCount}/${maxBuffer})`);
 
-                        if (user.email) {
+                        if (user.email && user.emailVerified) {
                             let subject = '';
                             const lastHeartbeat = config.lastHeartbeat
                                 ? new Date(config.lastHeartbeat).toUTCString()
@@ -238,19 +193,34 @@ export class HeartbeatCronService {
                                     await this.emailService.sendEmail({
                                         to: nominee.email,
                                         subject: isFinalStage
-                                            ? '🚨 URGENT: Vault Protocol Is About To Trigger'
+                                            ? '🚨 URGENT: Vault Protocol Has Been Triggered'
                                             : `⚠️ Alert: Your benefactor's heartbeat is overdue (Stage ${newMissCount}/${maxBuffer})`,
-                                        html: `
-                                        <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0f172a;padding:30px;color:#f8fafc;border-radius:12px;">
-                                          <h2 style="color:${isFinalStage ? '#ef4444' : '#f97316'};margin-top:0;">${isFinalStage ? '🚨 Protocol Trigger Imminent' : '⚠️ Heartbeat Overdue Alert'}</h2>
-                                          <p>Hi <strong>${nominee.name || 'Beneficiary'}</strong>,</p>
-                                          <p>The AlwaysThere Vault heartbeat for <strong>${user.name || user.walletAddress}</strong> has been missed.</p>
-                                          <div style="background:#1e293b;border-radius:8px;padding:16px;margin:20px 0;border-left:4px solid ${isFinalStage ? '#ef4444' : '#f97316'};">
-                                            <p style="margin:0;font-size:14px;">Buffer Status: <strong style="color:${isFinalStage ? '#ef4444' : '#f97316'};">${newMissCount} of ${maxBuffer} missed</strong></p>
-                                            ${isFinalStage ? '<p style="margin:8px 0 0 0;font-size:13px;color:#fca5a5;">If no heartbeat is received, assets will be distributed to you shortly.</p>' : '<p style="margin:8px 0 0 0;font-size:13px;color:#94a3b8;">The owner still has time to check in and abort the protocol.</p>'}
-                                          </div>
-                                          <p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">AlwaysThere Vault — Secure Digital Legacy</p>
-                                        </div>`
+                                        html: buildEmailShell({
+                                            accentColor: isFinalStage ? '#ef4444' : '#f97316',
+                                            accentGlow: isFinalStage ? 'rgba(239,68,68,0.3)' : 'rgba(249,115,22,0.3)',
+                                            icon: isFinalStage ? '🚨' : '⚠️',
+                                            headline: isFinalStage ? 'Protocol Triggered' : 'Heartbeat Overdue Alert',
+                                            subline: `Stage ${newMissCount} of ${maxBuffer} — ${isFinalStage ? 'Final' : 'Warning'}`,
+                                            body: `
+                                              <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hi <strong>${nominee.name || 'Beneficiary'}</strong>,</p>
+                                              <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+                                                The AlwaysThere Vault heartbeat for <strong style="color:#ffffff;">${user.name || user.walletAddress}</strong> has been missed.
+                                                ${isFinalStage
+                                                  ? ' The protocol has fully triggered and asset distribution is underway. You will receive a separate claim email shortly.'
+                                                  : ' The owner still has time to check in and abort the protocol.'}
+                                              </p>
+                                              ${infoBox(`
+                                                ${statRow('Vault Owner', user.name || 'Unknown', '#e2e8f0')}
+                                                ${statRow('Buffer Status', newMissCount + ' of ' + maxBuffer + ' missed', isFinalStage ? '#ef4444' : '#f97316', true)}
+                                              `)}
+                                              ${alertStrip(isFinalStage ? '#ef4444' : '#f97316',
+                                                isFinalStage
+                                                  ? 'The inheritance protocol is now executing. Watch your inbox for a separate asset claim notification.'
+                                                  : 'No action required from you at this time. You will be notified when the protocol fully triggers.'
+                                              )}
+                                            `,
+                                            footerNote: 'You are receiving this because you are a registered beneficiary in an AlwaysThere Vault.',
+                                        }),
                                     });
                                     this.logger.log(`📧 Nominee alert sent to ${nominee.email} (Stage ${newMissCount}/${maxBuffer})`);
                                 } else {
@@ -280,55 +250,82 @@ export class HeartbeatCronService {
                             }
                             
                             // Notify user
-                            if (user.email) {
+                             if (user.email && user.emailVerified) {
+                                const activatedBody = `
+                                  <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${user.name || 'Vault Owner'}</strong>,</p>
+                                  <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+                                    All heartbeat time buffers for your vault have been exhausted. The AlwaysThere Protocol has executed its smart contract instructions. Your designated digital assets are now being distributed to your nominated beneficiaries.
+                                  </p>
+                                  ${infoBox(`
+                                    ${statRow('Wallet', user.walletAddress.slice(0,10)+'...'+user.walletAddress.slice(-8), '#38bdf8')}
+                                    ${statRow('Protocol Status', 'TRIGGERED', '#ef4444')}
+                                    ${statRow('Asset Distribution', 'In Progress', '#f59e0b', true)}
+                                  `)}
+                                  ${alertStrip('#ef4444', 'Your inheritance plan is now being executed. This action is irreversible. Your digital legacy has been secured.')}
+                                `;
                                 await this.emailService.sendEmail({
                                     to: user.email,
-                                    subject: '🚨 AlwaysThere Vault Activated',
-                                    html: `
-<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #0f172a; padding: 40px 20px; color: #f8fafc; line-height: 1.6;">
-  <!-- Premium Card -->
-  <div style="background: #1e293b; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(220, 38, 38, 0.2); overflow: hidden;">
-    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%); border-bottom: 2px solid #ef4444; padding: 30px; text-align: center;">
-      <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid #ef4444; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);">🚨</div>
-      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">PROTOCOL ACTIVATED</h1>
-    </div>
-    <div style="padding: 35px 30px;">
-      <p style="font-size: 16px; color: #cbd5e1;">All heartbeat time buffers for wallet <br/><strong style="color: #38bdf8; word-break: break-all;">${user.walletAddress}</strong><br/> have been completely exhausted.</p>
-      <div style="background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444; padding: 16px; margin: 25px 0; border-radius: 4px;">
-        <p style="margin: 0; color: #fecaca; font-size: 14.5px;">Assets and Cryptographic Key Shares are now being irreversibly distributed to your authorized beneficiaries according to your Smart Contract instructions.</p>
-      </div>
-    </div>
-    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #334155;">
-      <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase;">Your legacy has been secured.<br/>AlwaysThere Vault</p>
-    </div>
-  </div>
-</div>`
+                                    subject: '🚨 AlwaysThere Vault Protocol Activated — Assets Being Distributed',
+                                    html: buildEmailShell({
+                                        accentColor: '#ef4444',
+                                        accentGlow: 'rgba(239,68,68,0.3)',
+                                        icon: '🚨',
+                                        headline: 'Protocol Activated',
+                                        subline: 'Your Digital Legacy Is Being Distributed',
+                                        body: activatedBody,
+                                        footerNote: 'This is an automated protocol execution notification.',
+                                    }),
                                 });
+                             }
+
+                            // Notify each nominee with ONLY their assigned files
+                            const nominees = await this.beneficiariesService.getAllBeneficiaries(user.walletAddress);
+                            this.logger.log(`Notifying ${nominees.length} nominees for ${user.walletAddress} with personalized asset lists...`);
+
+                            // Fetch all files belonging to this user
+                            const userFiles = await this.db.query.files.findMany({
+                                where: eq(files.userId, user.id),
+                            });
+
+                            // Group files by assignedBeneficiaryId
+                            const filesByNominee = new Map<string, typeof userFiles>();
+                            for (const file of userFiles) {
+                                if (file.assignedBeneficiaryId) {
+                                    const existing = filesByNominee.get(file.assignedBeneficiaryId) || [];
+                                    existing.push(file);
+                                    filesByNominee.set(file.assignedBeneficiaryId, existing);
+                                }
                             }
 
-                            // Notify all beneficiaries with claim access token
-                            const nominees = await this.beneficiariesService.getAllBeneficiaries(user.walletAddress);
-                            this.logger.log(`Notifying ${nominees.length} beneficiaries for ${user.walletAddress}...`);
-                            
+                            const backendUrl = process.env.API_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 7001}`;
+
                             for (const nominee of nominees) {
                                 try {
-                                    if (nominee.email) {
-                                        const token = await this.tokenService.generateToken('CLAIM_ACCESS', user.id, nominee.walletAddress, 7 * 24); // 7 days expiry
-                                        const backendUrl = process.env.API_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 7001}`;
-                                        const claimUrl = `${backendUrl}/api/claim/${token}`;
-                                        
-                                        await this.emailService.sendAssetReleaseNotification(
-                                            nominee.email,
-                                            nominee.name,
-                                            user.name || 'The account owner',
-                                            user.walletAddress,
-                                            1,
-                                            claimUrl
-                                        );
-                                        this.logger.log(`📧 Asset release email dispatched successfully to nominee: ${nominee.email}`);
+                                    if (!nominee.email) {
+                                        this.logger.warn(`Nominee ${nominee.name || nominee.id} has no email, skipping.`);
+                                        continue;
                                     }
+
+                                    const theirFiles = filesByNominee.get(nominee.id) || [];
+                                    if (theirFiles.length === 0) {
+                                        this.logger.log(`Nominee ${nominee.email} has no files assigned — skipping asset release email.`);
+                                        continue;
+                                    }
+
+                                    const token = await this.tokenService.generateToken('CLAIM_ACCESS', user.id, nominee.walletAddress, 7 * 24);
+                                    const claimUrl = `${backendUrl}/api/claim/${token}`;
+
+                                    await this.emailService.sendAssetReleaseNotification(
+                                        nominee.email,
+                                        nominee.name,
+                                        user.name || 'The account owner',
+                                        user.walletAddress,
+                                        theirFiles.length,
+                                        claimUrl
+                                    );
+                                    this.logger.log(`📧 Asset release email (${theirFiles.length} file(s)) dispatched to nominee: ${nominee.email}`);
                                 } catch (nomineeError) {
-                                    this.logger.error(`Failed to dispatch notification/token for nominee ${nominee.email || nominee.id}: ${nomineeError.message}`);
+                                    this.logger.error(`Failed to dispatch notification for nominee ${nominee.email || nominee.id}: ${nomineeError.message}`);
                                 }
                             }
                         } catch (notificationError) {

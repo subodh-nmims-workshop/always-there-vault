@@ -37,6 +37,25 @@ export class UsersController {
         return this.usersService.createOrUpdateUser(walletAddress, email);
     }
 
+    @Post('verify-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Verify user email using 6-digit code' })
+    async verifyEmail(
+        @Req() req: any,
+        @Body('code') code: string
+    ) {
+        const userId = req.user.userId;
+        return this.usersService.verifyEmail(userId, code);
+    }
+
+    @Post('resend-verification')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Resend email verification code' })
+    async resendVerification(@Req() req: any) {
+        const userId = req.user.userId;
+        return this.usersService.resendVerificationCode(userId);
+    }
+
     @Post('recovery-key')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Link a recovery address to the user account' })
@@ -46,5 +65,13 @@ export class UsersController {
     ) {
         const userId = req.user.userId;
         return this.usersService.updateRecoveryAddress(userId, recoveryAddress);
+    }
+
+    @Post('delete-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Delete/remove email verification status and email' })
+    async deleteEmail(@Req() req: any) {
+        const walletAddress = req.user.walletAddress;
+        return this.usersService.deleteEmail(walletAddress);
     }
 }

@@ -32,6 +32,11 @@ export const users = pgTable('users', {
   // Notifications
   expoPushToken: varchar('expo_push_token', { length: 255 }),
 
+  // Email Verification
+  emailVerified: boolean('email_verified').default(false).notNull(),
+  pendingEmail: varchar('pending_email', { length: 255 }),
+  emailVerificationToken: varchar('email_verification_token', { length: 255 }),
+
   // Preferences
   preferences: jsonb('preferences').default({}),
   

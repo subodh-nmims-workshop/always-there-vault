@@ -387,4 +387,38 @@ export class AssetsService {
     await this.auditService.trackAction(owner.id, 'UNAUTHORIZED_KEY_ACCESS', 'SECURITY', keyId, { requester: requesterWallet });
     throw new NotFoundException('Key not found or access denied');
   }
+
+  /**
+   * Assigns (or unassigns) a specific beneficiary to inherit this file on heartbeat timeout.
+   * Only the file owner can call this endpoint.
+   */
+  async assignNomineeToFile(fileId: string, walletAddress: string, assignedBeneficiaryId: string | null) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    const file = await this.db.query.files.findFirst({
+      where: and(eq(files.id, fileId), eq(files.userId, user.id)),
+    });
+
+    if (!file) throw new NotFoundException('File not found or access denied');
+
+    // If assigning a beneficiary, verify it belongs to this user
+    if (assignedBeneficiaryId) {
+      const nominee = await this.db.query.beneficiaries.findFirst({
+        where: and(
+          eq(beneficiaries.id, assignedBeneficiaryId),
+          eq(beneficiaries.userId, user.id),
+        ),
+      });
+      if (!nominee) throw new NotFoundException('Beneficiary not found or does not belong to your account');
+    }
+
+    await this.db.update(files)
+      .set({ assignedBeneficiaryId: assignedBeneficiaryId || null, updatedAt: new Date() })
+      .where(eq(files.id, fileId));
+
+    await this.auditService.trackAction(user.id, 'ASSIGN_NOMINEE', 'FILE', fileId, {
+      assignedBeneficiaryId: assignedBeneficiaryId || 'unassigned',
+    });
+
+    return { success: true, fileId, assignedBeneficiaryId };
+  }
 }
