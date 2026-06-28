@@ -18,6 +18,8 @@ import { ModeIndicator } from './mode-indicator'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ConfirmationDialog } from './confirmation-dialog'
 import { toast } from 'sonner'
+import { API_URL } from '@/lib/api-config'
+
 
 export function AssetCreationForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -272,7 +274,7 @@ export function AssetCreationForm() {
       // Sync Key to Backend for cloud backup
       if (!isDemo) {
         try {
-          await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
+          await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ shares: keyDistribution.shares })
@@ -288,7 +290,7 @@ export function AssetCreationForm() {
         try {
           const token = localStorage.getItem('dwp_token')
           for (const benId of selectedBeneficiaries) {
-            await fetch(`http://localhost:7001/api/time-capsules`, {
+            await fetch(`${API_URL}/api/time-capsules`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
@@ -377,7 +379,7 @@ export function AssetCreationForm() {
       if (!keyDist && !isDemo) {
         console.warn('⚠️ Key not found locally, attempting backend fetch...')
         try {
-          const response = await fetch(`http://localhost:7001/api/assets/keys/${asset.keyId}`)
+          const response = await fetch(`${API_URL}/api/assets/keys/${asset.keyId}`)
           if (response.ok) {
             keyDist = await response.json()
             if (keyDist) {
@@ -820,7 +822,7 @@ export function AssetCreationForm() {
       // Sync Key to Backend for cloud backup (CRITICAL for multi-device support)
       if (!isDemo) {
         try {
-          await fetch(`http://localhost:7001/api/assets/keys/${keyDistribution.keyId}`, {
+          await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ shares: keyDistribution.shares })
@@ -836,7 +838,7 @@ export function AssetCreationForm() {
         try {
           const token = localStorage.getItem('dwp_token')
           for (const benId of beneficiaryIds) {
-            await fetch(`http://localhost:7001/api/time-capsules`, {
+            await fetch(`${API_URL}/api/time-capsules`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
