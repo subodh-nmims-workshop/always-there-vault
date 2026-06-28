@@ -89,9 +89,7 @@ export class BeneficiariesService {
       throw new BadRequestException('Beneficiary email is required for verification.');
     }
 
-    const user = await this.db.query.users.findFirst({
-      where: eq(beneficiaries.userId, beneficiary.userId),
-    });
+    const user = await this.usersService.findUserById(beneficiary.userId);
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     this.verificationCodes.set(id, code);
@@ -134,9 +132,7 @@ export class BeneficiariesService {
 
     const ownerDetails = await Promise.all(
       results.map(async (b) => {
-        const owner = await this.db.query.users.findFirst({
-          where: eq(beneficiaries.userId, b.userId),
-        });
+        const owner = await this.usersService.findUserById(b.userId);
         return {
           ownerName: owner?.name || 'Unknown Owner',
           ownerAddress: owner?.walletAddress,
