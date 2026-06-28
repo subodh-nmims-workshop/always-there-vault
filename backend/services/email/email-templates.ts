@@ -20,8 +20,10 @@ export function buildEmailShell(opts: {
   subline: string;
   body: string;
   footerNote?: string;
+  logoUrl?: string;
 }): string {
-  const { accentColor, accentGlow, icon, headline, subline, body, footerNote } = opts;
+  const { accentColor, accentGlow, icon, headline, subline, body, footerNote, logoUrl } = opts;
+  const finalLogoUrl = logoUrl || 'https://raw.githubusercontent.com/subodh-001/decentralized-digital-will-protocol/main/frontend/web/public/logo-simple.png';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,20 +32,22 @@ export function buildEmailShell(opts: {
 <title>${headline}</title>
 </head>
 <body style="margin:0;padding:0;background:#060d1a;font-family:'Helvetica Neue',Arial,sans-serif;">
-
+ 
 <!-- Email Wrapper -->
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#060d1a;min-height:100vh;">
 <tr><td align="center" style="padding:40px 16px;">
-
+ 
   <!-- Card -->
   <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#0d1b2e;border-radius:16px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 32px 64px rgba(0,0,0,0.6),0 0 60px ${accentGlow};overflow:hidden;">
-
+ 
     <!-- Brand Header -->
     <tr>
       <td style="background:linear-gradient(135deg,#0d1b2e 0%,#0a1628 100%);border-bottom:1px solid rgba(255,255,255,0.06);padding:24px 32px;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td width="44" valign="middle">${LOGO_SVG}</td>
+            <td width="44" valign="middle">
+              <img src="${finalLogoUrl}" width="36" height="36" style="display:block;border-radius:8px;border:none;" alt="AlwaysThere Logo"/>
+            </td>
             <td valign="middle" style="padding-left:12px;">
               <div style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;line-height:1;">AlwaysThere</div>
               <div style="font-size:11px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;">Vault Protocol</div>
