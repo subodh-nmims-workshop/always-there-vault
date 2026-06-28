@@ -1,7 +1,34 @@
 import { Controller, Get, Post, Put, Body, Query, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+export class UpdateStorageEngineDto {
+  @ApiProperty({ description: 'Storage engine preference', enum: ['cloud', 'web3'] })
+  @IsString()
+  engine: 'cloud' | 'web3';
+}
+
+export class UpdateProfileDto {
+  @ApiProperty({ description: 'User email address', required: false })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+}
+
+export class VerifyEmailDto {
+  @ApiProperty({ description: '6-digit OTP verification code' })
+  @IsString()
+  code: string;
+}
+
+export class LinkRecoveryAddressDto {
+  @ApiProperty({ description: 'Recovery wallet address', required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  recoveryAddress: string | null;
+}
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -17,10 +44,10 @@ export class UsersController {
     @ApiResponse({ status: 400, description: 'Storage engine switch failed/locked' })
     async switchStorageEngine(
         @Req() req: any,
-        @Body('engine') engine: 'cloud' | 'web3'
+        @Body() body: UpdateStorageEngineDto
     ) {
         const userId = req.user.userId;
-        return this.usersService.updateStorageEngine(userId, engine);
+        return this.usersService.updateStorageEngine(userId, body.engine);
     }
 
     @Get('profile')
@@ -32,9 +59,9 @@ export class UsersController {
 
     @Post('profile')
     @ApiOperation({ summary: 'Create or update user profile' })
-    async createProfile(@Req() req: any, @Body('email') email?: string) {
+    async createProfile(@Req() req: any, @Body() body: UpdateProfileDto) {
         const walletAddress = req.user.walletAddress;
-        return this.usersService.createOrUpdateUser(walletAddress, email);
+        return this.usersService.createOrUpdateUser(walletAddress, body.email);
     }
 
     @Post('verify-email')
@@ -42,10 +69,10 @@ export class UsersController {
     @ApiOperation({ summary: 'Verify user email using 6-digit code' })
     async verifyEmail(
         @Req() req: any,
-        @Body('code') code: string
+        @Body() body: VerifyEmailDto
     ) {
         const userId = req.user.userId;
-        return this.usersService.verifyEmail(userId, code);
+        return this.usersService.verifyEmail(userId, body.code);
     }
 
     @Post('resend-verification')
@@ -61,10 +88,10 @@ export class UsersController {
     @ApiOperation({ summary: 'Link a recovery address to the user account' })
     async linkRecoveryAddress(
         @Req() req: any,
-        @Body('recoveryAddress') recoveryAddress: string | null
+        @Body() body: LinkRecoveryAddressDto
     ) {
         const userId = req.user.userId;
-        return this.usersService.updateRecoveryAddress(userId, recoveryAddress);
+        return this.usersService.updateRecoveryAddress(userId, body.recoveryAddress);
     }
 
     @Post('delete-email')
