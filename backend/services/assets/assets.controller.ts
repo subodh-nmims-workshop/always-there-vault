@@ -294,4 +294,34 @@ export class ClaimAssetsController {
 
     return this.assetsService.getDownloadUrl(assetId, nomineeWallet);
   }
+
+  @Get('keys/:keyId')
+  @ApiOperation({ summary: 'Retrieve key distribution using a CLAIM_ACCESS token (public)' })
+  async getClaimKey(
+    @Param('keyId') keyId: string,
+    @Query('claimToken') claimToken: string,
+  ) {
+    if (!claimToken) throw new BadRequestException('claimToken is required');
+
+    const records = await this.db.query.verificationTokens?.findMany
+      ? await this.db.query.verificationTokens.findMany({
+          where: (vt: any, { and, eq: deq, gt }: any) => and(
+            deq(vt.token, claimToken),
+            deq(vt.type, 'CLAIM_ACCESS'),
+            deq(vt.isUsed, false),
+            gt(vt.expiresAt, new Date())
+          ),
+          limit: 1
+        })
+      : [];
+
+    if (!records || records.length === 0) {
+      throw new BadRequestException('Invalid or expired claim token.');
+    }
+
+    const record = records[0];
+    const nomineeWallet = record.targetAddress;
+
+    return this.assetsService.getKeyDistribution(keyId, nomineeWallet);
+  }
 }

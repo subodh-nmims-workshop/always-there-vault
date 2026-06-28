@@ -204,9 +204,9 @@ export class AssetsService {
 
   async getDownloadUrl(id: string, walletAddress: string) {
     const user = await this.usersService.findUserByWallet(walletAddress);
-    let file = await this.db.query.files.findFirst({
+    let file = user ? await this.db.query.files.findFirst({
       where: and(eq(files.id, id), eq(files.userId, user.id)),
-    });
+    }) : null;
 
     if (!file) {
       // Check if it belongs to someone else and requester is a nominee

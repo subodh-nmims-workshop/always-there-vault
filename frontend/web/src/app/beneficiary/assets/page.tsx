@@ -26,6 +26,8 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { ethers } from 'ethers'
 import { SharedFooter } from '@/components/shared-footer'
+import WebCryptoService from '@/lib/crypto'
+
 import { WalletConnectModal } from '@/components/wallet-connect-modal'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -42,6 +44,83 @@ function BeneficiaryAssetsContent() {
   const [inheritanceData, setInheritanceData] = useState<any>(null)
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimed, setClaimed] = useState(false)
+  const [downloadingAssetId, setDownloadingAssetId] = useState<string | null>(null)
+
+  const downloadAndDecryptAsset = async (asset: any) => {
+    setDownloadingAssetId(asset.id)
+    try {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      
+      // 1. Fetch Key shares from public endpoint
+      const keyRes = await fetch(`${apiEndpoint}/api/claim-assets/keys/${asset.encryptionKeyId}?claimToken=${claimToken}`)
+      if (!keyRes.ok) {
+        throw new Error('Failed to retrieve decryption keys from backend.')
+      }
+      const keyDist = await keyRes.json()
+      if (!keyDist || !keyDist.shares) {
+        throw new Error('Keys distribution empty or malformed.')
+      }
+
+      // 2. Reconstruct key
+      const sharesToUse = keyDist.shares.slice(0, 3)
+      const crypto = WebCryptoService.getInstance()
+      const reconstructedKey = await crypto.reconstructKey(sharesToUse)
+
+      // 3. Decrypt
+      if (asset.encryptedData) {
+        // Small note or secret stored directly in DB
+        const decrypted = await crypto.decryptData(asset.encryptedData, reconstructedKey, asset.fileIv)
+        
+        // Trigger a download of a text file
+        const blob = new Blob([decrypted], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = asset.name.endsWith('.enc') ? asset.name.slice(0, -4) : asset.name
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        toast.success('Secret decrypted and downloaded successfully!')
+      } else {
+        // Binary file hosted on B2 or IPFS
+        // Get temporary download URL
+        const downloadRes = await fetch(`${apiEndpoint}/api/claim-assets/download/${asset.id}?claimToken=${claimToken}`)
+        if (!downloadRes.ok) {
+          throw new Error('Failed to get download URL from cloud storage.')
+        }
+        const { url: fileUrl } = await downloadRes.json()
+
+        // Fetch encrypted file contents
+        const fileContentRes = await fetch(fileUrl)
+        if (!fileContentRes.ok) {
+          throw new Error('Failed to fetch encrypted file contents from cloud storage.')
+        }
+        const encryptedHex = await fileContentRes.text()
+
+        // Decrypt binary content
+        const decryptedBuffer = await crypto.decryptBinary(encryptedHex, reconstructedKey, asset.fileIv)
+
+        // Trigger browser download
+        const blob = new Blob([decryptedBuffer], { type: asset.mimeType || 'application/octet-stream' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = asset.name.endsWith('.enc') ? asset.name.slice(0, -4) : asset.name
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        toast.success('File decrypted and downloaded successfully!')
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(`Download failed: ${err.message || err}`)
+    } finally {
+      setDownloadingAssetId(null)
+    }
+  }
+
 
   useEffect(() => {
     const storedAddress = localStorage.getItem('dwp_wallet_address')
@@ -383,8 +462,18 @@ function BeneficiaryAssetsContent() {
                           <p className="text-xs text-emerald-500/60 font-medium">Decrypted Successfully</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost" className="rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-all text-emerald-400">
-                        Download <Download className="w-4 h-4 ml-2" />
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        disabled={downloadingAssetId === asset.id}
+                        onClick={() => downloadAndDecryptAsset(asset)}
+                        className="rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-all text-emerald-400"
+                      >
+                        {downloadingAssetId === asset.id ? (
+                          <>Downloading... <RefreshCw className="w-4 h-4 ml-2 animate-spin" /></>
+                        ) : (
+                          <>Download <Download className="w-4 h-4 ml-2" /></>
+                        )}
                       </Button>
                     </Card>
                   ))}
