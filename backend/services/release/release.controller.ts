@@ -43,12 +43,14 @@ export class ClaimController {
                 where: eq(users.id, record.userId)
             });
             const ownerAddress = owner?.walletAddress || '';
+            const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
             
             // Redirect to frontend claim portal with the token and owner details
-            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:7000'}/claim/${token}?owner=${ownerAddress}`);
+            return res.redirect(`${frontendUrl}/claim/${token}?owner=${ownerAddress}`);
         } catch (e) {
             console.error('VerifyClaim Error:', e);
-            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:7000'}/?error=invalid_claim_token`);
+            const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
+            return res.redirect(`${frontendUrl}/?error=invalid_claim_token`);
         }
     }
 }
