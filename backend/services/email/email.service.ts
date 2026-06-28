@@ -21,7 +21,8 @@ export class EmailService {
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
     const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
     const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
-    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${user}>`;
+    const defaultSender = user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user;
+    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${defaultSender}>`;
     this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000';
 
     this.transporter = nodemailer.createTransport({
@@ -68,7 +69,7 @@ export class EmailService {
 
     if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
       try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || user || 'ks5093654@gmail.com';
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
         let senderEmail = fromEmail;
         let senderName = 'AlwaysThere Vault';
         if (fromEmail.includes('<')) {
@@ -446,7 +447,7 @@ export class EmailService {
     if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
       diagnostics.emailMode = 'Brevo API';
       try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || user || 'ks5093654@gmail.com';
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
         let senderEmail = fromEmail;
         let senderName = 'AlwaysThere Vault';
         if (fromEmail.includes('<')) {
