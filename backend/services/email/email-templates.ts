@@ -3,6 +3,18 @@
 //  Inbox-safe, enterprise-grade HTML email builder
 // ─────────────────────────────────────────────────────────────
 
+export function escapeHtml(str: any): string {
+  if (str === null || str === undefined) return '';
+  const stringified = typeof str === 'string' ? str : String(str);
+  return stringified
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+
 // Hosted logo — works in Gmail, Outlook, Apple Mail
 const LOGO_URL = 'https://alwaystherevault.com/logo-simple.png';
 

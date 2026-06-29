@@ -10,7 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { eq, sql } from 'drizzle-orm';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 import { files } from '../../src/db/schema/files';
-import { buildEmailShell, infoBox, statRow, alertStrip, ctaButton } from '../email/email-templates';
+import { buildEmailShell, infoBox, statRow, alertStrip, ctaButton, escapeHtml } from '../email/email-templates';
 
 interface HeartbeatAlertEmailParams {
     name: string;
@@ -29,17 +29,19 @@ function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
     const urgencyColor = p.isFinalWarning ? '#ef4444' : p.missCount === 1 ? '#eab308' : '#f97316';
     const glowColor = p.isFinalWarning ? 'rgba(239,68,68,0.3)' : p.missCount === 1 ? 'rgba(234,179,8,0.3)' : 'rgba(249,115,22,0.3)';
     const progressPct = Math.round((p.missCount / p.maxBuffer) * 100);
+    const escapedName = escapeHtml(p.name);
+    const escapedWallet = escapeHtml(p.walletAddress);
 
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${p.name}</strong>,</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
         ${p.isFinalWarning
           ? `<strong style="color:${urgencyColor};">This is your final warning.</strong> If you do not verify your status immediately, the AlwaysThere Vault will irreversibly distribute your assigned assets to your nominees.`
           : 'Your cryptographic heartbeat signal has been missed. Submit a proof-of-life verification immediately to halt the asset distribution sequence.'}
       </p>
       ${infoBox(`
-        ${statRow('Wallet', p.walletAddress.slice(0,10)+'...'+p.walletAddress.slice(-8), '#38bdf8')}
-        ${statRow('Last Heartbeat', p.lastHeartbeat, '#e2e8f0')}
+        ${statRow('Wallet', escapedWallet.slice(0,10)+'...'+escapedWallet.slice(-8), '#38bdf8')}
+        ${statRow('Last Heartbeat', escapeHtml(p.lastHeartbeat), '#e2e8f0')}
         ${statRow('Interval / Grace', `${p.intervalDays}d / ${p.gracePeriodDays}d`, '#e2e8f0')}
         ${statRow('Buffer Exhausted', `${p.missCount} of ${p.maxBuffer} missed`, urgencyColor, true)}
       `)}
@@ -205,13 +207,15 @@ export class HeartbeatCronService {
                             
                             // Notify user
                              if (user.email && user.emailVerified) {
+                                const escapedName = escapeHtml(user.name || 'Vault Owner');
+                                const escapedWallet = escapeHtml(user.walletAddress);
                                 const activatedBody = `
-                                  <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${user.name || 'Vault Owner'}</strong>,</p>
+                                  <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
                                   <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
                                     All heartbeat time buffers for your vault have been exhausted. The AlwaysThere Protocol has executed its smart contract instructions. Your designated digital assets are now being distributed to your nominated beneficiaries.
                                   </p>
                                   ${infoBox(`
-                                    ${statRow('Wallet', user.walletAddress.slice(0,10)+'...'+user.walletAddress.slice(-8), '#38bdf8')}
+                                    ${statRow('Wallet', escapedWallet.slice(0,10)+'...'+escapedWallet.slice(-8), '#38bdf8')}
                                     ${statRow('Protocol Status', 'TRIGGERED', '#ef4444')}
                                     ${statRow('Asset Distribution', 'In Progress', '#f59e0b', true)}
                                   `)}

@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { buildEmailShell, statRow, infoBox, alertStrip, ctaButton } from './email-templates';
+import * as Sentry from '@sentry/node';
+import { buildEmailShell, statRow, infoBox, alertStrip, ctaButton, escapeHtml } from './email-templates';
 
 interface EmailOptions {
   to: string;
@@ -12,18 +13,19 @@ interface EmailOptions {
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
   private fromEmail: string;
   private frontendUrl: string;
 
   constructor(private configService: ConfigService) {
-    const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.ethereal.email';
+    const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.ethereal.email').trim();
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
-    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
-    const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
+    const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
+    const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
     const defaultSender = user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user;
-    this.fromEmail = this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${defaultSender}>`;
-    this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000';
+    this.fromEmail = (this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${defaultSender}>`).trim();
+    this.frontendUrl = (this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000').trim();
 
     this.transporter = nodemailer.createTransport({
       host, port,
@@ -34,8 +36,24 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+    // 1. DMARC / SPF Check in Production to warn admins of delivery issues
+    const rawFrom = this.configService.get<string>('SMTP_FROM') || this.fromEmail;
+    let senderEmail = rawFrom;
+    if (rawFrom.includes('<')) {
+      const match = rawFrom.match(/<(.*)>/);
+      if (match) {
+        senderEmail = match[1].trim();
+      }
+    }
+    const isPublicDomain = /@(gmail|yahoo|outlook|hotmail|aol|live|icloud)\.com$/i.test(senderEmail);
+    if (isPublicDomain && process.env.NODE_ENV === 'production') {
+      this.logger.warn(`⚠️ DMARC Warning: Real email delivery from public domain "${senderEmail}" via SMTP relay is highly likely to fail or land in spam folders. Configure a custom validated domain.`);
+    }
+
+    // 2. Try Resend API first if configured
+    const resendKey = (this.configService.get<string>('RESEND_API_KEY') || '').trim();
     if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
+      this.logger.log(`Attempting email dispatch via Resend API to: ${options.to}`);
       try {
         const from = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <onboarding@resend.dev>';
         const res = await fetch('https://api.resend.com/emails', {
@@ -52,31 +70,37 @@ export class EmailService {
           })
         });
         if (res.ok) {
-          console.log('✅ Email sent via Resend API to:', options.to);
+          this.logger.log(`✅ Email successfully sent via Resend API to: ${options.to}`);
           return true;
         } else {
           const errText = await res.text();
-          console.error('❌ Resend API error:', errText);
+          const errMsg = `❌ Resend API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
+          this.logger.error(errMsg);
+          Sentry.captureMessage(errMsg, 'error');
         }
-      } catch (err) {
-        console.error('❌ Resend dispatch failed:', err);
+      } catch (err: any) {
+        const errMsg = `❌ Resend API dispatch failed to ${options.to}: ${err.message || err}`;
+        this.logger.error(errMsg, err.stack);
+        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
       }
     }
 
-    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
-    const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
-    const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST');
+    // 3. Try Brevo API if key looks like a Brevo key
+    const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
+    const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
+    const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || '').trim();
 
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
+    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'))) {
+      this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
       try {
         const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
-        let senderEmail = fromEmail;
+        let senderEmailParsed = fromEmail;
         let senderName = 'AlwaysThere Vault';
         if (fromEmail.includes('<')) {
           const match = fromEmail.match(/(.*)<(.*)>/);
           if (match) {
             senderName = match[1].replace(/"/g, '').trim();
-            senderEmail = match[2].trim();
+            senderEmailParsed = match[2].trim();
           }
         }
         
@@ -88,7 +112,7 @@ export class EmailService {
             'content-type': 'application/json'
           },
           body: JSON.stringify({
-            sender: { name: senderName, email: senderEmail },
+            sender: { name: senderName, email: senderEmailParsed },
             to: [{ email: options.to }],
             subject: options.subject,
             htmlContent: options.html
@@ -96,24 +120,32 @@ export class EmailService {
         });
 
         if (res.ok) {
-          console.log('✅ Email sent via Brevo API to:', options.to);
+          this.logger.log(`✅ Email successfully sent via Brevo HTTP API to: ${options.to}`);
           return true;
         } else {
           const errText = await res.text();
-          console.error('❌ Brevo API error:', errText);
+          const errMsg = `❌ Brevo HTTP API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
+          this.logger.error(errMsg);
+          Sentry.captureMessage(errMsg, 'error');
         }
-      } catch (err) {
-        console.error('❌ Brevo API dispatch failed:', err);
+      } catch (err: any) {
+        const errMsg = `❌ Brevo HTTP API dispatch failed to ${options.to}: ${err.message || err}`;
+        this.logger.error(errMsg, err.stack);
+        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
       }
     }
 
+    // 4. Ethereal / Local SMTP Fallback
     const isUnconfigured = !user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example');
 
     if (isUnconfigured) {
       if (process.env.NODE_ENV === 'production') {
-        console.error('❌ CRITICAL ERROR: SMTP credentials (SMTP_USER / SMTP_PASS) are not configured or are placeholder values in Render environment variables! Real emails cannot be delivered.');
+        const errMsg = `❌ CRITICAL ERROR: SMTP/API credentials are unconfigured or placeholder in production Render environment variables! Email delivery failed to ${options.to}`;
+        this.logger.error(errMsg);
+        Sentry.captureMessage(errMsg, 'fatal');
         return false;
       }
+      this.logger.log(`SMTP credentials unconfigured. Attempting Ethereal test mail to: ${options.to}`);
       try {
         const testAccount = await nodemailer.createTestAccount();
         const testTransporter = nodemailer.createTransport({
@@ -124,36 +156,50 @@ export class EmailService {
           from: `"AlwaysThere Vault" <${testAccount.user}>`,
           to: options.to, subject: options.subject, html: options.html,
         });
-        console.log('📬 TEST EMAIL SENT — Preview:', nodemailer.getTestMessageUrl(info));
+        this.logger.log(`📬 TEST EMAIL SENT via Ethereal — Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
         return true;
-      } catch (err) {
-        console.error('Test account creation failed:', err);
+      } catch (err: any) {
+        const errMsg = `❌ Ethereal test account email dispatch failed: ${err.message || err}`;
+        this.logger.error(errMsg, err.stack);
+        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
         return false;
       }
     }
 
+    // 5. Standard Nodemailer SMTP
+    this.logger.log(`Attempting email dispatch via standard Nodemailer SMTP to: ${options.to}`);
     try {
-      await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: this.fromEmail,
         to: options.to,
         subject: options.subject,
         text: options.text,
         html: options.html,
       });
-      console.log('✅ Email sent to:', options.to);
+      this.logger.log(`✅ Email successfully sent via SMTP to: ${options.to}. MessageID: ${info.messageId}`);
       return true;
-    } catch (error) {
-      console.error('Email service error:', error);
+    } catch (error: any) {
+      const errMsg = `❌ SMTP dispatch failed to ${options.to}. Error: ${error.message || error}`;
+      this.logger.error(errMsg, error.stack);
+      Sentry.captureException(error, {
+        extra: {
+          to: options.to,
+          subject: options.subject,
+          fromEmail: this.fromEmail,
+        }
+      });
       return false;
     }
   }
+
 
   // ─────────────────────────────────────────
   //  WELCOME
   // ─────────────────────────────────────────
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
+    const escapedName = escapeHtml(name);
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Welcome, <strong>${name}</strong>.</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Welcome, <strong>${escapedName}</strong>.</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
         Your AlwaysThere Vault is now active. You hold the most powerful tool for securing your digital legacy —
         a decentralized, encrypted, and automated inheritance protocol.
@@ -187,6 +233,7 @@ export class EmailService {
   //  EMAIL VERIFICATION OTP
   // ─────────────────────────────────────────
   async sendVerificationEmail(email: string, code: string): Promise<boolean> {
+    const escapedCode = escapeHtml(code);
     const body = `
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
         To protect your vault, please verify your email address. This address will receive
@@ -194,7 +241,7 @@ export class EmailService {
       </p>
       <div style="background:#060d1a;border:1px solid rgba(14,165,233,0.3);border-radius:12px;padding:28px;margin:24px 0;text-align:center;">
         <p style="margin:0 0 12px;font-size:11px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;">Your Verification Code</p>
-        <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(14,165,233,0.5);">${code}</div>
+        <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(14,165,233,0.5);">${escapedCode}</div>
         <p style="margin:12px 0 0;font-size:12px;color:#475569;">Expires in <strong style="color:#f59e0b;">5 minutes</strong></p>
       </div>
       ${alertStrip('#f59e0b', 'If you did not request this code, please ignore this email. Your account remains secure.')}
@@ -216,13 +263,16 @@ export class EmailService {
   }
 
   async sendBeneficiaryVerificationEmail(email: string, name: string, code: string, ownerName: string): Promise<boolean> {
+    const escapedName = escapeHtml(name);
+    const escapedCode = escapeHtml(code);
+    const escapedOwner = escapeHtml(ownerName);
     const body = `
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
-        To activate your status as a nominee beneficiary in <strong>${ownerName}</strong>'s Digital Will Vault, please provide the verification code below to the vault owner, or enter it in your dashboard verification panel.
+        To activate your status as a nominee beneficiary in <strong>${escapedOwner}</strong>'s Digital Will Vault, please provide the verification code below to the vault owner, or enter it in your dashboard verification panel.
       </p>
       <div style="background:#060d1a;border:1px solid rgba(167,139,250,0.3);border-radius:12px;padding:28px;margin:24px 0;text-align:center;">
         <p style="margin:0 0 12px;font-size:11px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;">Beneficiary OTP Code</p>
-        <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(167,139,250,0.5);">${code}</div>
+        <div style="font-size:40px;font-weight:800;letter-spacing:12px;color:#ffffff;font-family:'Courier New',monospace;text-shadow:0 0 20px rgba(167,139,250,0.5);">${escapedCode}</div>
         <p style="margin:12px 0 0;font-size:12px;color:#475569;">Expires in <strong style="color:#f59e0b;">15 minutes</strong></p>
       </div>
       ${alertStrip('#f59e0b', 'If you did not request this, you can ignore this email. Your status is secured.')}
@@ -247,14 +297,16 @@ export class EmailService {
   //  BENEFICIARY ADDED
   // ─────────────────────────────────────────
   async sendBeneficiaryAddedEmail(email: string, name: string, ownerName: string): Promise<boolean> {
+    const escapedName = escapeHtml(name);
+    const escapedOwner = escapeHtml(ownerName);
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hello, <strong>${name}</strong>.</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hello, <strong>${escapedName}</strong>.</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
-        <strong style="color:#ffffff;">${ownerName}</strong> has designated you as a beneficiary
+        <strong style="color:#ffffff;">${escapedOwner}</strong> has designated you as a beneficiary
         in their AlwaysThere Vault — a secure, blockchain-backed digital inheritance protocol.
       </p>
       ${infoBox(`
-        ${statRow('Designated By', ownerName, '#e2e8f0')}
+        ${statRow('Designated By', escapedOwner, '#e2e8f0')}
         ${statRow('Status', 'Active Beneficiary', '#22c55e')}
         ${statRow('Action Required', 'None at this time', '#64748b', true)}
       `)}
@@ -281,9 +333,10 @@ export class EmailService {
   //  HEARTBEAT REMINDER
   // ─────────────────────────────────────────
   async sendHeartbeatReminderEmail(email: string, name: string, daysOverdue: number): Promise<boolean> {
+    const escapedName = escapeHtml(name);
     const urgency = daysOverdue >= 5 ? '#ef4444' : '#f59e0b';
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${name}</strong>,</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
         Your vault heartbeat is overdue by <strong style="color:${urgency};">${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}</strong>.
         Submit a proof-of-life heartbeat immediately to prevent automatic asset distribution.
@@ -316,14 +369,16 @@ export class EmailService {
   //  PAYMENT SUCCESS
   // ─────────────────────────────────────────
   async sendPaymentSuccessEmail(email: string, name: string, plan: string, amount: number): Promise<boolean> {
+    const escapedName = escapeHtml(name);
+    const escapedPlan = escapeHtml(plan);
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Thank you, <strong>${name}</strong>.</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Thank you, <strong>${escapedName}</strong>.</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
         Your payment has been processed successfully and your subscription is now active.
         Full vault access has been unlocked.
       </p>
       ${infoBox(`
-        ${statRow('Plan', plan, '#22c55e')}
+        ${statRow('Plan', escapedPlan, '#22c55e')}
         ${statRow('Amount Charged', `$${amount.toFixed(2)}`, '#e2e8f0')}
         ${statRow('Billing Status', 'Paid & Active', '#22c55e')}
         ${statRow('Next Renewal', 'Auto-renews monthly', '#64748b', true)}
@@ -350,16 +405,19 @@ export class EmailService {
   //  ASSET RELEASE (Nominee)
   // ─────────────────────────────────────────
   async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number, claimUrl: string): Promise<boolean> {
+    const escapedName = escapeHtml(name);
+    const escapedOwner = escapeHtml(ownerName);
+    const escapedAddress = escapeHtml(ownerAddress);
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Greetings, <strong>${name}</strong>.</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Greetings, <strong>${escapedName}</strong>.</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
-        The AlwaysThere Vault belonging to <strong style="color:#ffffff;">${ownerName}</strong> has
+        The AlwaysThere Vault belonging to <strong style="color:#ffffff;">${escapedOwner}</strong> has
         triggered the inheritance protocol. All heartbeat buffers were exhausted and smart contract
         instructions have been executed. Assets designated to you are now available.
       </p>
       ${infoBox(`
-        ${statRow('Vault Owner', ownerName, '#e2e8f0')}
-        ${statRow('Wallet', ownerAddress.slice(0, 10) + '...' + ownerAddress.slice(-8), '#38bdf8')}
+        ${statRow('Vault Owner', escapedOwner, '#e2e8f0')}
+        ${statRow('Wallet', escapedAddress.slice(0, 10) + '...' + escapedAddress.slice(-8), '#38bdf8')}
         ${statRow('Assets Assigned to You', `${assetCount} Digital Asset${assetCount !== 1 ? 's' : ''}`, '#22c55e')}
         ${statRow('Claim Window', '7 Days from this email', '#f59e0b', true)}
       `)}
@@ -389,8 +447,9 @@ export class EmailService {
   //  TRIAL EXPIRING
   // ─────────────────────────────────────────
   async sendTrialExpiringEmail(email: string, name: string, daysRemaining: number): Promise<boolean> {
+    const escapedName = escapeHtml(name);
     const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hi <strong>${name}</strong>,</p>
+      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Hi <strong>${escapedName}</strong>,</p>
       <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
         Your free trial expires in <strong style="color:#f59e0b;">${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}</strong>.
         Upgrade now to ensure your digital legacy remains protected without interruption.
