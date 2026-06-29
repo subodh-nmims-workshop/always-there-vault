@@ -19,16 +19,16 @@ export class EmailService {
   private frontendUrl: string;
 
   constructor(private configService: ConfigService) {
-    const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.ethereal.email').trim();
+    const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.gmail.com').trim();
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
     const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
     const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
-    const defaultSender = user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user;
-    this.fromEmail = (this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${defaultSender}>`).trim();
+    this.fromEmail = (this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${user}>`).trim();
     this.frontendUrl = (this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000').trim();
 
     this.transporter = nodemailer.createTransport({
-      host, port,
+      host,
+      port,
       secure: port === 465,
       auth: { user, pass },
       tls: { rejectUnauthorized: false }
@@ -36,138 +36,7 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    // 1. DMARC / SPF Check in Production to warn admins of delivery issues
-    const rawFrom = this.configService.get<string>('SMTP_FROM') || this.fromEmail;
-    let senderEmail = rawFrom;
-    if (rawFrom.includes('<')) {
-      const match = rawFrom.match(/<(.*)>/);
-      if (match) {
-        senderEmail = match[1].trim();
-      }
-    }
-    const isPublicDomain = /@(gmail|yahoo|outlook|hotmail|aol|live|icloud)\.com$/i.test(senderEmail);
-    if (isPublicDomain && process.env.NODE_ENV === 'production') {
-      this.logger.warn(`⚠️ DMARC Warning: Real email delivery from public domain "${senderEmail}" via SMTP relay is highly likely to fail or land in spam folders. Configure a custom validated domain.`);
-    }
-
-    // 2. Try Resend API first if configured
-    const resendKey = (this.configService.get<string>('RESEND_API_KEY') || '').trim();
-    if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
-      this.logger.log(`Attempting email dispatch via Resend API to: ${options.to}`);
-      try {
-        const from = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <onboarding@resend.dev>';
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            from,
-            to: options.to,
-            subject: options.subject,
-            html: options.html
-          })
-        });
-        if (res.ok) {
-          this.logger.log(`✅ Email successfully sent via Resend API to: ${options.to}`);
-          return true;
-        } else {
-          const errText = await res.text();
-          const errMsg = `❌ Resend API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
-          this.logger.error(errMsg);
-          Sentry.captureMessage(errMsg, 'error');
-        }
-      } catch (err: any) {
-        const errMsg = `❌ Resend API dispatch failed to ${options.to}: ${err.message || err}`;
-        this.logger.error(errMsg, err.stack);
-        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
-      }
-    }
-
-    // 3. Try Brevo API if key looks like a Brevo key
-    const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
-    const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
-    const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || '').trim();
-
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'))) {
-      this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
-      try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
-        let senderEmailParsed = fromEmail;
-        let senderName = 'AlwaysThere Vault';
-        if (fromEmail.includes('<')) {
-          const match = fromEmail.match(/(.*)<(.*)>/);
-          if (match) {
-            senderName = match[1].replace(/"/g, '').trim();
-            senderEmailParsed = match[2].trim();
-          }
-        }
-        
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': pass,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: { name: senderName, email: senderEmailParsed },
-            to: [{ email: options.to }],
-            subject: options.subject,
-            htmlContent: options.html
-          })
-        });
-
-        if (res.ok) {
-          this.logger.log(`✅ Email successfully sent via Brevo HTTP API to: ${options.to}`);
-          return true;
-        } else {
-          const errText = await res.text();
-          const errMsg = `❌ Brevo HTTP API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
-          this.logger.error(errMsg);
-          Sentry.captureMessage(errMsg, 'error');
-        }
-      } catch (err: any) {
-        const errMsg = `❌ Brevo HTTP API dispatch failed to ${options.to}: ${err.message || err}`;
-        this.logger.error(errMsg, err.stack);
-        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
-      }
-    }
-
-    // 4. Ethereal / Local SMTP Fallback
-    const isUnconfigured = !user || user.includes('your-email') || user.includes('paste-your-16-digit') || user.includes('example');
-
-    if (isUnconfigured) {
-      if (process.env.NODE_ENV === 'production') {
-        const errMsg = `❌ CRITICAL ERROR: SMTP/API credentials are unconfigured or placeholder in production Render environment variables! Email delivery failed to ${options.to}`;
-        this.logger.error(errMsg);
-        Sentry.captureMessage(errMsg, 'fatal');
-        return false;
-      }
-      this.logger.log(`SMTP credentials unconfigured. Attempting Ethereal test mail to: ${options.to}`);
-      try {
-        const testAccount = await nodemailer.createTestAccount();
-        const testTransporter = nodemailer.createTransport({
-          host: 'smtp.ethereal.email', port: 587, secure: false,
-          auth: { user: testAccount.user, pass: testAccount.pass }
-        });
-        const info = await testTransporter.sendMail({
-          from: `"AlwaysThere Vault" <${testAccount.user}>`,
-          to: options.to, subject: options.subject, html: options.html,
-        });
-        this.logger.log(`📬 TEST EMAIL SENT via Ethereal — Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-        return true;
-      } catch (err: any) {
-        const errMsg = `❌ Ethereal test account email dispatch failed: ${err.message || err}`;
-        this.logger.error(errMsg, err.stack);
-        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
-        return false;
-      }
-    }
-
-    // 5. Standard Nodemailer SMTP
-    this.logger.log(`Attempting email dispatch via standard Nodemailer SMTP to: ${options.to}`);
+    this.logger.log(`Attempting email dispatch via SMTP to: ${options.to}`);
     try {
       const info = await this.transporter.sendMail({
         from: this.fromEmail,
@@ -479,11 +348,10 @@ export class EmailService {
   }
 
   async diagnoseSmtp(toEmail: string) {
-    const host = this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp-relay.brevo.com';
+    const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.gmail.com').trim();
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
-    const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
-    const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
-    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+    const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
+    const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
 
     const diagnostics: any = {
       timestamp: new Date().toISOString(),
@@ -494,95 +362,14 @@ export class EmailService {
         user,
         hasPass: !!pass,
         passLength: pass ? pass.length : 0,
-        hasResendKey: !!resendKey,
-        resendKeyLength: resendKey ? resendKey.length : 0,
         fromEmail: this.fromEmail,
       },
       smtpVerify: null,
       emailSent: null,
-      error: null
+      error: null,
+      emailMode: 'Nodemailer SMTP'
     };
 
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
-      diagnostics.emailMode = 'Brevo API';
-      try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
-        let senderEmail = fromEmail;
-        let senderName = 'AlwaysThere Vault';
-        if (fromEmail.includes('<')) {
-          const match = fromEmail.match(/(.*)<(.*)>/);
-          if (match) {
-            senderName = match[1].replace(/"/g, '').trim();
-            senderEmail = match[2].trim();
-          }
-        }
-
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': pass,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: { name: senderName, email: senderEmail },
-            to: [{ email: toEmail }],
-            subject: 'AlwaysThere Vault SMTP Diagnostic Test (Brevo API)',
-            htmlContent: '<b>Diagnostic Test from Brevo HTTP API</b>'
-          })
-        });
-
-        diagnostics.brevoStatus = res.status;
-        diagnostics.brevoStatusText = res.statusText;
-        if (res.ok) {
-          diagnostics.emailSent = 'Success';
-          diagnostics.response = await res.json();
-          return { success: true, diagnostics };
-        } else {
-          diagnostics.emailSent = 'Failed';
-          diagnostics.error = await res.text();
-          return { success: false, diagnostics };
-        }
-      } catch (err: any) {
-        diagnostics.emailSent = 'Failed';
-        diagnostics.error = err.message || err;
-        return { success: false, diagnostics };
-      }
-    }
-
-    if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
-      diagnostics.emailMode = 'Resend API';
-      try {
-        const from = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <onboarding@resend.dev>';
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            from,
-            to: toEmail,
-            subject: 'AlwaysThere Vault SMTP Diagnostic Test (Resend)',
-            html: '<b>Diagnostic Test from Resend API</b>'
-          })
-        });
-        diagnostics.resendStatus = res.status;
-        diagnostics.resendStatusText = res.statusText;
-        if (res.ok) {
-          diagnostics.emailSent = true;
-          return { success: true, diagnostics };
-        } else {
-          diagnostics.resendError = await res.text();
-          return { success: false, diagnostics };
-        }
-      } catch (err: any) {
-        diagnostics.error = err.message || err;
-        return { success: false, diagnostics };
-      }
-    }
-
-    diagnostics.emailMode = 'Nodemailer SMTP';
     try {
       try {
         await this.transporter.verify();
