@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Body, Query, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -13,6 +13,7 @@ export class UpdateStorageEngineDto {
 export class UpdateProfileDto {
   @ApiProperty({ description: 'User email address', required: false })
   @IsOptional()
+  @ValidateIf(o => o.email !== '')
   @IsEmail()
   email?: string;
 }

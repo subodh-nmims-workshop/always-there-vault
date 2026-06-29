@@ -63,7 +63,7 @@ export async function recordHeartbeat(payload: HeartbeatPayload): Promise<Heartb
             console.log('✅ Heartbeat synced to backend')
         } catch (syncErr: any) {
             console.warn('⚠️ Backend sync failed', syncErr)
-            return { success: false, error: syncErr.message || 'Failed to sync heartbeat with protocol cloud.' }
+            return { success: true, syncFailed: true, data: heartbeat, error: syncErr.message || 'Failed to sync heartbeat with protocol cloud.' }
         }
 
         return { success: true, data: heartbeat }
@@ -327,7 +327,7 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
             }
         } catch (syncErr: any) {
             console.warn('⚠️ Settings sync failed', syncErr)
-            return { success: false, error: syncErr.message || 'Failed to sync settings with protocol cloud.' }
+            return { success: true, syncFailed: true, error: syncErr.message || 'Failed to sync settings with protocol cloud.' }
         }
     } catch (error: any) {
         console.error('Settings update error:', error)

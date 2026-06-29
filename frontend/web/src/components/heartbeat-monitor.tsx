@@ -564,11 +564,12 @@ export function HeartbeatMonitor() {
 
     if (isDemo) {
       const seconds = Math.max(0, Math.ceil(diffMs / 1000))
-      return { value: seconds, unit: 'Seconds' }
+      const maxSeconds = settings.heartbeatInterval * 60
+      return { value: Math.min(seconds, maxSeconds), unit: 'Seconds' }
     }
 
     const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-    return { value: days, unit: 'Days' }
+    return { value: Math.min(days, settings.heartbeatInterval), unit: 'Days' }
   }
 
   const getGracePeriodLeft = (): { value: number; unit: string } => {
@@ -580,11 +581,12 @@ export function HeartbeatMonitor() {
 
     if (isDemo) {
       const seconds = Math.max(0, Math.ceil(diffMs / 1000))
-      return { value: seconds, unit: 'Seconds' }
+      const maxSeconds = settings.gracePeriod * 60
+      return { value: Math.min(seconds, maxSeconds), unit: 'Seconds' }
     }
 
     const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-    return { value: days, unit: 'Days' }
+    return { value: Math.min(days, settings.gracePeriod), unit: 'Days' }
   }
 
   const calculateProgress = () => {
@@ -597,7 +599,8 @@ export function HeartbeatMonitor() {
     const msLeft = nextDue.getTime() - currentTime
 
     if (msLeft < 0) return 100;
-    const progress = ((intervalMs - msLeft) / intervalMs) * 100;
+    const clampedMsLeft = Math.min(msLeft, intervalMs)
+    const progress = ((intervalMs - clampedMsLeft) / intervalMs) * 100;
     return Math.min(Math.max(progress, 0), 100);
   }
 
