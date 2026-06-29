@@ -239,15 +239,29 @@ export function HeartbeatMonitor() {
   useEffect(() => {
     if (walletAddress) {
       fetchLiveStatus()
-      loadHeartbeatHistory()
     }
   }, [walletAddress])
+
+  useEffect(() => {
+    if (walletAddress) {
+      loadHeartbeatHistory()
+    }
+  }, [walletAddress, state?.heartbeats])
 
   const loadHeartbeatHistory = () => {
     // Load from AppContext state
     if (state?.heartbeats) {
       const sortedHeartbeats = [...state.heartbeats].sort((a, b) => b.timestamp - a.timestamp)
       setHeartbeats(sortedHeartbeats.slice(0, 10)) // Last 10 heartbeats
+      
+      // Fallback: If lastHeartbeat is not set yet, or if the local heartbeat is newer than what we have, use the local one.
+      if (sortedHeartbeats.length > 0) {
+        const latestLocal = new Date(sortedHeartbeats[0].timestamp)
+        setLastHeartbeat(prev => {
+          if (!prev) return latestLocal
+          return latestLocal > prev ? latestLocal : prev
+        })
+      }
     }
   }
 
@@ -324,6 +338,7 @@ export function HeartbeatMonitor() {
       const res = await recordHeartbeat(payload)
 
       if (res.success) {
+        setLastHeartbeat(new Date()) // Update locally for instant countdown reset
         await fetchLiveStatus()
         await refreshState()
         loadHeartbeatHistory() // Reload history
