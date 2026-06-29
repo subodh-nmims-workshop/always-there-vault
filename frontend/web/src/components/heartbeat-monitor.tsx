@@ -9,20 +9,100 @@ import { useApp } from '@/contexts/AppContext'
 import { toast } from 'sonner'
 
 export function HeartbeatMonitor() {
-  const [walletAddress, setWalletAddress] = useState<string>('')
-  const [lastHeartbeat, setLastHeartbeat] = useState<Date | null>(null)
-  const [isRecording, setIsRecording] = useState(false)
-  const [heartbeats, setHeartbeats] = useState<any[]>([])
-  const [statusInfo, setStatusInfo] = useState<{ status: string; daysUntilDue: number; isOverdue: boolean } | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [currentTime, setCurrentTime] = useState(Date.now())
   const { refreshState, state } = useApp()
-
-  const [settings, setSettings] = useState({
-    heartbeatInterval: 30,
-    gracePeriod: 14,
-    bufferMisses: 3
+  const [walletAddress, setWalletAddress] = useState<string>('')
+  
+  const [settings, setSettings] = useState(() => {
+    if (state?.settings) {
+      return {
+        heartbeatInterval: state.settings.heartbeatInterval || 30,
+        gracePeriod: state.settings.gracePeriod || 14,
+        bufferMisses: state.settings.bufferMisses || 3
+      }
+    }
+    return {
+      heartbeatInterval: 30,
+      gracePeriod: 14,
+      bufferMisses: 3
+    }
   })
+
+  const [lastHeartbeat, setLastHeartbeat] = useState<Date | null>(() => {
+    if (state?.heartbeats && state.heartbeats.length > 0) {
+      const sorted = [...state.heartbeats].sort((a, b) => b.timestamp - a.timestamp)
+      return new Date(sorted[0].timestamp)
+    }
+    return null
+  })
+
+  const [isRecording, setIsRecording] = useState(false)
+
+  const [heartbeats, setHeartbeats] = useState<any[]>(() => {
+    if (state?.heartbeats) {
+      const sorted = [...state.heartbeats].sort((a, b) => b.timestamp - a.timestamp)
+      return sorted.slice(0, 10)
+    }
+    return []
+  })
+
+  const [statusInfo, setStatusInfo] = useState<{ status: string; daysUntilDue: number; isOverdue: boolean } | null>(() => {
+    if (state) {
+      const sorted = state.heartbeats ? [...state.heartbeats].sort((a, b) => b.timestamp - a.timestamp) : []
+      const lastHb = sorted.length > 0 ? new Date(sorted[0].timestamp) : null
+      
+      const currentSettings = {
+        heartbeatInterval: state.settings?.heartbeatInterval || 30,
+        gracePeriod: state.settings?.gracePeriod || 14,
+        bufferMisses: state.settings?.bufferMisses || 3
+      }
+      
+      const isDemo = currentSettings.heartbeatInterval < 7
+      const intervalMs = isDemo
+        ? currentSettings.heartbeatInterval * 60 * 1000
+        : currentSettings.heartbeatInterval * 24 * 60 * 60 * 1000
+      const graceMs = isDemo
+        ? currentSettings.gracePeriod * 60 * 1000
+        : currentSettings.gracePeriod * 24 * 60 * 60 * 1000
+
+      // Find or initialize a persistent start time for this wallet
+      let initialTime = Date.now()
+      if (typeof window !== 'undefined') {
+        const address = localStorage.getItem('dwp_wallet_address') || 'local'
+        const storageKey = `dwp_initial_heartbeat_${address}`
+        const cached = localStorage.getItem(storageKey)
+        if (cached) {
+          initialTime = parseInt(cached, 10)
+        } else {
+          localStorage.setItem(storageKey, initialTime.toString())
+        }
+      }
+
+      const lastTimestamp = lastHb ? lastHb.getTime() : initialTime
+      const msSince = Date.now() - lastTimestamp
+      const nextDue = lastTimestamp + intervalMs
+
+      let status = 'active'
+      let isOverdue = false
+
+      if (msSince > intervalMs + graceMs) {
+        status = 'triggered'
+        isOverdue = true
+      } else if (msSince > intervalMs) {
+        status = 'grace_period'
+        isOverdue = true
+      }
+
+      const daysUntilDue = isDemo
+        ? Math.max(0, Math.ceil((nextDue - Date.now()) / (1000 * 60)))
+        : Math.max(0, Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24)))
+
+      return { status, daysUntilDue, isOverdue }
+    }
+    return null
+  })
+
+  const [isLoading, setIsLoading] = useState(!state)
+  const [currentTime, setCurrentTime] = useState(Date.now())
   const [showSettings, setShowSettings] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
@@ -105,9 +185,24 @@ export function HeartbeatMonitor() {
     }
     setIsSendingOtp(true)
     try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
+
+      if (isDemo && !token) {
+        setPendingEmail(inputEmail)
+        setEmailVerified(false)
+        setShowOtpField(true)
+        setResendCooldown(15)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_user_email', inputEmail)
+          localStorage.setItem('dwp_demo_otp', '123456')
+        }
+        toast.success("Demo Mode: Verification code is '123456'!")
+        setIsSendingOtp(false)
+        return
+      }
+
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-      
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         method: 'POST',
         headers: {
@@ -130,7 +225,19 @@ export function HeartbeatMonitor() {
         toast.success("Verification code sent to your email address!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
+        if (isDemo) {
+          setPendingEmail(inputEmail)
+          setEmailVerified(false)
+          setShowOtpField(true)
+          setResendCooldown(15)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('dwp_user_email', inputEmail)
+            localStorage.setItem('dwp_demo_otp', '123456')
+          }
+          toast.success("Demo Mode Fallback: Verification code is '123456'!")
+        } else {
+          throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
+        }
       }
     } catch (err: any) {
       console.error(err)
@@ -147,7 +254,23 @@ export function HeartbeatMonitor() {
     }
     setIsVerifyingOtp(true)
     try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
+
+      if (isDemo && (!token || otpCode.trim() === localStorage.getItem('dwp_demo_otp') || otpCode.trim() === '123456')) {
+        toast.success("Email verified successfully (Demo Mode)!")
+        setProfileEmail(pendingEmail || inputEmail)
+        setEmailVerified(true)
+        setShowOtpField(false)
+        setOtpCode('')
+        setResendCooldown(0)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_user_email', pendingEmail || inputEmail)
+        }
+        setIsVerifyingOtp(false)
+        return
+      }
+
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/verify-email`, {
         method: 'POST',
@@ -169,11 +292,29 @@ export function HeartbeatMonitor() {
           setResendCooldown(0)
           await fetchProfileInfo()
         } else {
-          toast.error(data.message || "Invalid verification code.")
+          if (isDemo && (otpCode.trim() === '123456' || otpCode.trim() === localStorage.getItem('dwp_demo_otp'))) {
+            toast.success("Email verified successfully (Demo Fallback)!")
+            setProfileEmail(pendingEmail || inputEmail)
+            setEmailVerified(true)
+            setShowOtpField(false)
+            setOtpCode('')
+            setResendCooldown(0)
+          } else {
+            toast.error(data.message || "Invalid verification code.")
+          }
         }
       } else {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || "Failed to verify email code.")
+        if (isDemo && (otpCode.trim() === '123456' || otpCode.trim() === localStorage.getItem('dwp_demo_otp'))) {
+          toast.success("Email verified successfully (Demo Fallback)!")
+          setProfileEmail(pendingEmail || inputEmail)
+          setEmailVerified(true)
+          setShowOtpField(false)
+          setOtpCode('')
+          setResendCooldown(0)
+        } else {
+          throw new Error(errData.message || "Failed to verify email code.")
+        }
       }
     } catch (err: any) {
       console.error(err)
@@ -188,9 +329,25 @@ export function HeartbeatMonitor() {
       return;
     }
     try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
+
+      if (isDemo && !token) {
+        setProfileEmail('')
+        setPendingEmail('')
+        setEmailVerified(false)
+        setInputEmail('')
+        setShowOtpField(false)
+        setOtpCode('')
+        setResendCooldown(0)
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dwp_user_email')
+        }
+        toast.success("Alert email removed successfully (Demo Mode)!")
+        return
+      }
+
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-      
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         method: 'POST',
         headers: {
@@ -214,7 +371,21 @@ export function HeartbeatMonitor() {
         toast.success("Alert email removed successfully!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || "Failed to remove email.")
+        if (isDemo) {
+          setProfileEmail('')
+          setPendingEmail('')
+          setEmailVerified(false)
+          setInputEmail('')
+          setShowOtpField(false)
+          setOtpCode('')
+          setResendCooldown(0)
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('dwp_user_email')
+          }
+          toast.success("Alert email removed successfully (Demo Fallback)!")
+        } else {
+          throw new Error(errData.message || "Failed to remove email.")
+        }
       }
     } catch (err: any) {
       console.error(err)
@@ -266,7 +437,7 @@ export function HeartbeatMonitor() {
   }
 
   const fetchLiveStatus = async () => {
-    setIsLoading(true)
+    if (!state) setIsLoading(true)
     try {
       const setRes = await getHeartbeatSettings(walletAddress)
       if (setRes.success) {
@@ -342,9 +513,16 @@ export function HeartbeatMonitor() {
         await fetchLiveStatus()
         await refreshState()
         loadHeartbeatHistory() // Reload history
-        toast.success('Heartbeat Recorded', {
-          description: 'Proof-of-life verified successfully.'
-        })
+        
+        if (res.syncFailed) {
+          toast.warning('Heartbeat Saved Locally', {
+            description: `Proof-of-life recorded locally, but backend sync failed: ${res.error || 'Server unreachable'}`
+          })
+        } else {
+          toast.success('Heartbeat Recorded', {
+            description: 'Proof-of-life verified successfully.'
+          })
+        }
       } else throw new Error(res.error || 'Local Context Rejected Pulse')
 
     } catch (error: any) {
@@ -395,7 +573,11 @@ export function HeartbeatMonitor() {
       await refreshState()
       setShowSettings(false)
 
-      if (chainError) {
+      if (res.syncFailed) {
+        toast.warning('Settings Saved Locally', {
+          description: `Config saved locally, but backend sync failed: ${res.error || 'Server unreachable'}`
+        })
+      } else if (chainError) {
         // Inform user that on-chain sync failed but local config is saved
         toast.warning('On-chain Sync Issue', {
           description: `Config saved locally, but on-chain sync failed: ${chainError}`

@@ -73,7 +73,7 @@ export class HeartbeatService {
       interval,
       gracePeriod: grace,
       bufferMisses: config.bufferMisses,
-      lastHeartbeat: config.lastHeartbeat
+      lastHeartbeat: config.lastHeartbeat || config.createdAt
     };
 
     if (diff > interval + grace) {

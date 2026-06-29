@@ -11,7 +11,22 @@ export interface HeartbeatPayload {
     ipAddress?: string
 }
 
-export async function recordHeartbeat(payload: HeartbeatPayload) {
+export interface HeartbeatActionResult {
+    success: boolean
+    data?: any
+    syncFailed?: boolean
+    error?: string
+}
+
+export interface SettingsActionResult {
+    success: boolean
+    syncFailed?: boolean
+    verificationRequired?: boolean
+    pendingEmail?: string
+    error?: string
+}
+
+export async function recordHeartbeat(payload: HeartbeatPayload): Promise<HeartbeatActionResult> {
     try {
         const storage = WebStorageService.getInstance()
         const heartbeat = {
@@ -61,6 +76,40 @@ export async function recordHeartbeat(payload: HeartbeatPayload) {
 export async function getHeartbeatStatus(walletAddress: string) {
     try {
         const storage = WebStorageService.getInstance()
+
+        // Sync latest heartbeat timestamp from backend if online
+        try {
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+            const token = localStorage.getItem('dwp_token')
+            if (token) {
+                const res = await fetch(`${apiEndpoint}/api/heartbeat/status`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data && data.lastHeartbeat) {
+                        const backendTs = new Date(data.lastHeartbeat).getTime()
+                        const localHeartbeats = await storage.getAllHeartbeats()
+                        const maxLocal = localHeartbeats.length > 0 ? Math.max(...localHeartbeats.map((h: any) => h.timestamp)) : 0
+                        if (backendTs > maxLocal) {
+                            await storage.saveHeartbeat({
+                                id: `backend_sync_${backendTs}`,
+                                timestamp: backendTs,
+                                method: 'sync',
+                                verified: true
+                            })
+                        }
+                    }
+                } else if (res.status === 401) {
+                    localStorage.removeItem('dwp_token')
+                }
+            }
+        } catch (syncErr) {
+            console.warn('⚠️ Status sync from backend failed (offline fallback)', syncErr)
+        }
+
         const heartbeats = await storage.getAllHeartbeats()
         const settings = storage.getSettings()
 
@@ -77,17 +126,41 @@ export async function getHeartbeatStatus(walletAddress: string) {
             : gracePeriodDays * 24 * 60 * 60 * 1000;
 
         if (heartbeats.length === 0) {
-            const nextDue = Date.now() + intervalMs
+            let initialTime = Date.now()
+            if (typeof window !== 'undefined') {
+                const storageKey = `dwp_initial_heartbeat_${walletAddress}`
+                const cached = localStorage.getItem(storageKey)
+                if (cached) {
+                    initialTime = parseInt(cached, 10)
+                } else {
+                    localStorage.setItem(storageKey, initialTime.toString())
+                }
+            }
+
+            const nextDue = initialTime + intervalMs
+            const msSince = Date.now() - initialTime
+            let status = 'active'
+            let isOverdue = false
+
+            if (msSince > intervalMs + graceMs) {
+                status = 'triggered'
+                isOverdue = true
+            } else if (msSince > intervalMs) {
+                status = 'grace_period'
+                isOverdue = true
+            }
+
             const daysUntilDue = isDemo
                 ? Math.ceil((nextDue - Date.now()) / (1000 * 60))
                 : Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
+
             return {
                 success: true,
-                status: 'active',
-                lastHeartbeat: Date.now(),
+                status,
+                lastHeartbeat: initialTime,
                 nextDue,
                 daysUntilDue,
-                isOverdue: false,
+                isOverdue,
                 interval: intervalDays,
                 gracePeriod: gracePeriodDays
             }
@@ -177,7 +250,7 @@ export async function getHeartbeatSettings(walletAddress: string) {
     }
 }
 
-export async function updateHeartbeatSettings(walletAddress: string, interval: number, gracePeriod: number, bufferMisses: number = 3) {
+export async function updateHeartbeatSettings(walletAddress: string, interval: number, gracePeriod: number, bufferMisses: number = 3): Promise<SettingsActionResult> {
     try {
         const storage = WebStorageService.getInstance()
         storage.saveSettings({ heartbeatInterval: interval, gracePeriod, bufferMisses })
