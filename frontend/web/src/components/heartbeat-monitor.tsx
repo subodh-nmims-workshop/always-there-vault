@@ -185,9 +185,21 @@ export function HeartbeatMonitor() {
     }
     setIsSendingOtp(true)
     try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-      if (!token) {
-        throw new Error("No wallet connection found. Please connect your wallet first.")
+
+      if (isDemo && !token) {
+        setPendingEmail(inputEmail)
+        setEmailVerified(false)
+        setShowOtpField(true)
+        setResendCooldown(15)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_user_email', inputEmail)
+          localStorage.setItem('dwp_demo_otp', '123456')
+        }
+        toast.success("Demo Mode: Verification code is '123456'!")
+        setIsSendingOtp(false)
+        return
       }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
@@ -213,7 +225,19 @@ export function HeartbeatMonitor() {
         toast.success("Verification code sent to your email address!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
+        if (isDemo) {
+          setPendingEmail(inputEmail)
+          setEmailVerified(false)
+          setShowOtpField(true)
+          setResendCooldown(15)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('dwp_user_email', inputEmail)
+            localStorage.setItem('dwp_demo_otp', '123456')
+          }
+          toast.success("Demo Mode Fallback: Verification code is '123456'!")
+        } else {
+          throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
+        }
       }
     } catch (err: any) {
       console.error(err)
@@ -230,9 +254,21 @@ export function HeartbeatMonitor() {
     }
     setIsVerifyingOtp(true)
     try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-      if (!token) {
-        throw new Error("No wallet connection found. Please connect your wallet first.")
+
+      if (isDemo && (!token || otpCode.trim() === localStorage.getItem('dwp_demo_otp') || otpCode.trim() === '123456')) {
+        toast.success("Email verified successfully (Demo Mode)!")
+        setProfileEmail(pendingEmail || inputEmail)
+        setEmailVerified(true)
+        setShowOtpField(false)
+        setOtpCode('')
+        setResendCooldown(0)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_user_email', pendingEmail || inputEmail)
+        }
+        setIsVerifyingOtp(false)
+        return
       }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
@@ -256,11 +292,29 @@ export function HeartbeatMonitor() {
           setResendCooldown(0)
           await fetchProfileInfo()
         } else {
-          toast.error(data.message || "Invalid verification code.")
+          if (isDemo && (otpCode.trim() === '123456' || otpCode.trim() === localStorage.getItem('dwp_demo_otp'))) {
+            toast.success("Email verified successfully (Demo Fallback)!")
+            setProfileEmail(pendingEmail || inputEmail)
+            setEmailVerified(true)
+            setShowOtpField(false)
+            setOtpCode('')
+            setResendCooldown(0)
+          } else {
+            toast.error(data.message || "Invalid verification code.")
+          }
         }
       } else {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || "Failed to verify email code.")
+        if (isDemo && (otpCode.trim() === '123456' || otpCode.trim() === localStorage.getItem('dwp_demo_otp'))) {
+          toast.success("Email verified successfully (Demo Fallback)!")
+          setProfileEmail(pendingEmail || inputEmail)
+          setEmailVerified(true)
+          setShowOtpField(false)
+          setOtpCode('')
+          setResendCooldown(0)
+        } else {
+          throw new Error(errData.message || "Failed to verify email code.")
+        }
       }
     } catch (err: any) {
       console.error(err)
