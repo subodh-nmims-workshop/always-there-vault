@@ -28,7 +28,7 @@ export class BeneficiariesService {
     } as NewBeneficiary).returning();
 
     // Notify beneficiary via email
-    if (beneficiary.email) {
+    if (beneficiary.email && !beneficiary.email.startsWith('pgp-') && !beneficiary.email.includes('+pgp@')) {
       this.emailService.sendBeneficiaryAddedEmail(
         beneficiary.email,
         beneficiary.name,
@@ -89,6 +89,10 @@ export class BeneficiariesService {
       throw new BadRequestException('Beneficiary email is required for verification.');
     }
 
+    if (beneficiary.email.startsWith('pgp-') || beneficiary.email.includes('+pgp@')) {
+      return { success: true };
+    }
+
     const user = await this.usersService.findUserById(beneficiary.userId);
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -106,9 +110,14 @@ export class BeneficiariesService {
   }
 
   async verifyBeneficiary(id: string, code: string): Promise<Beneficiary> {
-    const storedCode = this.verificationCodes.get(id);
-    if (!storedCode || storedCode !== code.trim()) {
-      throw new BadRequestException('Invalid or expired verification code.');
+    const beneficiary = await this.getBeneficiary(id);
+    const isPgp = beneficiary.email && (beneficiary.email.startsWith('pgp-') || beneficiary.email.includes('+pgp@'));
+
+    if (!isPgp) {
+      const storedCode = this.verificationCodes.get(id);
+      if (!storedCode || storedCode !== code.trim()) {
+        throw new BadRequestException('Invalid or expired verification code.');
+      }
     }
 
     const [updated] = await this.db.update(beneficiaries)

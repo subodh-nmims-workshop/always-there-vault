@@ -41,6 +41,8 @@ export interface StoredBeneficiary {
   createdAt: number;
   enabled: boolean;
   isVerified?: boolean;
+  verificationMethod?: 'email' | 'public_key';
+  pgpPublicKey?: string;
 }
 
 export interface StoredHeartbeat {

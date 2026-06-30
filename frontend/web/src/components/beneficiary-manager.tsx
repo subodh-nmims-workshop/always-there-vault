@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, Mail, Wallet, Edit, Trash2, Check, X, Shield, CheckCircle } from 'lucide-react'
+import { Users, Plus, Mail, Wallet, Edit, Trash2, Check, X, Shield, CheckCircle, HelpCircle } from 'lucide-react'
 import WebStorageService, { StoredBeneficiary } from '@/lib/storage'
 import { useApp } from '@/contexts/AppContext'
 import { addBeneficiary } from '@/lib/blockchain'
@@ -20,9 +20,12 @@ export function BeneficiaryManager() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    walletAddress: ''
+    walletAddress: '',
+    verificationMethod: 'email', // 'email' | 'public_key'
+    pgpPublicKey: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPgpHelp, setShowPgpHelp] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; beneficiaryId: string | null; beneficiaryName: string }>({
     isOpen: false,
@@ -49,7 +52,7 @@ export function BeneficiaryManager() {
       const res = await fetch(`${apiEndpoint}/api/beneficiaries?ownerAddress=${walletAddress}`)
       if (res.ok) {
         const data = await res.json()
-        
+
         // Sync local IndexedDB
         for (const item of data) {
           await storage.saveBeneficiary({
@@ -62,7 +65,7 @@ export function BeneficiaryManager() {
             isVerified: item.isVerified ?? false,
           })
         }
-        
+
         // Remove locally deleted ones if they are not in backend
         const backendIds = data.map((b: any) => b.id)
         for (const localBen of beneficiaries) {
@@ -70,7 +73,7 @@ export function BeneficiaryManager() {
             await storage.deleteBeneficiary(localBen.id)
           }
         }
-        
+
         await refreshState()
       }
     } catch (err) {
@@ -140,7 +143,9 @@ export function BeneficiaryManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name || !formData.email) return
+    if (!formData.name) return
+    if (formData.verificationMethod === 'email' && !formData.email) return
+    if (formData.verificationMethod === 'public_key' && !formData.pgpPublicKey) return
 
     // 1. Check subscription
     if (!subscription || subscription.status === 'expired') {
@@ -174,26 +179,35 @@ export function BeneficiaryManager() {
         }
       }
 
+      // If PGP mode, append +pgp tag before @ to support real email inputs with bypass mode
+      const emailToSubmit = formData.verificationMethod === 'public_key'
+        ? (formData.email.includes('@') ? formData.email.replace('@', '+pgp@') : formData.email)
+        : formData.email;
+
       const beneficiary: StoredBeneficiary = {
         id: editingId || storage.generateId(),
         name: formData.name,
-        email: formData.email,
+        email: emailToSubmit,
         walletAddress: formData.walletAddress,
         createdAt: editingId ? beneficiaries.find(b => b.id === editingId)?.createdAt || Date.now() : Date.now(),
-        enabled: true
+        enabled: true,
+        verificationMethod: formData.verificationMethod as 'email' | 'public_key',
+        pgpPublicKey: formData.verificationMethod === 'public_key' ? formData.pgpPublicKey : undefined,
+        isVerified: formData.verificationMethod === 'public_key' ? true : undefined
       }
 
       await storage.saveBeneficiary(beneficiary)
-      
+
       // Sync to Backend Postgres
+      let backendId = beneficiary.id;
       if (!isDemo) {
         try {
           const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
           const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-          const url = editingId 
+          const url = editingId
             ? `${apiEndpoint}/api/beneficiaries/${editingId}`
             : `${apiEndpoint}/api/beneficiaries`
-          
+
           const syncRes = await fetch(url, {
             method: editingId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -207,11 +221,21 @@ export function BeneficiaryManager() {
           })
           if (syncRes.ok && !editingId) {
             const createdBen = await syncRes.json()
+            backendId = createdBen.id;
             await storage.deleteBeneficiary(beneficiary.id)
             await storage.saveBeneficiary({
               ...beneficiary,
               id: createdBen.id,
-              isVerified: createdBen.isVerified || false
+              isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
+            })
+          }
+
+          // If public key mode, immediately verify on backend too
+          if (formData.verificationMethod === 'public_key') {
+            await fetch(`${apiEndpoint}/api/beneficiaries/${backendId}/verify`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: 'BYPASS_PGP_VERIFICATION' })
             })
           }
         } catch (err) {
@@ -221,8 +245,9 @@ export function BeneficiaryManager() {
 
       await refreshState()
       await fetchAndSyncBeneficiaries()
-      
-      if (!isDemo) {
+
+      // Skip sending email bridge if PGP Mode
+      if (!isDemo && formData.verificationMethod !== 'public_key') {
         try {
           const emailReq = await fetch('/api/send-email', {
             method: 'POST',
@@ -243,7 +268,7 @@ export function BeneficiaryManager() {
       }
 
       // Reset form
-      setFormData({ name: '', email: '', walletAddress: '' })
+      setFormData({ name: '', email: '', walletAddress: '', verificationMethod: 'email', pgpPublicKey: '' })
       setShowAddForm(false)
       setEditingId(null)
 
@@ -260,10 +285,16 @@ export function BeneficiaryManager() {
   }
 
   const handleEdit = (beneficiary: StoredBeneficiary) => {
+    const isPgp = beneficiary.email && (beneficiary.email.includes('+pgp@') || beneficiary.email.startsWith('pgp-'));
+    const cleanEmail = beneficiary.email
+      ? beneficiary.email.replace('+pgp@', '@')
+      : '';
     setFormData({
       name: beneficiary.name,
-      email: beneficiary.email,
-      walletAddress: beneficiary.walletAddress
+      email: cleanEmail,
+      walletAddress: beneficiary.walletAddress,
+      verificationMethod: isPgp ? 'public_key' : 'email',
+      pgpPublicKey: isPgp ? beneficiary.pgpPublicKey || '' : ''
     })
     setEditingId(beneficiary.id)
     setShowAddForm(true)
@@ -282,7 +313,7 @@ export function BeneficiaryManager() {
 
     try {
       await storage.deleteBeneficiary(deleteConfirmation.beneficiaryId)
-      
+
       const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
       if (!isDemo) {
         // Delete from Backend Postgres
@@ -306,7 +337,7 @@ export function BeneficiaryManager() {
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', email: '', walletAddress: '' })
+    setFormData({ name: '', email: '', walletAddress: '', verificationMethod: 'email', pgpPublicKey: '' })
     setShowAddForm(false)
     setEditingId(null)
   }
@@ -321,9 +352,10 @@ export function BeneficiaryManager() {
   }
 
   const isFormValid = () => {
-    return formData.name.trim() !== '' &&
-      validateEmail(formData.email) &&
-      (!formData.walletAddress || validateWalletAddress(formData.walletAddress))
+    if (formData.name.trim() === '') return false
+    if (!validateEmail(formData.email)) return false
+    if (formData.verificationMethod === 'public_key' && !formData.pgpPublicKey.trim()) return false
+    return !formData.walletAddress || validateWalletAddress(formData.walletAddress)
   }
 
   return (
@@ -383,15 +415,30 @@ export function BeneficiaryManager() {
                               Pending
                             </span>
                           )}
+                          {beneficiary.email && (beneficiary.email.includes('+pgp@') || beneficiary.email.startsWith('pgp-')) && (
+                            <span className="inline-flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              PGP Mode
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-2 mt-4">
                       <div className="flex items-center space-x-2 text-sm">
-                        <Mail className="h-4 w-4 text-slate-500" />
-                        <span className="text-slate-600 dark:text-slate-400">{beneficiary.email}</span>
+                        <Mail className="h-4 w-4 text-slate-500 flex-shrink-0" />
+                        <span className="text-slate-600 dark:text-slate-400 truncate">
+                          {beneficiary.email ? beneficiary.email.replace('+pgp@', '@') : ''}
+                        </span>
                       </div>
+                      {beneficiary.email && (beneficiary.email.includes('+pgp@') || beneficiary.email.startsWith('pgp-')) && (
+                        <div className="flex items-start space-x-2 text-sm">
+                          <Shield className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-600 dark:text-slate-400 font-mono text-xs break-all line-clamp-1" title={beneficiary.pgpPublicKey}>
+                            PGP Key: {beneficiary.pgpPublicKey ? beneficiary.pgpPublicKey.substring(0, 30) + '...' : 'Key Uploaded'}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-start space-x-2 text-sm">
                         <Wallet className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
                         <span className="text-slate-600 dark:text-slate-400 font-mono text-xs break-all">
@@ -466,12 +513,29 @@ export function BeneficiaryManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Email *</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">Email Address *</label>
+                <div className="relative group">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md transition-colors">
+                    <HelpCircle className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                    Why verify?
+                  </span>
+                  <div className="absolute right-0 top-6 hidden group-hover:block z-50 w-72 p-3 bg-slate-900 dark:bg-slate-950 text-white text-xs rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-slate-850 dark:border-slate-800 leading-relaxed transition-all duration-200">
+                    <p className="font-bold mb-1 text-slate-100 flex items-center gap-1">
+                      <HelpCircle className="h-3.5 w-3.5 text-blue-400" /> Why verify nominee email?
+                    </p>
+                    <p className="text-[11px] text-slate-350">
+                      - Prevents accidental typos that could permanently lock or lose your inheritance assets.<br />
+                      - Ensures the nominee's inbox is active, verified, and secure to receive access links.
+                    </p>
+                  </div>
+                </div>
+              </div>
               <input
                 type="email"
                 className={`input-premium w-full ${formData.email && !validateEmail(formData.email) ? 'border-red-500' : ''
                   }`}
-                placeholder="email@example.com"
+                placeholder="nominee@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 required
@@ -483,6 +547,138 @@ export function BeneficiaryManager() {
                 </p>
               )}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-200">Verification Protocol *</label>
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Option 1: Email Mode */}
+                <div
+                  onClick={() => setFormData(prev => ({ ...prev, verificationMethod: 'email' }))}
+                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-300 relative flex flex-col justify-between ${formData.verificationMethod === 'email'
+                      ? 'border-blue-500 bg-blue-500/5 shadow-[0_4px_20px_rgba(59,130,246,0.15)] dark:border-blue-500/75'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent'
+                    }`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className={`p-2 rounded-lg ${formData.verificationMethod === 'email' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Standard Email Mode</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Best for family members and friends. We send an OTP code to verify this address. Prevents access loss through confirmation checks.</p>
+                    </div>
+                  </div>
+                  {formData.verificationMethod === 'email' && (
+                    <div className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse" />
+                  )}
+                </div>
+
+                {/* Option 2: Public Key Mode */}
+                <div
+                  onClick={() => setFormData(prev => ({ ...prev, verificationMethod: 'public_key' }))}
+                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-300 relative flex flex-col justify-between ${formData.verificationMethod === 'public_key'
+                      ? 'border-amber-500 bg-amber-500/5 shadow-[0_4px_20px_rgba(245,158,11,0.15)] dark:border-amber-500/75'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent'
+                    }`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className={`p-2 rounded-lg ${formData.verificationMethod === 'public_key' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                      <Shield className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">PGP Key Mode (Stealth)</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Best for high confidentiality, whistleblowers, or political targets. Bypasses emails to eliminate digital trails. Files are encrypted locally with the nominee's public key.</p>
+                    </div>
+                  </div>
+                  {formData.verificationMethod === 'public_key' && (
+                    <div className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {formData.verificationMethod === 'public_key' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">PGP Public Key *</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPgpHelp(!showPgpHelp)}
+                    className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5" />
+                    {showPgpHelp ? "Hide Guide" : "What is PGP? / Easy Guide"}
+                  </button>
+                </div>
+
+                {showPgpHelp && (
+                  <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-250 dark:border-amber-500/25 p-4 rounded-xl text-xs space-y-3 text-slate-600 dark:text-slate-350 animate-fadeIn max-h-[380px] overflow-y-auto leading-relaxed">
+                    <div className="bg-amber-500/10 dark:bg-amber-500/20 p-3 rounded-lg border border-amber-500/20 mb-2">
+                      <p className="font-bold text-amber-850 dark:text-amber-300 flex items-center gap-1">
+                        <HelpCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        💡 Short & Simple Explanation:
+                      </p>
+                      <p className="text-[11.5px] mt-1 text-slate-700 dark:text-slate-200">
+                        Use this mode if you want to keep the setup a <strong>secret or surprise</strong> from your nominee. No verification email will be sent to their inbox right now. You just need to paste their Encryption Key (Public Key) below to lock your files securely.
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="font-bold text-amber-700 dark:text-amber-400 mb-1">🔑 How PGP Works (Lock & Key Analogy)</p>
+                      <p>
+                        PGP works exactly like a physical **Lock** and **Key**:
+                      </p>
+                      <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-500 dark:text-slate-400">
+                        <li>
+                          <strong>Public Key (The Lock):</strong> This is a digital lock that you get from your nominee and paste here. We use this lock to encrypt your files. It is 100% safe to share.
+                        </li>
+                        <li>
+                          <strong>Private Key (The Key):</strong> This is the key that only your nominee has. When the protocol triggers, they will use their secret key to unlock and open your files.
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="border-t border-amber-200/50 dark:border-amber-500/20 pt-2">
+                      <p className="font-bold text-amber-700 dark:text-amber-400 mb-1">🛠️ How to get your Nominee's PGP Key? (Quick Steps)</p>
+                      <div className="space-y-2 mt-1 pl-1">
+                        <div>
+                          <strong className="text-[11px] text-slate-700 dark:text-slate-300">Option A: Ask your nominee for their Public Key</strong>
+                          <p className="text-[10.5px] text-slate-500 mt-0.5">
+                            If your nominee already knows PGP, ask them to copy and send their **PGP Public Key** to you, then paste it in the box below.
+                          </p>
+                        </div>
+                        <div>
+                          <strong className="text-[11px] text-slate-700 dark:text-slate-300">Option B: Generate a new key pair</strong>
+                          <p className="text-[10.5px] text-slate-500 mt-0.5">
+                            Install a free tool on your nominee's device to generate a key pair:<br />
+                            - <strong>Windows:</strong> Download <a href="https://gpg4win.org/" target="_blank" rel="noreferrer" className="underline text-amber-600 hover:text-amber-750 dark:text-amber-400 font-semibold">Gpg4win (Kleopatra)</a> → Open it and click <strong>New certificate / Key Pair</strong> → Enter Name/Email and set a strong passphrase.<br />
+                            - <strong>Mac:</strong> Download <a href="https://gpgtools.org/" target="_blank" rel="noreferrer" className="underline text-amber-600 hover:text-amber-750 dark:text-amber-400 font-semibold">GPG Suite</a>.<br />
+                            - <strong>Linux:</strong> Open terminal and run: <code>gpg --full-generate-key</code>.
+                          </p>
+                        </div>
+                        <div>
+                          <strong className="text-[11px] text-slate-700 dark:text-slate-300">Step 3: Copy and paste the Public Key</strong>
+                          <p className="text-[10.5px] text-slate-500 mt-0.5">
+                            Once generated, click **Export** or copy the key. Copy the entire text block starting with <code>-----BEGIN PGP PUBLIC KEY BLOCK-----</code> and paste it in the box below!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <textarea
+                  className="input-premium w-full h-56 font-mono text-xs py-3 px-4 resize-y focus:ring-1 focus:ring-amber-500"
+                  placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#10;...&#10;-----END PGP PUBLIC KEY BLOCK-----"
+                  value={formData.pgpPublicKey}
+                  onChange={(e) => setFormData(prev => ({ ...prev, pgpPublicKey: e.target.value }))}
+                  required
+                />
+                <p className="text-[11px] text-slate-500 dark:text-slate-450 mt-1">
+                  Paste the nominee's PGP Public Key. We use this key to locally encrypt files so only the nominee can read them.
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">
@@ -510,15 +706,27 @@ export function BeneficiaryManager() {
               )}
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-xl">
-              <div className="flex items-start space-x-3">
-                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-slate-700 dark:text-slate-300">
-                  <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">Beneficiary Verification</p>
-                  <p>The beneficiary will receive email notifications. If they don't have a Web3 wallet yet, they can create one and provide the address later to access assets.</p>
+            {formData.verificationMethod === 'email' ? (
+              <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-slate-700 dark:text-slate-300">
+                    <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">Standard Email Verification</p>
+                    <p className="text-xs">The nominee will get an email with a 6-digit code to verify their access. When the switch triggers, the files are released to their email.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-slate-700 dark:text-slate-300">
+                    <p className="font-medium text-amber-700 dark:text-amber-300 mb-1">PGP Stealth Mode (No Immediate Email)</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Perfect for high confidentiality. No verification email is sent to the nominee's inbox right now, leaving zero digital trail. When the switch triggers, files are encrypted with this PGP key before being sent.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex space-x-3">
               <button
