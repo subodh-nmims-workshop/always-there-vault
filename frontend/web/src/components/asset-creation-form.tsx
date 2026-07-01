@@ -587,7 +587,31 @@ export function AssetCreationForm() {
     setShareAssetSelection(asset.beneficiaries || [])
     // Preset the single-nominee assignment if already set
     setAssignedBeneficiaryId((asset as any).assignedBeneficiaryId || '')
+
+    // Preset the Time Capsule settings if already scheduled
+    const existingTc = timeCapsules.find(tc => tc.assetId === asset.id)
+    if (existingTc) {
+      setIsTimeCapsule(true)
+      const dateStr = existingTc.scheduledDate ? new Date(existingTc.scheduledDate).toISOString().split('T')[0] : ''
+      setScheduledDate(dateStr)
+      setCustomMessage(existingTc.customMessage || '')
+    } else {
+      setIsTimeCapsule(false)
+      setScheduledDate('')
+      setCustomMessage('')
+    }
+
     setIsShareAssetModalOpen(true)
+  }
+
+  const closeShareAssetModal = () => {
+    setIsShareAssetModalOpen(false)
+    setShareAssetTarget(null)
+    setShareAssetSelection([])
+    setAssignedBeneficiaryId('')
+    setIsTimeCapsule(false)
+    setScheduledDate('')
+    setCustomMessage('')
   }
 
   const toggleShareSelection = (beneficiaryId: string) => {
@@ -639,10 +663,41 @@ export function AssetCreationForm() {
         console.warn('⚠️ Could not sync nominee assignment to backend:', apiErr)
       }
 
-      setIsShareAssetModalOpen(false)
-      setShareAssetTarget(null)
-      setShareAssetSelection([])
-      setAssignedBeneficiaryId('')
+      // 🕰️ Sync Time Capsule Schedule
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
+      if (!isDemo && token) {
+        try {
+          // Delete existing schedules for this asset
+          await fetch(`${apiEndpoint}/api/time-capsules/asset/${shareAssetTarget.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+
+          // Save new schedule if toggled and valid nominee & date selected
+          if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
+            await fetch(`${apiEndpoint}/api/time-capsules`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                beneficiaryId: assignedBeneficiaryId,
+                assetId: shareAssetTarget.id,
+                scheduledDate: scheduledDate,
+                customMessage: customMessage
+              })
+            })
+            console.log('✅ Time Capsule updated successfully')
+          }
+        } catch (tcError) {
+          console.warn('⚠️ Failed to sync time capsule:', tcError)
+        }
+      }
+
+      closeShareAssetModal()
       await loadAssets()
       toast.success('Asset permissions updated')
     } catch (error) {
@@ -2024,7 +2079,7 @@ export function AssetCreationForm() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsShareAssetModalOpen(false)}
+              onClick={closeShareAssetModal}
               className="absolute inset-0 bg-black/60 backdrop-blur-md"
             />
 
@@ -2049,7 +2104,7 @@ export function AssetCreationForm() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsShareAssetModalOpen(false)}
+                  onClick={closeShareAssetModal}
                   className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full"
                 >
                   <X className="w-4 h-4" />
@@ -2127,6 +2182,62 @@ export function AssetCreationForm() {
                       </div>
                     </div>
 
+                    {/* Time Capsule Toggle for Existing Asset */}
+                    {assignedBeneficiaryId && (
+                      <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-4 space-y-3 mt-3">
+                        <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                              <span>🕰️</span>
+                              Schedule Delivery (Time Capsule)
+                            </h4>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">
+                              Deliver on a specific date regardless of heartbeat
+                            </p>
+                          </div>
+                          <div className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                            <motion.div layout className="w-3.5 h-3.5 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 16 : 0 }} />
+                          </div>
+                        </div>
+
+                        <AnimatePresence>
+                          {isTimeCapsule && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="space-y-3 overflow-hidden pt-1"
+                            >
+                              <div className="space-y-1">
+                                <label className="block text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">
+                                  Delivery Date <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="date"
+                                  value={scheduledDate}
+                                  onChange={(e) => setScheduledDate(e.target.value)}
+                                  min={new Date().toISOString().split('T')[0]}
+                                  className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white outline-none"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="block text-[9px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold">
+                                  Personal Message (Optional)
+                                </label>
+                                <textarea
+                                  value={customMessage}
+                                  onChange={(e) => setCustomMessage(e.target.value)}
+                                  placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
+                                  rows={2}
+                                  className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white outline-none resize-none"
+                                />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+
                     {/* Info note */}
                     {assignedBeneficiaryId && (
                       <div className="flex items-start gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-4 py-3">
@@ -2143,7 +2254,7 @@ export function AssetCreationForm() {
 
               <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
                 <button
-                  onClick={() => setIsShareAssetModalOpen(false)}
+                  onClick={closeShareAssetModal}
                   className="flex-1 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all"
                 >
                   Cancel

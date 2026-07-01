@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Delete, Param } from '@nestjs/common';
 import { TimeCapsulesService } from './time-capsules.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -21,6 +21,13 @@ export class TimeCapsulesController {
   @ApiOperation({ summary: 'Get all time capsule schedules for the current user' })
   async getCapsules(@Req() req) {
     return this.timeCapsulesService.getTimeCapsulesForUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('asset/:assetId')
+  @ApiOperation({ summary: 'Delete time capsule schedules for a specific asset' })
+  async deleteCapsulesByAsset(@Req() req, @Param('assetId') assetId: string) {
+    return this.timeCapsulesService.deleteTimeCapsulesByAsset(req.user.id, assetId);
   }
 }
 

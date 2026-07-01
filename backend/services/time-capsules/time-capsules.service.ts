@@ -46,5 +46,16 @@ export class TimeCapsulesService {
       .from(schema.timeCapsules)
       .where(eq(schema.timeCapsules.userId, userId));
   }
+
+  async deleteTimeCapsulesByAsset(userId: string, assetId: string) {
+    await this.db.delete(schema.timeCapsules)
+      .where(
+        and(
+          eq(schema.timeCapsules.userId, userId),
+          eq(schema.timeCapsules.assetId, assetId)
+        )
+      );
+    return { success: true };
+  }
 }
 
