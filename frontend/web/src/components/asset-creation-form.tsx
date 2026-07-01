@@ -274,9 +274,13 @@ export function AssetCreationForm() {
       // Sync Key to Backend for cloud backup
       if (!isDemo) {
         try {
+          const token = localStorage.getItem('dwp_token')
           await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ shares: keyDistribution.shares })
           })
           console.log('✅ Key synced to backend for recovery')
@@ -379,7 +383,12 @@ export function AssetCreationForm() {
       if (!keyDist && !isDemo) {
         console.warn('⚠️ Key not found locally, attempting backend fetch...')
         try {
-          const response = await fetch(`${API_URL}/api/assets/keys/${asset.keyId}`)
+          const token = localStorage.getItem('dwp_token')
+          const response = await fetch(`${API_URL}/api/assets/keys/${asset.keyId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
           if (response.ok) {
             keyDist = await response.json()
             if (keyDist) {
@@ -822,9 +831,13 @@ export function AssetCreationForm() {
       // Sync Key to Backend for cloud backup (CRITICAL for multi-device support)
       if (!isDemo) {
         try {
+          const token = localStorage.getItem('dwp_token')
           await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ shares: keyDistribution.shares })
           })
           console.log('✅ Key synced to backend for recovery')

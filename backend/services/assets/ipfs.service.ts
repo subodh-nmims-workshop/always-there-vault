@@ -11,7 +11,7 @@ export class IpfsService {
 
     constructor(private configService: ConfigService) {
         this.pinataApiKey = this.configService.get<string>('PINATA_API_KEY') || '';
-        this.pinataSecretApiKey = this.configService.get<string>('PINATA_SECRET_API_KEY') || '';
+        this.pinataSecretApiKey = this.configService.get<string>('PINATA_SECRET_API_KEY') || this.configService.get<string>('PINATA_SECRET') || '';
 
         if (!this.pinataApiKey || !this.pinataSecretApiKey) {
             this.logger.warn('No PINATA_API_KEY or PINATA_SECRET provided. IPFS will use simulated CID.');

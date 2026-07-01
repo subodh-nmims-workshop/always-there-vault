@@ -16,6 +16,8 @@ import {
   Patch,
   BadRequestException,
   Inject,
+  Res,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -323,5 +325,22 @@ export class ClaimAssetsController {
     const nomineeWallet = record.targetAddress;
 
     return this.assetsService.getKeyDistribution(keyId, nomineeWallet);
+  }
+
+  @Get('local-download/:key')
+  @ApiOperation({ summary: 'Download a simulated local asset (Dev Fallback)' })
+  async downloadLocalAsset(@Param('key') key: string, @Res() res: any) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    const filePath = path.join(uploadDir, encodeURIComponent(key));
+    
+    try {
+      const buffer = await fs.readFile(filePath);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.send(buffer);
+    } catch (e) {
+      throw new NotFoundException('Local asset file not found');
+    }
   }
 }

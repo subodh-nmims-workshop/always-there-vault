@@ -130,65 +130,42 @@ export class AssetsService {
       throw new BadRequestException('Storage quota exceeded');
     }
 
-    // MANDATORY SERVER-SIDE ENCRYPTION
-    const encryptedResult = await this.encryptionService.encryptFile(file.buffer, user.id);
-
-    // Upload to Backblaze B2 (Optimized for Cold Storage)
+    // Upload client-encrypted buffer directly to Backblaze B2 (or simulated dev local storage)
     const b2Key = `${walletAddress}/${Date.now()}-${file.originalname}`;
     const b2Result = await this.b2Service.uploadFile(
       b2Key,
-      encryptedResult.encrypted, 
+      file.buffer, 
       file.mimetype
     );
 
-    // Create file record with envelope encryption metadata
-    const [fileRecord] = await this.db.insert(files).values({
+    await this.auditService.trackAction(user.id, 'UPLOAD_FILE', 'FILE', null, { 
       name: file.originalname,
-      size: file.size,
-      mimeType: file.mimetype,
-      location: b2Result,
-      isIpfs: false,
-      encrypted: true,
-      
-      // Envelope Encryption Metadata
-      encryptedFEK: encryptedResult.encryptedFEK,
-      fekIv: encryptedResult.fekIv,
-      fekAuthTag: encryptedResult.fekAuthTag,
-      fileIv: encryptedResult.fileIv,
-      fileAuthTag: encryptedResult.fileAuthTag,
-      
-      userId: user.id,
-      folderId: folderId || null,
-      metadata: { 
-        storageProvider: 'backblaze-b2',
-        bucket: this.configService.get('B2_BUCKET_NAME')
-      }
-    } as NewFile).returning();
-
-    await this.auditService.trackAction(user.id, 'UPLOAD_FILE', 'FILE', fileRecord.id, { 
-      name: fileRecord.name,
       provider: 'B2'
     });
 
-    return fileRecord;
+    return { location: b2Result };
   }
 
   async createAsset(data: any, walletAddress: string) {
     const user = await this.usersService.findUserByWallet(walletAddress);
+
+    // Self-Healing: Check if this is a B2 file or IPFS file
+    const isB2 = data.ipfsHash && (data.ipfsHash.includes('/') || data.ipfsHash.startsWith('local-simulated://'));
+    const isIpfs = data.ipfsHash && !isB2;
 
     const [fileRecord] = await this.db.insert(files).values({
       id: data.id || undefined,
       name: data.name,
       size: data.size || 0,
       mimeType: data.mimeType || 'application/json',
-      cid: data.ipfsHash || null,
+      cid: isIpfs ? data.ipfsHash : null,
       location: data.ipfsHash || 'local',
       encryptionKeyId: data.keyId || null,
       encryptionIv: data.iv || null,
       encryptedData: data.encryptedData || null,
       encryptionKey: data.encryptionKey || null,
-      isIpfs: !!data.ipfsHash,
-      metadata: data.metadata || {},
+      isIpfs: !!isIpfs,
+      metadata: isB2 ? { storageProvider: 'backblaze-b2', bucket: this.configService.get('B2_BUCKET_NAME') } : (data.metadata || {}),
       userId: user.id,
       folderId: data.folderId || null,
     } as NewFile).returning();

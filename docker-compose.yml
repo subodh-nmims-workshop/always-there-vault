@@ -1,4 +1,3 @@
-
 services:
   # 1. Local Blockchain Node (Hardhat) - Mostly for Staging/Testing
   blockchain:
@@ -6,10 +5,8 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile.hardhat
-      network: host
     container_name: alwaysthere_blockchain
-    ports:
-      - "8545:8545"
+    network_mode: host
     volumes:
       - ./contracts:/app/contracts
       - ./scripts:/app/scripts
@@ -17,59 +14,6 @@ services:
       - ./hardhat.config.ts:/app/hardhat.config.ts
     environment:
       - NODE_ENV=development
-    networks:
-      - protocol_net
-
-  # 2. Next.js Web Dashboard (Disabled to allow local dev server)
-  # web:
-  #   image: subodh40/alwaysthere-web:latest
-  #   build:
-  #     context: ./frontend/web
-  #     dockerfile: Dockerfile
-  #     network: host
-  #   container_name: alwaysthere_web
-  #   ports:
-  #     - "7000:7000"
-  #   environment:
-  #     - NEXT_PUBLIC_BACKEND_URL=http://localhost:7001
-  #     - NEXT_PUBLIC_CHAIN_ID=137
-  #     - NEXT_PUBLIC_RPC_URL=https://polygon-rpc.com
-  #     - NODE_ENV=production
-  #   depends_on:
-  #     - backend
-  #     - blockchain
-  #   networks:
-  #     - protocol_net
-
-  # 3. NestJS Backend API (Disabled to allow local dev server)
-  # backend:
-  #   image: subodh40/alwaysthere-backend:latest
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #     network: host
-  #   container_name: alwaysthere_backend
-  #   ports:
-  #     - "7001:7001"
-  #   environment:
-  #     - NODE_ENV=production
-  #     - PORT=7001
-  #     - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/alwaysthere}
-  #     - RPC_URL=http://blockchain:8545
-  #     - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-  #     - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
-  #     - EMAIL_PORT=${EMAIL_PORT:-587}
-  #     - EMAIL_SECURE=${EMAIL_SECURE:-false}
-  #     - EMAIL_USER=${EMAIL_USER}
-  #     - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-  #     - SMTP_FROM=${SMTP_FROM}
-  #     - MONGO_URI=mongodb://admin:password@mongodb:27017/digital-will?authSource=admin
-  #   depends_on:
-  #     - postgres
-  #     - blockchain
-  #     - mongodb
-  #   networks:
-  #     - protocol_net
 
   # 4. PostgreSQL Database (For Drizzle ORM)
   postgres:
@@ -88,64 +32,41 @@ services:
   mongodb:
     image: mongo:7.0
     container_name: alwaysthere_mongodb
-    ports:
-      - "27018:27017"
-    expose:
-      - "27017"
+    network_mode: host
+    command: mongod --port 27018 --bind_ip_all
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: digital-will
-    networks:
-      - protocol_net
+    volumes:
+      - mongodb_data:/data/db
 
   # 6. Redis (For Caching/Pulse logs)
   redis:
     image: redis:7-alpine
     container_name: alwaysthere_redis
-    ports:
-      - "6379:6379"
-    networks:
-      - protocol_net
+    network_mode: host
+    volumes:
+      - redis_data:/data
 
   # 7. Prometheus (Metrics Collection)
   prometheus:
     image: prom/prometheus:latest
     container_name: alwaysthere_prometheus
+    network_mode: host
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - protocol_net
 
   # 8. Grafana (Visualization Dashboard)
   grafana:
     image: grafana/grafana:latest
     container_name: alwaysthere_grafana
-    ports:
-      - "3001:3000"
+    network_mode: host
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-    depends_on:
-      - prometheus
-    networks:
-      - protocol_net
-
-  # 9. Certbot (SSL Certificate Auto-Renewal)
-  certbot:
-    image: certbot/certbot
-    container_name: alwaysthere_certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    networks:
-      - protocol_net
-
-networks:
-  protocol_net:
-    driver: bridge
+      - GF_SERVER_HTTP_PORT=3001
 
 volumes:
   postgres_data:
+  mongodb_data:
+  redis_data:
