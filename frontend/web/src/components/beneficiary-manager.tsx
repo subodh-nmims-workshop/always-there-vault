@@ -171,11 +171,25 @@ export function BeneficiaryManager() {
       const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
 
       // Step 1: Engage Decentralized Backend Wallet Config (if web3 presence exists)
-      if (formData.walletAddress && !isDemo) {
+      const isZeroAddress = formData.walletAddress === '0x0000000000000000000000000000000000000000'
+      if (formData.walletAddress && !isZeroAddress && !isDemo) {
         const txResult = await addBeneficiary(formData.walletAddress)
         if (!txResult.success) {
-          toast.error(`Decentralized Registry Failed: ${txResult.error}`)
-          return
+          // If contract is not configured or wallet is not available, show warning instead of blocking
+          const isConfigOrWalletError = 
+            txResult.error?.includes('contract is not configured') || 
+            txResult.error?.includes('not configured') ||
+            txResult.error?.includes('No Web3 wallet found') ||
+            txResult.error?.includes('MetaMask');
+
+          if (isConfigOrWalletError) {
+            toast.warning('On-chain registration skipped', {
+              description: `${txResult.error}. Saved locally and to cloud database.`
+            })
+          } else {
+            toast.error(`Decentralized Registry Failed: ${txResult.error}`)
+            return
+          }
         }
       }
 
