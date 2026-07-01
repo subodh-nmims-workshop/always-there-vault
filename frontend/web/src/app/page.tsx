@@ -78,6 +78,13 @@ export default function HomePage() {
   const [pendingMfaData, setPendingMfaData] = useState<{ mfaToken: string; walletAddress: string } | null>(null)
   const [mfaVerifyCode, setMfaVerifyCode] = useState('')
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false)
+  const [mfaError, setMfaError] = useState<string | null>(null)
+
+  const closeMfaModal = () => {
+    setPendingMfaData(null)
+    setMfaVerifyCode('')
+    setMfaError(null)
+  }
 
   useEffect(() => {
     setHasMounted(true)
@@ -296,8 +303,10 @@ export default function HomePage() {
 
   const handleMfaVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setMfaError(null)
     if (!pendingMfaData) return
     if (!mfaVerifyCode.trim() || mfaVerifyCode.trim().length !== 6) {
+      setMfaError('Please enter a valid 6-digit code.')
       toast.error('Please enter a valid 6-digit code.')
       return
     }
@@ -313,7 +322,9 @@ export default function HomePage() {
 
       if (!verifyRes.ok) {
         const errorData = await verifyRes.json().catch(() => null)
-        throw new Error(errorData?.message || 'Verification failed. Please check the code.')
+        const errMsg = errorData?.message || 'Verification failed. Please check the code.'
+        const cleanMsg = errMsg.toLowerCase().includes('invalid') ? 'Incorrect OTP code. Please try again.' : errMsg
+        throw new Error(cleanMsg)
       }
 
       const authData = await verifyRes.json()
@@ -323,12 +334,13 @@ export default function HomePage() {
         localStorage.setItem('dwp_wallet_address', authData.walletAddress || pendingMfaData.walletAddress)
         localStorage.setItem('dwp_token', authData.token)
         setAddress(authData.walletAddress || pendingMfaData.walletAddress)
-        setPendingMfaData(null)
+        closeMfaModal()
         toast.success('MFA Verification Successful!')
       } else {
         throw new Error('No authentication token received after MFA.')
       }
     } catch (err: any) {
+      setMfaError(err.message || 'MFA Verification failed.')
       toast.error(err.message || 'MFA Verification failed.')
     } finally {
       setIsVerifyingMfa(false)
@@ -809,7 +821,7 @@ export default function HomePage() {
               className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-md w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
             >
               <button 
-                onClick={() => setPendingMfaData(null)}
+                onClick={closeMfaModal}
                 className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="size-5" />
@@ -833,19 +845,28 @@ export default function HomePage() {
                     maxLength={6}
                     placeholder="000000"
                     value={mfaVerifyCode}
-                    onChange={(e) => setMfaVerifyCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-blue-500"
+                    onChange={(e) => {
+                      setMfaVerifyCode(e.target.value)
+                      if (mfaError) setMfaError(null)
+                    }}
+                    className={`w-full bg-slate-950 border ${mfaError ? 'border-red-500 bg-red-500/5' : 'border-slate-800'} rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-blue-500`}
                     autoFocus
                   />
-                  <p className="text-[10px] text-slate-500 text-center leading-normal">
-                    Enter the code currently displayed in your Google Authenticator or Microsoft Authenticator app.
-                  </p>
+                  {mfaError ? (
+                    <p className="text-xs text-red-400 font-bold text-center mt-2 flex items-center justify-center gap-1.5 bg-red-500/5 border border-red-500/10 py-2 rounded-xl">
+                      <span className="text-red-500">⚠️</span> {mfaError}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-500 text-center leading-normal">
+                      Enter the code currently displayed in your Google Authenticator or Microsoft Authenticator app.
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-3">
                   <button 
                     type="button"
-                    onClick={() => setPendingMfaData(null)}
+                    onClick={closeMfaModal}
                     className="flex-1 bg-transparent border border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-white/5 transition-colors"
                   >
                     Cancel
