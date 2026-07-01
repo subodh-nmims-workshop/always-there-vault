@@ -222,16 +222,20 @@ export function BeneficiaryManager() {
             ? `${apiEndpoint}/api/beneficiaries/${editingId}`
             : `${apiEndpoint}/api/beneficiaries`
 
+          const requestBody: any = {
+            name: beneficiary.name,
+            email: beneficiary.email,
+            walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
+            relationship: 'nominee'
+          }
+          if (!editingId) {
+            requestBody.ownerAddress = walletAddress
+          }
+
           const syncRes = await fetch(url, {
             method: editingId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ownerAddress: walletAddress,
-              name: beneficiary.name,
-              email: beneficiary.email,
-              walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
-              relationship: 'nominee'
-            })
+            body: JSON.stringify(requestBody)
           })
           if (syncRes.ok && !editingId) {
             const createdBen = await syncRes.json()
