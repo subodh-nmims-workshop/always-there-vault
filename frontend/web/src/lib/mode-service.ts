@@ -372,6 +372,7 @@ class ModeService {
               iv: local?.iv || b.iv || b.fileIv || '',
               ipfsHash: b.ipfsHash || b.cid || local?.ipfsHash || '',
               beneficiaries: b.beneficiaries || local?.beneficiaries || [],
+              assignedBeneficiaryId: b.assignedBeneficiaryId || local?.assignedBeneficiaryId || null,
               createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
               size: b.size || local?.size || 0,
               mimeType: b.mimeType || local?.mimeType || '',

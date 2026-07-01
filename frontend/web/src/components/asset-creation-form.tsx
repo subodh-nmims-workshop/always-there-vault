@@ -82,6 +82,9 @@ export function AssetCreationForm() {
   const [scheduledDate, setScheduledDate] = useState('')
   const [customMessage, setCustomMessage] = useState('')
 
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+  const [timeCapsules, setTimeCapsules] = useState<any[]>([])
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -106,6 +109,16 @@ export function AssetCreationForm() {
     loadBeneficiaries()
   }, [])
 
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setActiveMenuId(null)
+    }
+    window.addEventListener('click', handleGlobalClick)
+    return () => {
+      window.removeEventListener('click', handleGlobalClick)
+    }
+  }, [])
+
   const loadAssets = async () => {
     try {
       // Use modeService to load assets (handles centralized/decentralized/sync)
@@ -124,6 +137,25 @@ export function AssetCreationForm() {
         setBreadcrumbs(path);
       } else {
         setBreadcrumbs([]);
+      }
+
+      // Load time capsules in parallel if not demo
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
+      if (!isDemo) {
+        try {
+          const token = localStorage.getItem('dwp_token')
+          const response = await fetch(`${API_URL}/api/time-capsules`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setTimeCapsules(data)
+          }
+        } catch (tcErr) {
+          console.warn('⚠️ Could not load time capsules:', tcErr)
+        }
       }
     } catch (error) {
       console.error('Failed to load assets/folders:', error)
@@ -582,8 +614,12 @@ export function AssetCreationForm() {
   const handleSaveAssetSharing = async () => {
     if (!shareAssetTarget) return
     try {
-      // Persist multi-select sharing locally (for display/UI purposes)
-      await storage.updateAssetBeneficiaries(shareAssetTarget.id, shareAssetSelection)
+      // Persist both beneficiaries array and assignedBeneficiaryId locally
+      const selectedBens = assignedBeneficiaryId ? [assignedBeneficiaryId] : []
+      await storage.updateAsset(shareAssetTarget.id, {
+        beneficiaries: selectedBens,
+        assignedBeneficiaryId: assignedBeneficiaryId || null
+      })
 
       // Persist single-nominee inheritance assignment to backend
       const token = localStorage.getItem('dwp_token')
@@ -928,27 +964,35 @@ export function AssetCreationForm() {
             <Icon className="w-5 h-5" />
           </div>
 
-          <div className="relative group/menu">
-            <button className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors p-1">
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setActiveMenuId(activeMenuId === asset.id ? null : asset.id)
+              }}
+              className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors p-1"
+            >
               <MoreVertical className="w-5 h-5" />
             </button>
-            <div className="absolute right-0 top-6 mt-1 w-28 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
-                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-t-lg flex items-center"
-              >
-                <Eye className="h-3 w-3 mr-2" /> View
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); openShareAssetModal(asset) }}
-                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
-              >
-                <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-3 py-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center">
-                <Trash2 className="h-3 w-3 mr-2" /> Delete
-              </button>
-            </div>
+            {activeMenuId === asset.id && (
+              <div className="absolute right-0 top-6 mt-1 w-28 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl transition-all z-20">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleViewAsset(asset) }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-t-lg flex items-center"
+                >
+                  <Eye className="h-3 w-3 mr-2" /> View
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); openShareAssetModal(asset) }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 flex items-center"
+                >
+                  <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.name) }} className="w-full text-left px-3 py-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center">
+                  <Trash2 className="h-3 w-3 mr-2" /> Delete
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1016,40 +1060,48 @@ export function AssetCreationForm() {
         <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
           <FolderOpen className="w-6 h-6 fill-blue-500/20" />
         </div>
-        <div className="relative group/menu">
-          <button onClick={(e) => e.stopPropagation()} className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors p-1">
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setActiveMenuId(activeMenuId === folder.id ? null : folder.id)
+            }}
+            className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors p-1"
+          >
             <MoreVertical className="w-5 h-5" />
           </button>
-          <div className="absolute right-0 top-6 mt-1 w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                openShareFolderModal(folder)
-              }}
-              className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-t-lg flex items-center"
-            >
-              <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setRenameFolderState({ isOpen: true, folderId: folder.id, currentName: folder.name })
-                setRenameInput(folder.name)
-              }}
-              className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 flex items-center"
-            >
-              <Pencil className="h-3 w-3 mr-2 text-blue-400" /> Rename
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDeleteFolder(folder.id, folder.name)
-              }}
-              className="w-full text-left px-3 py-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center"
-            >
-              <Trash2 className="h-3 w-3 mr-2" /> Delete
-            </button>
-          </div>
+          {activeMenuId === folder.id && (
+            <div className="absolute right-0 top-6 mt-1 w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl transition-all z-20">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openShareFolderModal(folder)
+                }}
+                className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-t-lg flex items-center"
+              >
+                <Shield className="h-3 w-3 mr-2 text-emerald-400" /> Share
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setRenameFolderState({ isOpen: true, folderId: folder.id, currentName: folder.name })
+                  setRenameInput(folder.name)
+                }}
+                className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/70 flex items-center"
+              >
+                <Pencil className="h-3 w-3 mr-2 text-blue-400" /> Rename
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteFolder(folder.id, folder.name)
+                }}
+                className="w-full text-left px-3 py-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 rounded-b-lg flex items-center"
+              >
+                <Trash2 className="h-3 w-3 mr-2" /> Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <h3 className="font-bold text-sm text-slate-800 dark:text-white truncate mb-1" title={folder.name}>{folder.name}</h3>
@@ -2300,6 +2352,50 @@ export function AssetCreationForm() {
                         </div>
                       </div>
                     )}
+
+                    {/* Time Capsule Schedules */}
+                    {(() => {
+                      const assetCapsules = timeCapsules.filter((tc: any) => tc.assetId === viewingAsset.id)
+                      if (assetCapsules.length === 0) return null
+                      return (
+                        <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4">
+                          <p className="text-xs uppercase tracking-widest text-amber-400 font-bold mb-3 flex items-center gap-2">
+                            <span>🕰️</span> Scheduled Time Capsule Deliveries
+                          </p>
+                          <div className="space-y-3">
+                            {assetCapsules.map((tc: any, idx: number) => {
+                              const ben = beneficiaries.find((b: any) => b.id === tc.beneficiaryId)
+                              return (
+                                <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 bg-white/[0.02] border border-white/5 rounded-lg text-slate-200">
+                                  <div>
+                                    <p className="text-sm font-semibold">
+                                      Recipient: <span className="text-amber-300">{ben?.name || 'Unknown Beneficiary'}</span>
+                                    </p>
+                                    {tc.customMessage && (
+                                      <p className="text-xs text-slate-400 mt-1 italic">
+                                        "{tc.customMessage}"
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="text-left md:text-right shrink-0">
+                                    <p className="text-xs text-slate-400">
+                                      Deliver on: <span className="font-semibold text-slate-300">{new Date(tc.scheduledDate).toLocaleDateString()}</span>
+                                    </p>
+                                    <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 ${
+                                      tc.isDelivered
+                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    }`}>
+                                      {tc.isDelivered ? 'Delivered' : 'Pending'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                     {/* Decrypted Content */}
                     <div className="bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4">

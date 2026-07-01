@@ -40,5 +40,11 @@ export class TimeCapsulesService {
       .set({ isDelivered: true, updatedAt: new Date() })
       .where(eq(schema.timeCapsules.id, capsuleId));
   }
+
+  async getTimeCapsulesForUser(userId: string) {
+    return this.db.select()
+      .from(schema.timeCapsules)
+      .where(eq(schema.timeCapsules.userId, userId));
+  }
 }
 

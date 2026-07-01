@@ -28,6 +28,7 @@ export interface StoredAsset {
   iv: string;
   ipfsHash?: string;
   beneficiaries: string[]; // Beneficiary IDs for this asset
+  assignedBeneficiaryId?: string | null; // Single-nominee inheritance assignment
   createdAt: number;
   size: number;
   mimeType?: string;
