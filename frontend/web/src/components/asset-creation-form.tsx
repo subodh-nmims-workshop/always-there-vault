@@ -144,14 +144,16 @@ export function AssetCreationForm() {
       if (!isDemo) {
         try {
           const token = localStorage.getItem('dwp_token')
-          const response = await fetch(`${API_URL}/api/time-capsules`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
+          if (token) {
+            const response = await fetch(`${API_URL}/api/time-capsules`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+            if (response.ok) {
+              const data = await response.json()
+              setTimeCapsules(data)
             }
-          })
-          if (response.ok) {
-            const data = await response.json()
-            setTimeCapsules(data)
           }
         } catch (tcErr) {
           console.warn('⚠️ Could not load time capsules:', tcErr)

@@ -161,13 +161,14 @@ export class AssetsService {
       cid: isIpfs ? data.ipfsHash : null,
       location: data.ipfsHash || 'local',
       encryptionKeyId: data.keyId || null,
-      encryptionIv: data.iv || null,
+      fileIv: data.iv || null,
       encryptedData: data.encryptedData || null,
       encryptionKey: data.encryptionKey || null,
       isIpfs: !!isIpfs,
       metadata: isB2 ? { storageProvider: 'backblaze-b2', bucket: this.configService.get('B2_BUCKET_NAME') } : (data.metadata || {}),
       userId: user.id,
       folderId: data.folderId || null,
+      assignedBeneficiaryId: data.assignedBeneficiaryId || null,
     } as NewFile).returning();
 
     await this.auditService.trackAction(user.id, 'CREATE_ASSET', 'FILE', fileRecord.id, { name: fileRecord.name, type: fileRecord.mimeType });

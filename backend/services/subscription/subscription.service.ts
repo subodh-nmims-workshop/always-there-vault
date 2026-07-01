@@ -118,6 +118,12 @@ export class SubscriptionService {
         return { ...newSub, mode, assetsCount, storageUsed, beneficiariesCount };
       }
 
+      // If the database has an expired starter plan, override status to ACTIVE since they are lifetime free
+      const isStarter = sub.planId === 'freedom_starter' || sub.planId === 'starter';
+      if (isStarter && sub.status === 'EXPIRED') {
+        sub.status = 'ACTIVE';
+      }
+
       return { ...sub, mode, assetsCount, storageUsed, beneficiariesCount };
     } catch (error) {
       console.error('GetSubscription Error:', error);

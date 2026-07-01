@@ -64,7 +64,13 @@ export function useSubscription(userId: string | null) {
       const trialData = trialRes.ok ? await trialRes.json() : null;
       const limitsData = limitsRes.ok ? await limitsRes.json() : null;
 
-      if (subData) setSubscription(subData);
+      if (subData) {
+        const plan = (subData.planId || subData.plan || '').toLowerCase();
+        if (plan === 'freedom_starter' || plan === 'starter') {
+          subData.status = 'active';
+        }
+        setSubscription(subData);
+      }
       if (trialData) setTrialStatus(trialData);
       if (limitsData) setLimits(limitsData);
       setError(null);

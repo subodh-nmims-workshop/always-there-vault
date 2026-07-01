@@ -47,7 +47,12 @@ function formatSubscription(data: any, walletAddress: string): UserSubscription 
   const rawMode = data.mode || data.storageEngine || 'decentralized'
   const mode: UserMode = rawMode === 'web3' || rawMode === 'decentralized' ? 'decentralized' : 'centralized'
   const planId = normalizePlanId(data.planId || data.plan, mode)
-  const status = normalizeStatus(data.status)
+  let status = normalizeStatus(data.status)
+  
+  // Free starter plans never expire
+  if (planId === 'freedom_starter' || planId === 'starter') {
+    status = 'active'
+  }
 
   // storageLimit from backend is in bytes → convert to GB
   const storageLimitBytes = data.storageLimit || 524288000 // default 500MB
