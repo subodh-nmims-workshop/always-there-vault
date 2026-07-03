@@ -6,7 +6,7 @@ import {
   FileText, Upload, Lock, Key, Trash2, Eye, Shield,
   CheckCircle, Plus, Search, Grid, List as ListIcon,
   Image as ImageIcon, Video, FolderOpen, MoreVertical, X,
-  FolderPlus, ChevronRight, CornerLeftUp, Coins, Pencil
+  FolderPlus, ChevronRight, CornerLeftUp, Coins, Pencil, Calendar, Clock
 } from 'lucide-react'
 import WebCryptoService from '@/lib/crypto'
 import WebStorageService, { StoredAsset, StoredFolder } from '@/lib/storage'
@@ -41,6 +41,7 @@ export function AssetCreationForm() {
   const [viewingAsset, setViewingAsset] = useState<StoredAsset | null>(null)
   const [decryptedContent, setDecryptedContent] = useState<string>('')
   const [isDecrypting, setIsDecrypting] = useState(false)
+  const [previewBg, setPreviewBg] = useState<'dark' | 'light' | 'checkered'>('checkered')
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false)
   const [isShareFolderModalOpen, setIsShareFolderModalOpen] = useState(false)
   const [shareFolderTarget, setShareFolderTarget] = useState<StoredFolder | null>(null)
@@ -139,7 +140,17 @@ export function AssetCreationForm() {
         setBreadcrumbs([]);
       }
 
-      // Load time capsules in parallel if not demo
+      // Load time capsules in parallel
+      let localCapsules: any[] = [];
+      try {
+        const stored = localStorage.getItem('dwp_local_time_capsules');
+        if (stored) {
+          localCapsules = JSON.parse(stored);
+        }
+      } catch (err) {
+        console.warn('Failed to load local time capsules:', err);
+      }
+
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
       if (!isDemo) {
         try {
@@ -152,13 +163,24 @@ export function AssetCreationForm() {
             })
             if (response.ok) {
               const data = await response.json()
-              setTimeCapsules(data)
+              // Merge backend capsules with local capsules, prioritizing backend
+              const backendMap = new Map(data.map((tc: any) => [tc.id || `${tc.assetId}-${tc.beneficiaryId}`, tc]));
+              const merged = [...data];
+              localCapsules.forEach((lc: any) => {
+                const key = lc.id || `${lc.assetId}-${lc.beneficiaryId}`;
+                if (!backendMap.has(key)) {
+                  merged.push(lc);
+                }
+              });
+              setTimeCapsules(merged)
+              return;
             }
           }
         } catch (tcErr) {
-          console.warn('⚠️ Could not load time capsules:', tcErr)
+          console.warn('⚠️ Could not load time capsules from backend, using local:', tcErr)
         }
       }
+      setTimeCapsules(localCapsules)
     } catch (error) {
       console.error('Failed to load assets/folders:', error)
     }
@@ -323,28 +345,53 @@ export function AssetCreationForm() {
         }
       }
 
-      // 🕰️ Save Time Capsule to Backend if scheduled
-      if (isTimeCapsule && scheduledDate && !isDemo) {
+      // 🕰️ Save Time Capsule locally and to Backend if scheduled
+      if (isTimeCapsule && scheduledDate) {
         try {
-          const token = localStorage.getItem('dwp_token')
-          for (const benId of selectedBeneficiaries) {
-            await fetch(`${API_URL}/api/time-capsules`, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-              },
-              body: JSON.stringify({ 
-                beneficiaryId: benId,
-                assetId: asset.id,
-                scheduledDate: scheduledDate,
-                customMessage: customMessage
-              })
-            })
+          let localCapsules: any[] = [];
+          const stored = localStorage.getItem('dwp_local_time_capsules');
+          if (stored) {
+            localCapsules = JSON.parse(stored);
           }
-          console.log('✅ Time Capsule scheduled on backend')
-        } catch (tcError) {
-          console.warn('⚠️ Failed to schedule time capsule:', tcError)
+          for (const benId of selectedBeneficiaries) {
+            localCapsules.push({
+              id: `local-${Date.now()}-${benId}`,
+              assetId: asset.id,
+              beneficiaryId: benId,
+              scheduledDate: scheduledDate,
+              customMessage: customMessage,
+              isDelivered: false,
+              createdAt: new Date().toISOString()
+            });
+          }
+          localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
+          console.log('✅ Time Capsule saved locally');
+        } catch (localErr) {
+          console.warn('Failed to save time capsule locally:', localErr);
+        }
+
+        if (!isDemo) {
+          try {
+            const token = localStorage.getItem('dwp_token')
+            for (const benId of selectedBeneficiaries) {
+              await fetch(`${API_URL}/api/time-capsules`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ 
+                  beneficiaryId: benId,
+                  assetId: asset.id,
+                  scheduledDate: scheduledDate,
+                  customMessage: customMessage
+                })
+              })
+            }
+            console.log('✅ Time Capsule scheduled on backend')
+          } catch (tcError) {
+            console.warn('⚠️ Failed to schedule time capsule:', tcError)
+          }
         }
       }
 
@@ -404,6 +451,7 @@ export function AssetCreationForm() {
     setIsViewModalOpen(true)
     setIsDecrypting(true)
     setDecryptedContent('')
+    setPreviewBg('checkered')
 
     try {
       console.log('🔓 Decrypting asset:', asset.name)
@@ -582,7 +630,7 @@ export function AssetCreationForm() {
     setIsShareFolderModalOpen(true)
   }
 
-  const openShareAssetModal = (asset: StoredAsset) => {
+  const openShareAssetModal = (asset: StoredAsset, forceTimeCapsule = false) => {
     setShareAssetTarget(asset)
     setShareAssetSelection(asset.beneficiaries || [])
     // Preset the single-nominee assignment if already set
@@ -596,7 +644,7 @@ export function AssetCreationForm() {
       setScheduledDate(dateStr)
       setCustomMessage(existingTc.customMessage || '')
     } else {
-      setIsTimeCapsule(false)
+      setIsTimeCapsule(forceTimeCapsule)
       setScheduledDate('')
       setCustomMessage('')
     }
@@ -665,6 +713,34 @@ export function AssetCreationForm() {
 
       // 🕰️ Sync Time Capsule Schedule
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
+
+      // Update local storage first (always, so it works locally!)
+      try {
+        let localCapsules: any[] = [];
+        const stored = localStorage.getItem('dwp_local_time_capsules');
+        if (stored) {
+          localCapsules = JSON.parse(stored);
+        }
+        // Remove existing schedules for this asset
+        localCapsules = localCapsules.filter((tc: any) => tc.assetId !== shareAssetTarget.id);
+        
+        if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
+          localCapsules.push({
+            id: `local-${Date.now()}`,
+            assetId: shareAssetTarget.id,
+            beneficiaryId: assignedBeneficiaryId,
+            scheduledDate: scheduledDate,
+            customMessage: customMessage,
+            isDelivered: false,
+            createdAt: new Date().toISOString()
+          });
+        }
+        localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
+        console.log('✅ Time Capsule updated in local storage');
+      } catch (localErr) {
+        console.warn('⚠️ Failed to save time capsule locally:', localErr);
+      }
+
       if (!isDemo && token) {
         try {
           // Delete existing schedules for this asset
@@ -690,7 +766,7 @@ export function AssetCreationForm() {
                 customMessage: customMessage
               })
             })
-            console.log('✅ Time Capsule updated successfully')
+            console.log('✅ Time Capsule updated successfully on backend')
           }
         } catch (tcError) {
           console.warn('⚠️ Failed to sync time capsule:', tcError)
@@ -939,29 +1015,54 @@ export function AssetCreationForm() {
         }
       }
 
-      // 🕰️ Save Time Capsule to Backend if scheduled
-      if (data.timeCapsule && !isDemo) {
+      // 🕰️ Save Time Capsule locally and to Backend if scheduled
+      if (data.timeCapsule) {
         try {
-          const token = localStorage.getItem('dwp_token')
-          for (const benId of beneficiaryIds) {
-            await fetch(`${API_URL}/api/time-capsules`, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-              },
-              body: JSON.stringify({ 
-                beneficiaryId: benId,
-                assetId: asset.id,
-                scheduledDate: data.timeCapsule.scheduledDate,
-                customMessage: data.timeCapsule.customMessage
-              })
-            })
+          let localCapsules: any[] = [];
+          const stored = localStorage.getItem('dwp_local_time_capsules');
+          if (stored) {
+            localCapsules = JSON.parse(stored);
           }
-          console.log('✅ Time Capsule scheduled on backend')
-        } catch (tcError) {
-          console.warn('⚠️ Failed to schedule time capsule:', tcError)
-          toast.warning('Asset saved, but failed to schedule time capsule delivery.')
+          for (const benId of beneficiaryIds) {
+            localCapsules.push({
+              id: `local-${Date.now()}-${benId}`,
+              assetId: asset.id,
+              beneficiaryId: benId,
+              scheduledDate: data.timeCapsule.scheduledDate,
+              customMessage: data.timeCapsule.customMessage,
+              isDelivered: false,
+              createdAt: new Date().toISOString()
+            });
+          }
+          localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
+          console.log('✅ Category Time Capsule saved locally');
+        } catch (localErr) {
+          console.warn('Failed to save category time capsule locally:', localErr);
+        }
+
+        if (!isDemo) {
+          try {
+            const token = localStorage.getItem('dwp_token')
+            for (const benId of beneficiaryIds) {
+              await fetch(`${API_URL}/api/time-capsules`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ 
+                  beneficiaryId: benId,
+                  assetId: asset.id,
+                  scheduledDate: data.timeCapsule.scheduledDate,
+                  customMessage: data.timeCapsule.customMessage
+                })
+              })
+            }
+            console.log('✅ Time Capsule scheduled on backend')
+          } catch (tcError) {
+            console.warn('⚠️ Failed to schedule time capsule:', tcError)
+            toast.warning('Asset saved, but failed to schedule time capsule delivery.')
+          }
         }
       }
 
@@ -1958,7 +2059,7 @@ export function AssetCreationForm() {
       {/* Share Folder Modal */}
       <AnimatePresence>
         {isShareFolderModalOpen && shareFolderTarget && (
-          <div className="fixed inset-0 z-[110] flex items-start justify-center px-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1971,7 +2072,7 @@ export function AssetCreationForm() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white dark:bg-[#05070a] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden my-8 md:my-16"
+              className="relative w-full max-w-md bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[85vh]"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-500" />
 
@@ -1995,7 +2096,7 @@ export function AssetCreationForm() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-5">
+              <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                 <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 mb-1 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-widest uppercase">Folder</p>
@@ -2074,7 +2175,7 @@ export function AssetCreationForm() {
       {/* Share Asset Modal */}
       <AnimatePresence>
         {isShareAssetModalOpen && shareAssetTarget && (
-          <div className="fixed inset-0 z-[110] flex items-start justify-center px-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -2087,7 +2188,7 @@ export function AssetCreationForm() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white dark:bg-[#05070a] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden my-8 md:my-16"
+              className="relative w-full max-w-md bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[85vh]"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-400 to-purple-500" />
 
@@ -2111,7 +2212,7 @@ export function AssetCreationForm() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-5">
+              <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                 <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 mb-1 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 tracking-widest uppercase">Asset</p>
@@ -2370,6 +2471,16 @@ export function AssetCreationForm() {
                     Share Asset
                   </button>
                   <button
+                    className="w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
+                    onClick={() => {
+                      closeContextMenu()
+                      openShareAssetModal(contextMenu.asset!, true)
+                    }}
+                  >
+                    <Clock className="w-4 h-4 text-blue-400" />
+                    Schedule Capsule
+                  </button>
+                  <button
                     className="w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
                     onClick={() => {
                       closeContextMenu()
@@ -2407,7 +2518,7 @@ export function AssetCreationForm() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setIsViewModalOpen(false)}
           >
             <motion.div
@@ -2415,7 +2526,7 @@ export function AssetCreationForm() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden my-8 md:my-16"
+              className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="bg-slate-50 dark:bg-gradient-to-r dark:from-blue-600/10 dark:to-purple-600/10 border-b border-slate-200 dark:border-white/10 p-6">
@@ -2441,7 +2552,7 @@ export function AssetCreationForm() {
               </div>
 
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
                 {isDecrypting ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
@@ -2511,11 +2622,37 @@ export function AssetCreationForm() {
                     })()}
 
                     {/* Decrypted Content */}
-                    <div className="bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4">
-                      <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-3 flex items-center gap-2">
-                        <Lock className={`w-3 h-3 ${decryptedContent?.includes('Failed') ? 'text-red-400' : 'text-green-400'}`} />
-                        {decryptedContent?.includes('Failed') ? 'Decryption Failed' : 'Decrypted Content'}
-                      </p>
+                    <div className="bg-slate-50 dark:bg-[#111827]/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs uppercase tracking-widest text-slate-400 font-bold flex items-center gap-2">
+                          <Lock className={`w-3.5 h-3.5 ${decryptedContent?.includes('Failed') ? 'text-red-400' : 'text-green-400'}`} />
+                          {decryptedContent?.includes('Failed') ? 'Decryption Failed' : 'Decrypted Content'}
+                        </p>
+                        
+                        {/* Checkerboard toggle if it's an image */}
+                        {!decryptedContent?.includes('Failed') && (viewingAsset.type?.toLowerCase() === 'photo' || viewingAsset.mimeType?.toLowerCase().startsWith('image/')) && (
+                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
+                            <button
+                              onClick={() => setPreviewBg('checkered')}
+                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'checkered' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+                            >
+                              Grid
+                            </button>
+                            <button
+                              onClick={() => setPreviewBg('dark')}
+                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'dark' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+                            >
+                              Dark
+                            </button>
+                            <button
+                              onClick={() => setPreviewBg('light')}
+                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'light' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+                            >
+                              Light
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
                       {decryptedContent?.includes('Key distribution not found') ? (
                         <div className="py-8 px-4 text-center">
@@ -2528,7 +2665,13 @@ export function AssetCreationForm() {
                           </div>
                         </div>
                       ) : (viewingAsset.type?.toLowerCase() === 'photo' || viewingAsset.mimeType?.toLowerCase().startsWith('image/')) && !decryptedContent?.includes('Failed') ? (
-                        <div className="flex justify-center bg-slate-100 dark:bg-slate-900/40 rounded-lg p-2 overflow-hidden min-h-[300px] items-center">
+                        <div className={`flex justify-center rounded-xl p-4 overflow-hidden min-h-[300px] items-center border border-dashed border-slate-200 dark:border-slate-800 transition-all ${
+                          previewBg === 'checkered'
+                            ? 'bg-[linear-gradient(45deg,#eee_25%,transparent_25%),linear-gradient(-45deg,#eee_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#eee_75%),linear-gradient(-45deg,transparent_75%,#eee_75%)] dark:bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%),linear-gradient(-45deg,#1e293b_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#1e293b_75%),linear-gradient(-45deg,transparent_75%,#1e293b_75%)] bg-[size:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]'
+                            : previewBg === 'dark'
+                            ? 'bg-slate-950'
+                            : 'bg-white'
+                        }`}>
                           {isDecrypting || !decryptedContent ? (
                             <div className="flex flex-col items-center gap-3 text-slate-400">
                               <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -2548,7 +2691,7 @@ export function AssetCreationForm() {
                           )}
                         </div>
                       ) : (
-                        <pre className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto">
+                        <pre className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/5">
                           {decryptedContent}
                         </pre>
                       )}
