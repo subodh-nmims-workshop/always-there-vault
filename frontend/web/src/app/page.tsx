@@ -53,7 +53,7 @@ import { OverviewDashboard } from '@/components/overview-dashboard'
 import { BeneficiariesDashboard } from '@/components/beneficiaries-dashboard'
 import { BeneficiaryManager } from '@/components/beneficiary-manager'
 import { StatusDashboard } from '@/components/status-dashboard'
-import { DemoWalkthroughPlayer } from '@/components/demo-walkthrough-player'
+
 import { SubscriptionDashboard } from '@/components/subscription-dashboard'
 import { ModeIndicator } from '@/components/mode-indicator'
 import { TrialBanner } from '@/components/trial-banner'
@@ -647,10 +647,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Futuristic Video Walkthrough Preview */}
-          <div className="mt-20 max-w-4xl mx-auto">
-            <DemoWalkthroughPlayer />
-          </div>
         </div>
       </section>
 

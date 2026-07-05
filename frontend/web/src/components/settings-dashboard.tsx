@@ -80,6 +80,14 @@ export function SettingsDashboard() {
   const [verificationPendingEmail, setVerificationPendingEmail] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
 
+  // Alternative Email Verification States
+  const [alternativeEmailInput, setAlternativeEmailInput] = useState('')
+  const [showAlternativeEmailVerifyModal, setShowAlternativeEmailVerifyModal] = useState(false)
+  const [alternativeEmailVerifyCode, setAlternativeEmailVerifyCode] = useState('')
+  const [isVerifyingAlternativeEmail, setIsVerifyingAlternativeEmail] = useState(false)
+  const [alternativeVerificationPendingEmail, setAlternativeVerificationPendingEmail] = useState('')
+  const [alternativeResendCooldown, setAlternativeResendCooldown] = useState(0)
+
   useEffect(() => {
     if (showEmailVerifyModal) {
       if (profile?.updatedAt) {
@@ -100,6 +108,25 @@ export function SettingsDashboard() {
   }, [showEmailVerifyModal, profile?.updatedAt])
 
   useEffect(() => {
+    if (showAlternativeEmailVerifyModal) {
+      if (profile?.updatedAt) {
+        const lastUpdated = new Date(profile.updatedAt).getTime()
+        const diff = Date.now() - lastUpdated
+        if (diff > 0 && diff < 15000) {
+          const remaining = Math.ceil((15000 - diff) / 1000)
+          if (remaining > 0) {
+            setAlternativeResendCooldown(remaining)
+            return
+          }
+        }
+        setAlternativeResendCooldown(0)
+      } else {
+        setAlternativeResendCooldown(15)
+      }
+    }
+  }, [showAlternativeEmailVerifyModal, profile?.updatedAt])
+
+  useEffect(() => {
     if (resendCooldown > 0) {
       const timer = setTimeout(() => {
         setResendCooldown(resendCooldown - 1)
@@ -107,6 +134,15 @@ export function SettingsDashboard() {
       return () => clearTimeout(timer)
     }
   }, [resendCooldown])
+
+  useEffect(() => {
+    if (alternativeResendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setAlternativeResendCooldown(alternativeResendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [alternativeResendCooldown])
 
   const fetchProfile = async () => {
     try {
@@ -479,6 +515,166 @@ export function SettingsDashboard() {
     }
   }
 
+  const handleVerifyAlternativeEmailCode = async () => {
+    if (!alternativeEmailVerifyCode.trim() || alternativeEmailVerifyCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit code.")
+      return
+    }
+    setIsVerifyingAlternativeEmail(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/verify-alternative-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: alternativeEmailVerifyCode.trim() })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          toast.success("Alternative email verified successfully!")
+          setShowAlternativeEmailVerifyModal(false)
+          setAlternativeEmailVerifyCode('')
+          fetchProfile()
+        } else {
+          toast.error(data.message || "Invalid verification code.")
+        }
+      } else {
+        throw new Error("Failed to verify alternative email code.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error verifying alternative email code.")
+    } finally {
+      setIsVerifyingAlternativeEmail(false)
+    }
+  }
+
+  const handleResendAlternativeEmailCode = async () => {
+    if (alternativeResendCooldown > 0) return
+    setIsVerifyingAlternativeEmail(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/resend-alternative-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        toast.success("Alternative verification code resent successfully!")
+        setAlternativeResendCooldown(15)
+      } else {
+        throw new Error("Failed to resend alternative code.")
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error resending alternative code.")
+    } finally {
+      setIsVerifyingAlternativeEmail(false)
+    }
+  }
+
+  const handleDeleteAlternativeEmail = async () => {
+    if (!confirm("Are you sure you want to delete your alternative email? Protocol warnings will no longer be sent here.")) {
+      return;
+    }
+    try {
+      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+      if (isDemo) {
+        localStorage.removeItem('demo_alt_user_email_pending')
+        localStorage.removeItem('demo_alt_user_email_verified')
+        localStorage.removeItem('dwp_alt_user_email')
+        
+        setAlternativeEmailInput('')
+        setProfile((prev: any) => prev ? { ...prev, alternativeEmail: null, alternativePendingEmail: null, alternativeEmailVerified: false } : null)
+        toast.success('Alternative email removed successfully')
+        return
+      }
+
+      const token = localStorage.getItem('dwp_token')
+      if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
+
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      setIsUpdating(true)
+      const res = await fetch(`${apiEndpoint}/api/users/delete-alternative-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      setIsUpdating(false)
+
+      if (res.ok) {
+        localStorage.removeItem('dwp_alt_user_email')
+        toast.success('Alternative email removed successfully')
+        setAlternativeEmailInput('')
+        fetchProfile()
+      } else {
+        toast.error('Failed to remove alternative email')
+      }
+    } catch (err: any) {
+      setIsUpdating(false)
+      console.error('Failed to delete alternative email:', err)
+      toast.error('Error removing alternative email', { description: err.message })
+    }
+  }
+
+  const handleSaveAlternativeEmail = async () => {
+    if (!alternativeEmailInput) {
+      toast.error("Please enter a valid email address.")
+      return
+    }
+
+    // Prevent adding same email as primary
+    if (alternativeEmailInput.toLowerCase() === (profile?.email || '').toLowerCase() ||
+        alternativeEmailInput.toLowerCase() === (profile?.pendingEmail || '').toLowerCase()) {
+      toast.error("This email is already your primary alert email.", { description: "Please enter a different email address for backup notifications." })
+      return
+    }
+
+    // Prevent re-adding same verified alternative email
+    if (profile?.alternativeEmailVerified && alternativeEmailInput.toLowerCase() === (profile?.alternativeEmail || '').toLowerCase()) {
+      toast.info("This email is already verified as your alternative notification email.")
+      return
+    }
+
+    setIsUpdating(true)
+    try {
+      const token = localStorage.getItem('dwp_token')
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ alternativeEmail: alternativeEmailInput })
+      })
+      setIsUpdating(false)
+
+      if (res.ok) {
+        const data = await res.json()
+        toast.success('Alternative email configuration updated')
+        if (data.alternativePendingEmail) {
+          setAlternativeVerificationPendingEmail(data.alternativePendingEmail)
+          setShowAlternativeEmailVerifyModal(true)
+          setAlternativeResendCooldown(15)
+          toast.info('Verification code sent to your alternative email!')
+        }
+        fetchProfile()
+      } else {
+        const err = await res.json().catch(() => null)
+        toast.error('Failed to update alternative email', { description: err?.message || 'Error' })
+      }
+    } catch (err: any) {
+      setIsUpdating(false)
+      toast.error('Update failed', { description: err.message })
+    }
+  }
+
   const [appState, setAppState] = useState<AppState | null>(null)
   const [emailInput, setEmailInput] = useState('')
   const [walletAddress, setWalletAddress] = useState('')
@@ -521,6 +717,7 @@ export function SettingsDashboard() {
   useEffect(() => {
     if (profile) {
       setEmailInput(profile.pendingEmail || profile.email || '')
+      setAlternativeEmailInput(profile.alternativePendingEmail || profile.alternativeEmail || '')
     } else if (appState?.settings?.emailNotification && !emailInput) {
       setEmailInput(appState.settings.emailNotification)
     }
@@ -1029,6 +1226,96 @@ export function SettingsDashboard() {
                       if (confirm("Discard this verification and reset the email?")) {
                         setShowEmailVerifyModal(false)
                         await handleDeleteEmail()
+                      }
+                    }}
+                    className="text-[10px] text-red-400 hover:text-red-300 font-bold underline cursor-pointer"
+                  >
+                    Discard verification request & clear email
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          </Portal>
+        )}
+      </AnimatePresence>
+
+      {/* Alternative Email Verification Modal */}
+      <AnimatePresence>
+        {showAlternativeEmailVerifyModal && (
+          <Portal>
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl max-w-lg w-full text-slate-100 shadow-2xl relative my-8 md:my-16"
+            >
+              <button 
+                onClick={() => setShowAlternativeEmailVerifyModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="icon-container w-12 h-12 mx-auto bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mb-3">
+                    <Mail className="size-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Verify Alternative Email</h3>
+                  <p className="text-xs text-slate-400 mt-1">We sent a 6-digit verification code to <span className="text-white font-bold">{alternativeVerificationPendingEmail}</span></p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
+                    Verification Code
+                  </label>
+                  <input 
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={alternativeEmailVerifyCode}
+                    onChange={(e) => setAlternativeEmailVerifyCode(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-[0.5em] text-white focus:outline-none focus:border-blue-500"
+                  />
+                  <div className="flex justify-between items-center px-1">
+                    <p className="text-[10px] text-slate-500">
+                      Enter the code to verify your address.
+                    </p>
+                    <button 
+                      onClick={handleResendAlternativeEmailCode}
+                      disabled={isVerifyingAlternativeEmail || alternativeResendCooldown > 0}
+                      className="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline disabled:opacity-50"
+                    >
+                      {alternativeResendCooldown > 0 ? `Resend Code (${alternativeResendCooldown}s)` : "Resend Code"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => setShowAlternativeEmailVerifyModal(false)}
+                    variant="outline"
+                    className="flex-1 bg-transparent border-slate-800 text-slate-400 hover:text-white text-xs uppercase tracking-widest py-5 rounded-xl hover:bg-white/5"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleVerifyAlternativeEmailCode}
+                    disabled={isVerifyingAlternativeEmail}
+                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-widest py-5 rounded-xl shadow-lg"
+                  >
+                    {isVerifyingAlternativeEmail ? "Verifying..." : "Verify & Save"}
+                  </Button>
+                </div>
+
+                <div className="text-center pt-2">
+                  <button
+                    onClick={async () => {
+                      if (confirm("Discard this verification and reset the alternative email?")) {
+                        setShowAlternativeEmailVerifyModal(false)
+                        await handleDeleteAlternativeEmail()
                       }
                     }}
                     className="text-[10px] text-red-400 hover:text-red-300 font-bold underline cursor-pointer"
@@ -1559,6 +1846,77 @@ export function SettingsDashboard() {
                                 ) : (
                                   <Button 
                                       onClick={() => syncHeartbeatSettings(emailInput)}
+                                      className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 h-10 rounded-xl shadow-md"
+                                  >
+                                    SAVE & VERIFY
+                                  </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Alternative Email section */}
+                        <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-white/5">
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <MessageSquare className="size-3" /> Alternative Email Alerts (Backup Notification)
+                                </label>
+                                {profile?.alternativeEmail && profile?.alternativeEmailVerified && profile.alternativeEmail === alternativeEmailInput && (
+                                  <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                    VERIFIED
+                                  </span>
+                                )}
+                                {profile?.alternativePendingEmail && profile.alternativePendingEmail === alternativeEmailInput && (
+                                  <button 
+                                    onClick={() => {
+                                      setAlternativeVerificationPendingEmail(profile.alternativePendingEmail || '')
+                                      setShowAlternativeEmailVerifyModal(true)
+                                    }}
+                                    className="text-[9px] font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/20 flex items-center gap-1 cursor-pointer transition-colors"
+                                  >
+                                    PENDING VERIFICATION (VERIFY NOW)
+                                  </button>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="email" 
+                                    placeholder="Enter secondary backup email"
+                                    value={alternativeEmailInput}
+                                    onChange={(e) => setAlternativeEmailInput(e.target.value)}
+                                    className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors"
+                                />
+                                {profile?.alternativeEmail === alternativeEmailInput && profile?.alternativeEmailVerified ? (
+                                  <div className="flex gap-2">
+                                    <Button 
+                                        onClick={handleDeleteAlternativeEmail}
+                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[10px] font-black px-3 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-colors"
+                                        title="Remove Alternative Email"
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </Button>
+                                  </div>
+                                ) : profile?.alternativePendingEmail === alternativeEmailInput ? (
+                                  <div className="flex gap-2">
+                                    <Button 
+                                        onClick={() => {
+                                          setAlternativeVerificationPendingEmail(alternativeEmailInput)
+                                          setShowAlternativeEmailVerifyModal(true)
+                                        }}
+                                        className="bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-black px-4 h-10 rounded-xl shadow-md"
+                                    >
+                                      VERIFY
+                                    </Button>
+                                    <Button 
+                                        onClick={handleDeleteAlternativeEmail}
+                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[10px] font-black px-3 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-colors"
+                                        title="Discard Verification"
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button 
+                                      onClick={handleSaveAlternativeEmail}
                                       className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 h-10 rounded-xl shadow-md"
                                   >
                                     SAVE & VERIFY

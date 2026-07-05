@@ -138,7 +138,15 @@ export class HeartbeatCronService {
                         const newMissCount = currentMisses + 1;
                         this.logger.warn(`User ${user.walletAddress} missed heartbeat. Stage: Missed${newMissCount} (${newMissCount}/${maxBuffer})`);
 
+                        const emailsToSend: string[] = [];
                         if (user.email && user.emailVerified) {
+                            emailsToSend.push(user.email);
+                        }
+                        if (user.alternativeEmail && user.alternativeEmailVerified) {
+                            emailsToSend.push(user.alternativeEmail);
+                        }
+
+                        if (emailsToSend.length > 0) {
                             let subject = '';
                             const lastHeartbeat = config.lastHeartbeat
                                 ? new Date(config.lastHeartbeat).toUTCString()
@@ -170,14 +178,16 @@ export class HeartbeatCronService {
                                 verificationUrl,
                             });
 
-                            const sent = await this.emailService.sendEmail({
-                                to: user.email,
-                                subject,
-                                html: messageHtml
-                            });
-                            this.logger.log(`📧 Heartbeat alert email (Stage ${newMissCount}) sent to owner ${user.email}: ${sent}`);
+                            for (const emailAddress of emailsToSend) {
+                                const sent = await this.emailService.sendEmail({
+                                    to: emailAddress,
+                                    subject,
+                                    html: messageHtml
+                                });
+                                this.logger.log(`📧 Heartbeat alert email (Stage ${newMissCount}) sent to ${emailAddress}: ${sent}`);
+                            }
                         } else {
-                            this.logger.warn(`⚠️ Cannot send alert — user ${user.walletAddress} has no email in DB`);
+                            this.logger.warn(`⚠️ Cannot send alert — user ${user.walletAddress} has no verified emails in DB`);
                         }
 
                         // Send Push Notification if token exists
@@ -206,8 +216,15 @@ export class HeartbeatCronService {
                             }
                             
                             // Notify user
+                             const activationEmails: string[] = [];
                              if (user.email && user.emailVerified) {
-                                const escapedName = escapeHtml(user.name || 'Vault Owner');
+                                 activationEmails.push(user.email);
+                             }
+                             if (user.alternativeEmail && user.alternativeEmailVerified) {
+                                 activationEmails.push(user.alternativeEmail);
+                             }
+                             if (activationEmails.length > 0) {
+                                 const escapedName = escapeHtml(user.name || 'Vault Owner');
                                 const escapedWallet = escapeHtml(user.walletAddress);
                                 const activatedBody = `
                                   <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
@@ -221,19 +238,21 @@ export class HeartbeatCronService {
                                   `)}
                                   ${alertStrip('#ef4444', 'Your inheritance plan is now being executed. This action is irreversible. Your digital legacy has been secured.')}
                                 `;
-                                await this.emailService.sendEmail({
-                                    to: user.email,
-                                    subject: '🚨 AlwaysThere Vault Protocol Activated — Assets Being Distributed',
-                                    html: buildEmailShell({
-                                        accentColor: '#ef4444',
-                                        accentGlow: 'rgba(239,68,68,0.3)',
-                                        icon: '🚨',
-                                        headline: 'Protocol Activated',
-                                        subline: 'Your Digital Legacy Is Being Distributed',
-                                        body: activatedBody,
-                                        footerNote: 'This is an automated protocol execution notification.',
-                                    }),
-                                });
+                                for (const emailAddress of activationEmails) {
+                                    await this.emailService.sendEmail({
+                                        to: emailAddress,
+                                        subject: '🚨 AlwaysThere Vault Protocol Activated — Assets Being Distributed',
+                                        html: buildEmailShell({
+                                            accentColor: '#ef4444',
+                                            accentGlow: 'rgba(239,68,68,0.3)',
+                                            icon: '🚨',
+                                            headline: 'Protocol Activated',
+                                            subline: 'Your Digital Legacy Is Being Distributed',
+                                            body: activatedBody,
+                                            footerNote: 'This is an automated protocol execution notification.',
+                                        }),
+                                    });
+                                }
                              }
 
                             // Notify each nominee with ONLY their assigned files

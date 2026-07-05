@@ -37,6 +37,12 @@ export const users = pgTable('users', {
   pendingEmail: varchar('pending_email', { length: 255 }),
   emailVerificationToken: varchar('email_verification_token', { length: 255 }),
 
+  // Alternative Email Verification
+  alternativeEmail: varchar('alternative_email', { length: 255 }),
+  alternativeEmailVerified: boolean('alternative_email_verified').default(false).notNull(),
+  alternativePendingEmail: varchar('alternative_pending_email', { length: 255 }),
+  alternativeEmailVerificationToken: varchar('alternative_email_verification_token', { length: 255 }),
+
   // Preferences
   preferences: jsonb('preferences').default({}),
   

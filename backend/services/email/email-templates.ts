@@ -15,11 +15,12 @@ export function escapeHtml(str: any): string {
 }
 
 
-// Hosted logo — works in Gmail, Outlook, Apple Mail
+// Hosted logo — served from the deployed Render frontend (alwaystherevault.com serves public/)
+// Falls back to Render CDN path, then a GitHub raw CDN copy
 const LOGO_URL = 'https://alwaystherevault.com/logo-simple.png';
 
-// Fallback CDN logo (base64-inlined shield icon as data URI fallback)
-const LOGO_FALLBACK = 'https://cdn.jsdelivr.net/gh/subodh-nmims-workshop/always-there-vault@main/frontend/web/public/logo-simple.png';
+// Backup CDN — always available even if custom domain is down
+const LOGO_FALLBACK = 'https://always-there-protocol.onrender.com/logo-simple.png';
 
 /** Wraps any email body in the AlwaysThere brand shell */
 export function buildEmailShell(opts: {
@@ -77,12 +78,14 @@ export function buildEmailShell(opts: {
               <tr>
                 <!-- Logo -->
                 <td width="48" valign="middle">
+                  <!--[if !mso]><!-->
                   <img src="${finalLogoUrl}"
                     width="42" height="42"
                     alt="AlwaysThere"
                     style="display:block;border-radius:10px;border:0;outline:none;text-decoration:none;"
-                    onerror="this.onerror=null;this.src='${LOGO_FALLBACK}';"
+                    onerror="this.onerror=null;this.src='${LOGO_FALLBACK}';this.onerror=function(){this.style.display='none';};"
                   />
+                  <!--<![endif]-->
                 </td>
                 <!-- Brand Name -->
                 <td valign="middle" style="padding-left:14px;">

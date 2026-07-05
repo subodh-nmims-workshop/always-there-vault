@@ -120,6 +120,17 @@ export function HeartbeatMonitor() {
   const [resendCooldown, setResendCooldown] = useState<number>(0)
   const [updatedAt, setUpdatedAt] = useState<string>('')
 
+  // Alternative Email OTP Verification States
+  const [profileAlternativeEmail, setProfileAlternativeEmail] = useState<string>('')
+  const [pendingAlternativeEmail, setPendingAlternativeEmail] = useState<string>('')
+  const [alternativeEmailVerified, setAlternativeEmailVerified] = useState<boolean>(false)
+  const [inputAlternativeEmail, setInputAlternativeEmail] = useState<string>('')
+  const [alternativeOtpCode, setAlternativeOtpCode] = useState<string>('')
+  const [showAlternativeOtpField, setShowAlternativeOtpField] = useState<boolean>(false)
+  const [isSendingAlternativeOtp, setIsSendingAlternativeOtp] = useState<boolean>(false)
+  const [isVerifyingAlternativeOtp, setIsVerifyingAlternativeOtp] = useState<boolean>(false)
+  const [alternativeResendCooldown, setAlternativeResendCooldown] = useState<number>(0)
+
   const fetchProfileInfo = async () => {
     try {
       const token = localStorage.getItem('dwp_token')
@@ -136,6 +147,10 @@ export function HeartbeatMonitor() {
         setPendingEmail(data.pendingEmail || '')
         setEmailVerified(data.emailVerified || false)
         setInputEmail(data.pendingEmail || data.email || '')
+        setProfileAlternativeEmail(data.alternativeEmail || '')
+        setPendingAlternativeEmail(data.alternativePendingEmail || '')
+        setAlternativeEmailVerified(data.alternativeEmailVerified || false)
+        setInputAlternativeEmail(data.alternativePendingEmail || data.alternativeEmail || '')
         setUpdatedAt(data.updatedAt || '')
       }
     } catch (err) {
@@ -153,10 +168,21 @@ export function HeartbeatMonitor() {
   }, [resendCooldown])
 
   useEffect(() => {
+    if (alternativeResendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setAlternativeResendCooldown(alternativeResendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [alternativeResendCooldown])
+
+  useEffect(() => {
     if (showSettings) {
       fetchProfileInfo()
       setOtpCode('')
       setShowOtpField(false)
+      setAlternativeOtpCode('')
+      setShowAlternativeOtpField(false)
     }
   }, [showSettings])
 
@@ -183,6 +209,19 @@ export function HeartbeatMonitor() {
       toast.error("Please enter a valid email address first.")
       return
     }
+
+    // Prevent re-adding same verified primary email
+    if (emailVerified && inputEmail.toLowerCase() === profileEmail.toLowerCase()) {
+      toast.info("This email is already verified as your primary notification email.")
+      return
+    }
+
+    // Prevent using alternative email as primary
+    if (inputEmail.toLowerCase() === (profileAlternativeEmail || '').toLowerCase() && alternativeEmailVerified) {
+      toast.error("This email is already your alternative notification email.", { description: "Please use a different email address for the primary slot." })
+      return
+    }
+
     setIsSendingOtp(true)
     try {
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
@@ -390,6 +429,233 @@ export function HeartbeatMonitor() {
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || "Error removing email.")
+    }
+  }
+
+  const handleSendAlternativeOtp = async () => {
+    if (!inputAlternativeEmail) {
+      toast.error("Please enter a valid alternative email address first.")
+      return
+    }
+
+    // Prevent adding same email as primary
+    if (inputAlternativeEmail.toLowerCase() === (profileEmail || '').toLowerCase() ||
+        inputAlternativeEmail.toLowerCase() === (pendingEmail || '').toLowerCase()) {
+      toast.error("This email is already your primary notification email.", { description: "Please use a different email address for the alternative slot." })
+      return
+    }
+
+    // Prevent re-adding already verified alternative email
+    if (alternativeEmailVerified && inputAlternativeEmail.toLowerCase() === profileAlternativeEmail.toLowerCase()) {
+      toast.info("This email is already verified as your alternative notification email.")
+      return
+    }
+
+    setIsSendingAlternativeOtp(true)
+    try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+      const token = localStorage.getItem('dwp_token')
+
+      if (isDemo && !token) {
+        setPendingAlternativeEmail(inputAlternativeEmail)
+        setAlternativeEmailVerified(false)
+        setShowAlternativeOtpField(true)
+        setAlternativeResendCooldown(15)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_alt_user_email', inputAlternativeEmail)
+          localStorage.setItem('dwp_alt_demo_otp', '123456')
+        }
+        toast.success("Demo Mode: Alternative email verification code is '123456'!")
+        setIsSendingAlternativeOtp(false)
+        return
+      }
+
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ alternativeEmail: inputAlternativeEmail })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setPendingAlternativeEmail(data.alternativePendingEmail || inputAlternativeEmail)
+        setAlternativeEmailVerified(false)
+        setShowAlternativeOtpField(true)
+        setAlternativeResendCooldown(15)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_alt_user_email', inputAlternativeEmail)
+        }
+        toast.success("Verification code sent to your alternative email address!")
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        if (isDemo) {
+          setPendingAlternativeEmail(inputAlternativeEmail)
+          setAlternativeEmailVerified(false)
+          setShowAlternativeOtpField(true)
+          setAlternativeResendCooldown(15)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('dwp_alt_user_email', inputAlternativeEmail)
+            localStorage.setItem('dwp_alt_demo_otp', '123456')
+          }
+          toast.success("Demo Mode Fallback: Alternative verification code is '123456'!")
+        } else {
+          throw new Error(errData.message || "Failed to update alternative email and trigger OTP.")
+        }
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Error sending verification code to alternative email.")
+    } finally {
+      setIsSendingAlternativeOtp(false)
+    }
+  }
+
+  const handleVerifyAlternativeOtp = async () => {
+    if (!alternativeOtpCode || alternativeOtpCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP code.")
+      return
+    }
+    setIsVerifyingAlternativeOtp(true)
+    try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+      const token = localStorage.getItem('dwp_token')
+
+      if (isDemo && (!token || alternativeOtpCode.trim() === localStorage.getItem('dwp_alt_demo_otp') || alternativeOtpCode.trim() === '123456')) {
+        toast.success("Alternative email verified successfully (Demo Mode)!")
+        setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
+        setAlternativeEmailVerified(true)
+        setShowAlternativeOtpField(false)
+        setAlternativeOtpCode('')
+        setAlternativeResendCooldown(0)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dwp_alt_user_email', pendingAlternativeEmail || inputAlternativeEmail)
+        }
+        setIsVerifyingAlternativeOtp(false)
+        return
+      }
+
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/verify-alternative-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: alternativeOtpCode.trim() })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          toast.success("Alternative email verified successfully!")
+          setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
+          setAlternativeEmailVerified(true)
+          setShowAlternativeOtpField(false)
+          setAlternativeOtpCode('')
+          setAlternativeResendCooldown(0)
+          await fetchProfileInfo()
+        } else {
+          if (isDemo && (alternativeOtpCode.trim() === '123456' || alternativeOtpCode.trim() === localStorage.getItem('dwp_alt_demo_otp'))) {
+            toast.success("Alternative email verified successfully (Demo Fallback)!")
+            setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
+            setAlternativeEmailVerified(true)
+            setShowAlternativeOtpField(false)
+            setAlternativeOtpCode('')
+            setAlternativeResendCooldown(0)
+          } else {
+            toast.error(data.message || "Invalid verification code.")
+          }
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        if (isDemo && (alternativeOtpCode.trim() === '123456' || alternativeOtpCode.trim() === localStorage.getItem('dwp_alt_demo_otp'))) {
+          toast.success("Alternative email verified successfully (Demo Fallback)!")
+          setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
+          setAlternativeEmailVerified(true)
+          setShowAlternativeOtpField(false)
+          setAlternativeOtpCode('')
+          setAlternativeResendCooldown(0)
+        } else {
+          throw new Error(errData.message || "Failed to verify alternative email code.")
+        }
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Error verifying alternative email code.")
+    } finally {
+      setIsVerifyingAlternativeOtp(false)
+    }
+  }
+
+  const handleRemoveAlternativeEmail = async () => {
+    if (!confirm("Are you sure you want to delete your alternative email? Protocol warnings will no longer be sent here.")) {
+      return;
+    }
+    try {
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
+      const token = localStorage.getItem('dwp_token')
+
+      if (isDemo && !token) {
+        setProfileAlternativeEmail('')
+        setPendingAlternativeEmail('')
+        setAlternativeEmailVerified(false)
+        setInputAlternativeEmail('')
+        setShowAlternativeOtpField(false)
+        setAlternativeOtpCode('')
+        setAlternativeResendCooldown(0)
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dwp_alt_user_email')
+        }
+        toast.success("Alternative email removed successfully (Demo Mode)!")
+        return
+      }
+
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const res = await fetch(`${apiEndpoint}/api/users/delete-alternative-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        setProfileAlternativeEmail('')
+        setPendingAlternativeEmail('')
+        setAlternativeEmailVerified(false)
+        setInputAlternativeEmail('')
+        setShowAlternativeOtpField(false)
+        setAlternativeOtpCode('')
+        setAlternativeResendCooldown(0)
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dwp_alt_user_email')
+        }
+        toast.success("Alternative email removed successfully!")
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        if (isDemo) {
+          setProfileAlternativeEmail('')
+          setPendingAlternativeEmail('')
+          setAlternativeEmailVerified(false)
+          setInputAlternativeEmail('')
+          setShowAlternativeOtpField(false)
+          setAlternativeOtpCode('')
+          setAlternativeResendCooldown(0)
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('dwp_alt_user_email')
+          }
+          toast.success("Alternative email removed successfully (Demo Fallback)!")
+        } else {
+          throw new Error(errData.message || "Failed to remove alternative email.")
+        }
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Error removing alternative email.")
     }
   }
 
@@ -1154,6 +1420,122 @@ export function HeartbeatMonitor() {
                                 setShowOtpField(false)
                                 setResendCooldown(0)
                                 setOtpCode('')
+                              }}
+                              className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs px-3 rounded-xl transition-all"
+                            >
+                              Change
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Alternative Notification Email with verification status and OTP flow */}
+                <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black tracking-wider text-slate-800 dark:text-slate-100 uppercase">
+                      Alternative Notification Email
+                    </label>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">
+                    Secondary backup email to receive heartbeat alerts.
+                  </p>
+
+                  {alternativeEmailVerified && profileAlternativeEmail ? (
+                    <div className="flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-xl p-3.5 mt-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Mail className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
+                        <span className="text-sm font-bold text-slate-800 dark:text-white truncate block">
+                          {profileAlternativeEmail}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                          <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                          Verified
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveAlternativeEmail}
+                        className="bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 border border-red-500/20 font-extrabold text-xs px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="email"
+                            placeholder="backup@email.com"
+                            value={inputAlternativeEmail}
+                            onChange={(e) => {
+                              setInputAlternativeEmail(e.target.value)
+                            }}
+                            disabled={showAlternativeOtpField || isSendingAlternativeOtp}
+                            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                        {inputAlternativeEmail && (
+                          <button
+                            type="button"
+                            onClick={handleSendAlternativeOtp}
+                            disabled={isSendingAlternativeOtp || alternativeResendCooldown > 0}
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs px-4 rounded-xl border border-blue-500/30 transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSendingAlternativeOtp ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : alternativeResendCooldown > 0 ? (
+                              `Resend OTP (${alternativeResendCooldown}s)`
+                            ) : showAlternativeOtpField ? (
+                              'Resend OTP'
+                            ) : (
+                              'Send OTP'
+                            )}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* OTP Field */}
+                      {showAlternativeOtpField && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-2.5"
+                        >
+                          <p className="text-xs text-blue-400 font-black">
+                            Enter the 6-digit OTP code sent to your alternative email:
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              maxLength={6}
+                              placeholder="000000"
+                              value={alternativeOtpCode}
+                              onChange={(e) => setAlternativeOtpCode(e.target.value.replace(/\D/g, ''))}
+                              className="w-28 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-xl px-3 py-2 outline-none text-center font-mono text-base font-black tracking-[0.2em]"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleVerifyAlternativeOtp}
+                              disabled={isVerifyingAlternativeOtp}
+                              className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
+                            >
+                              {isVerifyingAlternativeOtp ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                'Verify OTP'
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowAlternativeOtpField(false)
+                                setAlternativeResendCooldown(0)
+                                setAlternativeOtpCode('')
                               }}
                               className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs px-3 rounded-xl transition-all"
                             >

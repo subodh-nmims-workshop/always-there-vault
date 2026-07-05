@@ -16,6 +16,12 @@ export class UpdateProfileDto {
   @ValidateIf(o => o.email !== '')
   @IsEmail()
   email?: string;
+
+  @ApiProperty({ description: 'User alternative email address', required: false })
+  @IsOptional()
+  @ValidateIf(o => o.alternativeEmail !== '')
+  @IsEmail()
+  alternativeEmail?: string;
 }
 
 export class VerifyEmailDto {
@@ -62,7 +68,7 @@ export class UsersController {
     @ApiOperation({ summary: 'Create or update user profile' })
     async createProfile(@Req() req: any, @Body() body: UpdateProfileDto) {
         const walletAddress = req.user.walletAddress;
-        return this.usersService.createOrUpdateUser(walletAddress, body.email);
+        return this.usersService.createOrUpdateUser(walletAddress, body.email, body.alternativeEmail);
     }
 
     @Post('verify-email')
@@ -84,6 +90,25 @@ export class UsersController {
         return this.usersService.resendVerificationCode(userId);
     }
 
+    @Post('verify-alternative-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Verify user alternative email using 6-digit code' })
+    async verifyAlternativeEmail(
+        @Req() req: any,
+        @Body() body: VerifyEmailDto
+    ) {
+        const userId = req.user.userId;
+        return this.usersService.verifyAlternativeEmail(userId, body.code);
+    }
+
+    @Post('resend-alternative-verification')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Resend alternative email verification code' })
+    async resendAlternativeVerification(@Req() req: any) {
+        const userId = req.user.userId;
+        return this.usersService.resendAlternativeVerificationCode(userId);
+    }
+
     @Post('recovery-key')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Link a recovery address to the user account' })
@@ -101,5 +126,13 @@ export class UsersController {
     async deleteEmail(@Req() req: any) {
         const walletAddress = req.user.walletAddress;
         return this.usersService.deleteEmail(walletAddress);
+    }
+
+    @Post('delete-alternative-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Delete/remove alternative email verification status and email' })
+    async deleteAlternativeEmail(@Req() req: any) {
+        const walletAddress = req.user.walletAddress;
+        return this.usersService.deleteAlternativeEmail(walletAddress);
     }
 }
