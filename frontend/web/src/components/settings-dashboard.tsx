@@ -7,7 +7,7 @@ import { ethers } from 'ethers'
 import QRCode from 'qrcode'
 import CryptoJS from 'crypto-js'
 import { Button } from '@/components/ui/button'
-import { useSendTransaction } from 'wagmi'
+import { useSendTransaction, useChainId } from 'wagmi'
 import { parseEther } from 'viem'
 import { 
     Globe, 
@@ -57,6 +57,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ALL_PLANS, PlanType } from '@/types/subscription'
 
 export function SettingsDashboard() {
+  const chainId = useChainId()
   const [lang, setLang] = useState<Language>('en')
   const [t, setT] = useState<any>(translations.en)
   const [profile, setProfile] = useState<any>(null)
@@ -830,9 +831,42 @@ export function SettingsDashboard() {
         let referenceStr = '';
         if (method === 'CRYPTO') {
             const companyWallet = process.env.NEXT_PUBLIC_CRYPTO_RECEIVE_WALLET || '0xFF38De9C8f7B6A4cf810EAcE53D3E8EA9Dac1178';
+            
+            // Determine active token based on connected chain
+            let geckoId = 'ethereum';
+            if (chainId === 137) {
+                geckoId = 'matic-network';
+            } else if (chainId === 1) {
+                geckoId = 'ethereum';
+            } else if (chainId === 11155111) {
+                geckoId = 'ethereum';
+            }
+
+            let ethAmountStr = '0.01'; // Default backup
+            try {
+                toast.info("Fetching real-time exchange rate...");
+                const priceRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${geckoId}&vs_currencies=usd`);
+                const priceData = await priceRes.json();
+                const usdPrice = priceData[geckoId]?.usd;
+                if (usdPrice && usdPrice > 0) {
+                    ethAmountStr = (49.99 / usdPrice).toFixed(18);
+                }
+            } catch (err) {
+                console.error("CoinGecko API failed, using fallback:", err);
+                if (chainId === 137) {
+                    ethAmountStr = (49.99 / 0.45).toFixed(18); // Fallback matic price
+                } else {
+                    ethAmountStr = (49.99 / 3000.00).toFixed(18); // Fallback eth price
+                }
+            }
+
+            // Clean string formatting to avoid parsing failures
+            const parsedAmount = parseFloat(ethAmountStr).toFixed(18);
+            toast.info(`Sending ${parseFloat(parsedAmount).toFixed(6)} native tokens ($49.99 USD equivalent)...`);
+
             const txHash = await sendTransactionAsync({
                 to: companyWallet as `0x${string}`,
-                value: parseEther('0.01'), // $9 equivalent or Professional plan cost
+                value: parseEther(parsedAmount),
             });
             toast.info(`Transaction submitted: ${txHash}. Verifying on blockchain...`);
             referenceStr = txHash;
@@ -842,14 +876,17 @@ export function SettingsDashboard() {
             referenceStr = referenceFromModal;
         }
 
+        const targetPlanId = subscription?.mode === 'decentralized' ? 'sovereign_pro' : 'professional';
+
         const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/payment/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 walletAddress,
                 method,
-                planId: 'professional',
-                reference: referenceStr
+                planId: targetPlanId,
+                reference: referenceStr,
+                chainId: chainId
             })
         })
 

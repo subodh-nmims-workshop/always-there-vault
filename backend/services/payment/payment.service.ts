@@ -85,22 +85,68 @@ export class PaymentService {
     }
   }
 
-  async processCryptoPayment(walletAddress: string, txHash: string, planId: string, billingCycle: string = 'YEARLY'): Promise<any> {
+  async processCryptoPayment(walletAddress: string, txHash: string, planId: string, billingCycle: string = 'YEARLY', chainId?: number): Promise<any> {
     const normalizedWalletAddress = walletAddress.toLowerCase();
-    this.logger.log(`⛓️ Processing Crypto Payment for ${normalizedWalletAddress}, TX: ${txHash}, Cycle: ${billingCycle}`);
+    this.logger.log(`⛓️ Processing Crypto Payment for ${normalizedWalletAddress}, TX: ${txHash}, Cycle: ${billingCycle}, ChainID: ${chainId}`);
     
     try {
       const { ethers } = require('ethers');
-      const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL') || this.configService.get<string>('RPC_URL') || 'https://ethereum-sepolia.publicnode.com';
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
       
-      // Wait for transaction to be mined (max 30 seconds)
-      const receipt = await provider.waitForTransaction(txHash, 1, 30000);
-      if (!receipt || receipt.status !== 1) {
-          throw new Error('Transaction failed or not found on blockchain');
+      // Determine primary RPC URL
+      let rpcUrl = '';
+      if (chainId === 1) {
+        rpcUrl = 'https://cloudflare-eth.com';
+      } else if (chainId === 137) {
+        rpcUrl = 'https://polygon-rpc.com';
+      } else if (chainId === 11155111) {
+        rpcUrl = 'https://ethereum-sepolia.publicnode.com';
+      } else if (chainId === 1337 || chainId === 31337) {
+        rpcUrl = 'http://127.0.0.1:8545';
+      } else {
+        rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL') || this.configService.get<string>('RPC_URL') || 'https://ethereum-sepolia.publicnode.com';
       }
 
-      const tx = await provider.getTransaction(txHash);
+      // Build fallback list
+      const rpcUrlsToTry = [rpcUrl];
+      const fallbacks = [
+        'https://polygon-rpc.com',
+        'https://cloudflare-eth.com',
+        'https://ethereum-sepolia.publicnode.com',
+        this.configService.get<string>('RPC_URL')
+      ].filter(Boolean) as string[];
+
+      for (const url of fallbacks) {
+        if (!rpcUrlsToTry.includes(url)) {
+          rpcUrlsToTry.push(url);
+        }
+      }
+
+      let tx: any = null;
+      let receipt: any = null;
+      let lastError: any = null;
+
+      for (const url of rpcUrlsToTry) {
+        try {
+          this.logger.log(`Trying to verify tx ${txHash} on RPC: ${url}`);
+          const provider = new ethers.JsonRpcProvider(url);
+          tx = await provider.getTransaction(txHash);
+          if (tx) {
+            receipt = await provider.getTransactionReceipt(txHash);
+            if (receipt && receipt.status === 1) {
+              this.logger.log(`✅ Transaction successfully verified on RPC: ${url}`);
+              break;
+            }
+          }
+        } catch (err) {
+          lastError = err;
+          this.logger.warn(`Could not verify tx on RPC ${url}: ${err.message}`);
+        }
+      }
+
+      if (!receipt || receipt.status !== 1) {
+        throw new Error(lastError?.message || 'Transaction failed, not found, or not confirmed on supported networks');
+      }
+
       const companyWallet = (process.env.CRYPTO_RECEIVE_WALLET || this.configService.get<string>('CRYPTO_RECEIVE_WALLET') || '').toLowerCase();
       const contractAddress = (this.configService.get<string>('CONTRACT_ADDRESS') || process.env.CONTRACT_ADDRESS || '').toLowerCase();
       const subscriptionContractAddress = (this.configService.get<string>('SUBSCRIPTION_CONTRACT_ADDRESS') || process.env.SUBSCRIPTION_CONTRACT_ADDRESS || '').toLowerCase();
@@ -114,10 +160,6 @@ export class PaymentService {
       if (!isValidRecipient) {
           throw new Error('Transaction sent to invalid wallet or contract address');
       }
-
-      // Here you can also check tx.value (amount of ETH sent) matches the plan price
-      // const requiredAmount = ethers.parseEther('0.01');
-      // if (tx.value < requiredAmount) throw new Error('Insufficient payment amount');
 
       this.logger.log(`✅ Crypto Payment Verified on Blockchain: ${txHash}`);
       return await this.activatePremium(normalizedWalletAddress, 'CRYPTO', txHash, planId, billingCycle);

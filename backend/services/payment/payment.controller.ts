@@ -8,10 +8,10 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('process')
-  async processPayment(@Body() body: { walletAddress: string; method: 'PAYPAL' | 'CRYPTO'; planId: string; billingCycle?: string; reference: string }) {
-    const { walletAddress, method, planId, billingCycle = 'YEARLY', reference } = body;
+  async processPayment(@Body() body: { walletAddress: string; method: 'PAYPAL' | 'CRYPTO'; planId: string; billingCycle?: string; reference: string; chainId?: number }) {
+    const { walletAddress, method, planId, billingCycle = 'YEARLY', reference, chainId } = body;
 
-    this.logger.log(`Incoming ${method} payment request for ${walletAddress} [${planId} - ${billingCycle}]`);
+    this.logger.log(`Incoming ${method} payment request for ${walletAddress} [${planId} - ${billingCycle}] (Chain: ${chainId})`);
 
     try {
       if (method === 'PAYPAL') {
@@ -19,7 +19,7 @@ export class PaymentController {
         return await this.paymentService.processPayPalPayment(walletAddress, reference, planId, billingCycle);
       } else {
         // 'reference' is the Crypto TX Hash
-        return await this.paymentService.processCryptoPayment(walletAddress, reference, planId, billingCycle);
+        return await this.paymentService.processCryptoPayment(walletAddress, reference, planId, billingCycle, chainId);
       }
     } catch (error) {
       this.logger.error(`Payment processing failed: ${error.message}`);
