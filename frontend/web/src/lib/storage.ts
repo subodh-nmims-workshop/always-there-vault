@@ -54,6 +54,16 @@ export interface StoredHeartbeat {
   verified: boolean;
 }
 
+export interface StoredTimeCapsule {
+  id: string;
+  assetId: string;
+  beneficiaryId: string;
+  scheduledDate: string;
+  customMessage?: string;
+  isDelivered: boolean;
+  createdAt: string;
+}
+
 export interface AppState {
   folders: StoredFolder[];
   assets: StoredAsset[];
@@ -87,7 +97,7 @@ class WebStorageService {
   private static instance: WebStorageService;
   private crypto: WebCryptoService;
   private dbName = 'digital-will-db';
-  private dbVersion = 3;
+  private dbVersion = 4;
   private db: IDBDatabase | null = null;
   private dbInitPromise: Promise<void> | null = null;
 
@@ -141,6 +151,9 @@ class WebStorageService {
         }
         if (!db.objectStoreNames.contains('diagnosticLogs')) {
           db.createObjectStore('diagnosticLogs', { keyPath: 'id', autoIncrement: true });
+        }
+        if (!db.objectStoreNames.contains('timeCapsules')) {
+          db.createObjectStore('timeCapsules', { keyPath: 'id' });
         }
       };
     });
@@ -213,6 +226,13 @@ class WebStorageService {
 
   async deleteAsset(id: string): Promise<void> {
     await this.ensureDB();
+    
+    try {
+      await this.deleteTimeCapsulesByAsset(id);
+    } catch (err) {
+      console.warn('⚠️ Could not delete time capsules for asset:', id, err);
+    }
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['assets'], 'readwrite');
       const store = transaction.objectStore('assets');
@@ -414,7 +434,7 @@ class WebStorageService {
   async clearAllData(): Promise<void> {
     await this.ensureDB();
 
-    const stores = ['assets', 'beneficiaries', 'heartbeats', 'keyDistributions'];
+    const stores = ['assets', 'beneficiaries', 'heartbeats', 'keyDistributions', 'folders', 'diagnosticLogs', 'timeCapsules'];
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(stores, 'readwrite');
@@ -836,6 +856,73 @@ class WebStorageService {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  /**
+   * Time Capsule Management
+   */
+  async saveTimeCapsule(capsule: StoredTimeCapsule): Promise<void> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['timeCapsules'], 'readwrite');
+      const store = transaction.objectStore('timeCapsules');
+      const request = store.put(capsule);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async getAllTimeCapsules(): Promise<StoredTimeCapsule[]> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['timeCapsules'], 'readonly');
+      const store = transaction.objectStore('timeCapsules');
+      const request = store.getAll();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  async deleteTimeCapsule(id: string): Promise<void> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['timeCapsules'], 'readwrite');
+      const store = transaction.objectStore('timeCapsules');
+      const request = store.delete(id);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async deleteTimeCapsulesByAsset(assetId: string): Promise<void> {
+    await this.ensureDB();
+    const all = await this.getAllTimeCapsules();
+    const toDelete = all.filter(tc => tc.assetId === assetId);
+    
+    return new Promise((resolve, reject) => {
+      if (toDelete.length === 0) {
+        resolve();
+        return;
+      }
+      
+      const transaction = this.db!.transaction(['timeCapsules'], 'readwrite');
+      const store = transaction.objectStore('timeCapsules');
+      let completed = 0;
+      
+      toDelete.forEach(tc => {
+        const req = store.delete(tc.id);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          completed++;
+          if (completed === toDelete.length) {
+            resolve();
+          }
+        };
+      });
     });
   }
 }

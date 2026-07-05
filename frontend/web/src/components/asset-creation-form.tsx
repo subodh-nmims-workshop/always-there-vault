@@ -165,10 +165,7 @@ export function AssetCreationForm() {
       // Load time capsules in parallel
       let localCapsules: any[] = [];
       try {
-        const stored = localStorage.getItem('dwp_local_time_capsules');
-        if (stored) {
-          localCapsules = JSON.parse(stored);
-        }
+        localCapsules = await storage.getAllTimeCapsules();
       } catch (err) {
         console.warn('Failed to load local time capsules:', err);
       }
@@ -370,13 +367,8 @@ export function AssetCreationForm() {
       // 🕰️ Save Time Capsule locally and to Backend if scheduled
       if (isTimeCapsule && scheduledDate) {
         try {
-          let localCapsules: any[] = [];
-          const stored = localStorage.getItem('dwp_local_time_capsules');
-          if (stored) {
-            localCapsules = JSON.parse(stored);
-          }
           for (const benId of selectedBeneficiaries) {
-            localCapsules.push({
+            await storage.saveTimeCapsule({
               id: `local-${Date.now()}-${benId}`,
               assetId: asset.id,
               beneficiaryId: benId,
@@ -386,7 +378,6 @@ export function AssetCreationForm() {
               createdAt: new Date().toISOString()
             });
           }
-          localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
           console.log('✅ Time Capsule saved locally');
         } catch (localErr) {
           console.warn('Failed to save time capsule locally:', localErr);
@@ -680,18 +671,12 @@ export function AssetCreationForm() {
       // 🕰️ Sync Time Capsule Schedule
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
 
-      // Update local storage first
+      // Update local storage/IndexedDB first
       try {
-        let localCapsules: any[] = [];
-        const stored = localStorage.getItem('dwp_local_time_capsules');
-        if (stored) {
-          localCapsules = JSON.parse(stored);
-        }
-        // Remove existing schedules for this asset
-        localCapsules = localCapsules.filter((tc: any) => tc.assetId !== viewingAsset.id);
+        await storage.deleteTimeCapsulesByAsset(viewingAsset.id);
         
         if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
-          localCapsules.push({
+          await storage.saveTimeCapsule({
             id: `local-${Date.now()}`,
             assetId: viewingAsset.id,
             beneficiaryId: assignedBeneficiaryId,
@@ -701,8 +686,7 @@ export function AssetCreationForm() {
             createdAt: new Date().toISOString()
           });
         }
-        localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
-        console.log('✅ Time Capsule updated in local storage');
+        console.log('✅ Time Capsule updated in local storage/IndexedDB');
       } catch (localErr) {
         console.warn('⚠️ Failed to save time capsule locally:', localErr);
       }
@@ -919,18 +903,12 @@ export function AssetCreationForm() {
       // 🕰️ Sync Time Capsule Schedule
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
 
-      // Update local storage first (always, so it works locally!)
+      // Update local storage/IndexedDB first (always, so it works locally!)
       try {
-        let localCapsules: any[] = [];
-        const stored = localStorage.getItem('dwp_local_time_capsules');
-        if (stored) {
-          localCapsules = JSON.parse(stored);
-        }
-        // Remove existing schedules for this asset
-        localCapsules = localCapsules.filter((tc: any) => tc.assetId !== shareAssetTarget.id);
+        await storage.deleteTimeCapsulesByAsset(shareAssetTarget.id);
         
         if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
-          localCapsules.push({
+          await storage.saveTimeCapsule({
             id: `local-${Date.now()}`,
             assetId: shareAssetTarget.id,
             beneficiaryId: assignedBeneficiaryId,
@@ -940,8 +918,7 @@ export function AssetCreationForm() {
             createdAt: new Date().toISOString()
           });
         }
-        localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
-        console.log('✅ Time Capsule updated in local storage');
+        console.log('✅ Time Capsule updated in local storage/IndexedDB');
       } catch (localErr) {
         console.warn('⚠️ Failed to save time capsule locally:', localErr);
       }
@@ -1223,13 +1200,8 @@ export function AssetCreationForm() {
       // 🕰️ Save Time Capsule locally and to Backend if scheduled
       if (data.timeCapsule) {
         try {
-          let localCapsules: any[] = [];
-          const stored = localStorage.getItem('dwp_local_time_capsules');
-          if (stored) {
-            localCapsules = JSON.parse(stored);
-          }
           for (const benId of beneficiaryIds) {
-            localCapsules.push({
+            await storage.saveTimeCapsule({
               id: `local-${Date.now()}-${benId}`,
               assetId: asset.id,
               beneficiaryId: benId,
@@ -1239,7 +1211,6 @@ export function AssetCreationForm() {
               createdAt: new Date().toISOString()
             });
           }
-          localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
           console.log('✅ Category Time Capsule saved locally');
         } catch (localErr) {
           console.warn('Failed to save category time capsule locally:', localErr);
