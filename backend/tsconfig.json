@@ -32,12 +32,12 @@
     "api/**/*",
     "services/**/*",
     "src/db/**/*",
-    "middleware/**/*",
-    "scripts/**/*"
+    "middleware/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "test"
+    "test",
+    "scripts"
   ]
 }
