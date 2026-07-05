@@ -49,7 +49,7 @@ export function SharedFooter() {
                         <ul className="space-y-3 text-sm">
                             <li><Link href="/investors" className="hover:text-slate-900 dark:hover:text-white transition-colors">Partners & Investors</Link></li>
                             <li><Link href="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors">About Us</Link></li>
-                            <li><Link href="mailto:subodhram3350@gmail.com" className="hover:text-slate-900 dark:hover:text-white transition-colors">Contact</Link></li>
+                            <li><Link href="mailto:support@alwaystherevault.com" className="hover:text-slate-900 dark:hover:text-white transition-colors">Contact</Link></li>
                         </ul>
                     </div>
                 </div>

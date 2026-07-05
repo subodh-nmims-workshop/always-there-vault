@@ -40,12 +40,12 @@ export default function InvestorsPage() {
             Billions of dollars in digital assets are lost forever when owners pass away. AlwaysThere Vault is building the ultimate decentralized digital will to solve the internet's biggest generational wealth transfer problem.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link href="mailto:subodhram3350@gmail.com?subject=Investor Inquiry - AlwaysThere">
+            <Link href="mailto:support@alwaystherevault.com?subject=Investor Inquiry - AlwaysThere">
               <Button className="h-14 px-8 bg-[#2b52ff] hover:bg-[#1a3ecd] text-slate-900 dark:text-slate-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_0_30px_rgba(43,82,255,0.3)]">
                 Invest in AlwaysThere <TrendingUp className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link href="mailto:subodhram3350@gmail.com?subject=Developer Application - AlwaysThere">
+            <Link href="mailto:support@alwaystherevault.com?subject=Developer Application - AlwaysThere">
               <Button variant="outline" className="h-14 px-8 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-slate-900 dark:text-slate-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest">
                 Join the Dev Team <Code className="w-4 h-4 ml-2" />
               </Button>
@@ -140,7 +140,7 @@ export default function InvestorsPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="mailto:subodhram3350@gmail.com?subject=Investor Pitch Request" className="inline-block pt-6">
+              <Link href="mailto:support@alwaystherevault.com?subject=Investor Pitch Request" className="inline-block pt-6">
                 <Button className="bg-slate-900 text-slate-900 dark:text-slate-900 dark:text-white dark:bg-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-200 rounded-xl font-bold gap-2">
                   Request Pitch Deck <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -167,7 +167,7 @@ export default function InvestorsPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="mailto:subodhram3350@gmail.com?subject=Developer Application" className="inline-block pt-6">
+              <Link href="mailto:support@alwaystherevault.com?subject=Developer Application" className="inline-block pt-6">
                 <Button className="bg-purple-600 hover:bg-purple-500 text-slate-900 dark:text-slate-900 dark:text-white rounded-xl font-bold gap-2">
                   View Open Roles <ChevronRight className="w-4 h-4" />
                 </Button>

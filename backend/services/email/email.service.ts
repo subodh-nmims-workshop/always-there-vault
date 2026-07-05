@@ -395,7 +395,7 @@ export class EmailService {
         headline: 'Payment Successful',
         subline: `${plan} Subscription — Active`,
         body,
-        footerNote: 'Receipt available in your account dashboard. Contact support@alwaysthere.app for billing queries.',
+        footerNote: 'Receipt available in your account dashboard. Contact support@alwaystherevault.com for billing queries.',
       }),
       text: `Hi ${name}, your payment of $${amount.toFixed(2)} was successful. ${plan} subscription is now active.`,
     });

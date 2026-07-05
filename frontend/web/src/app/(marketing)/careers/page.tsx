@@ -173,7 +173,7 @@ export default function CareersPage() {
                         <p className="text-blue-100/60 text-lg font-medium mb-8 max-w-xl mx-auto">
                             We are always looking for exceptional engineers who understand Zero-Knowledge proofs, Rust, or decentralized infrastructure.
                         </p>
-                        <a href="mailto:careers@digitalwill.protocol" className="inline-block bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-900 dark:text-white font-bold text-sm px-8 py-4 rounded-full tracking-wider uppercase transition-colors">
+                        <a href="mailto:support@alwaystherevault.com" className="inline-block bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-900 dark:text-white font-bold text-sm px-8 py-4 rounded-full tracking-wider uppercase transition-colors">
                             Submit your PGP / GitHub
                         </a>
                     </div>

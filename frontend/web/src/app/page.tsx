@@ -419,7 +419,7 @@ export default function HomePage() {
               </div>
 
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="mailto:subodhram3350@gmail.com?subject=Investor Access Request - AlwaysThere">
+                <Link href="mailto:support@alwaystherevault.com?subject=Investor Access Request - AlwaysThere">
                   <button className="w-full sm:w-auto px-8 py-4 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)] flex items-center justify-center gap-2">
                     Request Investor Access <ChevronRight className="w-5 h-5" />
                   </button>

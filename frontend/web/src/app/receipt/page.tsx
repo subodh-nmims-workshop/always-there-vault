@@ -117,7 +117,7 @@ function ReceiptContent() {
                             <div className="text-[10px] text-slate-500 leading-relaxed font-semibold print:text-[9px]">
                                 AlwaysThere Vault Inc.<br />
                                 Decentralized Smart Will Storage & Recovery Node<br />
-                                will.alwaysthere.io | support@alwaysthere.io
+                                will.alwaystherevault.com | support@alwaystherevault.com
                             </div>
                         </div>
                         <div className="text-left sm:text-right font-medium text-slate-700 space-y-1 text-xs print:text-[10px] print:text-right">
