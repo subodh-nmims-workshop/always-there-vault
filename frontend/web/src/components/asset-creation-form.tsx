@@ -41,6 +41,7 @@ export function AssetCreationForm() {
   const [viewingAsset, setViewingAsset] = useState<StoredAsset | null>(null)
   const [decryptedContent, setDecryptedContent] = useState<string>('')
   const [isDecrypting, setIsDecrypting] = useState(false)
+  const [isDecryptedImage, setIsDecryptedImage] = useState<boolean>(false)
   const [previewBg, setPreviewBg] = useState<'dark' | 'light' | 'checkered'>('checkered')
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false)
   const [isShareFolderModalOpen, setIsShareFolderModalOpen] = useState(false)
@@ -119,6 +120,27 @@ export function AssetCreationForm() {
       window.removeEventListener('click', handleGlobalClick)
     }
   }, [])
+
+  // Clean up Object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (decryptedContent && decryptedContent.startsWith('blob:')) {
+        URL.revokeObjectURL(decryptedContent);
+        console.log('♻️ Object URL revoked');
+      }
+    };
+  }, [decryptedContent]);
+
+  useEffect(() => {
+    if (!isViewModalOpen) {
+      if (decryptedContent && decryptedContent.startsWith('blob:')) {
+        URL.revokeObjectURL(decryptedContent);
+        console.log('♻️ View modal closed: Object URL revoked');
+      }
+      setDecryptedContent('');
+      setIsDecryptedImage(false);
+    }
+  }, [isViewModalOpen]);
 
   const loadAssets = async () => {
     try {
@@ -451,10 +473,31 @@ export function AssetCreationForm() {
     setIsViewModalOpen(true)
     setIsDecrypting(true)
     setDecryptedContent('')
+    setIsDecryptedImage(false)
     setPreviewBg('checkered')
+
+    // Initialize nominee and time capsule settings for this asset
+    const beneficiaryId = asset.assignedBeneficiaryId || (asset.beneficiaries && asset.beneficiaries[0]) || '';
+    setAssignedBeneficiaryId(beneficiaryId);
+
+    const existingTc = timeCapsules.find(tc => tc.assetId === asset.id)
+    if (existingTc) {
+      setIsTimeCapsule(true)
+      const dateStr = existingTc.scheduledDate ? new Date(existingTc.scheduledDate).toISOString().split('T')[0] : ''
+      setScheduledDate(dateStr)
+      setCustomMessage(existingTc.customMessage || '')
+    } else {
+      setIsTimeCapsule(false)
+      setScheduledDate('')
+      setCustomMessage('')
+    }
 
     try {
       console.log('🔓 Decrypting asset:', asset.name)
+
+      if (!asset.iv) {
+        throw new Error('Initialization Vector (IV) is missing. Decryption is not possible for this asset.')
+      }
 
       // Get all key distributions and find the one for this asset
       let allKeyDists = await storage.getAllKeyDistributions()
@@ -492,40 +535,98 @@ export function AssetCreationForm() {
       const reconstructedKey = await crypto.reconstructKey(sharesToUse)
       console.log('✅ Key reconstructed')
 
-      // Decrypt the data
-      const isImage = asset.type?.toLowerCase() === 'photo' || asset.mimeType?.toLowerCase().startsWith('image/')
-
-      if (isImage) {
-        // Decrypt as binary first
-        const decryptedBuffer = await crypto.decryptBinary(
-          asset.encryptedData,
-          reconstructedKey,
-          asset.iv
-        )
-
-        // Backward compatibility: check if the buffer is actually a string containing a Data URL or raw Base64
-        let isLegacyFormat = false;
+      // Self-Healing: If encryptedData is empty, fetch remote content
+      let encryptedDataToDecrypt = asset.encryptedData
+      if (!encryptedDataToDecrypt && !isDemo) {
+        console.log('📥 Asset encryptedData is empty. Fetching remote payload...')
         try {
-          const textDecoder = new TextDecoder('utf-8', { fatal: true });
-          const decodedText = textDecoder.decode(decryptedBuffer);
-
-          // Check for data URI prefix OR common raw base64 image prefixes (JPEG: /9j/, PNG: iVBOR, GIF: R0lG)
-          if (
-            decodedText.startsWith('data:') ||
-            decodedText.startsWith('/9j/') ||
-            decodedText.startsWith('iVBOR') ||
-            decodedText.startsWith('R0lG') ||
-            // Fallback: If it's a very long string and contains only base64 characters, it's likely legacy base64
-            (decodedText.length > 100 && /^[A-Za-z0-9+/=]+$/.test(decodedText.substring(0, 100)))
-          ) {
-            isLegacyFormat = true;
-            setDecryptedContent(decodedText);
-            console.log('✅ Legacy image format decrypted');
+          const token = localStorage.getItem('dwp_token')
+          const downloadResponse = await fetch(`${API_URL}/api/assets/${asset.id}/download`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (downloadResponse.ok) {
+            const { url } = await downloadResponse.json()
+            console.log('🔗 Fetching from URL:', url)
+            const fileResponse = await fetch(url)
+            if (fileResponse.ok) {
+              encryptedDataToDecrypt = await fileResponse.text()
+              console.log('✅ Remote payload fetched successfully, length:', encryptedDataToDecrypt.length)
+              // Update local IndexedDB so we don't have to fetch it next time
+              try {
+                await storage.updateAsset(asset.id, { encryptedData: encryptedDataToDecrypt })
+              } catch (dbErr) {
+                console.warn('Could not cache remote encrypted data locally:', dbErr)
+              }
+            } else {
+              throw new Error(`Failed to download remote file: ${fileResponse.statusText}`)
+            }
+          } else {
+            throw new Error(`Failed to get download URL: ${downloadResponse.statusText}`)
           }
-        } catch (e) {
-          // Not a valid UTF-8 string, must be raw binary (new format)
+        } catch (downloadErr: any) {
+          console.error('❌ Remote download failed:', downloadErr)
+          throw new Error(`Remote asset download failed: ${downloadErr.message}`)
         }
+      }
 
+      if (!encryptedDataToDecrypt) {
+        throw new Error('Encrypted data payload is empty or not available.')
+      }
+
+      // Decrypt the data as binary first
+      const decryptedBuffer = await crypto.decryptBinary(
+        encryptedDataToDecrypt,
+        reconstructedKey,
+        asset.iv
+      )
+
+      // Helper to check if the decrypted buffer is a raw binary image by inspecting magic bytes
+      const isBinaryImage = (buffer: ArrayBuffer): boolean => {
+        const bytes = new Uint8Array(buffer);
+        if (bytes.length < 4) return false;
+        
+        // PNG magic: 89 50 4E 47
+        if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return true;
+        // JPEG magic: FF D8 FF
+        if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) return true;
+        // GIF magic: 47 49 46 38 ("GIF8")
+        if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) return true;
+        // WEBP / RIFF: 52 49 46 46 ("RIFF")
+        if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) return true;
+        // BMP magic: 42 4D ("BM")
+        if (bytes[0] === 0x42 && bytes[1] === 0x4D) return true;
+        
+        return false;
+      };
+
+      // Check if it's a legacy string format
+      let isLegacyFormat = false;
+      let decodedText = '';
+      try {
+        const textDecoder = new TextDecoder('utf-8', { fatal: true });
+        decodedText = textDecoder.decode(decryptedBuffer).trim();
+
+        if (decodedText.startsWith('data:')) {
+          isLegacyFormat = true;
+          setDecryptedContent(decodedText);
+          setIsDecryptedImage(true);
+          console.log('✅ Legacy image format (Data URL) decrypted');
+        } else if (/^[A-Za-z0-9+/=\s]+$/.test(decodedText)) {
+          isLegacyFormat = true;
+          const cleanBase64 = decodedText.replace(/\s/g, '');
+          setDecryptedContent(cleanBase64);
+          setIsDecryptedImage(true);
+          console.log('✅ Legacy image format (Base64) decrypted');
+        }
+      } catch (e) {
+        // Not a valid UTF-8 string, must be binary
+      }
+
+      // Check if we should render as image
+      const isActuallyImage = isBinaryImage(decryptedBuffer) || isLegacyFormat || asset.type?.toLowerCase() === 'photo' || asset.type?.toLowerCase() === 'image' || asset.mimeType?.toLowerCase().startsWith('image/');
+
+      if (isActuallyImage) {
+        setIsDecryptedImage(true);
         if (!isLegacyFormat) {
           const blob = new Blob([decryptedBuffer], { type: asset.mimeType || 'image/jpeg' })
           const objectURL = URL.createObjectURL(blob)
@@ -533,12 +634,14 @@ export function AssetCreationForm() {
           console.log('✅ Binary image format decrypted');
         }
       } else {
-        const decrypted = await crypto.decryptData(
-          asset.encryptedData,
-          reconstructedKey,
-          asset.iv
-        )
-        setDecryptedContent(decrypted)
+        setIsDecryptedImage(false);
+        // Render as text
+        if (decodedText) {
+          setDecryptedContent(decodedText);
+        } else {
+          // If not UTF-8 text and not recognized image, fall back to showing info or hex view
+          setDecryptedContent(`[Binary Data: ${formatFileSize(asset.size || 0)}]`);
+        }
       }
       console.log('✅ Data decrypted')
     } catch (error) {
@@ -546,6 +649,109 @@ export function AssetCreationForm() {
       setDecryptedContent('Failed to decrypt: ' + (error as Error).message)
     } finally {
       setIsDecrypting(false)
+    }
+  }
+
+  const handleSaveViewModalSharing = async () => {
+    if (!viewingAsset) return
+    try {
+      // Persist both beneficiaries array and assignedBeneficiaryId locally
+      const selectedBens = assignedBeneficiaryId ? [assignedBeneficiaryId] : []
+      await storage.updateAsset(viewingAsset.id, {
+        beneficiaries: selectedBens,
+        assignedBeneficiaryId: assignedBeneficiaryId || null
+      })
+
+      // Persist single-nominee inheritance assignment to backend
+      const token = localStorage.getItem('dwp_token')
+      try {
+        await fetch(`${API_URL}/api/assets/${viewingAsset.id}/assign-nominee`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ assignedBeneficiaryId: assignedBeneficiaryId || null })
+        })
+      } catch (apiErr) {
+        console.warn('⚠️ Could not sync nominee assignment to backend:', apiErr)
+      }
+
+      // 🕰️ Sync Time Capsule Schedule
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
+
+      // Update local storage first
+      try {
+        let localCapsules: any[] = [];
+        const stored = localStorage.getItem('dwp_local_time_capsules');
+        if (stored) {
+          localCapsules = JSON.parse(stored);
+        }
+        // Remove existing schedules for this asset
+        localCapsules = localCapsules.filter((tc: any) => tc.assetId !== viewingAsset.id);
+        
+        if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
+          localCapsules.push({
+            id: `local-${Date.now()}`,
+            assetId: viewingAsset.id,
+            beneficiaryId: assignedBeneficiaryId,
+            scheduledDate: scheduledDate,
+            customMessage: customMessage,
+            isDelivered: false,
+            createdAt: new Date().toISOString()
+          });
+        }
+        localStorage.setItem('dwp_local_time_capsules', JSON.stringify(localCapsules));
+        console.log('✅ Time Capsule updated in local storage');
+      } catch (localErr) {
+        console.warn('⚠️ Failed to save time capsule locally:', localErr);
+      }
+
+      if (!isDemo && token) {
+        try {
+          // Delete existing schedules for this asset
+          await fetch(`${API_URL}/api/time-capsules/asset/${viewingAsset.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+
+          // Save new schedule if toggled and valid nominee & date selected
+          if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
+            await fetch(`${API_URL}/api/time-capsules`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                assetId: viewingAsset.id,
+                beneficiaryId: assignedBeneficiaryId,
+                scheduledDate: scheduledDate,
+                customMessage: customMessage
+              })
+            })
+          }
+          console.log('✅ Time Capsule synced to backend');
+        } catch (apiErr) {
+          console.warn('⚠️ Could not sync time capsule to backend:', apiErr)
+        }
+      }
+
+      toast.success('Delivery Settings Updated', {
+        description: isTimeCapsule 
+          ? 'Nominee assigned and Time Capsule scheduled successfully.' 
+          : 'Delivery settings updated successfully.'
+      })
+      
+      // Update local asset list and time capsule state
+      loadAssets()
+    } catch (error) {
+      console.error('Failed to update asset delivery settings:', error)
+      toast.error('Update Failed', {
+        description: (error as Error).message
+      })
     }
   }
 
@@ -697,9 +903,8 @@ export function AssetCreationForm() {
 
       // Persist single-nominee inheritance assignment to backend
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       try {
-        await fetch(`${apiEndpoint}/api/assets/${shareAssetTarget.id}/assign-nominee`, {
+        await fetch(`${API_URL}/api/assets/${shareAssetTarget.id}/assign-nominee`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -744,7 +949,7 @@ export function AssetCreationForm() {
       if (!isDemo && token) {
         try {
           // Delete existing schedules for this asset
-          await fetch(`${apiEndpoint}/api/time-capsules/asset/${shareAssetTarget.id}`, {
+          await fetch(`${API_URL}/api/time-capsules/asset/${shareAssetTarget.id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`
@@ -753,7 +958,7 @@ export function AssetCreationForm() {
 
           // Save new schedule if toggled and valid nominee & date selected
           if (isTimeCapsule && scheduledDate && assignedBeneficiaryId) {
-            await fetch(`${apiEndpoint}/api/time-capsules`, {
+            await fetch(`${API_URL}/api/time-capsules`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1791,56 +1996,68 @@ export function AssetCreationForm() {
 
                   {/* Time Capsule Toggle for Generic Upload */}
                   <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-4">
-                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                          <span className="text-lg">🕰️</span>
-                          Schedule Delivery (Time Capsule)
-                        </h4>
-                        <p className="text-[10px] text-slate-600 dark:text-slate-500 uppercase tracking-widest font-bold mt-1">
-                          Deliver this on a specific date regardless of your heartbeat
-                        </p>
-                      </div>
-                      <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                        <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 24 : 0 }} />
-                      </div>
-                    </div>
+                    {selectedBeneficiaries.length > 0 ? (
+                      <>
+                        <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                              <span className="text-lg">🕰️</span>
+                              Schedule Delivery (Time Capsule)
+                            </h4>
+                            <p className="text-[10px] text-slate-600 dark:text-slate-500 uppercase tracking-widest font-bold mt-1">
+                              Deliver this on a specific date regardless of your heartbeat
+                            </p>
+                          </div>
+                          <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                            <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 24 : 0 }} />
+                          </div>
+                        </div>
 
-                    <AnimatePresence>
-                      {isTimeCapsule && (
-                        <motion.div
-                           initial={{ opacity: 0, height: 0 }}
-                           animate={{ opacity: 1, height: 'auto' }}
-                           exit={{ opacity: 0, height: 0 }}
-                           className="space-y-4 overflow-hidden pt-2"
-                        >
-                          <div className="space-y-2">
-                            <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">
-                              Delivery Date <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="date"
-                              value={scheduledDate}
-                              onChange={(e) => setScheduledDate(e.target.value)}
-                              min={new Date().toISOString().split('T')[0]}
-                              className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold mb-2">
-                              Personal Message (Optional)
-                            </label>
-                            <textarea
-                              value={customMessage}
-                              onChange={(e) => setCustomMessage(e.target.value)}
-                              placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
-                              rows={3}
-                              className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-inner"
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        <AnimatePresence>
+                          {isTimeCapsule && (
+                            <motion.div
+                               initial={{ opacity: 0, height: 0 }}
+                               animate={{ opacity: 1, height: 'auto' }}
+                               exit={{ opacity: 0, height: 0 }}
+                               className="space-y-4 overflow-hidden pt-2"
+                            >
+                              <div className="space-y-2">
+                                <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">
+                                  Delivery Date <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="date"
+                                  value={scheduledDate}
+                                  onChange={(e) => setScheduledDate(e.target.value)}
+                                  min={new Date().toISOString().split('T')[0]}
+                                  className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-inner"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="block text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold mb-2">
+                                  Personal Message (Optional)
+                                </label>
+                                <textarea
+                                  value={customMessage}
+                                  onChange={(e) => setCustomMessage(e.target.value)}
+                                  placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
+                                  rows={3}
+                                  className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-inner"
+                                />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 py-2">
+                        <span className="text-xl">🕰️</span>
+                        <div>
+                          <p className="text-xs font-semibold">Schedule Delivery (Time Capsule)</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">Please select at least one beneficiary above to enable Time Capsule scheduling.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Progress Bar */}
@@ -2284,60 +2501,70 @@ export function AssetCreationForm() {
                     </div>
 
                     {/* Time Capsule Toggle for Existing Asset */}
-                    {assignedBeneficiaryId && (
-                      <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-4 space-y-3 mt-3">
-                        <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                              <span>🕰️</span>
-                              Schedule Delivery (Time Capsule)
-                            </h4>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">
-                              Deliver on a specific date regardless of heartbeat
-                            </p>
+                    <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-4 space-y-3 mt-3">
+                      {assignedBeneficiaryId ? (
+                        <>
+                          <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <span>🕰️</span>
+                                Schedule Delivery (Time Capsule)
+                              </h4>
+                              <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">
+                                Deliver on a specific date regardless of heartbeat
+                              </p>
+                            </div>
+                            <div className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                              <motion.div layout className="w-3.5 h-3.5 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 16 : 0 }} />
+                            </div>
                           </div>
-                          <div className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                            <motion.div layout className="w-3.5 h-3.5 rounded-full bg-white shadow-sm" style={{ x: isTimeCapsule ? 16 : 0 }} />
+
+                          <AnimatePresence>
+                            {isTimeCapsule && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="space-y-3 overflow-hidden pt-1"
+                              >
+                                <div className="space-y-1">
+                                  <label className="block text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">
+                                    Delivery Date <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white outline-none"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="block text-[9px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold">
+                                    Personal Message (Optional)
+                                  </label>
+                                  <textarea
+                                    value={customMessage}
+                                    onChange={(e) => setCustomMessage(e.target.value)}
+                                    placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
+                                    rows={2}
+                                    className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white outline-none resize-none"
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 py-1">
+                          <span className="text-lg">🕰️</span>
+                          <div>
+                            <p className="text-xs font-semibold">Schedule Delivery (Time Capsule)</p>
+                            <p className="text-[9px] text-slate-400 mt-0.5">Please select a nominee above to enable Time Capsule scheduling.</p>
                           </div>
                         </div>
-
-                        <AnimatePresence>
-                          {isTimeCapsule && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="space-y-3 overflow-hidden pt-1"
-                            >
-                              <div className="space-y-1">
-                                <label className="block text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">
-                                  Delivery Date <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                  type="date"
-                                  value={scheduledDate}
-                                  onChange={(e) => setScheduledDate(e.target.value)}
-                                  min={new Date().toISOString().split('T')[0]}
-                                  className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white outline-none"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="block text-[9px] uppercase tracking-widest text-slate-600 dark:text-slate-400 font-bold">
-                                  Personal Message (Optional)
-                                </label>
-                                <textarea
-                                  value={customMessage}
-                                  onChange={(e) => setCustomMessage(e.target.value)}
-                                  placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
-                                  rows={2}
-                                  className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white outline-none resize-none"
-                                />
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     {/* Info note */}
                     {assignedBeneficiaryId && (
@@ -2518,7 +2745,7 @@ export function AssetCreationForm() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setIsViewModalOpen(false)}
           >
             <motion.div
@@ -2526,17 +2753,20 @@ export function AssetCreationForm() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+              className="bg-slate-900 border border-white/10 rounded-3xl shadow-2xl shadow-blue-500/10 max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col relative"
             >
+              {/* Header Gradient */}
+              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-blue-600/10 to-purple-600/10 pointer-events-none" />
+
               {/* Header */}
-              <div className="bg-slate-50 dark:bg-gradient-to-r dark:from-blue-600/10 dark:to-purple-600/10 border-b border-slate-200 dark:border-white/10 p-6">
+              <div className="relative border-b border-white/10 p-6 z-10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <Eye className="w-6 h-6 text-blue-400" />
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                      <Eye className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">{viewingAsset.name}</h2>
+                      <h2 className="text-xl font-bold text-white tracking-tight">{viewingAsset.name}</h2>
                       <p className="text-xs text-slate-400 mt-1">
                         {new Date(viewingAsset.createdAt).toLocaleString()} • {formatFileSize(viewingAsset.size)}
                       </p>
@@ -2544,7 +2774,7 @@ export function AssetCreationForm() {
                   </div>
                   <button
                     onClick={() => setIsViewModalOpen(false)}
-                    className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg"
+                    className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -2552,11 +2782,11 @@ export function AssetCreationForm() {
               </div>
 
               {/* Content */}
-              <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="relative p-6 overflow-y-auto flex-1 custom-scrollbar z-10">
                 {isDecrypting ? (
-                  <div className="flex flex-col items-center justify-center py-12">
+                  <div className="flex flex-col items-center justify-center py-16">
                     <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                    <p className="text-slate-400 text-sm">Decrypting data...</p>
+                    <p className="text-slate-400 text-sm font-medium animate-pulse">Decrypting secure files...</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -2568,7 +2798,7 @@ export function AssetCreationForm() {
                           {viewingAsset.beneficiaries.map((benId, idx) => {
                             const ben = beneficiaries.find((b: any) => b.id === benId)
                             return (
-                              <span key={idx} className="text-xs bg-blue-500/10 text-blue-300 px-3 py-1 rounded-full">
+                              <span key={idx} className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-1 rounded-full">
                                 {ben?.name || `Beneficiary ${idx + 1}`}
                               </span>
                             )
@@ -2622,7 +2852,7 @@ export function AssetCreationForm() {
                     })()}
 
                     {/* Decrypted Content */}
-                    <div className="bg-slate-50 dark:bg-[#111827]/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl p-5">
+                    <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5">
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-xs uppercase tracking-widest text-slate-400 font-bold flex items-center gap-2">
                           <Lock className={`w-3.5 h-3.5 ${decryptedContent?.includes('Failed') ? 'text-red-400' : 'text-green-400'}`} />
@@ -2630,23 +2860,23 @@ export function AssetCreationForm() {
                         </p>
                         
                         {/* Checkerboard toggle if it's an image */}
-                        {!decryptedContent?.includes('Failed') && (viewingAsset.type?.toLowerCase() === 'photo' || viewingAsset.mimeType?.toLowerCase().startsWith('image/')) && (
-                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
+                        {!decryptedContent?.includes('Failed') && isDecryptedImage && (
+                          <div className="flex items-center gap-1 bg-slate-800 border border-white/10 rounded-lg p-0.5">
                             <button
                               onClick={() => setPreviewBg('checkered')}
-                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'checkered' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'checkered' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                             >
                               Grid
                             </button>
                             <button
                               onClick={() => setPreviewBg('dark')}
-                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'dark' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'dark' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                             >
                               Dark
                             </button>
                             <button
                               onClick={() => setPreviewBg('light')}
-                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'light' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+                              className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold rounded-md transition-all ${previewBg === 'light' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                             >
                               Light
                             </button>
@@ -2654,20 +2884,23 @@ export function AssetCreationForm() {
                         )}
                       </div>
 
-                      {decryptedContent?.includes('Key distribution not found') ? (
-                        <div className="py-8 px-4 text-center">
-                          <Shield className="w-12 h-12 text-slate-600 mx-auto mb-4 opacity-50" />
-                          <p className="text-slate-400 text-sm leading-relaxed mb-4">
-                            Encryption key for this asset is not found in local storage or cloud backup.
+                      {decryptedContent?.includes('Failed') || decryptedContent?.includes('Key distribution not found') ? (
+                        <div className="py-8 px-4 text-center bg-red-950/20 border border-red-500/20 rounded-xl">
+                          <Shield className="w-12 h-12 text-red-400 mx-auto mb-4 opacity-75 animate-pulse" />
+                          <h4 className="text-sm font-bold text-red-200 mb-2">Security Decryption Failed</h4>
+                          <p className="text-slate-400 text-xs leading-relaxed mb-4 max-w-md mx-auto">
+                            {decryptedContent?.includes('Key distribution not found') 
+                              ? 'The Shamir keys required to reconstruct the decryption key are not present on this device. Wait for sync or re-upload.'
+                              : `Cryptographic keys do not match this payload. (${decryptedContent})`}
                           </p>
                           <div className="inline-block p-1 rounded-lg bg-yellow-400/10 border border-yellow-400/20">
-                            <p className="text-[10px] font-bold text-yellow-400 px-3 uppercase">Recommendation: Delete and re-upload this asset</p>
+                            <p className="text-[10px] font-bold text-yellow-400 px-3 uppercase tracking-wider">Recommendation: verify your connected wallet or re-upload</p>
                           </div>
                         </div>
-                      ) : (viewingAsset.type?.toLowerCase() === 'photo' || viewingAsset.mimeType?.toLowerCase().startsWith('image/')) && !decryptedContent?.includes('Failed') ? (
-                        <div className={`flex justify-center rounded-xl p-4 overflow-hidden min-h-[300px] items-center border border-dashed border-slate-200 dark:border-slate-800 transition-all ${
+                      ) : isDecryptedImage && !decryptedContent?.includes('Failed') ? (
+                        <div className={`flex justify-center rounded-xl p-4 overflow-hidden min-h-[300px] items-center border border-dashed border-white/10 transition-all ${
                           previewBg === 'checkered'
-                            ? 'bg-[linear-gradient(45deg,#eee_25%,transparent_25%),linear-gradient(-45deg,#eee_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#eee_75%),linear-gradient(-45deg,transparent_75%,#eee_75%)] dark:bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%),linear-gradient(-45deg,#1e293b_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#1e293b_75%),linear-gradient(-45deg,transparent_75%,#1e293b_75%)] bg-[size:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]'
+                            ? 'bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%),linear-gradient(-45deg,#1e293b_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#1e293b_75%),linear-gradient(-45deg,transparent_75%,#1e293b_75%)] bg-[size:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]'
                             : previewBg === 'dark'
                             ? 'bg-slate-950'
                             : 'bg-white'
@@ -2691,19 +2924,103 @@ export function AssetCreationForm() {
                           )}
                         </div>
                       ) : (
-                        <pre className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+                        <pre className="text-sm text-slate-200 whitespace-pre-wrap font-mono overflow-x-auto bg-white/5 p-4 rounded-xl border border-white/5">
                           {decryptedContent}
                         </pre>
                       )}
                     </div>
 
+                    {/* Interactive Delivery Schedule Card */}
+                    <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs uppercase tracking-widest text-amber-400 font-bold flex items-center gap-2">
+                          <span>🕰️</span>
+                          Delivery Settings & Time Capsule
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Nominee Dropdown Selection */}
+                        <div className="space-y-1">
+                          <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                            Nominee Assignment
+                          </label>
+                          <select
+                            value={assignedBeneficiaryId}
+                            onChange={(e) => setAssignedBeneficiaryId(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          >
+                            <option value="">None (No Nominee Assigned)</option>
+                            {beneficiaries.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name} ({b.email})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Schedule Toggle */}
+                        {assignedBeneficiaryId && (
+                          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 space-y-3">
+                            <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsTimeCapsule(!isTimeCapsule)}>
+                              <div>
+                                <p className="text-xs font-bold text-slate-200">Schedule Delivery (Time Capsule)</p>
+                                <p className="text-[9px] text-slate-400">Deliver on a specific date regardless of heartbeat</p>
+                              </div>
+                              <div className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 ${isTimeCapsule ? 'bg-blue-500' : 'bg-slate-700'}`}>
+                                <div className="w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform" style={{ transform: isTimeCapsule ? 'translateX(16px)' : 'translateX(0)' }} />
+                              </div>
+                            </div>
+
+                            {isTimeCapsule && (
+                              <div className="space-y-3 pt-1">
+                                <div className="space-y-1">
+                                  <label className="block text-[9px] uppercase tracking-widest text-slate-400 font-bold">
+                                    Delivery Date <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="block text-[9px] uppercase tracking-widest text-slate-400 font-bold">
+                                    Personal Message (Optional)
+                                  </label>
+                                  <textarea
+                                    value={customMessage}
+                                    onChange={(e) => setCustomMessage(e.target.value)}
+                                    placeholder="e.g. Happy 18th Birthday! Here are your crypto assets."
+                                    rows={2}
+                                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none resize-none"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Save Button */}
+                        <button
+                          type="button"
+                          onClick={handleSaveViewModalSharing}
+                          className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-500/20 transition-all"
+                        >
+                          Save Delivery Settings
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Metadata */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-4 group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
                         <p className="text-xs text-slate-500 mb-1">Type</p>
-                        <p className="text-sm text-slate-800 dark:text-white font-medium uppercase tracking-tighter">{viewingAsset.type.replace('_', ' ')}</p>
+                        <p className="text-sm text-white font-medium uppercase tracking-tighter">{viewingAsset.type.replace('_', ' ')}</p>
                       </div>
-                      <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-4 group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
                         <p className="text-xs text-slate-500 mb-1">IPFS CID</p>
                         <p className="text-[10px] text-blue-400 font-mono truncate">{viewingAsset.ipfsHash || 'Qm...fallback (Cloud Copy Active)'}</p>
                       </div>
@@ -2713,10 +3030,10 @@ export function AssetCreationForm() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-slate-200 dark:border-white/10 p-6 bg-slate-50 dark:bg-black/20">
+              <div className="relative border-t border-white/10 p-6 bg-slate-950/20 z-10">
                 <button
                   onClick={() => setIsViewModalOpen(false)}
-                  className="w-full px-6 py-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white rounded-xl transition-all font-medium"
+                  className="w-full px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all font-semibold border border-white/10"
                 >
                   Close
                 </button>

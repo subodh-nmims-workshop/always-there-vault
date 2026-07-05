@@ -83,10 +83,16 @@ class WebCryptoService {
       const cryptoKey = await this.getCryptoKey(encryptionKeyHex);
 
       const iv = crypto.getRandomValues(new Uint8Array(12));
+      
+      // Ensure we only encrypt the actual bytes in the view
+      const bufferToEncrypt = data.byteOffset === 0 && data.byteLength === data.buffer.byteLength
+        ? data.buffer
+        : data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+
       const encryptedBuffer = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv },
         cryptoKey,
-        data.buffer as ArrayBuffer
+        bufferToEncrypt as ArrayBuffer
       );
 
       const encryptedDataHex = this.uint8ArrayToHex(encryptedBuffer);
@@ -165,9 +171,17 @@ class WebCryptoService {
       const keyId = await this.generateHash(keyHex).then(h => h.substring(0, 16));
       const shares: ShamirShare[] = [];
 
+      // Ensure Buffer is globally defined before importing shamirs-secret-sharing
+      const { Buffer } = await import('buffer');
+      if (typeof globalThis !== 'undefined' && !(globalThis as any).Buffer) {
+        (globalThis as any).Buffer = Buffer;
+      }
+      if (typeof window !== 'undefined' && !(window as any).Buffer) {
+        (window as any).Buffer = Buffer;
+      }
+
       // Use shamirs-secret-sharing (fully supported in browser & node)
       const sss = await import('shamirs-secret-sharing');
-      const { Buffer } = await import('buffer');
       
       const keyBuffer = Buffer.from(keyHex, 'hex');
       const sssShares = sss.split(keyBuffer, {
@@ -250,8 +264,16 @@ class WebCryptoService {
     }
 
     try {
-      const sss = await import('shamirs-secret-sharing');
+      // Ensure Buffer is globally defined before importing shamirs-secret-sharing
       const { Buffer } = await import('buffer');
+      if (typeof globalThis !== 'undefined' && !(globalThis as any).Buffer) {
+        (globalThis as any).Buffer = Buffer;
+      }
+      if (typeof window !== 'undefined' && !(window as any).Buffer) {
+        (window as any).Buffer = Buffer;
+      }
+
+      const sss = await import('shamirs-secret-sharing');
       
       const shareBuffers = shares.map(s => Buffer.from(s.shareData, 'hex'));
       const recovered = sss.combine(shareBuffers);

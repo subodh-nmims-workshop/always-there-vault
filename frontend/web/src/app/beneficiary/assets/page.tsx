@@ -51,8 +51,18 @@ function BeneficiaryAssetsContent() {
     try {
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       
+      const keyId = asset.encryptionKeyId || asset.keyId
+      const fileIv = asset.fileIv || asset.iv
+      
+      if (!keyId) {
+        throw new Error('Decryption key ID is missing.')
+      }
+      if (!fileIv) {
+        throw new Error('Initialization Vector (IV) is missing.')
+      }
+
       // 1. Fetch Key shares from public endpoint
-      const keyRes = await fetch(`${apiEndpoint}/api/claim-assets/keys/${asset.encryptionKeyId}?claimToken=${claimToken}`)
+      const keyRes = await fetch(`${apiEndpoint}/api/claim-assets/keys/${keyId}?claimToken=${claimToken}`)
       if (!keyRes.ok) {
         throw new Error('Failed to retrieve decryption keys from backend.')
       }
@@ -69,7 +79,7 @@ function BeneficiaryAssetsContent() {
       // 3. Decrypt
       if (asset.encryptedData) {
         // Small note or secret stored directly in DB
-        const decrypted = await crypto.decryptData(asset.encryptedData, reconstructedKey, asset.fileIv)
+        const decrypted = await crypto.decryptData(asset.encryptedData, reconstructedKey, fileIv)
         
         // Trigger a download of a text file
         const blob = new Blob([decrypted], { type: 'text/plain;charset=utf-8' })
@@ -99,7 +109,7 @@ function BeneficiaryAssetsContent() {
         const encryptedHex = await fileContentRes.text()
 
         // Decrypt binary content
-        const decryptedBuffer = await crypto.decryptBinary(encryptedHex, reconstructedKey, asset.fileIv)
+        const decryptedBuffer = await crypto.decryptBinary(encryptedHex, reconstructedKey, fileIv)
 
         // Trigger browser download
         const blob = new Blob([decryptedBuffer], { type: asset.mimeType || 'application/octet-stream' })

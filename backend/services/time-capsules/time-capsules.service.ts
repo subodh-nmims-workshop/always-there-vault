@@ -12,6 +12,36 @@ export class TimeCapsulesService {
   ) {}
 
   async createTimeCapsule(userId: string, data: { beneficiaryId: string, assetId: string, customMessage: string, scheduledDate: string }) {
+    // 1. Verify that the asset exists and belongs to the user
+    const asset = await this.db.select()
+      .from(schema.files)
+      .where(
+        and(
+          eq(schema.files.id, data.assetId),
+          eq(schema.files.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (asset.length === 0) {
+      throw new NotFoundException('Asset not found or access denied');
+    }
+
+    // 2. Verify that the beneficiary exists and belongs to the user
+    const beneficiary = await this.db.select()
+      .from(schema.beneficiaries)
+      .where(
+        and(
+          eq(schema.beneficiaries.id, data.beneficiaryId),
+          eq(schema.beneficiaries.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (beneficiary.length === 0) {
+      throw new NotFoundException('Beneficiary not found or access denied');
+    }
+
     const newCapsule = await this.db.insert(schema.timeCapsules).values({
       userId,
       beneficiaryId: data.beneficiaryId,

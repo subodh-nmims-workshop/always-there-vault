@@ -96,14 +96,24 @@ export class BlockchainService {
   }
 
   async isAlwaysThereTriggered(walletAddress: string): Promise<boolean> {
-    if (!this.provider) return false;
+    const isDev = this.configService.get<string>('NODE_ENV') === 'development';
+    
+    if (!this.provider) {
+      return isDev;
+    }
 
     try {
-        const abi = ["function wills(address owner) public view returns (uint256, uint256, uint256, bool, bool)"];
+        const abi = ["function users(address owner) public view returns (uint256, uint256, uint256, uint256, bool, bool)"];
         const contract = new ethers.Contract(this.contractAddress, abi, this.provider);
-        const will = await contract.wills(walletAddress);
-        return will[2]; // isTriggered is the 3rd element (index 2)
+        const userConfig = await contract.users(walletAddress);
+        const triggerTime = userConfig[3];
+        return Number(triggerTime) > 0;
     } catch (error) {
+        console.warn(`⚠️ Blockchain trigger check failed: ${error.message}`);
+        if (isDev) {
+            console.log('Bypassing blockchain trigger check in development mode.');
+            return true;
+        }
         return false;
     }
   }

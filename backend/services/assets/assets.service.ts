@@ -70,7 +70,7 @@ export class AssetsService {
       const isNominee = await this.db.query.beneficiaries.findFirst({
         where: and(
           eq(beneficiaries.userId, owner.id),
-          eq(beneficiaries.walletAddress, walletAddress)
+          eq(sql`lower(${beneficiaries.walletAddress})`, walletAddress.toLowerCase())
         )
       });
 
@@ -201,7 +201,7 @@ export class AssetsService {
           const isNominee = await this.db.query.beneficiaries.findFirst({
             where: and(
               eq(beneficiaries.userId, owner.id),
-              eq(beneficiaries.walletAddress, walletAddress)
+              eq(sql`lower(${beneficiaries.walletAddress})`, walletAddress.toLowerCase())
             )
           });
 
@@ -348,7 +348,7 @@ export class AssetsService {
     const isNominee = await this.db.query.beneficiaries.findFirst({
         where: and(
             eq(beneficiaries.userId, owner.id),
-            eq(beneficiaries.walletAddress, requesterWallet)
+            eq(sql`lower(${beneficiaries.walletAddress})`, requesterWallet.toLowerCase())
         )
     });
 
