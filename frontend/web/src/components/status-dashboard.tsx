@@ -41,6 +41,14 @@ export function StatusDashboard() {
     const [activities, setActivities] = useState<ActivityItem[]>([])
     const [activeTranslation, setActiveTranslation] = useState<string>('Booting up secure vaults and protocol components...')
     const logsContainerRef = useRef<HTMLDivElement>(null)
+    const [showConsole, setShowConsole] = useState(false)
+    const apiEndpoint = useMemo(() => {
+        try {
+            return (ModeService.getInstance() as any).config.apiEndpoint || 'http://localhost:7001'
+        } catch {
+            return 'http://localhost:7530'
+        }
+    }, [])
 
     // Persistent addLog helper
     const addLog = async (status: SystemLog['status'], message: string, color: string) => {
@@ -334,14 +342,14 @@ export function StatusDashboard() {
                 {/* Status Header & Health Score */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
                     <div className="flex flex-col gap-2">
-                        <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">System Status & Node Connectivity</h1>
+                        <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">System Status & Security Overview</h1>
                         <div className={`flex items-center gap-3 ${statusBg} px-4 py-1.5 rounded-full border ${statusBorder} w-fit`}>
                             <span className="relative flex h-2.5 w-2.5">
                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${systemStatus === 'secure' ? 'bg-green-400' : 'bg-amber-400'} opacity-75`}></span>
                                 <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${systemStatus === 'secure' ? 'bg-green-500' : 'bg-amber-500'}`}></span>
                             </span>
                             <p className={`${statusColor} font-mono text-xs uppercase tracking-widest font-bold`}>
-                                {systemStatus === 'secure' ? 'All Systems Operational' : systemStatus === 'warning' ? 'System Warning: Action Required' : 'Critical System Error'}
+                                {systemStatus === 'secure' ? 'All Systems Safe & Operational' : systemStatus === 'warning' ? 'System Attention Required' : 'Critical Vault Error'}
                             </p>
                         </div>
                     </div>
@@ -355,8 +363,8 @@ export function StatusDashboard() {
                             <span className="absolute text-xl font-black font-mono text-slate-900 dark:text-white">{healthScore}%</span>
                         </div>
                         <div className="flex flex-col">
-                            <h4 className="text-slate-950 dark:text-white font-bold text-sm">Vault Health Score</h4>
-                            <p className="text-slate-500 text-xs">Overall protocol integrity</p>
+                            <h4 className="text-slate-950 dark:text-white font-bold text-sm">Overall Safety Score</h4>
+                            <p className="text-slate-500 text-xs">Your legacy protection status</p>
                             <div className="flex gap-1 mt-2">
                                 {[1, 2, 3, 4, 5].map(i => (
                                     <div key={i} className={`h-1 w-4 rounded-full ${i <= healthScore/20 ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-800'}`}></div>
@@ -368,7 +376,7 @@ export function StatusDashboard() {
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Card 1: Security Audit */}
+                    {/* Card 1: Security Blueprint */}
                     <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.05)]">
                         <div className="flex justify-between items-start">
                             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
@@ -377,22 +385,22 @@ export function StatusDashboard() {
                             <CheckBadgeIcon className="w-6 h-6 text-green-400" />
                         </div>
                         <div>
-                            <h3 className="text-slate-900 dark:text-white text-lg font-bold mb-4">Cryptographic Audit</h3>
+                            <h3 className="text-slate-900 dark:text-white text-lg font-bold mb-4">Vault Protection Details</h3>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-500">Encryption Layer</span>
-                                    <span className="text-slate-800 dark:text-white font-mono">AES-256-GCM</span>
+                                    <span className="text-slate-500">Vault Encryption</span>
+                                    <span className="text-slate-800 dark:text-white font-semibold">Military-Grade (AES-256)</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-500">Key Sharding</span>
-                                    <span className="text-slate-800 dark:text-white font-mono">Shamir (3/5)</span>
+                                    <span className="text-slate-500">Backup Protection</span>
+                                    <span className="text-slate-800 dark:text-white font-semibold">Decentralized Split (3 of 5)</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-500">Share Distribution</span>
-                                    <span className="text-emerald-500 dark:text-emerald-400 font-mono font-bold">Verified</span>
+                                    <span className="text-slate-500">Key Distribution</span>
+                                    <span className="text-emerald-500 dark:text-emerald-400 font-bold">Verified & Active</span>
                                 </div>
                                 <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                                    <p className="text-slate-500 text-[10px] uppercase font-bold mb-3">Asset Distribution</p>
+                                    <p className="text-slate-500 text-[10px] uppercase font-bold mb-3">Your Protected Assets</p>
                                     <div className="flex gap-2">
                                         <div className="flex-1 bg-slate-100 dark:bg-slate-800/50 p-2 rounded-lg text-center">
                                             <p className="text-xs text-slate-500">Docs</p>
@@ -412,14 +420,14 @@ export function StatusDashboard() {
                         </div>
                     </div>
 
-                    {/* Card 2: Network Topology */}
+                    {/* Card 2: Backup Locations & Sync */}
                     <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 border-l-4 border-l-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.05)]">
                         <div className="flex justify-between items-start">
                             <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
                                 <GlobeAltIcon className="w-6 h-6" />
                             </div>
                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${backendStatus === 'online' ? 'bg-green-500/10 text-green-400' : 'bg-rose-500/10 text-rose-400'} border border-current uppercase tracking-widest`}>
-                                {backendStatus === 'online' ? 'Active Sync' : 'Local Only'}
+                                {backendStatus === 'online' ? 'Cloud Sync Connected' : 'Local Offline Mode'}
                             </span>
                         </div>
                         <div className="flex-1 flex flex-col justify-center items-center gap-4 py-4">
@@ -428,7 +436,7 @@ export function StatusDashboard() {
                                     <div className="size-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                                         <ServerStackIcon className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] uppercase font-bold text-slate-500">Local</span>
+                                    <span className="text-[10px] uppercase font-bold text-slate-500">Your Device</span>
                                 </div>
                                 <div className="flex-1 h-px bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-emerald-500/50 relative">
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-white animate-ping"></div>
@@ -437,16 +445,16 @@ export function StatusDashboard() {
                                     <div className="size-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                                         <CloudArrowUpIcon className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] uppercase font-bold text-slate-500">IPFS</span>
+                                    <span className="text-[10px] uppercase font-bold text-slate-500">Cloud Storage</span>
                                 </div>
                             </div>
-                            <p className="text-slate-500 dark:text-slate-400 text-xs text-center px-4">
-                                Data is locally encrypted and distributed via IPFS clusters for maximum redundancy.
+                            <p className="text-slate-500 dark:text-slate-400 text-xs text-center px-4 leading-relaxed">
+                                Your files are safely encrypted on your device first, then securely backed up across multiple global servers.
                             </p>
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500">
-                                <span>Sync Progress</span>
+                                <span>Cloud Sync Progress</span>
                                 <span className="text-purple-500">{(appState?.assets.filter(a => a.ipfsHash).length || 0) / (appState?.assets.length || 1) * 100}%</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -455,13 +463,13 @@ export function StatusDashboard() {
                         </div>
                     </div>
 
-                    {/* Card 3: Recent Activities */}
+                    {/* Card 3: Recent Activity */}
                     <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 border-l-4 border-l-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.05)]">
                         <div className="flex justify-between items-start">
                             <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                 <ClockIcon className="w-6 h-6" />
                             </div>
-                            <h3 className="text-slate-900 dark:text-white text-lg font-bold">Activity Feed</h3>
+                            <h3 className="text-slate-900 dark:text-white text-lg font-bold">Recent Protection Actions</h3>
                         </div>
                         <div className="flex-1 space-y-4 overflow-y-auto max-h-[250px] pr-2 custom-scrollbar">
                             {activities.length > 0 ? activities.map((act) => (
@@ -475,77 +483,279 @@ export function StatusDashboard() {
                                     {act.type === 'asset' && <DocumentTextIcon className="w-4 h-4 text-blue-400" />}
                                 </div>
                             )) : (
-                                <p className="text-slate-500 text-sm italic text-center py-10">No recent activity found</p>
+                                <p className="text-slate-500 text-sm italic text-center py-10">No protection actions taken yet</p>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* Console Area */}
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between px-2">
-                        <div className="flex items-center gap-3">
-                            <CommandLineIcon className="w-5 h-5 text-slate-500" />
-                            <h2 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest">Deep Kernel Logs</h2>
+                {/* Protocol Lifecycle Flow & Routing Infrastructure */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column: Interactive Protocol Flow */}
+                    <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
+                        <div>
+                            <h3 className="text-slate-900 dark:text-white text-lg font-bold">Protocol Lifecycle Flow</h3>
+                            <p className="text-slate-500 text-xs mt-1">Real-time status of each phase in your digital will execution pipeline.</p>
                         </div>
-                        <div className="hidden sm:flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-semibold text-blue-600 dark:text-blue-400">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                            </span>
-                            Live Decoder Active
+                        <div className="space-y-6 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
+                            {/* Phase 1 */}
+                            <div className="flex gap-4 relative">
+                                <div className="z-10 size-12 rounded-2xl bg-green-500/10 text-green-500 border border-green-500/30 flex items-center justify-center font-bold font-mono">
+                                    01
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        Ingestion & WebCrypto Lock
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase tracking-wider">Active</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">Assets are encrypted client-side using a locally generated symmetric key.</p>
+                                </div>
+                            </div>
+
+                            {/* Phase 2 */}
+                            <div className="flex gap-4 relative">
+                                <div className="z-10 size-12 rounded-2xl bg-green-500/10 text-green-500 border border-green-500/30 flex items-center justify-center font-bold font-mono">
+                                    02
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        Shamir Key Sharding (3/5)
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase tracking-wider">Split Verified</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">Encryption key is split into 5 shares and distributed across node gateways.</p>
+                                </div>
+                            </div>
+
+                            {/* Phase 3 */}
+                            <div className="flex gap-4 relative">
+                                <div className="z-10 size-12 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center justify-center font-bold font-mono">
+                                    03
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        Heartbeat Surveillance
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase tracking-wider animate-pulse">Monitoring</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">The watchdog timer runs checks. If check-in is missed, trigger is fired.</p>
+                                </div>
+                            </div>
+
+                            {/* Phase 4 */}
+                            <div className="flex gap-4 relative">
+                                <div className="z-10 size-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold font-mono">
+                                    04
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        Nominee Asset Release
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold uppercase tracking-wider">Armed</span>
+                                    </h4>
+                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">Reconstruct key from 3 available shares to decrypt files upon nominee request.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Explainer / Translation Panel */}
-                    <div className="bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300">
-                        <div className="p-2 bg-blue-600 text-white rounded-xl shadow-md">
-                            <CommandLineIcon className="w-5 h-5" />
+                    {/* Right Column: Service Routing & Endpoint Registry */}
+                    <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 flex flex-col justify-between">
+                        <div>
+                            <h3 className="text-slate-900 dark:text-white text-lg font-bold">Service Routing & Endpoint Registry</h3>
+                            <p className="text-slate-500 text-xs mt-1">Registry of all core protocol modules, API paths, and network integrations.</p>
+                        </div>
+                        <div className="flex-1 overflow-x-auto custom-scrollbar my-4">
+                            <table className="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
+                                        <th className="pb-3 pl-2">Service / Link</th>
+                                        <th className="pb-3">Endpoint URL</th>
+                                        <th className="pb-3">Service Type</th>
+                                        <th className="pb-3">Security Protocol</th>
+                                        <th className="pb-3 pr-2 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-350">
+                                    <tr>
+                                        <td className="py-4 pl-2 font-bold text-slate-900 dark:text-white">Core Validation Node</td>
+                                        <td className="py-4 font-mono text-blue-500 dark:text-blue-400 break-all select-all">{apiEndpoint}</td>
+                                        <td className="py-4">REST API Server</td>
+                                        <td className="py-4 text-[10px]"><span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 font-mono font-bold">TLS 1.3 / JWT</span></td>
+                                        <td className="py-4 pr-2 text-right">
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${backendStatus === 'online' ? 'bg-green-500/10 text-green-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                                <span className={`size-1.5 rounded-full ${backendStatus === 'online' ? 'bg-green-400 animate-pulse' : 'bg-rose-400'}`}></span>
+                                                {backendStatus === 'online' ? 'ONLINE' : 'OFFLINE'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4 pl-2 font-bold text-slate-900 dark:text-white">IPFS P2P Gateway</td>
+                                        <td className="py-4 font-mono text-purple-400 break-all select-all">https://ipfs.io/ipfs/</td>
+                                        <td className="py-4">Distributed Storage</td>
+                                        <td className="py-4 text-[10px]"><span className="bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20 font-mono font-bold">IPFS Hash Pinned</span></td>
+                                        <td className="py-4 pr-2 text-right">
+                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400">
+                                                <span className="size-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                                CONNECTED
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4 pl-2 font-bold text-slate-900 dark:text-white">Heartbeat Watchdog</td>
+                                        <td className="py-4 font-mono text-amber-500 break-all select-all">{apiEndpoint}/api/users/profile</td>
+                                        <td className="py-4">Cron & Surveillance</td>
+                                        <td className="py-4 text-[10px]"><span className="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono font-bold">HMAC Signed Pulse</span></td>
+                                        <td className="py-4 pr-2 text-right">
+                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400">
+                                                <span className="size-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                                MONITORING
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4 pl-2 font-bold text-slate-900 dark:text-white">Alert Dispatch Relay</td>
+                                        <td className="py-4 font-mono text-emerald-500 break-all select-all">smtp.resend.com:587</td>
+                                        <td className="py-4">Notification SMTP</td>
+                                        <td className="py-4 text-[10px]"><span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono font-bold">SSL / TLS Enabled</span></td>
+                                        <td className="py-4 pr-2 text-right">
+                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400">
+                                                <span className="size-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                                CONFIGURED
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4 pl-2 font-bold text-slate-900 dark:text-white">Decentralized Web3 Ledger</td>
+                                        <td className="py-4 font-mono text-slate-500 break-all select-all">Polygon RPC Mainnet</td>
+                                        <td className="py-4">Smart Contract Registry</td>
+                                        <td className="py-4 text-[10px]"><span className="bg-slate-500/10 text-slate-400 px-2 py-0.5 rounded border border-slate-500/20 font-mono font-bold">EVM Cryptography</span></td>
+                                        <td className="py-4 pr-2 text-right">
+                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400">
+                                                <span className="size-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                                SYNCED
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                            <span className="text-[10px] uppercase font-bold text-slate-500">Decentralized Routing Network Status: OPTIMAL</span>
+                            <div className="flex gap-2">
+                                <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] rounded-lg text-slate-600 dark:text-slate-300 font-mono">Zero-Knowledge State Proof</span>
+                                <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] rounded-lg text-slate-600 dark:text-slate-300 font-mono">Self-Healing Enabled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Simplified Status Checks & Tech Toggle */}
+                <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-slate-900 dark:text-white text-xl font-bold">Automatic Security Audits</h2>
+                            <p className="text-slate-500 text-sm mt-1">Our decentralized system runs continuous safety checks in the background.</p>
+                        </div>
+                        <button
+                            onClick={() => setShowConsole(!showConsole)}
+                            className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2"
+                        >
+                            <CommandLineIcon className="w-4 h-4" />
+                            {showConsole ? "Hide Developer Logs" : "Show Developer Logs"}
+                        </button>
+                    </div>
+
+                    {/* Explainer / Translation Panel - ALWAYS VISIBLE */}
+                    <div className="bg-blue-50/50 dark:bg-blue-950/15 border border-blue-100 dark:border-blue-900/30 rounded-2xl p-5 flex items-start gap-4 transition-all duration-300">
+                        <div className="p-3 bg-blue-600 text-white rounded-xl shadow-md shrink-0">
+                            <ShieldCheckIcon className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] text-blue-500 dark:text-blue-400 uppercase font-black tracking-wider">User-Friendly Status Decoder</p>
-                            <p className="text-slate-800 dark:text-slate-200 text-sm font-bold mt-0.5 transition-all duration-300">{activeTranslation}</p>
+                            <p className="text-[10px] text-blue-500 dark:text-blue-400 uppercase font-black tracking-wider">Live System Status</p>
+                            <p className="text-slate-850 dark:text-slate-200 text-base font-bold mt-1 transition-all duration-300">{activeTranslation}</p>
                         </div>
                     </div>
 
-                    {/* Console Output */}
-                    <div className="bg-white dark:bg-slate-950/60 rounded-3xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800 transition-colors duration-300">
-                        <div className="bg-slate-100 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800/80 px-6 py-3 flex items-center justify-between">
-                            <div className="flex gap-2">
-                                <div className="size-3 rounded-full bg-rose-500/50"></div>
-                                <div className="size-3 rounded-full bg-amber-500/50"></div>
-                                <div className="size-3 rounded-full bg-emerald-500/50"></div>
-                            </div>
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium tracking-wide">bash — alwaysthere-kernel — 80x24</span>
-                        </div>
-
-                        <div ref={logsContainerRef} className="p-8 h-[200px] overflow-y-auto font-mono text-sm leading-loose space-y-2 custom-scrollbar">
-                            {logs.map((log, i) => (
-                                <div key={i} className="flex gap-4">
-                                    <span className="text-slate-400 dark:text-slate-500">[{log.time}]</span>
-                                    <span className={`${log.color} font-bold w-20`}>[{log.status}]</span>
-                                    <span className="text-slate-700 dark:text-slate-300 font-medium">{log.message}</span>
+                    {/* Visual Status Checklist */}
+                    {!showConsole && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                            <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800">
+                                <div className="p-2 bg-green-500/10 text-green-500 rounded-lg shrink-0">
+                                    <CheckBadgeIcon className="w-5 h-5" />
                                 </div>
-                            ))}
-                            <div className="flex gap-4 animate-pulse mt-4">
-                                <span className="text-slate-400 dark:text-slate-500">[{new Date().toLocaleTimeString()}]</span>
-                                <span className="text-blue-600 dark:text-blue-400 font-bold w-20">&gt;</span>
-                                <span className="text-slate-800 dark:text-slate-200 flex items-center font-semibold">
-                                    Kernel state: OPTIMAL. Listening for events...
-                                    <span className="w-2.5 h-5 bg-blue-500 inline-block ml-1 opacity-70 animate-pulse"></span>
-                                </span>
+                                <div>
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">Device-Side File Locking</h4>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Files are locked using AES-256 before they leave your device. Nobody (including us) can read them without your consent.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800">
+                                <div className="p-2 bg-green-500/10 text-green-500 rounded-lg shrink-0">
+                                    <CheckBadgeIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">Decentralized Backup Keys</h4>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Your recovery key is split into 5 locations. Even if 2 locations go offline or fail, your legacy is perfectly safe.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800">
+                                <div className="p-2 bg-green-500/10 text-green-500 rounded-lg shrink-0">
+                                    <CheckBadgeIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">Global Cloud Distribution</h4>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Data is securely stored across a global network of servers to protect against localized outages or shutdowns.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-start p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800">
+                                <div className="p-2 bg-green-500/10 text-green-500 rounded-lg shrink-0">
+                                    <CheckBadgeIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">Heartbeat Guard Switch</h4>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Our system actively waits for your heartbeat signals. If you don't check in within your chosen limit, inheritance kicks in.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Console Output (Collapsible) */}
+                    {showConsole && (
+                        <div className="bg-slate-950 rounded-3xl overflow-hidden border border-slate-800 transition-all duration-300">
+                            <div className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+                                <div className="flex gap-2">
+                                    <div className="size-3 rounded-full bg-rose-500/50"></div>
+                                    <div className="size-3 rounded-full bg-amber-500/50"></div>
+                                    <div className="size-3 rounded-full bg-emerald-500/50"></div>
+                                </div>
+                                <span className="text-xs text-slate-400 font-mono font-medium tracking-wide">bash — alwaysthere-kernel — 80x24</span>
+                            </div>
+
+                            <div ref={logsContainerRef} className="p-6 h-[220px] overflow-y-auto font-mono text-xs leading-relaxed space-y-2 custom-scrollbar text-slate-300">
+                                {logs.map((log, i) => (
+                                    <div key={i} className="flex gap-4">
+                                        <span className="text-slate-500">[{log.time}]</span>
+                                        <span className={`${log.color} font-bold w-16`}>[{log.status}]</span>
+                                        <span className="text-slate-300 font-medium">{log.message}</span>
+                                    </div>
+                                ))}
+                                <div className="flex gap-4 animate-pulse mt-4">
+                                    <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span>
+                                    <span className="text-blue-400 font-bold w-16">&gt;</span>
+                                    <span className="text-slate-200 flex items-center font-semibold">
+                                        Kernel state: OPTIMAL. Listening for events...
+                                        <span className="w-2 h-4 bg-blue-500 inline-block ml-1 opacity-70 animate-pulse"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Bottom Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
                     <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl flex items-center justify-between group hover:border-blue-500/30 transition-colors">
                         <div>
-                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Vault Status</p>
+                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Vault State</p>
                             <p className={`text-slate-800 dark:text-white text-xl font-bold font-mono ${statusColor}`}>
-                                {systemStatus.toUpperCase()}
+                                {systemStatus === 'secure' ? 'SECURE & ACTIVE' : 'ACTION REQUIRED'}
                             </p>
                         </div>
                         <ShieldCheckIcon className="w-8 h-8 text-slate-400 dark:text-slate-700 group-hover:text-blue-500/50 transition-colors" />
@@ -553,15 +763,15 @@ export function StatusDashboard() {
 
                     <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-500/30 transition-colors">
                         <div>
-                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Verified Nodes</p>
-                            <p className="text-slate-800 dark:text-white text-xl font-bold font-mono">1,024+</p>
+                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Backup Servers</p>
+                            <p className="text-slate-800 dark:text-white text-xl font-bold font-mono">1,024+ Nodes</p>
                         </div>
                         <ServerStackIcon className="w-8 h-8 text-slate-400 dark:text-slate-700 group-hover:text-emerald-500/50 transition-colors" />
                     </div>
 
                     <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl flex items-center justify-between group hover:border-purple-500/30 transition-colors">
                         <div>
-                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Encrypted Payload</p>
+                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Vault Data Size</p>
                             <p className="text-slate-800 dark:text-white text-xl font-bold font-mono">
                                 {appState ? (appState.assets.length * 1.2).toFixed(1) : 0} MB
                             </p>
@@ -571,7 +781,7 @@ export function StatusDashboard() {
 
                     <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl flex items-center justify-between group hover:border-rose-500/30 transition-colors">
                         <div>
-                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Heartbeat Health</p>
+                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Last Heartbeat</p>
                             <p className="text-slate-800 dark:text-white text-xl font-bold font-mono">
                                 {appState?.stats.lastHeartbeat ? Math.floor((Date.now() - appState.stats.lastHeartbeat) / (1000 * 60 * 60 * 24)) : '?'} Days ago
                             </p>

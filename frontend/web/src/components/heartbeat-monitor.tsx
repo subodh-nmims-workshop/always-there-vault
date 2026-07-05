@@ -677,18 +677,54 @@ export function HeartbeatMonitor() {
 
   return (
     <div className="space-y-6 w-full max-w-4xl mx-auto font-sans">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes ecg {
+          0% { stroke-dashoffset: 200; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          50% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        @keyframes pulse-ring {
+          0% { transform: scale(0.95); opacity: 0.5; }
+          50% { transform: scale(1.15); opacity: 0; }
+          100% { transform: scale(0.95); opacity: 0; }
+        }
+        .animate-scan-line {
+          animation: scan 1.5s ease-in-out infinite;
+        }
+        .animate-pulse-ring-custom {
+          animation: pulse-ring 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+        }
+      `}} />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="bg-white/80 dark:bg-slate-900/40 rounded-3xl p-8 relative overflow-hidden backdrop-blur-xl border border-slate-200 dark:border-white/5 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/10 blur-[80px] rounded-full pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none"></div>
 
         <div className="flex items-center justify-between mb-8 relative z-10">
-          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-500">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              Live Connection
             </span>
-            Live Connection
-          </span>
+            <div className="hidden sm:block w-24 h-6 overflow-hidden opacity-40">
+              <svg className="w-full h-full text-emerald-500" viewBox="0 0 100 20" fill="none">
+                <path
+                  d="M0,10 L30,10 L33,2 L36,18 L39,10 L45,10 L48,2 L51,18 L54,10 L100,10"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeDasharray="200"
+                  strokeDashoffset="200"
+                  style={{ animation: 'ecg 2s linear infinite' }}
+                />
+              </svg>
+            </div>
+          </div>
           <div className="flex gap-2">
             <button onClick={() => setShowHistory(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 shadow-inner">
               <Activity className="w-4 h-4" />
@@ -703,7 +739,6 @@ export function HeartbeatMonitor() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
           <div className="space-y-4">
-            {/* Status */}
             {/* Status */}
             {(() => {
               const colorMaps: Record<string, { bg: string; border: string; text: string; shadow: string }> = {
@@ -734,8 +769,8 @@ export function HeartbeatMonitor() {
               };
               const styles = colorMaps[heartbeatDisplay.color] || colorMaps.slate;
               return (
-                <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner">
-                  <div className={`w-12 h-12 rounded-xl ${styles.bg} ${styles.shadow} ${styles.border} flex flex-shrink-0 items-center justify-center border`}>
+                <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner hover:border-emerald-500/20 hover:bg-slate-100/30 dark:hover:bg-white/[0.06] transition-all duration-300">
+                  <div className={`w-12 h-12 rounded-xl ${styles.bg} ${styles.shadow} ${styles.border} flex flex-shrink-0 items-center justify-center border transition-all duration-300`}>
                     {heartbeatDisplay.status === 'active' ? <ShieldCheck className={`w-6 h-6 ${styles.text}`} /> : <ShieldAlert className={`w-6 h-6 ${styles.text}`} />}
                   </div>
                   <div className="flex-1">
@@ -747,8 +782,8 @@ export function HeartbeatMonitor() {
             })()}
 
             {/* Interval */}
-            <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex flex-shrink-0 items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-500/20">
+            <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner hover:border-blue-500/20 hover:bg-slate-100/30 dark:hover:bg-white/[0.06] transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex flex-shrink-0 items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-500/20 transition-all duration-300">
                 <Clock className="w-6 h-6 text-blue-400" />
               </div>
               <div className="flex-1">
@@ -758,8 +793,8 @@ export function HeartbeatMonitor() {
             </div>
 
             {/* Last Pulse */}
-            <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex flex-shrink-0 items-center justify-center shadow-lg shadow-purple-500/20 border border-purple-500/20">
+            <div className="bg-slate-50 dark:bg-white/[0.03] p-5 rounded-2xl flex items-center gap-5 border border-slate-200 dark:border-white/5 shadow-inner hover:border-purple-500/20 hover:bg-slate-100/30 dark:hover:bg-white/[0.06] transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex flex-shrink-0 items-center justify-center shadow-lg shadow-purple-500/20 border border-purple-500/20 transition-all duration-300">
                 <Activity className="w-6 h-6 text-purple-400" />
               </div>
               <div className="flex-1">
@@ -778,6 +813,13 @@ export function HeartbeatMonitor() {
 
           <div className="flex flex-col items-center justify-center py-4">
             <div className="relative w-56 h-56 flex items-center justify-center group">
+              {/* Outer Pulse Rings for Active Status */}
+              {heartbeatDisplay.status === 'active' && (
+                <>
+                  <div className="absolute inset-0 rounded-full border-2 border-emerald-500/10 animate-pulse-ring-custom"></div>
+                  <div className="absolute inset-2 rounded-full border border-emerald-500/5 animate-[pulse-ring_3s_infinite_1s]"></div>
+                </>
+              )}
               {(() => {
                 const strokeColorMap: Record<string, string> = {
                   emerald: 'text-emerald-500',
@@ -876,15 +918,18 @@ export function HeartbeatMonitor() {
           className="w-full py-5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-500 to-red-600 hover:from-rose-500 hover:via-red-400 hover:to-rose-500 relative group overflow-hidden shadow-[0_0_30px_rgba(225,29,72,0.3)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border border-rose-400/30"
         >
           <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
-          <div className="relative flex items-center justify-center gap-3 text-white font-bold text-lg tracking-wide">
+          {isRecording && (
+            <div className="absolute inset-x-0 h-1 bg-cyan-400 shadow-[0_0_12px_theme(colors.cyan.400)] animate-scan-line z-20"></div>
+          )}
+          <div className="relative flex items-center justify-center gap-3 text-white font-bold text-lg tracking-wide z-10">
             {isRecording ? (
               <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>
-                <Fingerprint className="w-6 h-6" />
+                <Fingerprint className="w-6 h-6 text-cyan-300" />
               </motion.div>
             ) : (
               <Fingerprint className="w-6 h-6 group-hover:scale-110 transition-transform" />
             )}
-            {isRecording ? 'Generating Proof...' : 'Record Heartbeat Signature'}
+            {isRecording ? 'Scanning Pulse Verification...' : 'Record Heartbeat Signature'}
           </div>
         </button>
       </motion.div>
@@ -893,8 +938,8 @@ export function HeartbeatMonitor() {
       <AnimatePresence>
         {showHistory && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[80vh] overflow-y-auto my-8 md:my-16">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-200 dark:border-slate-800 pb-6 sticky top-0 bg-white dark:bg-slate-900 z-10">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-2xl w-full relative shadow-2xl max-h-[80vh] flex flex-col my-8 md:my-16">
+              <div className="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-800 pb-6 shrink-0">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20">
                     <Activity className="w-6 h-6 text-purple-400" />
@@ -909,15 +954,15 @@ export function HeartbeatMonitor() {
                 </button>
               </div>
 
-              {heartbeats.length === 0 ? (
-                <div className="text-center py-12">
-                  <Activity className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-                  <p className="text-slate-300 font-medium">No heartbeat history yet</p>
-                  <p className="text-sm text-slate-500 mt-2">Record your first heartbeat to see it here</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {heartbeats.map((heartbeat, index) => (
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 min-h-0">
+                {heartbeats.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Activity className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                    <p className="text-slate-300 font-medium">No heartbeat history yet</p>
+                    <p className="text-sm text-slate-500 mt-2">Record your first heartbeat to see it here</p>
+                  </div>
+                ) : (
+                  heartbeats.map((heartbeat, index) => (
                     <motion.div
                       key={heartbeat.id}
                       initial={{ opacity: 0, x: -20 }}
@@ -967,11 +1012,11 @@ export function HeartbeatMonitor() {
                         </div>
                       )}
                     </motion.div>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
 
-              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 shrink-0">
                 <button
                   onClick={() => setShowHistory(false)}
                   className="w-full px-6 py-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-sm"
