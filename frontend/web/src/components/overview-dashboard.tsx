@@ -107,18 +107,18 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                             </div>
                         </div>
 
-                        <div className="flex w-full md:w-auto items-center gap-2 shrink-0 z-10">
+                        <div className="flex flex-col sm:flex-row w-full md:w-auto items-stretch sm:items-center gap-2 shrink-0 z-10">
                             <input 
                                 type="email" 
                                 placeholder="name@example.com" 
                                 value={emailInput}
                                 onChange={(e) => setEmailInput(e.target.value)}
-                                className="bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors w-full md:w-64"
+                                className="bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-colors w-full sm:w-64"
                             />
                             <button 
                                 onClick={handleEnableEmail}
                                 disabled={isSavingEmail}
-                                className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] disabled:opacity-50 whitespace-nowrap"
+                                className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] disabled:opacity-50 whitespace-nowrap text-center"
                             >
                                 {isSavingEmail ? 'Saving...' : 'Enable Alerts'}
                             </button>
@@ -128,27 +128,27 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
 
                 {/* Hero Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex items-center justify-between overflow-hidden relative group shadow-sm">
+                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex items-center justify-between overflow-hidden relative group shadow-sm">
                         <div className="absolute -right-4 -bottom-4 size-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
                         <div>
                             <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Vault Health</p>
-                            <h3 className="text-4xl font-bold tracking-tighter text-slate-900 dark:text-white">{vaultHealth}%</h3>
+                            <h3 className="text-3xl sm:text-4xl font-bold tracking-tighter text-slate-900 dark:text-white">{vaultHealth}%</h3>
                             <p className={`text-xs mt-2 flex items-center gap-1 font-semibold uppercase ${vaultHealth >= 80 ? 'text-green-400' : vaultHealth >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
                                 <ShieldCheckIcon className="w-4 h-4" /> {vaultHealth >= 80 ? 'Optimal' : vaultHealth >= 50 ? 'Warning' : 'Critical'}
                             </p>
                         </div>
-                        <div className="relative size-20">
+                        <div className="relative size-16 sm:size-20">
                             <svg className="size-full -rotate-90" viewBox="0 0 36 36">
                                 <circle className="stroke-slate-100 dark:stroke-slate-800" cx="18" cy="18" fill="none" r="16" strokeWidth="3"></circle>
                                 <circle className="stroke-blue-500" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset={100 - vaultHealth} strokeLinecap="round" strokeWidth="3"></circle>
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center glow-primary">
-                                <ShieldCheckIcon className="text-blue-500 w-8 h-8" />
+                                <ShieldCheckIcon className="text-blue-500 w-6 h-6 sm:w-8 sm:h-8" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
                         <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Encrypted Assets</p>
                         <div className="flex items-end justify-between mt-4">
                             <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{totalAssets}</h3>
@@ -160,7 +160,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
                         <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Beneficiaries</p>
                         <div className="flex items-end justify-between mt-4">
                             <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tighter">{totalBeneficiaries}</h3>
@@ -171,49 +171,49 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
 
                 {/* Protocol Overview & Features */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-3xl border border-blue-250 dark:border-blue-500/20 backdrop-blur-sm relative overflow-hidden shadow-sm">
+                    <div className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-blue-250 dark:border-blue-500/20 backdrop-blur-sm relative overflow-hidden shadow-sm">
                         <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full"></div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                            <ShieldCheckIcon className="w-6 h-6 text-blue-400" /> Protocol Security Posture
+                        <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                            <ShieldCheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" /> Protocol Security Posture
                         </h3>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
                             AlwaysThere uses military-grade AES-256-GCM encryption on your local device before any data is sent. Only you and your designated beneficiaries hold the decryption keys.
                         </p>
-                        <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                             <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-1">Encryption</p>
-                                <p className="text-sm text-green-400 font-bold">AES-256-GCM Active</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-1">Encryption</p>
+                                <p className="text-xs sm:text-sm text-green-400 font-bold">AES-256-GCM Active</p>
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-1">Architecture</p>
-                                <p className="text-sm text-blue-400 font-bold">Zero-Knowledge</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-1">Architecture</p>
+                                <p className="text-xs sm:text-sm text-blue-400 font-bold">Zero-Knowledge</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Recommended Actions</h3>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Complete these steps to fully secure your digital inheritance.</p>
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">Recommended Actions</h3>
+                            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-4">Complete these steps to fully secure your digital inheritance.</p>
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center gap-3">
-                                <div className={`size-6 rounded-full flex items-center justify-center ${totalAssets > 0 ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
+                                <div className={`size-6 rounded-full flex items-center justify-center shrink-0 ${totalAssets > 0 ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                                     {totalAssets > 0 ? '✓' : '1'}
                                 </div>
-                                <span className={`text-sm ${totalAssets > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Encrypt your first asset or secret</span>
+                                <span className={`text-xs sm:text-sm ${totalAssets > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Encrypt your first asset or secret</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className={`size-6 rounded-full flex items-center justify-center ${totalBeneficiaries > 0 ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
+                                <div className={`size-6 rounded-full flex items-center justify-center shrink-0 ${totalBeneficiaries > 0 ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                                     {totalBeneficiaries > 0 ? '✓' : '2'}
                                 </div>
-                                <span className={`text-sm ${totalBeneficiaries > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Add a trusted beneficiary</span>
+                                <span className={`text-xs sm:text-sm ${totalBeneficiaries > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Add a trusted beneficiary</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className={`size-6 rounded-full flex items-center justify-center ${heartbeat?.isActive ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
+                                <div className={`size-6 rounded-full flex items-center justify-center shrink-0 ${heartbeat?.isActive ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                                     {heartbeat?.isActive ? '✓' : '3'}
                                 </div>
-                                <span className={`text-sm ${heartbeat?.isActive ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Initialize the Dead Man's Switch</span>
+                                <span className={`text-xs sm:text-sm ${heartbeat?.isActive ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Initialize the Dead Man's Switch</span>
                             </div>
                         </div>
                     </div>
@@ -223,7 +223,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                     {/* Left Column */}
                     <div className="lg:w-2/3 flex flex-col gap-6">
                         {/* Chart Section */}
-                        <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 relative overflow-hidden shadow-sm">
+                        <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden shadow-sm">
                             {/* CSS for ECG wave animation */}
                             <style>{`
                                 @keyframes ecgPulse {
@@ -235,14 +235,14 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                     animation: ecgPulse 4s linear infinite;
                                 }
                             `}</style>
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                 <div>
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Security & Pulse Center</h2>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Proof of life active monitoring and on-chain verification record</p>
+                                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Security & Pulse Center</h2>
+                                    <p className="text-slate-650 dark:text-slate-400 text-xs sm:text-sm mt-1">Proof of life active monitoring and on-chain verification record</p>
                                 </div>
-                                <div className="text-right">
-                                    <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{heartbeats.length}</span>
-                                    <p className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider mt-1">Total Pings</p>
+                                <div className="text-left sm:text-right shrink-0">
+                                    <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{heartbeats.length}</span>
+                                    <p className="text-slate-650 dark:text-slate-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mt-0.5 sm:mt-1">Total Pings</p>
                                 </div>
                             </div>
 
@@ -259,7 +259,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                             ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[280px]">
                                     {/* Left Side: Live ECG Animation */}
-                                    <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-6 relative overflow-hidden">
+                                    <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
                                         <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-[9px] font-bold text-green-500 uppercase tracking-wider">
                                             <span className="relative flex h-1.5 w-1.5">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -316,7 +316,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                     </div>
 
                                     {/* Right Side: Uptime Grid Matrix */}
-                                    <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-6">
+                                    <div className="flex flex-col justify-between bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 sm:p-6">
                                         <div>
                                             <p className="text-xs text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">Verification History</p>
                                             <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">Audit Matrix</h3>
@@ -450,7 +450,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                         {/* Dead Man's Switch Card */}
                         <div className="relative group rounded-3xl p-1 bg-gradient-to-b from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20">
                             <div className="absolute inset-0 bg-blue-500/5 blur-xl rounded-3xl opacity-50"></div>
-                            <div className="relative bg-white/80 dark:bg-slate-900/80 rounded-[22px] p-8 border border-slate-200 dark:border-slate-800/50 h-full backdrop-blur-xl shadow-sm">
+                            <div className="relative bg-white/80 dark:bg-slate-900/80 rounded-[22px] p-4 sm:p-8 border border-slate-200 dark:border-slate-800/50 h-full backdrop-blur-xl shadow-sm">
                                 <div className="flex items-center justify-between mb-8">
                                     <h2 className="text-lg font-bold text-slate-900 dark:text-white">Dead Man's Switch</h2>
                                     <span className={`${heartbeat?.isActive ? 'bg-green-50/50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20 shadow-sm' : 'bg-red-50/50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20'} border px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center`}>
@@ -462,7 +462,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                 <div className="flex flex-col items-center py-6">
                                     {heartbeat?.nextDeadline ? (
                                         <>
-                                            <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-tighter mb-2">
+                                            <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-tighter mb-2">
                                                 {(() => {
                                                     const now = new Date().getTime()
                                                     const deadline = new Date(heartbeat.nextDeadline).getTime()
@@ -473,12 +473,12 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                                     return `${days}d ${hours}h ${minutes}m`
                                                 })()}
                                             </div>
-                                            <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Until next required heartbeat</p>
+                                            <p className="text-slate-650 dark:text-slate-400 text-xs sm:text-sm font-medium">Until next required heartbeat</p>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="text-3xl font-bold text-slate-400 dark:text-slate-500 tracking-tighter mb-2">No Heartbeat</div>
-                                            <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Sign your first heartbeat</p>
+                                            <div className="text-2xl sm:text-3xl font-bold text-slate-400 dark:text-slate-500 tracking-tighter mb-2">No Heartbeat</div>
+                                            <p className="text-slate-650 dark:text-slate-400 text-xs sm:text-sm font-medium">Sign your first heartbeat</p>
                                         </>
                                     )}
                                 </div>
@@ -502,7 +502,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                         </div>
 
                         {/* Beneficiaries Card */}
-                        <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="bg-white dark:bg-slate-900/40 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">Beneficiaries</h2>
                                 <span className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-500/20">

@@ -12,7 +12,7 @@ import { Portal } from '@/components/portal'
 interface UpgradeModalProps {
   isOpen: boolean
   onClose: () => void
-  onUpgrade: (method: 'PAYPAL' | 'CRYPTO', reference?: string) => void
+  onUpgrade: (method: 'PAYPAL' | 'CRYPTO' | 'STRIPE', reference?: string) => void
   title?: string
   description?: string
 }
@@ -24,7 +24,7 @@ export function UpgradeModal({
   title = "Unlock Premium Security",
   description = "Web3 storage and advanced vault features are reserved for our premium guardians."
 }: UpgradeModalProps) {
-  const [method, setMethod] = useState<'PAYPAL' | 'CRYPTO' | null>(null)
+  const [method, setMethod] = useState<'PAYPAL' | 'CRYPTO' | 'STRIPE' | null>(null)
 
   const handlePayment = () => {
     if (!method) {
@@ -90,28 +90,39 @@ export function UpgradeModal({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                <button
+                    onClick={() => setMethod('STRIPE')}
+                    className={`flex sm:flex-col items-center sm:justify-center gap-3 sm:gap-0 p-4 sm:p-3 rounded-2xl border transition-all ${
+                        method === 'STRIPE' 
+                        ? 'bg-blue-500/10 border-blue-500 shadow-lg shadow-blue-500/10' 
+                        : 'bg-white/5 border-white/10 hover:border-white/20'
+                    }`}
+                >
+                    <CreditCard className={method === 'STRIPE' ? 'text-blue-400' : 'text-slate-400'} size={22} />
+                    <span className={`text-xs sm:text-[10px] font-bold sm:mt-2 ${method === 'STRIPE' ? 'text-white' : 'text-slate-400'}`}>Card (Stripe)</span>
+                </button>
                 <button
                     onClick={() => setMethod('PAYPAL')}
-                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${
+                    className={`flex sm:flex-col items-center sm:justify-center gap-3 sm:gap-0 p-4 sm:p-3 rounded-2xl border transition-all ${
                         method === 'PAYPAL' 
                         ? 'bg-blue-500/10 border-blue-500 shadow-lg shadow-blue-500/10' 
                         : 'bg-white/5 border-white/10 hover:border-white/20'
                     }`}
                 >
-                    <CreditCard className={method === 'PAYPAL' ? 'text-blue-400' : 'text-slate-400'} size={24} />
-                    <span className={`text-xs font-bold mt-2 ${method === 'PAYPAL' ? 'text-white' : 'text-slate-400'}`}>PayPal</span>
+                    <CreditCard className={method === 'PAYPAL' ? 'text-blue-400' : 'text-slate-400'} size={22} />
+                    <span className={`text-xs sm:text-[10px] font-bold sm:mt-2 ${method === 'PAYPAL' ? 'text-white' : 'text-slate-400'}`}>PayPal</span>
                 </button>
                 <button
                     onClick={() => setMethod('CRYPTO')}
-                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${
+                    className={`flex sm:flex-col items-center sm:justify-center gap-3 sm:gap-0 p-4 sm:p-3 rounded-2xl border transition-all ${
                         method === 'CRYPTO' 
                         ? 'bg-purple-500/10 border-purple-500 shadow-lg shadow-purple-500/10' 
                         : 'bg-white/5 border-white/10 hover:border-white/20'
                     }`}
                 >
-                    <Wallet className={method === 'CRYPTO' ? 'text-purple-400' : 'text-slate-400'} size={24} />
-                    <span className={`text-xs font-bold mt-2 ${method === 'CRYPTO' ? 'text-white' : 'text-slate-400'}`}>Crypto (ETH/USDT)</span>
+                    <Wallet className={method === 'CRYPTO' ? 'text-purple-400' : 'text-slate-400'} size={22} />
+                    <span className={`text-xs sm:text-[10px] font-bold sm:mt-2 ${method === 'CRYPTO' ? 'text-white' : 'text-slate-400'}`}>Crypto</span>
                 </button>
               </div>
 
@@ -147,9 +158,10 @@ export function UpgradeModal({
                 ) : (
                   <Button 
                     onClick={handlePayment}
+                    disabled={!method}
                     className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 group transition-all duration-300 transform hover:scale-[1.02]"
                   >
-                    Confirm & Pay $49.99 (Crypto)
+                    {method === 'STRIPE' ? 'Confirm & Pay $49.99 (Stripe)' : 'Confirm & Pay $49.99 (Crypto)'}
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}

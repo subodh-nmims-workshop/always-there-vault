@@ -153,8 +153,16 @@ export class AssetsService {
     const isB2 = data.ipfsHash && (data.ipfsHash.includes('/') || data.ipfsHash.startsWith('local-simulated://'));
     const isIpfs = data.ipfsHash && !isB2;
 
+    const isUuid = (val: string) => {
+      if (!val) return false;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(val);
+    };
+
+    const fileId = (data.id && isUuid(data.id)) ? data.id : (data.assetId && isUuid(data.assetId)) ? data.assetId : undefined;
+
     const [fileRecord] = await this.db.insert(files).values({
-      id: data.id || undefined,
+      id: fileId,
       name: data.name,
       size: data.size || 0,
       mimeType: data.mimeType || 'application/json',

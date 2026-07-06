@@ -221,7 +221,7 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
                         </div>
 
                         {/* Double Columns: Shipping Address vs Billing Address styled columns */}
-                        <div className="grid grid-cols-2 gap-6 mb-4 text-xs px-1 print:gap-4 print:mb-3 print:text-[10px]">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4 text-xs px-1 print:gap-4 print:mb-3 print:text-[10px]">
                             <div>
                                 <h3 className="font-bold text-indigo-600 uppercase tracking-wider mb-2">Vault Registry Node</h3>
                                 <div className="text-slate-600 space-y-1 leading-relaxed">
@@ -296,7 +296,7 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
                                 <span>💳</span> Payment Verification Details
                             </h3>
                             <div className="flex flex-row justify-between items-center gap-4">
-                                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-slate-600 w-full md:w-auto print:gap-x-4 print:gap-y-1">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-slate-600 w-full md:w-auto print:gap-x-4 print:gap-y-1">
                                     <div>
                                         <span className="text-slate-400 font-medium font-semibold">Payment Gateway:</span>
                                     </div>

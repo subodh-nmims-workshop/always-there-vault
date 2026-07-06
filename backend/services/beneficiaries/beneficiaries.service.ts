@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { beneficiaries, type Beneficiary, type NewBeneficiary } from '../../src/db/schema/beneficiaries';
 import { files } from '../../src/db/schema/files';
 import { UsersService } from '../users/users.service';
@@ -17,7 +17,33 @@ export class BeneficiariesService {
 
   async createBeneficiary(createData: any): Promise<Beneficiary> {
     const user = await this.usersService.findUserByWallet(createData.ownerAddress);
-    const lowerWalletAddress = createData.walletAddress ? createData.walletAddress.toLowerCase() : '';
+    const lowerWalletAddress = createData.walletAddress ? createData.walletAddress.toLowerCase().trim() : '';
+    const lowerEmail = createData.email ? createData.email.toLowerCase().trim() : '';
+
+    if (lowerEmail) {
+      const existingEmail = await this.db.query.beneficiaries.findFirst({
+        where: and(
+          eq(beneficiaries.userId, user.id),
+          eq(sql`lower(${beneficiaries.email})`, lowerEmail)
+        )
+      });
+      if (existingEmail) {
+        throw new BadRequestException('A beneficiary with this email address is already added.');
+      }
+    }
+
+    if (lowerWalletAddress) {
+      const existingWallet = await this.db.query.beneficiaries.findFirst({
+        where: and(
+          eq(beneficiaries.userId, user.id),
+          eq(beneficiaries.walletAddress, lowerWalletAddress)
+        )
+      });
+      if (existingWallet) {
+        throw new BadRequestException('A beneficiary with this wallet address is already added.');
+      }
+    }
+
     const [beneficiary] = await this.db.insert(beneficiaries).values({
       userId: user.id,
       walletAddress: lowerWalletAddress,

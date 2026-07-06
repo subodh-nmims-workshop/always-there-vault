@@ -62,6 +62,7 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
   const [loading, setLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [generatedSeed, setGeneratedSeed] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'primary_wallet' | 'recovery_key'>('primary_wallet');
   
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -134,54 +135,107 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
   };
 
   const renderChoice = () => (
-    <View style={styles.content}>
-      <Text style={styles.title}>IDENTITY PROTOCOL</Text>
-      <Text style={styles.subtitle}>Initialize your decentralized identity to access the global inheritance network.</Text>
-      
-      <TouchableOpacity style={styles.choiceCard} onPress={() => setWalletSubMode('create')}>
-        <LinearGradient colors={[COLORS.accent + '20', COLORS.accent + '05']} style={styles.choiceIconBox}>
-          <Plus size={24} color={COLORS.accent} />
-        </LinearGradient>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.choiceTitle}>Generate Identity</Text>
-          <Text style={styles.choiceDesc}>Create new technical inheritance keys</Text>
-        </View>
-        <ChevronRight size={20} color={COLORS.textDim} />
-      </TouchableOpacity>
+    <View style={styles.choiceContainer}>
+      {/* TABS SELECTOR */}
+      <View style={styles.tabHeader}>
+        <TouchableOpacity 
+          style={[styles.tabBtn, activeTab === 'primary_wallet' && styles.tabBtnActive]} 
+          onPress={() => setActiveTab('primary_wallet')}
+        >
+          <Wallet size={16} color={activeTab === 'primary_wallet' ? COLORS.primary : COLORS.textDim} style={{ marginRight: 6 }} />
+          <Text style={[styles.tabBtnText, activeTab === 'primary_wallet' && styles.tabBtnTextActive]}>PRIMARY WALLET</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tabBtn, activeTab === 'recovery_key' && styles.tabBtnActive]} 
+          onPress={() => setActiveTab('recovery_key')}
+        >
+          <Key size={16} color={activeTab === 'recovery_key' ? COLORS.primary : COLORS.textDim} style={{ marginRight: 6 }} />
+          <Text style={[styles.tabBtnText, activeTab === 'recovery_key' && styles.tabBtnTextActive]}>RECOVERY KEY</Text>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity style={styles.choiceCard} onPress={() => {
-        setLoading(true);
-        setSelectedWalletId('rainbow');
-        setTimeout(() => {
-          setWallet('0x387affcb2e6462c051a85e4db8d3d92828b4b8');
-          setWalletSubMode('import');
-          setLoading(false);
-        }, 1200);
-      }}>
-        <LinearGradient colors={['rgba(56, 122, 255, 0.2)', 'rgba(56, 122, 255, 0.05)']} style={styles.choiceIconBox}>
-          {loading && selectedWalletId === 'rainbow' ? (
-            <ActivityIndicator color="#387aff" size="small" />
-          ) : (
-            <Link2 size={24} color="#387aff" />
-          )}
-        </LinearGradient>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.choiceTitle, { color: '#387aff' }]}>Rainbow Wallet</Text>
-          <Text style={styles.choiceDesc}>Direct Mobile Connection (Recommended)</Text>
-        </View>
-        <ChevronRight size={20} color={COLORS.textDim} />
-      </TouchableOpacity>
+      {activeTab === 'primary_wallet' ? (
+        <View style={styles.tabBody}>
+          <View style={styles.walletIconMainBox}>
+             <Wallet size={36} color="#3b82f6" />
+          </View>
 
-      <TouchableOpacity style={styles.choiceCard} onPress={() => setWalletSubMode('list')}>
-        <LinearGradient colors={[COLORS.primary + '20', COLORS.primary + '05']} style={styles.choiceIconBox}>
-          <Wallet size={24} color={COLORS.primary} />
-        </LinearGradient>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.choiceTitle}>Other Wallets</Text>
-          <Text style={styles.choiceDesc}>MetaMask, Trust or Public ID</Text>
+          <Text style={styles.connectTitle}>Connect Primary Wallet</Text>
+          <Text style={styles.connectDesc}>Unlock the protocol using your primary Web3 wallet identity.</Text>
+
+          <TouchableOpacity 
+            style={styles.openSelectorBtn}
+            onPress={() => setWalletSubMode('list')}
+          >
+            <Wallet size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.openSelectorBtnText}>Open Multi-Wallet Selector</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.networksLabel}>SUPPORTED NETWORKS</Text>
+          <View style={styles.networksRow}>
+             <Text style={styles.chainText}>Ξ Ethereum</Text>
+             <Text style={styles.chainText}>◆ Base</Text>
+             <Text style={styles.chainText}>● Arbitrum</Text>
+          </View>
+
+          <View style={styles.warningBox}>
+             <AlertTriangle size={16} color="#f59e0b" style={{ marginRight: 10, marginTop: 2 }} />
+             <View style={{ flex: 1 }}>
+                <Text style={styles.warningTitle}>Local Testing Mode</Text>
+                <Text style={styles.warningText}>Mobile wallets & WalletConnect do not support Localhost. Use "Other Wallets" selection to connect with a test address.</Text>
+             </View>
+          </View>
+
+          <View style={styles.rainbowCard}>
+             <Shield size={18} color={COLORS.primary} style={{ marginRight: 12 }} />
+             <View style={{ flex: 1 }}>
+                <Text style={styles.rainbowTitle}>RainbowKit Integrated</Text>
+                <Text style={styles.rainbowDesc}>Access Rainbow, Coinbase, MetaMask, and hundreds of mobile wallets.</Text>
+             </View>
+          </View>
         </View>
-        <ChevronRight size={20} color={COLORS.textDim} />
-      </TouchableOpacity>
+      ) : (
+        <View style={styles.tabBody}>
+          <View style={[styles.walletIconMainBox, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+             <Key size={36} color="#f59e0b" />
+          </View>
+
+          <Text style={styles.connectTitle}>Restore Security Key</Text>
+          <Text style={styles.connectDesc}>Reconstruct your decentralized vaults using your recovery phrase shards.</Text>
+
+          <TouchableOpacity 
+            style={[styles.openSelectorBtn, { backgroundColor: '#f59e0b' }]}
+            onPress={() => setWalletSubMode('create')}
+          >
+            <Plus size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.openSelectorBtnText}>Enter Recovery Shards</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.openSelectorBtn, { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: COLORS.border, marginTop: 12 }]}
+            onPress={() => setWalletSubMode('import')}
+          >
+            <Link2 size={18} color={COLORS.primary} style={{ marginRight: 8 }} />
+            <Text style={[styles.openSelectorBtnText, { color: COLORS.text }]}>Manual Import Address</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* FOOTER VALUES */}
+      <View style={styles.footerChecks}>
+         <View style={styles.checkItem}>
+            <CheckCircle2 size={12} color="#10b981" />
+            <Text style={styles.checkText}>Zero-trust</Text>
+         </View>
+         <View style={styles.checkItem}>
+            <CheckCircle2 size={12} color="#10b981" />
+            <Text style={styles.checkText}>Client-side sign</Text>
+         </View>
+         <View style={styles.checkItem}>
+            <CheckCircle2 size={12} color="#10b981" />
+            <Text style={styles.checkText}>Hardware-backed</Text>
+         </View>
+      </View>
     </View>
   );
 
@@ -420,7 +474,168 @@ const styles = StyleSheet.create({
   numText: { color: COLORS.text, fontFamily: FONTS.orbitron.bold, fontSize: 24 },
   
   bioContainer: { alignItems: 'center', paddingBottom: 40 },
-  bioLabel: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 11, letterSpacing: 1, marginTop: 10 }
+  bioLabel: { color: COLORS.primary, fontFamily: FONTS.orbitron.bold, fontSize: 11, letterSpacing: 1, marginTop: 10 },
+  
+  choiceContainer: { flex: 1, paddingHorizontal: GAPS.lg, paddingVertical: GAPS.lg },
+  tabHeader: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+    borderRadius: 12, 
+    padding: 4, 
+    borderWidth: 1, 
+    borderColor: COLORS.border,
+    marginBottom: 24 
+  },
+  tabBtn: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: 12, 
+    borderRadius: 8 
+  },
+  tabBtnActive: { 
+    backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+    borderWidth: 1, 
+    borderColor: 'rgba(59, 130, 246, 0.2)' 
+  },
+  tabBtnText: { 
+    color: COLORS.textDim, 
+    fontSize: 11, 
+    fontFamily: FONTS.orbitron.bold, 
+    letterSpacing: 1 
+  },
+  tabBtnTextActive: { 
+    color: COLORS.primary 
+  },
+  tabBody: { 
+    alignItems: 'center', 
+    backgroundColor: COLORS.surface, 
+    borderRadius: 20, 
+    padding: 24, 
+    borderWidth: 1, 
+    borderColor: COLORS.border,
+    marginBottom: 24 
+  },
+  walletIconMainBox: { 
+    width: 70, 
+    height: 70, 
+    borderRadius: 20, 
+    backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginBottom: 20 
+  },
+  connectTitle: { 
+    color: COLORS.text, 
+    fontSize: 22, 
+    fontFamily: FONTS.inter.bold, 
+    textAlign: 'center',
+    marginBottom: 8 
+  },
+  connectDesc: { 
+    color: COLORS.textMuted, 
+    fontSize: 13, 
+    fontFamily: FONTS.inter.medium, 
+    textAlign: 'center', 
+    lineHeight: 18,
+    marginBottom: 24 
+  },
+  openSelectorBtn: { 
+    width: '100%', 
+    height: 56, 
+    backgroundColor: COLORS.primary, 
+    borderRadius: 12, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    marginBottom: 24 
+  },
+  openSelectorBtnText: { 
+    color: '#fff', 
+    fontSize: 14, 
+    fontFamily: FONTS.inter.bold 
+  },
+  networksLabel: { 
+    color: COLORS.textDim, 
+    fontSize: 9, 
+    fontFamily: FONTS.orbitron.bold, 
+    letterSpacing: 1, 
+    marginBottom: 12 
+  },
+  networksRow: { 
+    flexDirection: 'row', 
+    gap: 16, 
+    marginBottom: 24 
+  },
+  chainText: { 
+    color: COLORS.textMuted, 
+    fontSize: 12, 
+    fontFamily: FONTS.inter.semibold, 
+    backgroundColor: 'rgba(255,255,255,0.03)', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: COLORS.border 
+  },
+  warningBox: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(245, 158, 11, 0.05)', 
+    borderRadius: 12, 
+    padding: 14, 
+    borderWidth: 1, 
+    borderColor: 'rgba(245, 158, 11, 0.15)',
+    marginBottom: 16 
+  },
+  warningTitle: { 
+    color: '#f59e0b', 
+    fontSize: 12, 
+    fontFamily: FONTS.inter.bold,
+    marginBottom: 2 
+  },
+  warningText: { 
+    color: 'rgba(245, 158, 11, 0.8)', 
+    fontSize: 11, 
+    fontFamily: FONTS.inter.medium, 
+    lineHeight: 15 
+  },
+  rainbowCard: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.02)', 
+    borderRadius: 12, 
+    padding: 14, 
+    borderWidth: 1, 
+    borderColor: COLORS.border 
+  },
+  rainbowTitle: { 
+    color: COLORS.text, 
+    fontSize: 12, 
+    fontFamily: FONTS.inter.bold, 
+    marginBottom: 2 
+  },
+  rainbowDesc: { 
+    color: COLORS.textDim, 
+    fontSize: 11, 
+    fontFamily: FONTS.inter.medium, 
+    lineHeight: 15 
+  },
+  footerChecks: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    gap: 16 
+  },
+  checkItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 4 
+  },
+  checkText: { 
+    color: COLORS.textDim, 
+    fontSize: 10, 
+    fontFamily: FONTS.inter.semibold 
+  }
 });
 
 export default LoginScreen;

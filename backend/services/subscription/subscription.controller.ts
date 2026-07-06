@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service';
 import { ServiceMode, PlanType } from './subscription.schema';
+import { PLANS } from './plans.config';
 import Stripe from 'stripe';
 import { UsersService } from '../users/users.service';
 import { users } from '../../src/db/schema/users';
@@ -64,7 +65,50 @@ export class SubscriptionController {
       cancelUrl: string;
     },
   ) {
-    return {};
+    const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_51MockKey';
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2023-10-16' as any,
+    });
+
+    const planKey = (body.planType || '').toLowerCase() as PlanType;
+    const planConfig = PLANS[planKey];
+    if (!planConfig) {
+      throw new BadRequestException('Invalid plan type selected');
+    }
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: planConfig.name,
+                description: `Subscription to ${planConfig.name} - ${planConfig.features.slice(0, 3).join(', ')}`,
+              },
+              unit_amount: Math.round(planConfig.price * 100),
+              recurring: {
+                interval: 'month',
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: body.successUrl + '?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: body.cancelUrl,
+        metadata: {
+          userId: body.userId,
+          planType: body.planType,
+        },
+      });
+
+      return { sessionId: session.id, url: session.url };
+    } catch (err: any) {
+      console.error('Stripe session creation failed:', err);
+      throw new BadRequestException(err.message || 'Stripe session creation failed');
+    }
   }
 
   @Post('activate')
@@ -117,13 +161,51 @@ export class SubscriptionController {
   @Post(':userId/usage')
   async mockUsage() { return {}; }
   @Post('webhook')
-  async handleWebhook(@Body() body: any, @Headers('stripe-signature') signature: string) {
-    try {
-      // Verify webhook signature
-      const event = body as Stripe.Event;
-      return { received: true };
-    } catch (error) {
-      throw new BadRequestException('Webhook error');
+  async handleWebhook(@Body() body: any, @Headers('stripe-signature') signature: string, @Request() req: any) {
+    const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_51MockKey';
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2023-10-16' as any,
+    });
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+
+    let event: Stripe.Event;
+
+    if (webhookSecret && signature) {
+      try {
+        const rawBody = req.rawBody || JSON.stringify(body);
+        event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+      } catch (err: any) {
+        console.warn('Webhook signature verification failed, processing body directly in dev mode:', err.message);
+        event = body;
+      }
+    } else {
+      event = body;
     }
+
+    console.log(`Stripe Webhook received: ${event.type}`);
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.metadata?.userId;
+      const planType = session.metadata?.planType;
+
+      if (userId && planType) {
+        console.log(`Upgrading user ${userId} to plan ${planType} via Stripe checkout completion.`);
+        
+        // Resolve wallet address → userId if needed
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+        let targetUserId = userId;
+        if (!isUuid) {
+          const user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, userId.toLowerCase()) });
+          if (user) {
+            targetUserId = user.id;
+          }
+        }
+        
+        await this.subscriptionService.upgradeSubscription(targetUserId, planType, 'web3');
+      }
+    }
+
+    return { received: true };
   }
 }

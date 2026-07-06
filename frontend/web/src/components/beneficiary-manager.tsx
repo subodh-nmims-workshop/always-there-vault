@@ -165,6 +165,33 @@ export function BeneficiaryManager() {
       }
     }
 
+    // Check local list of beneficiaries for duplicate email/wallet, case-insensitive
+    if (formData.email) {
+      const duplicateEmail = beneficiaries.find(b => 
+        b.id !== editingId && 
+        b.email?.trim().toLowerCase() === formData.email.trim().toLowerCase()
+      )
+      if (duplicateEmail) {
+        toast.error('Duplicate Beneficiary', {
+          description: `A beneficiary with the email ${formData.email} has already been added.`
+        })
+        return
+      }
+    }
+
+    if (formData.walletAddress && formData.walletAddress !== '0x0000000000000000000000000000000000000000') {
+      const duplicateWallet = beneficiaries.find(b => 
+        b.id !== editingId && 
+        b.walletAddress?.trim().toLowerCase() === formData.walletAddress.trim().toLowerCase()
+      )
+      if (duplicateWallet) {
+        toast.error('Duplicate Beneficiary', {
+          description: `A beneficiary with the wallet address ${formData.walletAddress} has already been added.`
+        })
+        return
+      }
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -215,49 +242,55 @@ export function BeneficiaryManager() {
       // Sync to Backend Postgres
       let backendId = beneficiary.id;
       if (!isDemo) {
-        try {
-          const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
-          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-          const url = editingId
-            ? `${apiEndpoint}/api/beneficiaries/${editingId}`
-            : `${apiEndpoint}/api/beneficiaries`
+        const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
+        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+        const url = editingId
+          ? `${apiEndpoint}/api/beneficiaries/${editingId}`
+          : `${apiEndpoint}/api/beneficiaries`
 
-          const requestBody: any = {
-            name: beneficiary.name,
-            email: beneficiary.email,
-            walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
-            relationship: 'nominee'
-          }
-          if (!editingId) {
-            requestBody.ownerAddress = walletAddress
-          }
+        const requestBody: any = {
+          name: beneficiary.name,
+          email: beneficiary.email,
+          walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
+          relationship: 'nominee'
+        }
+        if (!editingId) {
+          requestBody.ownerAddress = walletAddress
+        }
 
-          const syncRes = await fetch(url, {
-            method: editingId ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
+        const syncRes = await fetch(url, {
+          method: editingId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        })
+
+        if (!syncRes.ok) {
+          const errData = await syncRes.json().catch(() => null)
+          throw new Error(errData?.message || 'Failed to sync beneficiary with server.')
+        }
+
+        if (!editingId) {
+          const createdBen = await syncRes.json()
+          backendId = createdBen.id;
+          await storage.deleteBeneficiary(beneficiary.id)
+          await storage.saveBeneficiary({
+            ...beneficiary,
+            id: createdBen.id,
+            isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
           })
-          if (syncRes.ok && !editingId) {
-            const createdBen = await syncRes.json()
-            backendId = createdBen.id;
-            await storage.deleteBeneficiary(beneficiary.id)
-            await storage.saveBeneficiary({
-              ...beneficiary,
-              id: createdBen.id,
-              isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
-            })
-          }
+        }
 
-          // If public key mode, immediately verify on backend too
-          if (formData.verificationMethod === 'public_key') {
-            await fetch(`${apiEndpoint}/api/beneficiaries/${backendId}/verify`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ code: 'BYPASS_PGP_VERIFICATION' })
-            })
+        // If public key mode, immediately verify on backend too
+        if (formData.verificationMethod === 'public_key') {
+          const verifyRes = await fetch(`${apiEndpoint}/api/beneficiaries/${backendId}/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: 'BYPASS_PGP_VERIFICATION' })
+          })
+          if (!verifyRes.ok) {
+            const errData = await verifyRes.json().catch(() => null)
+            console.error('Failed to verify PGP beneficiary on backend:', errData)
           }
-        } catch (err) {
-          console.error('Failed to sync beneficiary to backend', err)
         }
       }
 
@@ -294,9 +327,9 @@ export function BeneficiaryManager() {
         description: isDemo ? 'Saved locally in sandbox demo mode.' : 'Global database synced successfully.'
       })
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save beneficiary:', error)
-      toast.error('Failed to save beneficiary')
+      toast.error(error.message || 'Failed to save beneficiary')
     } finally {
       setIsSubmitting(false)
     }
@@ -379,21 +412,21 @@ export function BeneficiaryManager() {
   return (
     <div className="space-y-6">
       {/* Beneficiaries List */}
-      <div className="premium-card p-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="premium-card p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center space-x-3">
-            <div className="icon-container bg-gradient-to-br from-green-600 to-emerald-600">
+            <div className="icon-container bg-gradient-to-br from-green-600 to-emerald-600 shrink-0">
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold gradient-text-premium">Beneficiary Management</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Manage who will receive your digital assets</p>
+              <h2 className="text-xl sm:text-2xl font-bold gradient-text-premium leading-tight">Beneficiary Management</h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Manage who will receive your digital assets</p>
             </div>
           </div>
           <button
             onClick={() => setShowAddForm(true)}
             disabled={showAddForm}
-            className="btn-premium px-6 py-3 disabled:opacity-50"
+            className="btn-premium px-6 py-3 disabled:opacity-50 w-full sm:w-auto justify-center"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Beneficiary
@@ -409,8 +442,8 @@ export function BeneficiaryManager() {
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
             {beneficiaries.map((beneficiary) => (
-              <div key={beneficiary.id} className="premium-card p-6 hover:scale-[1.02] transition-transform">
-                <div className="flex items-start justify-between">
+              <div key={beneficiary.id} className="premium-card p-4 sm:p-6 hover:scale-[1.02] transition-transform">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
@@ -469,14 +502,14 @@ export function BeneficiaryManager() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col space-y-2 ml-4">
+                  <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto justify-end sm:justify-start sm:ml-4 border-t sm:border-t-0 border-slate-150 dark:border-slate-850 pt-3 sm:pt-0 shrink-0">
                     {!beneficiary.isVerified && (
                       <button
                         onClick={() => {
                           setVerifyingBeneficiary(beneficiary)
                           handleSendVerificationCode(beneficiary)
                         }}
-                        className="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-450 text-xs font-semibold transition-colors border border-amber-200 dark:border-amber-500/20 hover:border-amber-500/50"
+                        className="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-450 text-xs font-semibold transition-colors border border-amber-200 dark:border-amber-500/20 hover:border-amber-500/50 flex-1 sm:flex-initial"
                         title="Verify Nominee Email"
                       >
                         Verify
@@ -484,13 +517,13 @@ export function BeneficiaryManager() {
                     )}
                     <button
                       onClick={() => handleEdit(beneficiary)}
-                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 flex items-center justify-center"
+                      className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 flex items-center justify-center flex-1 sm:flex-initial"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(beneficiary.id, beneficiary.name)}
-                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20 hover:border-red-500/50 flex items-center justify-center"
+                      className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20 hover:border-red-500/50 flex items-center justify-center flex-1 sm:flex-initial"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -504,16 +537,16 @@ export function BeneficiaryManager() {
 
       {/* Add/Edit Form */}
       {showAddForm && (
-        <div className="premium-card p-8">
+        <div className="premium-card p-4 sm:p-8">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="icon-container bg-gradient-to-br from-blue-600 to-cyan-600">
+            <div className="icon-container bg-gradient-to-br from-blue-600 to-cyan-600 shrink-0">
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold gradient-text-premium">
+              <h2 className="text-xl sm:text-2xl font-bold gradient-text-premium leading-tight">
                 {editingId ? 'Edit Beneficiary' : 'Add New Beneficiary'}
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Enter beneficiary details and wallet address</p>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Enter beneficiary details and wallet address</p>
             </div>
           </div>
 
@@ -568,7 +601,7 @@ export function BeneficiaryManager() {
 
             <div>
               <label className="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-200">Verification Protocol *</label>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Option 1: Email Mode */}
                 <div
                   onClick={() => setFormData(prev => ({ ...prev, verificationMethod: 'email' }))}
@@ -746,10 +779,10 @@ export function BeneficiaryManager() {
               </div>
             )}
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                className="btn-premium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-premium w-full sm:flex-1 justify-center py-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!isFormValid() || isSubmitting}
               >
                 {isSubmitting ? (
@@ -768,9 +801,9 @@ export function BeneficiaryManager() {
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="px-8 py-4 rounded-xl border-2 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-blue-500/50 transition-all duration-300"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl border-2 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-blue-500/50 transition-all duration-300 flex items-center justify-center"
               >
-                <X className="h-5 w-5 mr-2 inline" />
+                <X className="h-5 w-5 mr-2" />
                 Cancel
               </button>
             </div>

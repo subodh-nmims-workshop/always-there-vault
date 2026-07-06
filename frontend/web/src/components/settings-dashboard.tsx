@@ -802,12 +802,39 @@ export function SettingsDashboard() {
 
   const { sendTransactionAsync } = useSendTransaction()
 
-  const handleUpgrade = async (method: 'PAYPAL' | 'CRYPTO', referenceFromModal?: string) => {
+  const handleUpgrade = async (method: 'PAYPAL' | 'CRYPTO' | 'STRIPE', referenceFromModal?: string) => {
     setIsProcessingPayment(true)
     toast.info(`Processing ${method} payment...`)
     
     try {
         const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
+        const targetPlanId = subscription?.mode === 'decentralized' ? 'sovereign_pro' : 'professional';
+
+        if (method === 'STRIPE') {
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
+            const checkoutRes = await fetch(`${apiEndpoint}/subscription/checkout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: walletAddress,
+                    planType: targetPlanId,
+                    successUrl: `${window.location.origin}/dashboard?payment=success`,
+                    cancelUrl: `${window.location.origin}/dashboard?payment=cancelled`,
+                })
+            });
+            if (!checkoutRes.ok) {
+                const errData = await checkoutRes.json().catch(() => null);
+                throw new Error(errData?.message || 'Failed to initialize Stripe checkout session');
+            }
+            const checkoutData = await checkoutRes.json();
+            if (checkoutData.url) {
+                toast.success('Redirecting to secure Stripe checkout...');
+                window.location.href = checkoutData.url;
+                return;
+            }
+            throw new Error('No checkout URL returned from server');
+        }
+
         if (isDemo) {
           toast.success("Sandbox Demo: Payment bypassed and premium plan unlocked!")
           const stored = localStorage.getItem('dwp_subscription')
@@ -876,7 +903,7 @@ export function SettingsDashboard() {
             referenceStr = referenceFromModal;
         }
 
-        const targetPlanId = subscription?.mode === 'decentralized' ? 'sovereign_pro' : 'professional';
+
 
         const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/payment/process', {
             method: 'POST',
@@ -1812,13 +1839,13 @@ export function SettingsDashboard() {
                                   </button>
                                 )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                                 <input 
                                     type="email" 
                                     placeholder="Enter backup email"
                                     value={emailInput}
                                     onChange={(e) => setEmailInput(e.target.value)}
-                                    className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors"
+                                    className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors w-full"
                                 />
                                 {profile?.email === emailInput && profile?.emailVerified ? (
                                   <div className="flex gap-2">
@@ -1914,13 +1941,13 @@ export function SettingsDashboard() {
                                   </button>
                                 )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                                 <input 
                                     type="email" 
                                     placeholder="Enter secondary backup email"
                                     value={alternativeEmailInput}
                                     onChange={(e) => setAlternativeEmailInput(e.target.value)}
-                                    className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors"
+                                    className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2 text-sm font-medium text-slate-800 dark:text-white outline-none focus:border-blue-500/50 transition-colors w-full"
                                 />
                                 {profile?.alternativeEmail === alternativeEmailInput && profile?.alternativeEmailVerified ? (
                                   <div className="flex gap-2">

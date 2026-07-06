@@ -138,6 +138,18 @@ const CATEGORIES: { label: string; icon: any; id: AssetCategory }[] = [
   { id: 'business_secret', label: 'Secrets', icon: Lock },
 ];
 
+import * as Clipboard from 'expo-clipboard';
+import ApiService from '../services/ApiService';
+import { Eye, EyeOff, Copy, Trash2 } from 'lucide-react-native';
+
+const uuidv4 = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 const AssetsScreen = () => {
   const [items, setItems] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'all'>('all');
@@ -145,6 +157,9 @@ const AssetsScreen = () => {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [wallet, setWallet] = useState('0x...');
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [revealEncrypted, setRevealEncrypted] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadItems();
@@ -157,8 +172,28 @@ const AssetsScreen = () => {
   };
 
   const loadItems = async () => {
-    const saved = await AsyncStorage.getItem('dwp_vault_items');
-    if (saved) setItems(JSON.parse(saved));
+    const api = ApiService.getInstance();
+    const res = await api.getAssets();
+    if (res.success && res.data) {
+      const mapped = res.data.map((f: any) => {
+        const sizeKb = (f.size / 1024).toFixed(1) + ' KB';
+        const category = CATEGORY_TEMPLATES[f.mimeType as AssetCategory] ? f.mimeType : 'document';
+        return {
+          id: f.id,
+          name: f.name,
+          type: category,
+          category: category,
+          createdAt: f.createdAt,
+          size: sizeKb,
+          encryptedData: f.encryptedData,
+        };
+      });
+      setItems(mapped);
+      await AsyncStorage.setItem('dwp_vault_items', JSON.stringify(mapped));
+    } else {
+      const saved = await AsyncStorage.getItem('dwp_vault_items');
+      if (saved) setItems(JSON.parse(saved));
+    }
   };
 
   const handleCreate = async () => {
@@ -167,37 +202,60 @@ const AssetsScreen = () => {
     
     setIsEncrypting(true);
     
-    setTimeout(async () => {
-      let structured = `=== ${activeTmpl.label.toUpperCase()} ===\n\n`;
-      activeTmpl.fields.forEach(f => {
-        if (formData[f.name]) {
-          structured += `${f.encrypted ? '🔒 ' : ''}${f.label}: ${formData[f.name]}\n`;
-        }
-      });
+    let structured = `=== ${activeTmpl.label.toUpperCase()} ===\n\n`;
+    activeTmpl.fields.forEach(f => {
+      if (formData[f.name]) {
+        structured += `${f.encrypted ? '🔒 ' : ''}${f.label}: ${formData[f.name]}\n`;
+      }
+    });
 
+    const assetId = uuidv4();
+    const api = ApiService.getInstance();
+    const metadata = {
+      name: assetName,
+      type: activeTmpl.id,
+      mimeType: activeTmpl.id,
+      ipfsHash: `local-simulated://${uuidv4()}`,
+      keyId: `key-${uuidv4()}`,
+      iv: `iv-${uuidv4()}`,
+      encryptedData: JSON.stringify(formData),
+      size: structured.length,
+      beneficiaries: [],
+    };
+
+    const success = await api.syncAssetMetadata(assetId, metadata);
+    if (success) {
+      await loadItems();
+    } else {
       const newItem = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: assetId,
         name: assetName,
         type: activeTmpl.id,
         category: activeTmpl.id,
         createdAt: new Date().toISOString(),
-        size: (structured.length / 1024).toFixed(1) + ' KB'
+        size: (structured.length / 1024).toFixed(1) + ' KB',
+        encryptedData: JSON.stringify(formData),
       };
-      
       const updated = [...items, newItem];
       setItems(updated);
       await AsyncStorage.setItem('dwp_vault_items', JSON.stringify(updated));
-      
-      setIsEncrypting(false);
-      setShowAdd(false);
-      setFormData({});
-    }, 2000);
+    }
+    
+    setIsEncrypting(false);
+    setShowAdd(false);
+    setFormData({});
   };
 
   const deleteItem = async (id: string) => {
-    const updated = items.filter(i => i.id !== id);
-    setItems(updated);
-    await AsyncStorage.setItem('dwp_vault_items', JSON.stringify(updated));
+    const api = ApiService.getInstance();
+    const success = await api.deleteAsset(id);
+    if (success) {
+      await loadItems();
+    } else {
+      const updated = items.filter(i => i.id !== id);
+      setItems(updated);
+      await AsyncStorage.setItem('dwp_vault_items', JSON.stringify(updated));
+    }
   };
 
   const getIcon = (type: string) => {
@@ -273,27 +331,41 @@ const AssetsScreen = () => {
         ) : (
           <View style={styles.assetList}>
              {items.filter(i => selectedCategory === 'all' || i.category === selectedCategory).map((item) => (
-               <View key={item.id} style={styles.assetItem}>
-                  <View style={styles.assetLeading}>
-                     <View style={[styles.assetIconBox, { backgroundColor: (CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary) + '15' }]}>
-                        {getIcon(item.type)}
-                     </View>
-                     <View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                           <Text style={styles.assetTitle}>{item.name}</Text>
-                           <View style={[styles.typeBadge, { borderColor: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
-                              <Text style={[styles.typeBadgeText, { borderColor: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
-                                {CATEGORY_TEMPLATES[item.type as AssetCategory]?.label.toUpperCase()}
-                              </Text>
-                           </View>
-                        </View>
-                        <Text style={styles.assetSub}>{item.size} • {new Date(item.createdAt).toLocaleDateString()}</Text>
-                     </View>
-                  </View>
-                  <TouchableOpacity onPress={() => deleteItem(item.id)}>
-                    <MoreVertical size={16} color={COLORS.textDim} />
-                  </TouchableOpacity>
-               </View>
+                <TouchableOpacity 
+                   key={item.id} 
+                   style={styles.assetItem}
+                   onPress={() => {
+                     setSelectedAsset(item);
+                     setRevealEncrypted({});
+                     setShowDetails(true);
+                   }}
+                >
+                   <View style={styles.assetLeading}>
+                      <View style={[styles.assetIconBox, { backgroundColor: (CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary) + '15' }]}>
+                         {getIcon(item.type)}
+                      </View>
+                      <View>
+                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={styles.assetTitle}>{item.name}</Text>
+                            <View style={[styles.typeBadge, { borderColor: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
+                               <Text style={[styles.typeBadgeText, { borderColor: CATEGORY_TEMPLATES[item.type as AssetCategory]?.color || COLORS.primary }]}>
+                                 {CATEGORY_TEMPLATES[item.type as AssetCategory]?.label.toUpperCase()}
+                               </Text>
+                            </View>
+                         </View>
+                         <Text style={styles.assetSub}>{item.size} • {new Date(item.createdAt).toLocaleDateString()}</Text>
+                      </View>
+                   </View>
+                   <TouchableOpacity 
+                     onPress={(e) => {
+                       e.stopPropagation();
+                       deleteItem(item.id);
+                     }}
+                     style={{ padding: 8 }}
+                   >
+                     <Trash2 size={16} color={COLORS.error} />
+                   </TouchableOpacity>
+                </TouchableOpacity>
              ))}
           </View>
         )}
@@ -301,6 +373,7 @@ const AssetsScreen = () => {
         <View style={{ height: 40 }} />
       </ScrollView>
 
+      {/* SECURE NEW PAYLOAD MODAL */}
       <ProtocolModal visible={showAdd} onClose={() => setShowAdd(false)} title="SECURE NEW PAYLOAD">
          {isEncrypting ? (
            <View style={styles.encrypting}>
@@ -337,6 +410,83 @@ const AssetsScreen = () => {
               <TouchableOpacity style={styles.primaryBtn} onPress={handleCreate}>
                  <Text style={styles.primaryBtnText}>INITIATE ENCRYPTION</Text>
                  <ArrowUpRight size={18} color="#fff" />
+              </TouchableOpacity>
+              <View style={{ height: 30 }} />
+           </ScrollView>
+         )}
+      </ProtocolModal>
+
+      {/* VIEW DECRYPTED DETAILS MODAL */}
+      <ProtocolModal visible={showDetails} onClose={() => setShowDetails(false)} title="DECRYPTED PAYLOAD">
+         {selectedAsset && (
+           <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
+              <Text style={styles.modalSub}>Decrypted from Vault: {selectedAsset.category}</Text>
+              
+              <View style={styles.detailsContainer}>
+                 <Text style={styles.detailTitle}>{selectedAsset.name}</Text>
+                 <Text style={styles.detailTime}>Secured: {new Date(selectedAsset.createdAt).toLocaleString()}</Text>
+                 
+                 <View style={styles.detailDivider} />
+
+                 {(() => {
+                   const activeTmpl = CATEGORY_TEMPLATES[selectedAsset.type as AssetCategory] || CATEGORY_TEMPLATES.document;
+                   let decryptedObj: Record<string, string> = {};
+                   try {
+                     decryptedObj = JSON.parse(selectedAsset.encryptedData || '{}');
+                   } catch (e) {
+                     // Try parsing structured string as fallback if old layout
+                   }
+
+                   return activeTmpl.fields.map(field => {
+                     const val = decryptedObj[field.name];
+                     if (!val) return null;
+
+                     const isRevealed = !field.encrypted || revealEncrypted[field.name];
+
+                     return (
+                       <View key={field.name} style={styles.detailFieldCard}>
+                          <View style={styles.fieldHeader}>
+                             <Text style={styles.fieldLabel}>
+                               {field.label.toUpperCase()} {field.encrypted && '🔒 (ENCRYPTED)'}
+                             </Text>
+                             <View style={styles.fieldActions}>
+                                {field.encrypted && (
+                                   <TouchableOpacity 
+                                     style={styles.fieldActionBtn}
+                                     onPress={() => setRevealEncrypted(prev => ({ ...prev, [field.name]: !prev[field.name] }))}
+                                   >
+                                      {isRevealed ? <EyeOff size={14} color={COLORS.primary} /> : <Eye size={14} color={COLORS.primary} />}
+                                   </TouchableOpacity>
+                                )}
+                                <TouchableOpacity 
+                                  style={styles.fieldActionBtn}
+                                  onPress={async () => {
+                                    await Clipboard.setStringAsync(val);
+                                    alert('Copied to clipboard!');
+                                  }}
+                                >
+                                   <Copy size={14} color={COLORS.primary} />
+                                </TouchableOpacity>
+                             </View>
+                          </View>
+                          <Text style={styles.fieldValue}>
+                             {isRevealed ? val : '••••••••••••••••'}
+                          </Text>
+                       </View>
+                     );
+                   });
+                 })()}
+              </View>
+
+              <TouchableOpacity 
+                 style={[styles.primaryBtn, { backgroundColor: COLORS.error }]} 
+                 onPress={() => {
+                   deleteItem(selectedAsset.id);
+                   setShowDetails(false);
+                 }}
+              >
+                 <Trash2 size={18} color="#fff" />
+                 <Text style={styles.primaryBtnText}>DELETE PAYLOAD</Text>
               </TouchableOpacity>
               <View style={{ height: 30 }} />
            </ScrollView>
@@ -418,6 +568,65 @@ const styles = StyleSheet.create({
   modalSub: { color: COLORS.primary, fontSize: 11, fontFamily: FONTS.orbitron.bold, marginBottom: 24, textTransform: 'uppercase', letterSpacing: 1 },
   typeBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.1)' },
   typeBadgeText: { fontSize: 8, fontFamily: FONTS.orbitron.bold },
+  detailsContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 20,
+  },
+  detailTitle: {
+    color: COLORS.text,
+    fontSize: 20,
+    fontFamily: FONTS.inter.bold,
+  },
+  detailTime: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontFamily: FONTS.inter.medium,
+    marginTop: 4,
+  },
+  detailDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: 16,
+  },
+  detailFieldCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 12,
+  },
+  fieldHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  fieldLabel: {
+    color: COLORS.textMuted,
+    fontSize: 9,
+    fontFamily: FONTS.orbitron.bold,
+    letterSpacing: 0.5,
+  },
+  fieldActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  fieldActionBtn: {
+    padding: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 6,
+  },
+  fieldValue: {
+    color: COLORS.text,
+    fontSize: 14,
+    fontFamily: FONTS.inter.semibold,
+  },
 });
 
 export default AssetsScreen;

@@ -142,10 +142,10 @@ function BeneficiaryAssetsContent() {
 
   // Auto-trigger check when arriving from email claim link
   useEffect(() => {
-    if (claimToken && ownerAddress && isConnected && userAddress && status === 'idle') {
+    if (claimToken && status === 'idle') {
       checkEligibility()
     }
-  }, [claimToken, ownerAddress, isConnected, userAddress]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [claimToken, status]) // eslint-disable-line react-hooks/exhaustive-deps
 
 
   const handleWalletConnect = async (walletAddress: string) => {
@@ -157,17 +157,41 @@ function BeneficiaryAssetsContent() {
   }
 
   const checkEligibility = async () => {
-    if (!ownerAddress || !ethers.isAddress(ownerAddress)) {
-      toast.error('Please enter a valid owner wallet address')
-      return
-    }
-
     setStatus('checking')
     
     try {
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-      const response = await fetch(`${apiEndpoint}/api/heartbeat/public-status/${ownerAddress}`)
       
+      if (claimToken) {
+        // ✅ Direct check via public claim-token endpoint — bypass heartbeat check entirely
+        const claimRes = await fetch(`${apiEndpoint}/api/claim-assets/contents?claimToken=${claimToken}`)
+        if (claimRes.ok) {
+          const claimData = await claimRes.json()
+          const assetList = claimData.assets || []
+          
+          setStatus('ready')
+          setInheritanceData({
+            ownerName: claimData.ownerName || 'The account owner',
+            lastHeartbeat: 'Verified via secure link',
+            status: 'Delivered',
+            assets: assetList
+          })
+          toast.success('Secure link verified. Assets are ready for retrieval.')
+          return
+        } else {
+          const errData = await claimRes.json().catch(() => ({}))
+          console.warn('Claim assets fetch failed:', errData)
+          throw new Error(errData.message || 'Failed to authorize claim token. It may be expired or invalid.')
+        }
+      }
+
+      if (!ownerAddress || !ethers.isAddress(ownerAddress)) {
+        toast.error('Please enter a valid owner wallet address')
+        setStatus('idle')
+        return
+      }
+
+      const response = await fetch(`${apiEndpoint}/api/heartbeat/public-status/${ownerAddress}`)
       if (!response.ok) throw new Error('Failed to fetch status')
       
       const data = await response.json()
@@ -176,37 +200,24 @@ function BeneficiaryAssetsContent() {
         let ownerName = 'The account owner'
         let assetList: any[] = []
 
-        if (claimToken) {
-          // ✅ Use public claim-token endpoint — no JWT needed for beneficiaries
-          const claimRes = await fetch(`${apiEndpoint}/api/claim-assets/contents?claimToken=${claimToken}`)
-          if (claimRes.ok) {
-            const claimData = await claimRes.json()
-            assetList = claimData.assets || []
-          } else {
-            const errData = await claimRes.json().catch(() => ({}))
-            console.warn('Claim assets fetch failed:', errData)
-            throw new Error(errData.message || 'Failed to authorize claim token. It may be expired or invalid.')
-          }
-        } else {
-          // Fallback: fetch owner info and assets via JWT (owner viewing their own)
-          const beneficiaryResponse = await fetch(`${apiEndpoint}/api/beneficiaries/in-wills?walletAddress=${userAddress}`)
-          const myWills = await beneficiaryResponse.json()
-          const myWill = myWills.find((w: any) => w.ownerAddress.toLowerCase() === ownerAddress.toLowerCase())
+        // Fallback: fetch owner info and assets via JWT (owner viewing their own)
+        const beneficiaryResponse = await fetch(`${apiEndpoint}/api/beneficiaries/in-wills?walletAddress=${userAddress}`)
+        const myWills = await beneficiaryResponse.json()
+        const myWill = myWills.find((w: any) => w.ownerAddress.toLowerCase() === ownerAddress.toLowerCase())
 
-          if (!myWill) {
-            setStatus('not_eligible')
-            toast.error('You are not registered as a beneficiary for this address.')
-            return
-          }
-
-          ownerName = myWill.ownerName
-          const token = localStorage.getItem('dwp_token')
-          const assetsResponse = await fetch(`${apiEndpoint}/api/assets/contents?ownerAddress=${ownerAddress}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-          })
-          const assetsData = await assetsResponse.json()
-          assetList = assetsData.assets || []
+        if (!myWill) {
+          setStatus('not_eligible')
+          toast.error('You are not registered as a beneficiary for this address.')
+          return
         }
+
+        ownerName = myWill.ownerName
+        const token = localStorage.getItem('dwp_token')
+        const assetsResponse = await fetch(`${apiEndpoint}/api/assets/contents?ownerAddress=${ownerAddress}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const assetsData = await assetsResponse.json()
+        assetList = assetsData.assets || []
 
         setStatus('ready')
         setInheritanceData({
@@ -220,10 +231,10 @@ function BeneficiaryAssetsContent() {
         setStatus('not_triggered')
         toast.info('Protocol is still active. Assets are secure.')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
       setStatus('idle')
-      toast.error('Failed to verify eligibility.')
+      toast.error(error.message || 'Failed to verify eligibility.')
     }
   }
 
@@ -328,13 +339,13 @@ function BeneficiaryAssetsContent() {
                     
                     <Button 
                       onClick={checkEligibility}
-                      disabled={!isConnected}
+                      disabled={!isConnected && !claimToken}
                       className="w-full h-14 bg-[#1152d4] hover:bg-blue-600 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.01] shadow-2xl shadow-blue-500/20"
                     >
                       Verify Protocol Status <ArrowRight className="w-5 h-5" />
                     </Button>
                     
-                    {!isConnected && (
+                    {!isConnected && !claimToken && (
                       <div className="flex items-center gap-2 justify-center text-amber-400 text-sm font-medium bg-amber-400/10 py-3 rounded-xl border border-amber-400/20">
                         <AlertTriangle className="w-4 h-4" />
                         Wallet connection required for identity proof

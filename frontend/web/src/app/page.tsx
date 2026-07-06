@@ -35,7 +35,8 @@ import {
   AlertTriangle,
   History,
   Info,
-  X
+  X,
+  LogOut
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -268,12 +269,18 @@ export default function HomePage() {
       const authData = await verifyRes.json()
       
       if (authData?.status === 'PENDING_MFA') {
+        localStorage.removeItem('dwp_is_demo')
+        localStorage.removeItem('dwp_demo_otp')
+        localStorage.removeItem('dwp_alt_demo_otp')
         setPendingMfaData({ mfaToken: authData.mfaToken, walletAddress })
         setMfaVerifyCode('')
         setShowWalletModal(false)
         toast.info('Two-Factor Authentication required.')
       } else if (authData?.token) {
         setIsConnected(true)
+        localStorage.removeItem('dwp_is_demo')
+        localStorage.removeItem('dwp_demo_otp')
+        localStorage.removeItem('dwp_alt_demo_otp')
         localStorage.setItem('dwp_wallet_connected', 'true')
         localStorage.setItem('dwp_wallet_address', authData.walletAddress || walletAddress)
         localStorage.setItem('dwp_token', authData.token)
@@ -499,15 +506,15 @@ export default function HomePage() {
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[150px] rounded-full mix-blend-screen" />
         </div>
 
-        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors duration-300">
-          <Link href="/" className="flex items-center gap-2 group">
-            <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors duration-300">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
+            <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
             <div className="flex flex-col text-left">
-              <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
-              <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+              <span className="text-sm sm:text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+              <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5 hidden sm:block">SECURE YOUR DIGITAL LEGACY</span>
             </div>
           </Link>
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-3 sm:space-x-6">
             <div className="hidden md:flex items-center gap-6 mr-4">
               <Link href="/docs" className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Documentation</Link>
               <Link href="/donate" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#2b52ff]/20 to-purple-500/20 border border-[#2b52ff]/30 text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white hover:from-[#2b52ff]/40 hover:to-purple-500/40 transition-all shadow-[0_0_15px_rgba(43,82,255,0.2)]">
@@ -517,25 +524,26 @@ export default function HomePage() {
             <ThemeToggle />
             <ModeIndicator />
             <div className="h-8 w-px bg-slate-200 dark:bg-white/10 hidden md:block"></div>
-            <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all">
-              Logout
+            <button onClick={handleDisconnect} className="px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-red-500/10 text-red-500 text-[10px] sm:text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all flex items-center gap-1.5 shrink-0">
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </nav>
         
-        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-8 mb-24 relative z-10">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-            <TabsList className="bg-slate-100/80 dark:bg-[#0f172a]/80 backdrop-blur-md border border-slate-200 dark:border-white/10 p-2 rounded-2xl w-full justify-start overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-2xl">
-              <TabsTrigger value="overview" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(43,82,255,0.4)] transition-all">Overview</TabsTrigger>
-              <TabsTrigger value="assets" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Digital Assets</TabsTrigger>
-              <TabsTrigger value="beneficiaries" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Beneficiaries</TabsTrigger>
-              <TabsTrigger value="status" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Protocol Status</TabsTrigger>
-              <TabsTrigger value="heartbeat" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.2)]">Heartbeat</TabsTrigger>
-              <TabsTrigger value="subscription" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Subscription</TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Settings</TabsTrigger>
+        <main className="flex-1 max-w-[1400px] mx-auto w-full p-3 sm:p-4 md:p-6 lg:p-8 space-y-6 sm:space-y-8 mt-4 sm:mt-8 mb-24 relative z-10">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
+            <TabsList className="bg-slate-100/80 dark:bg-[#0f172a]/80 backdrop-blur-md border border-slate-200 dark:border-white/10 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl w-full justify-start overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-2xl">
+              <TabsTrigger value="overview" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(43,82,255,0.4)] transition-all">Overview</TabsTrigger>
+              <TabsTrigger value="assets" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Digital Assets</TabsTrigger>
+              <TabsTrigger value="beneficiaries" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Beneficiaries</TabsTrigger>
+              <TabsTrigger value="status" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Protocol Status</TabsTrigger>
+              <TabsTrigger value="heartbeat" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.2)]">Heartbeat</TabsTrigger>
+              <TabsTrigger value="subscription" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Subscription</TabsTrigger>
+              <TabsTrigger value="settings" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Settings</TabsTrigger>
             </TabsList>
 
-            <div className="bg-white/80 dark:bg-[#030712]/50 backdrop-blur-3xl border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 shadow-2xl">
+            <div className="bg-white/80 dark:bg-[#030712]/50 backdrop-blur-3xl border border-slate-200 dark:border-white/5 rounded-2xl sm:rounded-[2rem] p-3 sm:p-6 shadow-2xl">
               <TabsContent value="overview" className="m-0">
                 {activeTab === 'overview' && <OverviewDashboard onNavigate={setActiveTab} />}
               </TabsContent>
@@ -571,12 +579,12 @@ export default function HomePage() {
         <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-600/5 dark:bg-blue-600/5 blur-[120px] rounded-full" />
       </div>
 
-      <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors duration-300">
-        <Link href="/" className="flex items-center gap-2 group">
-          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+      <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors duration-300">
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
+          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
           <div className="flex flex-col text-left">
-            <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
-            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
+            <span className="text-sm sm:text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
+            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5 hidden sm:block">SECURE YOUR DIGITAL LEGACY</span>
           </div>
         </Link>
         <div className="hidden md:flex items-center gap-8">
@@ -619,9 +627,6 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-lg sm:max-w-none mx-auto">
             <button onClick={handleConnect} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-blue-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-xl sm:shadow-2xl shadow-blue-600/30">
               Connect Wallet <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-            <button onClick={handleStartDemo} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-xl sm:shadow-2xl shadow-purple-600/30">
-              Try Sandbox Demo
             </button>
             <Link href="/features" className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white text-xs sm:text-sm font-black uppercase tracking-widest hover:dark:bg-white/10 transition-all text-center">
               How it works

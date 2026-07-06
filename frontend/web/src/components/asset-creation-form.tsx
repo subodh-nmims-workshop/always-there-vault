@@ -1780,7 +1780,7 @@ export function AssetCreationForm() {
               )
             })()
           ) : (
-            <div className={viewMode === 'grid' ? "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col space-y-3"}>
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col space-y-3"}>
               {/* ALWAYS map folders first, then assets, with stable sort to avoid jumping */}
               {filteredFolders.map(folder =>
                 viewMode === 'grid'
@@ -2180,7 +2180,7 @@ export function AssetCreationForm() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-2">Token Type</label>
                     <select
@@ -2986,7 +2986,7 @@ export function AssetCreationForm() {
                     </div>
 
                     {/* Metadata */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="bg-white/5 border border-white/5 rounded-xl p-4 group hover:bg-white/10 transition-colors">
                         <p className="text-xs text-slate-500 mb-1">Type</p>
                         <p className="text-sm text-white font-medium uppercase tracking-tighter">{viewingAsset.type.replace('_', ' ')}</p>

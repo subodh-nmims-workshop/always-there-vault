@@ -15,12 +15,11 @@ export function escapeHtml(str: any): string {
 }
 
 
-// Hosted logo — served from the deployed Render frontend (alwaystherevault.com serves public/)
-// Falls back to Render CDN path, then a GitHub raw CDN copy
-const LOGO_URL = 'https://alwaystherevault.com/logo-simple.png';
+// Hosted logo — served from public GitHub repositories for robust, inbox-safe loading
+const LOGO_URL = 'https://raw.githubusercontent.com/subodh-001/decentralized-digital-will-protocol/main/frontend/web/public/logo-simple.png';
 
-// Backup CDN — always available even if custom domain is down
-const LOGO_FALLBACK = 'https://always-there-protocol.onrender.com/logo-simple.png';
+// Backup CDN
+const LOGO_FALLBACK = 'https://raw.githubusercontent.com/subodh-nmims-workshop/always-there-vault/main/frontend/web/public/logo-simple.png';
 
 /** Wraps any email body in the AlwaysThere brand shell */
 export function buildEmailShell(opts: {

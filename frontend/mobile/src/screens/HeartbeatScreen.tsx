@@ -23,6 +23,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DashboardHeader from '../components/DashboardHeader';
 import { COLORS, FONTS, RADIUS, SHADOWS, GAPS } from '../theme';
 
+import ApiService from '../services/ApiService';
+
 const HeartbeatScreen = () => {
   const [lastHeartbeat, setLastHeartbeat] = useState<string>('Never');
   const [pulseCount, setPulseCount] = useState(0);
@@ -38,33 +40,49 @@ const HeartbeatScreen = () => {
   );
 
   const loadData = async () => {
-    const saved = await AsyncStorage.getItem('dwp_heartbeat_history');
+    const api = ApiService.getInstance();
     const w = await AsyncStorage.getItem('dwp_wallet_address');
     if (w) setWallet(w);
+
+    const res = await api.getHeartbeatStatus();
+    if (res.success && res.data) {
+      const { lastHeartbeat } = res.data;
+      if (lastHeartbeat) {
+        setLastHeartbeat(new Date(lastHeartbeat).toLocaleString());
+      }
+    }
+
+    const saved = await AsyncStorage.getItem('dwp_heartbeat_history');
     if (saved) {
       const parsed = JSON.parse(saved);
       setHistory(parsed);
       setPulseCount(parsed.length);
-      if (parsed.length > 0) {
-        setLastHeartbeat(new Date(parsed[0].timestamp).toLocaleString());
-      }
     }
   };
 
   const handlePulse = async () => {
     setIsLoading(true);
-    // Simulate web's blockchain signing
-    setTimeout(async () => {
-      const now = new Date();
-      const newPulse = { id: now.getTime(), timestamp: now.toISOString(), status: 'SUCCESS' };
-      const saved = await AsyncStorage.getItem('dwp_heartbeat_history');
-      const history = saved ? JSON.parse(saved) : [];
-      const updated = [newPulse, ...history];
-      await AsyncStorage.setItem('dwp_heartbeat_history', JSON.stringify(updated));
-      setPulseCount(updated.length);
-      setLastHeartbeat(now.toLocaleString());
+    try {
+      const api = ApiService.getInstance();
+      const success = await api.recordHeartbeat('manual_pulse_screen');
+      if (success) {
+        const now = new Date();
+        const newPulse = { id: now.getTime(), timestamp: now.toISOString(), status: 'SUCCESS' };
+        const saved = await AsyncStorage.getItem('dwp_heartbeat_history');
+        const history = saved ? JSON.parse(saved) : [];
+        const updated = [newPulse, ...history];
+        await AsyncStorage.setItem('dwp_heartbeat_history', JSON.stringify(updated));
+        setHistory(updated);
+        setPulseCount(updated.length);
+        setLastHeartbeat(now.toLocaleString());
+      } else {
+        alert('Pulse emission failed. Check connection.');
+      }
+    } catch (e) {
+      alert('Network or session error during pulse.');
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   return (

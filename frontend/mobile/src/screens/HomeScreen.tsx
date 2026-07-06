@@ -76,26 +76,62 @@ const HomeScreen = ({ navigation }: any) => {
 
   const loadData = async () => {
     try {
-      const items = await AsyncStorage.getItem('dwp_vault_items');
-      const beneficiaries = await AsyncStorage.getItem('dwp_beneficiaries');
+      const api = ApiService.getInstance();
+      const [assetsRes, beneficiariesRes, heartbeatRes] = await Promise.all([
+        api.getAssets(),
+        api.getBeneficiaries(),
+        api.getHeartbeatStatus()
+      ]);
+
       const wallet = await AsyncStorage.getItem('dwp_wallet_address');
       const history = await AsyncStorage.getItem('dwp_heartbeat_history');
-      
-      const vaultItems = items ? JSON.parse(items) : [];
-      const protectionNodes = beneficiaries ? JSON.parse(beneficiaries) : [];
       const heartbeatLogs = history ? JSON.parse(history) : [];
 
-      // Calculate health based on heartbeat regularity (simplified)
-      const health = heartbeatLogs.length > 0 ? 98 : 45;
-      
+      let assetCount = 0;
+      if (assetsRes.success && assetsRes.data) {
+        assetCount = assetsRes.data.length;
+      } else {
+        const items = await AsyncStorage.getItem('dwp_vault_items');
+        assetCount = items ? JSON.parse(items).length : 0;
+      }
+
+      let beneficiaryCount = 0;
+      if (beneficiariesRes.success && beneficiariesRes.data) {
+        beneficiaryCount = beneficiariesRes.data.length;
+      } else {
+        const beneficiaries = await AsyncStorage.getItem('dwp_beneficiaries');
+        beneficiaryCount = beneficiaries ? JSON.parse(beneficiaries).length : 0;
+      }
+
+      let health = 45;
+      let countdown = '03d 12h 45m';
+      if (heartbeatRes.success && heartbeatRes.data) {
+        const { status, daysUntilDue, minutesUntilDue } = heartbeatRes.data;
+        if (status === 'active') health = 99;
+        else if (status === 'grace_period') health = 50;
+        else if (status === 'overdue') health = 10;
+
+        if (status === 'overdue') {
+          countdown = 'OVERDUE';
+        } else if (minutesUntilDue > 0) {
+          countdown = `${minutesUntilDue}m left`;
+        } else if (daysUntilDue > 0) {
+          countdown = `${daysUntilDue}d left`;
+        } else {
+          countdown = '0d 0h 0m';
+        }
+      } else if (heartbeatLogs.length > 0) {
+        health = 98;
+      }
+
       setStats(prev => ({
         ...prev,
-        assets: vaultItems.length,
-        beneficiaries: protectionNodes.length,
+        assets: assetCount,
+        beneficiaries: beneficiaryCount,
         health,
         wallet: wallet || prev.wallet,
         totalPings: heartbeatLogs.length,
-        // Map most recent activity (demo logic)
+        countdown,
         lastActivity: heartbeatLogs[0] || null
       }));
 
@@ -108,7 +144,7 @@ const HomeScreen = ({ navigation }: any) => {
       } else {
         const initialLogs = [
           { time: new Date().toLocaleTimeString(), status: 'INFO', message: 'Initializing DeadMan Protocol Kernel v3.1.0...', color: '#3b82f6' },
-          { time: new Date().toLocaleTimeString(), status: 'OK', message: `Local storage state loaded. Ledger contains ${vaultItems.length} items.`, color: '#10b981' },
+          { time: new Date().toLocaleTimeString(), status: 'OK', message: `Local storage state loaded. Ledger contains ${assetCount} items.`, color: '#10b981' },
           { time: new Date().toLocaleTimeString(), status: 'OK', message: 'Loaded Shamir secret sharing configuration (Threshold: 3/5).', color: '#10b981' }
         ];
         setLogs(initialLogs);
@@ -429,7 +465,7 @@ const HomeScreen = ({ navigation }: any) => {
                  </View>
 
                  <View style={styles.countdownCenter}>
-                    <Text style={styles.countdownValue}>03d 12h 45m</Text>
+                    <Text style={styles.countdownValue}>{stats.countdown}</Text>
                     <Text style={styles.countdownLabel}>Until next required heartbeat</Text>
                  </View>
 

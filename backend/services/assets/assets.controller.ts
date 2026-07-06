@@ -127,7 +127,10 @@ export class AssetsController {
   @ApiOperation({ summary: 'Delete asset metadata' })
   @ApiResponse({ status: 204, description: 'Asset metadata deleted successfully' })
   @ApiResponse({ status: 404, description: 'Asset not found' })
-  async deleteAssetMock(): Promise<any> { return null; }
+  async deleteAsset(@Param('id') id: string, @Req() req: any): Promise<any> {
+    const walletAddress = req.user.walletAddress;
+    return this.assetsService.deleteAsset(id, walletAddress);
+  }
 
   @Post('folders')
   @ApiOperation({ summary: 'Create a new folder' })

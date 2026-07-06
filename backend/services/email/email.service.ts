@@ -93,7 +93,7 @@ export class EmailService {
     if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'))) {
       this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
       try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'support@alwaystherevault.com';
         let senderEmailParsed = fromEmail;
         let senderName = 'AlwaysThere Vault';
         if (fromEmail.includes('<')) {
@@ -506,7 +506,7 @@ export class EmailService {
     if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
       diagnostics.emailMode = 'Brevo API';
       try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'ks5093654@gmail.com';
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'support@alwaystherevault.com';
         let senderEmail = fromEmail;
         let senderName = 'AlwaysThere Vault';
         if (fromEmail.includes('<')) {
