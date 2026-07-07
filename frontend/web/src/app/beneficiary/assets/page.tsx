@@ -55,10 +55,16 @@ function BeneficiaryAssetsContent() {
       const fileIv = asset.fileIv || asset.iv
       
       if (!keyId) {
-        throw new Error('Decryption key ID is missing.')
+        toast.error('Decryption key not found', {
+          description: 'This asset was uploaded without a stored encryption key. It may be a legacy or test asset. Contact support if this is unexpected.'
+        })
+        return
       }
       if (!fileIv) {
-        throw new Error('Initialization Vector (IV) is missing.')
+        toast.error('Encryption IV missing', {
+          description: 'This asset is missing its initialization vector and cannot be decrypted.'
+        })
+        return
       }
 
       // 1. Fetch Key shares from public endpoint
