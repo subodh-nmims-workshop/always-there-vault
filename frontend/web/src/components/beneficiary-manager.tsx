@@ -47,13 +47,27 @@ export function BeneficiaryManager() {
     if (isDemo) return
     try {
       const walletAddress = localStorage.getItem('dwp_wallet_address')
+      const token = localStorage.getItem('dwp_token')
       if (!walletAddress) return
+
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-      const res = await fetch(`${apiEndpoint}/api/beneficiaries?ownerAddress=${walletAddress}`)
+      
+      // Use JWT token if available, otherwise fall back to ownerAddress query
+      const headers: any = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      const res = await fetch(`${apiEndpoint}/api/beneficiaries?ownerAddress=${walletAddress}`, { headers })
       if (res.ok) {
         const data = await res.json()
 
-        // Sync local IndexedDB
+        // ⚡ SAFETY GUARD: Never delete local data if backend returns nothing
+        // This prevents data loss on network errors, wrong wallet address, or expired sessions
+        if (!data || data.length === 0) {
+          console.warn('⚠️ Backend returned 0 beneficiaries — skipping local sync to prevent data loss.')
+          return
+        }
+
+        // Restore/sync backend beneficiaries into local IndexedDB
         for (const item of data) {
           await storage.saveBeneficiary({
             id: item.id,
@@ -66,7 +80,8 @@ export function BeneficiaryManager() {
           })
         }
 
-        // Remove locally deleted ones if they are not in backend
+        // Only remove local beneficiaries that were explicitly deleted from backend
+        // (only when backend has MORE data than nothing — the safety guard above ensures this)
         const backendIds = data.map((b: any) => b.id)
         for (const localBen of beneficiaries) {
           if (!backendIds.includes(localBen.id)) {
@@ -80,6 +95,7 @@ export function BeneficiaryManager() {
       console.error('Failed to sync beneficiaries from backend', err)
     }
   }
+
 
   useEffect(() => {
     fetchAndSyncBeneficiaries()
