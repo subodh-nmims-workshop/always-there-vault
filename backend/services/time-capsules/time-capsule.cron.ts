@@ -51,7 +51,8 @@ export class TimeCapsuleCronService {
           }
 
           // Generate a 7-day token for them to access this specific asset
-          const token = await this.tokenService.generateToken('CLAIM_ACCESS', sender.id, beneficiary.walletAddress, 7 * 24);
+          const targetAddress = (beneficiary.walletAddress && beneficiary.walletAddress !== '0x0000000000000000000000000000000000000000') ? beneficiary.walletAddress : beneficiary.id;
+          const token = await this.tokenService.generateToken('CLAIM_ACCESS', sender.id, targetAddress, 7 * 24);
           const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
           const claimUrl = `${frontendUrl}/claim/${token}?owner=${sender.walletAddress}`;
 

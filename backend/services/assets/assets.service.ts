@@ -57,11 +57,15 @@ export class AssetsService {
     return folder;
   }
 
-  async getFolderContents(walletAddress: string, folderId?: string, ownerAddress?: string) {
+  async getFolderContents(walletAddressOrId: string, folderId?: string, ownerAddress?: string) {
     let targetUserId: string;
     let nomineeRecord: any = null;
 
-    if (ownerAddress && ownerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+    if (!walletAddressOrId) {
+      throw new BadRequestException('Wallet address or beneficiary ID is required');
+    }
+
+    if (ownerAddress && ownerAddress.toLowerCase() !== walletAddressOrId.toLowerCase()) {
       // Requester is checking another user's assets (nominee check)
       const owner = await this.usersService.findUserByWallet(ownerAddress);
       if (!owner) throw new NotFoundException('Owner not found');
@@ -70,7 +74,10 @@ export class AssetsService {
       const isNominee = await this.db.query.beneficiaries.findFirst({
         where: and(
           eq(beneficiaries.userId, owner.id),
-          eq(sql`lower(${beneficiaries.walletAddress})`, walletAddress.toLowerCase())
+          or(
+            eq(sql`lower(${beneficiaries.walletAddress})`, walletAddressOrId.toLowerCase()),
+            eq(beneficiaries.id, walletAddressOrId)
+          )
         )
       });
 
@@ -88,7 +95,7 @@ export class AssetsService {
       nomineeRecord = isNominee;
     } else {
       // User is checking their own assets
-      const user = await this.usersService.findUserByWallet(walletAddress);
+      const user = await this.usersService.findUserByWallet(walletAddressOrId);
       if (!user) throw new NotFoundException('User not found');
       targetUserId = user.id;
     }
@@ -188,8 +195,18 @@ export class AssetsService {
     return fileRecord;
   }
 
-  async getDownloadUrl(id: string, walletAddress: string) {
-    const user = await this.usersService.findUserByWallet(walletAddress);
+  async getDownloadUrl(id: string, walletAddressOrId: string) {
+    if (!walletAddressOrId) {
+      throw new BadRequestException('Wallet address or beneficiary ID is required');
+    }
+    let user: any = null;
+    try {
+      if (walletAddressOrId.startsWith('0x')) {
+        user = await this.usersService.findUserByWallet(walletAddressOrId);
+      }
+    } catch (e) {
+      // Ignore not found if it is a nominee ID
+    }
     let file = user ? await this.db.query.files.findFirst({
       where: and(eq(files.id, id), eq(files.userId, user.id)),
     }) : null;
@@ -209,7 +226,10 @@ export class AssetsService {
           const isNominee = await this.db.query.beneficiaries.findFirst({
             where: and(
               eq(beneficiaries.userId, owner.id),
-              eq(sql`lower(${beneficiaries.walletAddress})`, walletAddress.toLowerCase())
+              or(
+                eq(sql`lower(${beneficiaries.walletAddress})`, walletAddressOrId.toLowerCase()),
+                eq(beneficiaries.id, walletAddressOrId)
+              )
             )
           });
 
@@ -326,7 +346,10 @@ export class AssetsService {
     }).returning();
   }
 
-  async getKeyDistribution(keyId: string, requesterWallet: string) {
+  async getKeyDistribution(keyId: string, requesterWalletOrId: string) {
+    if (!requesterWalletOrId) {
+      throw new BadRequestException('Requester wallet address or ID is required');
+    }
     const { keyDistributions } = await import('../../src/db/schema/keys');
     
     // 1. Find the asset associated with this key to identify the owner
@@ -345,7 +368,7 @@ export class AssetsService {
     });
 
     // 2. If requester is owner, allow access
-    if (owner && owner.walletAddress.toLowerCase() === requesterWallet.toLowerCase()) {
+    if (owner && owner.walletAddress.toLowerCase() === requesterWalletOrId.toLowerCase()) {
         const result = await this.db.query.keyDistributions.findFirst({
             where: eq(keyDistributions.keyId, keyId),
         });
@@ -356,7 +379,10 @@ export class AssetsService {
     const isNominee = await this.db.query.beneficiaries.findFirst({
         where: and(
             eq(beneficiaries.userId, owner.id),
-            eq(sql`lower(${beneficiaries.walletAddress})`, requesterWallet.toLowerCase())
+            or(
+                eq(sql`lower(${beneficiaries.walletAddress})`, requesterWalletOrId.toLowerCase()),
+                eq(beneficiaries.id, requesterWalletOrId)
+            )
         )
     });
 
@@ -375,7 +401,7 @@ export class AssetsService {
     }
 
     // 4. Unauthorized
-    await this.auditService.trackAction(owner.id, 'UNAUTHORIZED_KEY_ACCESS', 'SECURITY', keyId, { requester: requesterWallet });
+    await this.auditService.trackAction(owner.id, 'UNAUTHORIZED_KEY_ACCESS', 'SECURITY', keyId, { requester: requesterWalletOrId });
     throw new NotFoundException('Key not found or access denied');
   }
 

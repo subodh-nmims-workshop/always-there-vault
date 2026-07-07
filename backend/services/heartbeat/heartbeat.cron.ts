@@ -289,7 +289,8 @@ export class HeartbeatCronService {
                                         continue;
                                     }
 
-                                    const token = await this.tokenService.generateToken('CLAIM_ACCESS', user.id, nominee.walletAddress, 7 * 24);
+                                    const targetAddress = (nominee.walletAddress && nominee.walletAddress !== '0x0000000000000000000000000000000000000000') ? nominee.walletAddress : nominee.id;
+                                    const token = await this.tokenService.generateToken('CLAIM_ACCESS', user.id, targetAddress, 7 * 24);
                                     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
                                     const claimUrl = `${frontendUrl}/claim/${token}?owner=${user.walletAddress}`;
 
