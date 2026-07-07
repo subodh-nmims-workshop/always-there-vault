@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
-import * as AWS from 'aws-sdk';
+import { KMSClient, DecryptCommand } from '@aws-sdk/client-kms';
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { eq, and, desc, between } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
 import { userKeys } from '../../src/db/schema/userKeys';
 import { files } from '../../src/db/schema/files';
@@ -31,21 +31,22 @@ export class SecureEncryptionService {
     private readonly ITERATIONS = 100000; // PBKDF2 iterations
     private readonly logger = new Logger(SecureEncryptionService.name);
     
-    private kms: AWS.KMS;
+    private kms: KMSClient;
 
     constructor(@Inject('DRIZZLE_DB') private db: any) {
-        this.kms = new AWS.KMS({
+        this.kms = new KMSClient({
             region: process.env.AWS_REGION || 'us-east-1'
         });
     }
+
     
-    // Generate Master Key from environment (with KMS integration)
     private async getMasterKey(): Promise<Buffer> {
         try {
             if (process.env.ENCRYPTION_MASTER_KEY_CIPHER) {
-                const { Plaintext } = await this.kms.decrypt({
+                const command = new DecryptCommand({
                     CiphertextBlob: Buffer.from(process.env.ENCRYPTION_MASTER_KEY_CIPHER, 'base64')
-                }).promise();
+                });
+                const { Plaintext } = await this.kms.send(command);
                 return Plaintext as Buffer;
             }
             

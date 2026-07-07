@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { AppProvider } from '@/contexts/AppContext'
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { setupFetchInterceptor } from '@/lib/fetch-interceptor'
 
 // RainbowKit & Wagmi
 import '@rainbow-me/rainbowkit/styles.css'
@@ -21,8 +22,10 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   useEffect(() => {
+    // Setup global fetch interceptor for JWT expiry and rate limiting
+    setupFetchInterceptor()
+
     // Increase MaxListeners to prevent MetaMask/extensions memory leak warnings
-    // since multiple extensions or initialization cycles can attach many listeners.
     try {
       const EventEmitter = require('events').EventEmitter;
       if (EventEmitter) {

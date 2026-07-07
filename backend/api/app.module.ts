@@ -5,9 +5,10 @@
  */
 
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { HoneypotMiddleware } from '../middleware/honeypot.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthModule } from '../services/auth/auth.module';
@@ -37,17 +38,18 @@ import { NotificationsModule } from '../services/notifications/notifications.mod
       isGlobal: true,
       envFilePath: '.env',
     }),
-    /*
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        const uri = configService.get<string>('MONGO_URI') || 'mongodb://admin:password@127.0.0.1:27017/digital-will?authSource=admin';
-        console.log('🔍 MongoDB URI:', uri);
-        return { uri };
-      },
-      inject: [ConfigService],
-    }),
-    */
+    // ─── Rate Limiting (Global) ───────────────────────────────────────
+    // 100 requests per minute per IP globally
+    // Critical endpoints (claim, auth) use @Throttle() decorators for tighter limits
+    ThrottlerModule.forRoot([{
+      name: 'global',
+      ttl: 60000,   // 1 minute window
+      limit: 100,   // max 100 requests per IP per minute
+    }, {
+      name: 'strict', // used on sensitive endpoints
+      ttl: 60000,
+      limit: 10,
+    }]),
     ScheduleModule.forRoot(),
     PrometheusModule.register(),
     LoggerModule,
@@ -68,7 +70,13 @@ import { NotificationsModule } from '../services/notifications/notifications.mod
     NotificationsModule,
   ],
   controllers: [AppController, HealthController],
-  providers: [],
+  providers: [
+    // Apply rate limiting globally to all routes
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -31,10 +31,12 @@ import { UsersService } from '../users/users.service';
 import { TokenService } from '../auth/token.service';
 import { eq } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('assets')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@SkipThrottle() // Authenticated users are already verified — rely on JWT, not rate limit
 @Controller('api/assets')
 export class AssetsController {
   constructor(
@@ -222,6 +224,7 @@ export class AssetsController {
  * Beneficiaries use their CLAIM_ACCESS token (from email) to access assets.
  */
 @ApiTags('claim-assets')
+@Throttle({ strict: { ttl: 60000, limit: 10 } }) // Max 10 claim attempts per minute per IP
 @Controller('api/claim-assets')
 export class ClaimAssetsController {
   constructor(
