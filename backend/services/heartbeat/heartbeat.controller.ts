@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { HeartbeatService } from './heartbeat.service';
@@ -33,6 +34,22 @@ export class HeartbeatController {
   @ApiResponse({ status: 200, description: 'Heartbeat status retrieved successfully' })
   async getPublicStatus(@Param('wallet') wallet: string): Promise<any> {
     return this.heartbeatService.getHeartbeatStatus(wallet);
+  }
+
+  @Post('trigger-cron')
+  @ApiOperation({ summary: 'Manually trigger the Heartbeat Cron Check (External Cron / Webhook)' })
+  async triggerCron(@Query('secret') secret: string): Promise<any> {
+    const expectedSecret = process.env.CRON_SECRET || 'super-secret-cron-key-123';
+    if (secret !== expectedSecret) {
+      throw new BadRequestException('Invalid cron secret');
+    }
+    
+    // Trigger the cron check asynchronously
+    this.heartbeatCronService.handleCron().catch(err => {
+      console.error('Error running triggered heartbeat cron:', err);
+    });
+    
+    return { success: true, message: 'Heartbeat cron check triggered' };
   }
 
   @Get('verify')
