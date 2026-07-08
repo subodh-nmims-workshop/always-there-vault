@@ -23,8 +23,8 @@ export class EmailService {
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
     const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
     const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
-    const defaultSender = user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user;
-    this.fromEmail = (this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <${defaultSender}>`).trim();
+    const defaultSender = (user && !user.includes('your-email') && !user.includes('placeholder') && !user.includes('example')) ? user : 'support@alwaystherevault.com';
+    this.fromEmail = (this.configService.get<string>('SMTP_FROM') || `"AlwaysThere Vault" <support@alwaystherevault.com>`).trim();
     this.frontendUrl = (this.configService.get<string>('FRONTEND_URL') || 'http://localhost:7000').trim();
 
     this.transporter = nodemailer.createTransport({
@@ -96,7 +96,7 @@ export class EmailService {
     if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'))) {
       this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
       try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'support@alwaystherevault.com';
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <support@alwaystherevault.com>';
         let senderEmailParsed = fromEmail;
         let senderName = 'AlwaysThere Vault';
         if (fromEmail.includes('<')) {
