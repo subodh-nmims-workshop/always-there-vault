@@ -1,0 +1,20 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Build outputs
+dist
+build
+
+# Environment files
+.env
+.env.*
+
+# Git
+.git
+.gitignore
+
+# Tests
+test
+*.test.ts
+*.spec.ts

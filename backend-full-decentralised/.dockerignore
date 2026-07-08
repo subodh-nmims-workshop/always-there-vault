@@ -1,0 +1,16 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Hardhat outputs
+artifacts
+cache
+typechain-types
+
+# Environment files
+.env
+.env.*
+
+# Git
+.git
+.gitignore
