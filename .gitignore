@@ -90,3 +90,6 @@ backend/*.db
 
 # Local uploads directory
 backend/uploads/
+
+# Local secrets file
+secrets.txt
