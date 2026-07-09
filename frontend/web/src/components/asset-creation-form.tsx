@@ -165,7 +165,7 @@ export function AssetCreationForm() {
               const backendFiles: any[] = (backendData.assets || []).map((f: any) => ({
                 id: f.id,
                 name: f.name,
-                type: f.mimeType?.startsWith('image/') ? 'photo' : 'document',
+                type: f.metadata?.type || f.type || (f.mimeType?.startsWith('image/') ? 'photo' : 'document'),
                 folderId: f.folderId || null,
                 encryptedData: f.encryptedData || null,
                 keyId: f.encryptionKeyId || null,
@@ -402,6 +402,7 @@ export function AssetCreationForm() {
             body: JSON.stringify({
               id: asset.id,
               name: asset.name,
+              type: asset.type,
               size: asset.size,
               mimeType: asset.mimeType,
               ipfsHash: ipfsCID,
@@ -409,6 +410,7 @@ export function AssetCreationForm() {
               iv: asset.iv,
               folderId: asset.folderId || null,
               assignedBeneficiaryId: selectedBeneficiaries[0] || null,
+              metadata: { type: asset.type }
             })
           })
           if (backendAssetRes.ok) {
