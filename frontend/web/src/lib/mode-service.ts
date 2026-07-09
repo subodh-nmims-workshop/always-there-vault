@@ -211,7 +211,8 @@ class ModeService {
                         beneficiaries: asset.beneficiaries,
                         size: asset.size,
                         mimeType: asset.mimeType,
-                        folderId: asset.folderId
+                        folderId: asset.folderId,
+                        metadata: { type: asset.type }
                     })
                 })
                 console.log('✅ Asset binary and metadata saved to Cloud Vault')
@@ -235,7 +236,8 @@ class ModeService {
                 beneficiaries: asset.beneficiaries,
                 size: asset.size,
                 mimeType: asset.mimeType,
-                folderId: asset.folderId
+                folderId: asset.folderId,
+                metadata: { type: asset.type }
               })
             })
 
@@ -364,7 +366,7 @@ class ModeService {
             return {
               id: b.id,
               name: b.name,
-              type: b.type || b.mimeType?.split('/')[0]?.toUpperCase() || 'FILE',
+              type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
               folderId: b.folderId || null,
               // Critical: use local encryptedData — backend only stores it for notes
               encryptedData: local?.encryptedData || b.encryptedData || '',

@@ -180,7 +180,10 @@ export class AssetsService {
       encryptedData: data.encryptedData || null,
       encryptionKey: data.encryptionKey || null,
       isIpfs: !!isIpfs,
-      metadata: isB2 ? { storageProvider: 'backblaze-b2', bucket: this.configService.get('B2_BUCKET_NAME') } : (data.metadata || {}),
+      metadata: {
+        ...(data.metadata || {}),
+        ...(isB2 ? { storageProvider: 'backblaze-b2', bucket: this.configService.get('B2_BUCKET_NAME') } : {})
+      },
       userId: user.id,
       folderId: data.folderId || null,
       assignedBeneficiaryId: data.assignedBeneficiaryId || null,
