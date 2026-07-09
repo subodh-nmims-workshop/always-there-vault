@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Image from 'next/image'
 import { ethers } from 'ethers'
 import QRCode from 'qrcode'
 import CryptoJS from 'crypto-js'
@@ -1170,7 +1171,7 @@ export function SettingsDashboard() {
                 </div>
 
                 <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-200">
-                  <img src={mfaQrCode} alt="MFA QR Code" className="size-48" />
+                  <Image src={mfaQrCode} alt="MFA QR Code" width={192} height={192} className="size-48" unoptimized />
                   <p className="text-[10px] text-slate-500 mt-2 font-mono select-all">Secret: {mfaSecret}</p>
                 </div>
 

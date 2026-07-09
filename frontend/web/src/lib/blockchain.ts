@@ -38,6 +38,10 @@ const DIGITAL_WILL_ABI = [
   'event TokenAssetExecuted(address indexed owner,address indexed token,address indexed beneficiary,uint8 tokenType,uint256 amountOrId,uint256 timestamp)'
 ]
 
+// Cache providers to prevent duplicate event listeners on window.ethereum
+let cachedProvider: ethers.BrowserProvider | null = null
+let cachedReadOnlyProvider: ethers.JsonRpcProvider | null = null
+
 /**
  * Get Web3 Provider (MetaMask, WalletConnect, etc.)
  */
@@ -46,16 +50,21 @@ export async function getProvider() {
     throw new Error('No Web3 wallet found. Please install MetaMask.')
   }
 
-  const provider = new ethers.BrowserProvider(window.ethereum)
-  return provider
+  if (!cachedProvider) {
+    cachedProvider = new ethers.BrowserProvider(window.ethereum)
+  }
+  return cachedProvider
 }
 
 /**
  * Get Read-Only Provider (for queries without wallet)
  */
 export function getReadOnlyProvider() {
-  const config = getContractConfig()
-  return new ethers.JsonRpcProvider(config.RPC_URL)
+  if (!cachedReadOnlyProvider) {
+    const config = getContractConfig()
+    cachedReadOnlyProvider = new ethers.JsonRpcProvider(config.RPC_URL)
+  }
+  return cachedReadOnlyProvider
 }
 
 /**

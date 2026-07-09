@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { LOGO_BASE64 } from '@/utils/logo-base64'
 import { Download, Printer } from 'lucide-react'
@@ -111,7 +112,7 @@ function ReceiptContent() {
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2.5">
-                                <img src={LOGO_BASE64} alt="AlwaysThere Logo" className="h-9 w-auto object-contain" />
+                                <Image src={LOGO_BASE64} alt="AlwaysThere Logo" width={36} height={36} className="h-9 w-auto object-contain" unoptimized />
                                 <span className="text-lg font-black text-slate-900 tracking-tight">AlwaysThere</span>
                             </div>
                             <div className="text-[10px] text-slate-500 leading-relaxed font-semibold print:text-[9px]">

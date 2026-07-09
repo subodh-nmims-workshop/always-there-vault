@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { 
   Shield, 
   Lock, 
@@ -89,6 +90,15 @@ export default function HomePage() {
 
   useEffect(() => {
     setHasMounted(true)
+    
+    // Check for expired session query parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('session') === 'expired') {
+      toast.error('Session expired. Please reconnect your wallet.')
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
     const storedConnection = localStorage.getItem('dwp_wallet_connected')
     if (isDemo) {
@@ -369,7 +379,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 font-sans flex flex-col overflow-x-hidden relative transition-colors duration-300">
         <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors duration-300">
           <Link href="/" className="flex items-center gap-2 group">
-            <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+            <Image src="/logo-simple.png" alt="AlwaysThere Logo" width={40} height={40} className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
             <div className="flex flex-col text-left">
               <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
               <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
@@ -508,7 +518,7 @@ export default function HomePage() {
 
         <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors duration-300">
           <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+            <Image src="/logo-simple.png" alt="AlwaysThere Logo" width={40} height={40} className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
             <div className="flex flex-col text-left">
               <span className="text-sm sm:text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
               <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5 hidden sm:block">SECURE YOUR DIGITAL LEGACY</span>
@@ -581,7 +591,7 @@ export default function HomePage() {
 
       <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors duration-300">
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+          <Image src="/logo-simple.png" alt="AlwaysThere Logo" width={40} height={40} className="h-8 sm:h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
           <div className="flex flex-col text-left">
             <span className="text-sm sm:text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
             <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5 hidden sm:block">SECURE YOUR DIGITAL LEGACY</span>

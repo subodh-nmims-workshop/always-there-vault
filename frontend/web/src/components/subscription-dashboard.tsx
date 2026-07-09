@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, TrendingUp, Calendar, CreditCard, RefreshCw, XCircle, Zap, Users, HardDrive, FileText as ReceiptIcon, Printer, X, Download, QrCode } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ALL_PLANS } from '@/types/subscription'
 import { useState, useEffect } from 'react'
@@ -197,7 +198,7 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
                             <div className="flex flex-row justify-between items-start gap-4">
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2.5">
-                                        <img src={LOGO_BASE64} alt="AlwaysThere Logo" className="h-9 w-auto object-contain" />
+                                        <Image src={LOGO_BASE64} alt="AlwaysThere Logo" width={36} height={36} className="h-9 w-auto object-contain" unoptimized />
                                         <span className="text-lg font-black text-slate-900 tracking-tight">AlwaysThere</span>
                                     </div>
                                     <div className="text-[10px] text-slate-500 leading-relaxed font-semibold print:text-[9px] print:leading-normal">
@@ -328,10 +329,13 @@ function ReceiptModal({ isOpen, onClose, invoice }: ReceiptModalProps) {
 
                                 <div className="flex flex-col items-center gap-1.5 p-2 bg-white border border-slate-200 rounded-xl shadow-sm print:p-1.5 flex-shrink-0">
                                     {qrDataUrl ? (
-                                        <img 
+                                        <Image 
                                             src={qrDataUrl} 
                                             alt="Verify On-Chain QR" 
+                                            width={96}
+                                            height={96}
                                             className="w-24 h-24 object-contain print:w-20 print:h-20" 
+                                            unoptimized
                                         />
                                     ) : (
                                         <div className="w-24 h-24 bg-slate-100 animate-pulse rounded print:w-20 print:h-20" />

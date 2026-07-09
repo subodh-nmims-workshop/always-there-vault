@@ -33,10 +33,13 @@ export function setupFetchInterceptor() {
             // Clear stale auth data
             localStorage.removeItem('dwp_token')
             localStorage.removeItem('dwp_wallet_address')
-            // Redirect only if not already on login/landing page
+            localStorage.removeItem('dwp_wallet_connected')
+            localStorage.removeItem('dwp_is_demo')
+            
+            // Redirect only if not already on login/beneficiary/claim page
             if (!window.location.pathname.includes('/login') &&
                 !window.location.pathname.includes('/beneficiary') &&
-                window.location.pathname !== '/') {
+                !window.location.pathname.includes('/claim')) {
               window.location.href = '/?session=expired'
             }
           }

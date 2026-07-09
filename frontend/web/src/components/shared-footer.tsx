@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { Shield } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
@@ -14,7 +15,7 @@ export function SharedFooter() {
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
                              <Link href="/" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
-                                <img src="/logo-simple.png" alt="AlwaysThere Logo" className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
+                                <Image src="/logo-simple.png" alt="AlwaysThere Logo" width={40} height={40} className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
                                 <div className="flex flex-col text-left">
                                     <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
                                     <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>

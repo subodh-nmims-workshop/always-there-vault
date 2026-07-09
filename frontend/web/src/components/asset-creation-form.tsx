@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Upload, Lock, Key, Trash2, Eye, Shield,
@@ -2957,15 +2958,18 @@ export function AssetCreationForm() {
                               <p className="text-xs">Decrypting image...</p>
                             </div>
                           ) : (
-                            <img
-                              src={decryptedContent.startsWith('blob:') || decryptedContent.startsWith('data:') ? decryptedContent : `data:${viewingAsset.mimeType || 'image/jpeg'};base64,${decryptedContent}`}
-                              alt={viewingAsset.name}
-                              className="max-h-[50vh] object-contain rounded-md shadow-2xl"
+                            <Image
+                              src={decryptedContent.startsWith('blob:') || decryptedContent.startsWith('data:') ? decryptedContent : `data:${viewingAsset?.mimeType || 'image/jpeg'};base64,${decryptedContent}`}
+                              alt={viewingAsset?.name || 'Decrypted Image'}
+                              width={800}
+                              height={600}
+                              className="max-h-[50vh] w-auto h-auto object-contain rounded-md shadow-2xl"
                               onError={(e) => {
                                 console.error('Image render failed, src:', (e.target as HTMLImageElement).src.substring(0, 100))
                                   ; (e.target as HTMLImageElement).style.display = 'none'
                                   ; (e.target as HTMLImageElement).insertAdjacentHTML('afterend', '<p class="text-red-400 text-sm">Image failed to render. Check console for details.</p>')
                               }}
+                              unoptimized
                             />
                           )}
                         </div>
