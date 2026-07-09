@@ -118,7 +118,7 @@ export class EmailService {
     const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
     const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || '').trim();
 
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'))) {
+    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host.includes('brevo') && !pass.startsWith('xsmtpsib')))) {
       this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
       try {
         let senderEmailParsed = 'support@alwaystherevault.com';
@@ -538,7 +538,7 @@ export class EmailService {
       error: null
     };
 
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'))) {
+    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host?.includes('brevo') && !pass.startsWith('xsmtpsib')))) {
       diagnostics.emailMode = 'Brevo API';
       try {
         const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'support@alwaystherevault.com';
