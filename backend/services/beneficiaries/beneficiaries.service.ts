@@ -55,10 +55,16 @@ export class BeneficiariesService {
 
     // Notify beneficiary via email
     if (beneficiary.email && !beneficiary.email.startsWith('pgp-') && !beneficiary.email.includes('+pgp@')) {
+      const verifiedSenderEmail = user.emailVerified ? user.email : (user.alternativeEmailVerified ? user.alternativeEmail : null);
+      const fromEmailHeader = verifiedSenderEmail 
+        ? `"${user.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
+        : undefined;
+
       this.emailService.sendBeneficiaryAddedEmail(
         beneficiary.email,
         beneficiary.name,
-        user.name || 'A user'
+        user.name || 'A user',
+        fromEmailHeader
       ).catch(err => console.error('Failed to send beneficiary email:', err));
     }
 
@@ -125,11 +131,17 @@ export class BeneficiariesService {
     this.verificationCodes.set(id, code);
 
     // Send email asynchronously
+    const verifiedSenderEmail = user?.emailVerified ? user.email : (user?.alternativeEmailVerified ? user.alternativeEmail : null);
+    const fromEmailHeader = verifiedSenderEmail 
+      ? `"${user?.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
+      : undefined;
+
     this.emailService.sendBeneficiaryVerificationEmail(
       beneficiary.email,
       beneficiary.name || 'Nominee',
       code,
-      user?.name || 'A user'
+      user?.name || 'A user',
+      fromEmailHeader
     ).catch(err => console.error('Failed to send beneficiary verification email:', err));
 
     return { success: true };

@@ -119,9 +119,9 @@ export class HeartbeatCronService {
                     const now = new Date();
                     const unitsSinceLastHeartbeat = Math.floor((now.getTime() - lastHeartbeatTime.getTime()) / timeUnit);
 
-                    // How many alerts should have been sent so far = units since last heartbeat - interval
+                    // How many alerts should have been sent so far = units since last heartbeat - interval + 1
                     // If currentMisses already covers the expected count, throttle (only applies to warnings, not the final trigger)
-                    const expectedMisses = Math.max(0, unitsSinceLastHeartbeat - config.intervalDays);
+                    const expectedMisses = Math.max(0, unitsSinceLastHeartbeat - config.intervalDays + 1);
                     if (currentMisses < maxBuffer && currentMisses >= expectedMisses && currentMisses > 0) {
                         this.logger.debug(`Throttling alert for ${user.walletAddress}: misses(${currentMisses}) already covers expected(${expectedMisses}) for this time period.`);
                         continue;
@@ -294,13 +294,19 @@ export class HeartbeatCronService {
                                     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
                                     const claimUrl = `${frontendUrl}/claim/${token}?owner=${user.walletAddress}`;
 
+                                    const verifiedSenderEmail = user.emailVerified ? user.email : (user.alternativeEmailVerified ? user.alternativeEmail : null);
+                                    const fromEmailHeader = verifiedSenderEmail 
+                                      ? `"${user.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
+                                      : undefined;
+
                                     await this.emailService.sendAssetReleaseNotification(
                                         nominee.email,
                                         nominee.name,
                                         user.name || 'The account owner',
                                         user.walletAddress,
                                         theirFiles.length,
-                                        claimUrl
+                                        claimUrl,
+                                        fromEmailHeader
                                     );
                                     this.logger.log(`📧 Asset release email (${theirFiles.length} file(s)) dispatched to nominee: ${nominee.email}`);
                                 } catch (nomineeError) {

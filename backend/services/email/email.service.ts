@@ -9,6 +9,8 @@ interface EmailOptions {
   subject: string;
   html: string;
   text?: string;
+  from?: string;
+  replyTo?: string;
 }
 
 @Injectable()
@@ -39,18 +41,41 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    // 1. DMARC / SPF Check in Production to warn admins of delivery issues
-    const rawFrom = this.configService.get<string>('SMTP_FROM') || this.fromEmail;
-    let senderEmail = rawFrom;
-    if (rawFrom.includes('<')) {
-      const match = rawFrom.match(/<(.*)>/);
-      if (match) {
-        senderEmail = match[1].trim();
+    // 1. DMARC / SPF Check & Alignment Protection
+    // Instead of sending directly from the user's personal domain (e.g. Gmail), which will get blocked by SPF/DMARC,
+    // we use our system's verified domain as the From header, but with the user's name as the Display Name,
+    // and route replies directly to their verified email using the Reply-To header.
+    let fromHeader = this.fromEmail;
+    let replyToHeader = options.replyTo;
+
+    if (options.from) {
+      let displayName = 'Vault Owner';
+      let userEmail = options.from;
+      if (options.from.includes('<')) {
+        const match = options.from.match(/(.*)<(.*)>/);
+        if (match) {
+          displayName = match[1].replace(/"/g, '').trim();
+          userEmail = match[2].trim();
+        }
       }
+      
+      let systemEmail = 'support@alwaystherevault.com';
+      if (this.fromEmail.includes('<')) {
+        const match = this.fromEmail.match(/<(.*)>/);
+        if (match) {
+          systemEmail = match[1].trim();
+        }
+      } else {
+        systemEmail = this.fromEmail.trim();
+      }
+
+      fromHeader = `"${displayName} via AlwaysThere" <${systemEmail}>`;
+      replyToHeader = userEmail;
     }
-    const isPublicDomain = /@(gmail|yahoo|outlook|hotmail|aol|live|icloud)\.com$/i.test(senderEmail);
+
+    const isPublicDomain = /@(gmail|yahoo|outlook|hotmail|aol|live|icloud)\.com$/i.test(replyToHeader || '');
     if (isPublicDomain && process.env.NODE_ENV === 'production') {
-      this.logger.warn(`⚠️ DMARC Warning: Real email delivery from public domain "${senderEmail}" via SMTP relay is highly likely to fail or land in spam folders. Configure a custom validated domain.`);
+      this.logger.log(`ℹ️ SPF/DMARC Guard: Routing reply-to to verified address "${replyToHeader}" and sending from "${fromHeader}" to guarantee delivery.`);
     }
 
     // 2. Try Resend API first if configured
@@ -58,7 +83,6 @@ export class EmailService {
     if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
       this.logger.log(`Attempting email dispatch via Resend API to: ${options.to}`);
       try {
-        const from = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <onboarding@resend.dev>';
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -66,10 +90,11 @@ export class EmailService {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            from,
+            from: fromHeader,
             to: options.to,
             subject: options.subject,
-            html: options.html
+            html: options.html,
+            reply_to: replyToHeader
           })
         });
         if (res.ok) {
@@ -96,11 +121,10 @@ export class EmailService {
     if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'))) {
       this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
       try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || 'AlwaysThere Vault <support@alwaystherevault.com>';
-        let senderEmailParsed = fromEmail;
+        let senderEmailParsed = 'support@alwaystherevault.com';
         let senderName = 'AlwaysThere Vault';
-        if (fromEmail.includes('<')) {
-          const match = fromEmail.match(/(.*)<(.*)>/);
+        if (fromHeader.includes('<')) {
+          const match = fromHeader.match(/(.*)<(.*)>/);
           if (match) {
             senderName = match[1].replace(/"/g, '').trim();
             senderEmailParsed = match[2].trim();
@@ -117,6 +141,7 @@ export class EmailService {
           body: JSON.stringify({
             sender: { name: senderName, email: senderEmailParsed },
             to: [{ email: options.to }],
+            replyTo: replyToHeader ? { email: replyToHeader } : undefined,
             subject: options.subject,
             htmlContent: options.html
           })
@@ -156,8 +181,11 @@ export class EmailService {
           auth: { user: testAccount.user, pass: testAccount.pass }
         });
         const info = await testTransporter.sendMail({
-          from: `"AlwaysThere Vault" <${testAccount.user}>`,
-          to: options.to, subject: options.subject, html: options.html,
+          from: fromHeader,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          replyTo: replyToHeader,
         });
         this.logger.log(`📬 TEST EMAIL SENT via Ethereal — Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
         return true;
@@ -173,11 +201,12 @@ export class EmailService {
     this.logger.log(`Attempting email dispatch via standard Nodemailer SMTP to: ${options.to}`);
     try {
       const info = await this.transporter.sendMail({
-        from: this.fromEmail,
+        from: fromHeader,
         to: options.to,
         subject: options.subject,
         text: options.text,
         html: options.html,
+        replyTo: replyToHeader,
       });
       this.logger.log(`✅ Email successfully sent via SMTP to: ${options.to}. MessageID: ${info.messageId}`);
       return true;
@@ -265,7 +294,7 @@ export class EmailService {
     });
   }
 
-  async sendBeneficiaryVerificationEmail(email: string, name: string, code: string, ownerName: string): Promise<boolean> {
+  async sendBeneficiaryVerificationEmail(email: string, name: string, code: string, ownerName: string, fromEmail?: string): Promise<boolean> {
     const escapedName = escapeHtml(name);
     const escapedCode = escapeHtml(code);
     const escapedOwner = escapeHtml(ownerName);
@@ -293,13 +322,14 @@ export class EmailService {
         footerNote: 'This code expires in 15 minutes. Do not share it with unauthorized users.',
       }),
       text: `Your AlwaysThere beneficiary verification code is: ${code}. Expires in 15 minutes.`,
+      from: fromEmail,
     });
   }
 
   // ─────────────────────────────────────────
   //  BENEFICIARY ADDED
   // ─────────────────────────────────────────
-  async sendBeneficiaryAddedEmail(email: string, name: string, ownerName: string): Promise<boolean> {
+  async sendBeneficiaryAddedEmail(email: string, name: string, ownerName: string, fromEmail?: string): Promise<boolean> {
     const escapedName = escapeHtml(name);
     const escapedOwner = escapeHtml(ownerName);
     const body = `
@@ -329,6 +359,7 @@ export class EmailService {
         footerNote: `You were designated as a beneficiary by ${ownerName}. No action required.`,
       }),
       text: `Hi ${name}, ${ownerName} has added you as a beneficiary in AlwaysThere Vault. You'll be notified if action is required.`,
+      from: fromEmail,
     });
   }
 
@@ -407,7 +438,7 @@ export class EmailService {
   // ─────────────────────────────────────────
   //  ASSET RELEASE (Nominee)
   // ─────────────────────────────────────────
-  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number, claimUrl: string): Promise<boolean> {
+  async sendAssetReleaseNotification(email: string, name: string, ownerName: string, ownerAddress: string, assetCount: number, claimUrl: string, fromEmail?: string): Promise<boolean> {
     const escapedName = escapeHtml(name);
     const escapedOwner = escapeHtml(ownerName);
     const escapedAddress = escapeHtml(ownerAddress);
@@ -443,6 +474,7 @@ export class EmailService {
         footerNote: 'This is a one-time inheritance notification. Your claim link is unique and expires in 7 days.',
       }),
       text: `Hi ${name}, assets from ${ownerName} have been released to you. You have ${assetCount} asset(s). Claim here: ${claimUrl}`,
+      from: fromEmail,
     });
   }
 

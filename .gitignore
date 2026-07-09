@@ -87,3 +87,6 @@ grafana_data/
 # Local database (for dev only)
 *.db
 backend/*.db
+
+# Local uploads directory
+backend/uploads/

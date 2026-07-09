@@ -76,14 +76,14 @@ export class HeartbeatService {
       lastHeartbeat: config.lastHeartbeat || config.createdAt
     };
 
-    if (diff > interval + grace) {
+    if (diff >= interval + grace) {
       return { 
         status: 'overdue', 
         daysUntilDue: isDemo ? 0 : interval + grace - diff,
         minutesUntilDue: isDemo ? interval + grace - diff : 0,
         ...common
       };
-    } else if (diff > interval) {
+    } else if (diff >= interval) {
       return { 
         status: 'grace_period', 
         daysUntilDue: isDemo ? 0 : interval + grace - diff,

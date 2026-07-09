@@ -21,7 +21,7 @@ export class TimeCapsuleCronService {
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleScheduledDeliveries() {
     this.logger.log('Checking for pending Time Capsule deliveries...');
     
@@ -84,10 +84,16 @@ export class TimeCapsuleCronService {
             footerNote: 'Secured by AlwaysThere Vault Protocol.',
           });
 
+          const verifiedSenderEmail = sender.emailVerified ? sender.email : (sender.alternativeEmailVerified ? sender.alternativeEmail : null);
+          const fromEmailHeader = verifiedSenderEmail 
+            ? `"${sender.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
+            : undefined;
+
           await this.emailService.sendEmail({
             to: beneficiary.email,
             subject: `🕰️ You received a Time Capsule from ${sender.name || 'someone special'}`,
-            html: emailHtml
+            html: emailHtml,
+            from: fromEmailHeader
           });
 
           // Mark as delivered

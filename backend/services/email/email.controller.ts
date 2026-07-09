@@ -49,15 +49,4 @@ export class EmailController {
     };
   }
 
-  @Post('test-demo')
-  async sendTestDemo(@Body() body: { email: string }) {
-    console.log('Sending test demo mail to:', body.email);
-    return {
-      success: await this.emailService.sendBeneficiaryAddedEmail(
-        body.email,
-        'Subodh',
-        'Always There Demo'
-      ),
-    };
-  }
 }
