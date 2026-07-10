@@ -46,6 +46,7 @@ function BeneficiaryAssetsContent() {
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimed, setClaimed] = useState(false)
   const [downloadingAssetId, setDownloadingAssetId] = useState<string | null>(null)
+  const [lastCheckedToken, setLastCheckedToken] = useState<string | null>(null)
 
   const downloadAndDecryptAsset = async (asset: any) => {
     setDownloadingAssetId(asset.id)
@@ -149,10 +150,11 @@ function BeneficiaryAssetsContent() {
 
   // Auto-trigger check when arriving from email claim link
   useEffect(() => {
-    if (claimToken && status === 'idle') {
+    if (claimToken && status === 'idle' && claimToken !== lastCheckedToken) {
+      setLastCheckedToken(claimToken)
       checkEligibility()
     }
-  }, [claimToken, status]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [claimToken, status, lastCheckedToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
 
   const handleWalletConnect = async (walletAddress: string) => {
