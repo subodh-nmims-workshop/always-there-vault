@@ -1151,6 +1151,35 @@ export function HeartbeatMonitor() {
         </div>
 
         <AnimatePresence>
+          {(!profileEmail || !emailVerified) && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }} 
+              animate={{ opacity: 1, height: 'auto' }} 
+              exit={{ opacity: 0, height: 0 }} 
+              className="mb-6 overflow-hidden"
+            >
+              <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center justify-between gap-4 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-500/20 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse">
+                    <Mail className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-red-800 dark:text-red-100 uppercase tracking-tight">Alert Email Missing</p>
+                    <p className="text-xs font-medium text-red-700 dark:text-red-300 mt-0.5">
+                      You won't receive warning alerts before your vault triggers.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="px-3.5 py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-lg transition-colors shadow-md shadow-red-500/20 shrink-0"
+                >
+                  Configure
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {daysUntilDue <= (isDemo ? 60 : 7) && daysUntilDue > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
