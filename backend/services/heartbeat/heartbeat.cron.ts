@@ -10,65 +10,6 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { eq, sql } from 'drizzle-orm';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 import { files } from '../../src/db/schema/files';
-import { buildEmailShell, infoBox, statRow, alertStrip, ctaButton, escapeHtml } from '../email/email-templates';
-
-interface HeartbeatAlertEmailParams {
-    name: string;
-    walletAddress: string;
-    missCount: number;
-    maxBuffer: number;
-    intervalDays: number;
-    gracePeriodDays: number;
-    lastHeartbeat: string;
-    checkedAt: string;
-    isFinalWarning: boolean;
-    verificationUrl: string;
-}
-
-function buildHeartbeatAlertEmail(p: HeartbeatAlertEmailParams): string {
-    const urgencyColor = p.isFinalWarning ? '#ef4444' : p.missCount === 1 ? '#eab308' : '#f97316';
-    const glowColor = p.isFinalWarning ? 'rgba(239,68,68,0.3)' : p.missCount === 1 ? 'rgba(234,179,8,0.3)' : 'rgba(249,115,22,0.3)';
-    const progressPct = Math.round((p.missCount / p.maxBuffer) * 100);
-    const escapedName = escapeHtml(p.name);
-    const escapedWallet = escapeHtml(p.walletAddress);
-
-    const body = `
-      <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
-      <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
-        ${p.isFinalWarning
-          ? `<strong style="color:${urgencyColor};">This is your final warning.</strong> If you do not verify your status immediately, the AlwaysThere Vault will irreversibly distribute your assigned assets to your nominees.`
-          : 'Your cryptographic heartbeat signal has been missed. Submit a proof-of-life verification immediately to halt the asset distribution sequence.'}
-      </p>
-      ${infoBox(`
-        ${statRow('Wallet', escapedWallet.slice(0,10)+'...'+escapedWallet.slice(-8), '#38bdf8')}
-        ${statRow('Last Heartbeat', escapeHtml(p.lastHeartbeat), '#e2e8f0')}
-        ${statRow('Interval / Grace', `${p.intervalDays}d / ${p.gracePeriodDays}d`, '#e2e8f0')}
-        ${statRow('Buffer Exhausted', `${p.missCount} of ${p.maxBuffer} missed`, urgencyColor, true)}
-      `)}
-      <div style="margin:20px 0;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
-          <tr>
-            <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Buffer Exhaustion</td>
-            <td align="right" style="font-size:12px;font-weight:700;color:${urgencyColor};">${progressPct}%</td>
-          </tr>
-        </table>
-        <div style="background:#060d1a;border:1px solid rgba(255,255,255,0.06);border-radius:6px;height:10px;overflow:hidden;padding:2px;">
-          <div style="background:linear-gradient(90deg,${urgencyColor}80,${urgencyColor});width:${progressPct}%;height:100%;border-radius:3px;box-shadow:0 0 8px ${urgencyColor};"></div>
-        </div>
-      </div>
-      ${ctaButton(p.verificationUrl, p.isFinalWarning ? '🚨 Verify Status Immediately' : '✅ Confirm I\'m Active', urgencyColor)}
-    `;
-
-    return buildEmailShell({
-        accentColor: urgencyColor,
-        accentGlow: glowColor,
-        icon: p.isFinalWarning ? '💀' : '⏳',
-        headline: p.isFinalWarning ? 'Protocol Trigger Imminent' : 'Heartbeat Overdue',
-        subline: `Stage ${p.missCount} of ${p.maxBuffer} — ${p.isFinalWarning ? 'Final Warning' : 'Action Required'}`,
-        body,
-        footerNote: 'Automated heartbeat monitoring from AlwaysThere Vault Protocol.',
-    });
-}
 
 
 
@@ -139,50 +80,41 @@ export class HeartbeatCronService {
                         this.logger.warn(`User ${user.walletAddress} missed heartbeat. Stage: Missed${newMissCount} (${newMissCount}/${maxBuffer})`);
 
                         const emailsToSend: string[] = [];
-                        if (user.email && user.emailVerified) {
+                        if (user.email && (user.emailVerified || isDemo)) {
                             emailsToSend.push(user.email);
                         }
-                        if (user.alternativeEmail && user.alternativeEmailVerified) {
+                        if (user.alternativeEmail && (user.alternativeEmailVerified || isDemo)) {
                             emailsToSend.push(user.alternativeEmail);
                         }
 
                         if (emailsToSend.length > 0) {
-                            let subject = '';
                             const lastHeartbeat = config.lastHeartbeat
                                 ? new Date(config.lastHeartbeat).toUTCString()
                                 : 'Never';
-                            const checkedAt = new Date().toUTCString();
-
-                            if (newMissCount === 1) {
-                                subject = '⚠️ First Notice: Heartbeat Missed';
-                            } else if (newMissCount === maxBuffer) {
-                                subject = '🚨 FINAL WARNING: Protocol Trigger Imminent';
-                            } else {
-                                subject = `⚠️ Heartbeat Missed - Stage ${newMissCount}/${maxBuffer}`;
-                            }
 
                             const token = await this.tokenService.generateToken('HEARTBEAT_VERIFY', user.id, user.walletAddress, 24);
                             const backendUrl = process.env.API_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 7001}`;
                             const verificationUrl = `${backendUrl}/api/heartbeat/verify?token=${token}`;
 
-                            const messageHtml = buildHeartbeatAlertEmail({
+                            const template = this.emailService.templates.heartbeatOverdueWarning({
+                                stage: newMissCount === maxBuffer ? 'final' : newMissCount === 1 ? 'first' : 'intermediate',
+                                stageLabel: `${newMissCount}/${maxBuffer}`,
+                                elapsedSummary: `Your heartbeat is overdue.`,
+                                progressPercent: (newMissCount / maxBuffer) * 100,
+                                verificationUrl,
                                 name: user.name || 'User',
                                 walletAddress: user.walletAddress,
-                                missCount: newMissCount,
-                                maxBuffer,
+                                lastHeartbeat,
                                 intervalDays: config.intervalDays,
                                 gracePeriodDays: config.gracePeriodDays,
-                                lastHeartbeat,
-                                checkedAt,
-                                isFinalWarning: newMissCount === maxBuffer,
-                                verificationUrl,
+                                maxBuffer,
+                                missCount: newMissCount,
                             });
 
                             for (const emailAddress of emailsToSend) {
-                                const sent = await this.emailService.sendEmail({
+                                const sent = await this.emailService.send({
                                     to: emailAddress,
-                                    subject,
-                                    html: messageHtml
+                                    ...template
                                 });
                                 this.logger.log(`📧 Heartbeat alert email (Stage ${newMissCount}) sent to ${emailAddress}: ${sent}`);
                             }
@@ -216,44 +148,25 @@ export class HeartbeatCronService {
                             }
                             
                             // Notify user
-                             const activationEmails: string[] = [];
-                             if (user.email && user.emailVerified) {
-                                 activationEmails.push(user.email);
-                             }
-                             if (user.alternativeEmail && user.alternativeEmailVerified) {
-                                 activationEmails.push(user.alternativeEmail);
-                             }
-                             if (activationEmails.length > 0) {
-                                 const escapedName = escapeHtml(user.name || 'Vault Owner');
-                                const escapedWallet = escapeHtml(user.walletAddress);
-                                const activatedBody = `
-                                  <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
-                                  <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
-                                    All heartbeat time buffers for your vault have been exhausted. The AlwaysThere Protocol has executed its smart contract instructions. Your designated digital assets are now being distributed to your nominated beneficiaries.
-                                  </p>
-                                  ${infoBox(`
-                                    ${statRow('Wallet', escapedWallet.slice(0,10)+'...'+escapedWallet.slice(-8), '#38bdf8')}
-                                    ${statRow('Protocol Status', 'TRIGGERED', '#ef4444')}
-                                    ${statRow('Asset Distribution', 'In Progress', '#f59e0b', true)}
-                                  `)}
-                                  ${alertStrip('#ef4444', 'Your inheritance plan is now being executed. This action is irreversible. Your digital legacy has been secured.')}
-                                `;
+                            const activationEmails: string[] = [];
+                            if (user.email && (user.emailVerified || isDemo)) {
+                                activationEmails.push(user.email);
+                            }
+                            if (user.alternativeEmail && (user.alternativeEmailVerified || isDemo)) {
+                                activationEmails.push(user.alternativeEmail);
+                            }
+                            if (activationEmails.length > 0) {
+                                const template = this.emailService.templates.protocolActivated({
+                                    ownerName: user.name || 'Vault Owner',
+                                    walletAddress: user.walletAddress,
+                                });
                                 for (const emailAddress of activationEmails) {
-                                    await this.emailService.sendEmail({
+                                    await this.emailService.send({
                                         to: emailAddress,
-                                        subject: '🚨 AlwaysThere Vault Protocol Activated — Assets Being Distributed',
-                                        html: buildEmailShell({
-                                            accentColor: '#ef4444',
-                                            accentGlow: 'rgba(239,68,68,0.3)',
-                                            icon: '🚨',
-                                            headline: 'Protocol Activated',
-                                            subline: 'Your Digital Legacy Is Being Distributed',
-                                            body: activatedBody,
-                                            footerNote: 'This is an automated protocol execution notification.',
-                                        }),
+                                        ...template
                                     });
                                 }
-                             }
+                            }
 
                             // Notify each nominee with ONLY their assigned files
                             const nominees = await this.beneficiariesService.getAllBeneficiaries(user.walletAddress);
@@ -294,20 +207,25 @@ export class HeartbeatCronService {
                                     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
                                     const claimUrl = `${frontendUrl}/claim/${token}?owner=${user.walletAddress}`;
 
-                                    const verifiedSenderEmail = user.emailVerified ? user.email : (user.alternativeEmailVerified ? user.alternativeEmail : null);
+                                    const verifiedSenderEmail = (user.emailVerified || isDemo) ? user.email : ((user.alternativeEmailVerified || isDemo) ? user.alternativeEmail : null);
                                     const fromEmailHeader = verifiedSenderEmail 
                                       ? `"${user.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
                                       : undefined;
 
-                                    await this.emailService.sendAssetReleaseNotification(
-                                        nominee.email,
-                                        nominee.name,
-                                        user.name || 'The account owner',
-                                        user.walletAddress,
-                                        theirFiles.length,
+                                    const template = this.emailService.templates.nomineeAssetRelease({
+                                        nomineeName: nominee.name,
+                                        ownerName: user.name || 'The account owner',
+                                        ownerAddress: user.walletAddress,
+                                        assetCount: theirFiles.length,
                                         claimUrl,
-                                        fromEmailHeader
-                                    );
+                                        fileList: theirFiles.map(f => f.name || 'Unnamed Asset'),
+                                    });
+
+                                    await this.emailService.send({
+                                        to: nominee.email,
+                                        ...template,
+                                        from: fromEmailHeader
+                                    });
                                     this.logger.log(`📧 Asset release email (${theirFiles.length} file(s)) dispatched to nominee: ${nominee.email}`);
                                 } catch (nomineeError) {
                                     this.logger.error(`Failed to dispatch notification for nominee ${nominee.email || nominee.id}: ${nomineeError.message}`);
@@ -345,23 +263,25 @@ export class HeartbeatCronService {
         const backendUrl = process.env.API_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 7001}`;
         const verificationUrl = `${backendUrl}/api/heartbeat/verify?token=${token}`;
 
-        const html = buildHeartbeatAlertEmail({
+        const template = this.emailService.templates.heartbeatOverdueWarning({
+            stage: 'first',
+            stageLabel: '1/3',
+            elapsedSummary: 'Your heartbeat is overdue.',
+            progressPercent: 33.33,
+            verificationUrl,
             name: user.name || 'User',
             walletAddress: user.walletAddress,
-            missCount: 1,
-            maxBuffer: config?.bufferMisses || 3,
+            lastHeartbeat,
             intervalDays: config?.intervalDays || 30,
             gracePeriodDays: config?.gracePeriodDays || 7,
-            lastHeartbeat,
-            checkedAt: new Date().toUTCString(),
-            isFinalWarning: false,
-            verificationUrl,
+            maxBuffer: config?.bufferMisses || 3,
+            missCount: 1,
         });
 
-        await this.emailService.sendEmail({
+        await this.emailService.send({
             to: user.email,
+            ...template,
             subject: '🧪 [TEST] Heartbeat Alert Email Preview',
-            html,
         });
 
         return { sent: true, preview: `Test email sent to ${user.email}` };

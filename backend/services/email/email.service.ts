@@ -40,6 +40,173 @@ export class EmailService {
     });
   }
 
+  async send(options: EmailOptions): Promise<boolean> {
+    return this.sendEmail(options);
+  }
+
+  get templates() {
+    return {
+      heartbeatOverdueWarning: (params: {
+        stage: 'first' | 'intermediate' | 'final';
+        stageLabel?: string;
+        elapsedSummary: string;
+        progressPercent: number;
+        verificationUrl: string;
+        name: string;
+        walletAddress: string;
+        lastHeartbeat: string;
+        intervalDays: number;
+        gracePeriodDays: number;
+        maxBuffer: number;
+        missCount: number;
+      }) => {
+        const urgencyColor = params.stage === 'final' ? '#ef4444' : params.stage === 'first' ? '#eab308' : '#f97316';
+        const glowColor = params.stage === 'final' ? 'rgba(239,68,68,0.3)' : params.stage === 'first' ? 'rgba(234,179,8,0.3)' : 'rgba(249,115,22,0.3)';
+        const escapedName = escapeHtml(params.name);
+        const escapedWallet = escapeHtml(params.walletAddress);
+
+        let subject = '';
+        if (params.stage === 'first') {
+          subject = '⚠️ First Notice: Heartbeat Missed';
+        } else if (params.stage === 'final') {
+          subject = '🚨 FINAL WARNING: Protocol Trigger Imminent';
+        } else {
+          subject = `⚠️ Heartbeat Missed - Stage ${params.stageLabel || `${params.missCount}/${params.maxBuffer}`}`;
+        }
+
+        const body = `
+          <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
+          <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+            ${params.stage === 'final'
+              ? `<strong style="color:${urgencyColor};">This is your final warning.</strong> If you do not verify your status immediately, the AlwaysThere Vault will irreversibly distribute your assigned assets to your nominees.`
+              : 'Your cryptographic heartbeat signal has been missed. Submit a proof-of-life verification immediately to halt the asset distribution sequence.'}
+          </p>
+          ${infoBox(`
+            ${statRow('Wallet', escapedWallet.slice(0, 10) + '...' + escapedWallet.slice(-8), '#38bdf8')}
+            ${statRow('Last Heartbeat', escapeHtml(params.lastHeartbeat), '#e2e8f0')}
+            ${statRow('Interval / Grace', `${params.intervalDays}d / ${params.gracePeriodDays}d`, '#e2e8f0')}
+            ${statRow('Buffer Exhausted', `${params.missCount} of ${params.maxBuffer} missed`, urgencyColor, true)}
+          `)}
+          <div style="margin:20px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+              <tr>
+                <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Buffer Exhaustion</td>
+                <td align="right" style="font-size:12px;font-weight:700;color:${urgencyColor};">${Math.round(params.progressPercent)}%</td>
+              </tr>
+            </table>
+            <div style="background:#060d1a;border:1px solid rgba(255,255,255,0.06);border-radius:6px;height:10px;overflow:hidden;padding:2px;">
+              <div style="background:linear-gradient(90deg,${urgencyColor}80,${urgencyColor});width:${params.progressPercent}%;height:100%;border-radius:3px;box-shadow:0 0 8px ${urgencyColor};"></div>
+            </div>
+          </div>
+          ${ctaButton(params.verificationUrl, params.stage === 'final' ? '🚨 Verify Status Immediately' : '✅ Confirm I\'m Active', urgencyColor)}
+        `;
+
+        return {
+          subject,
+          html: buildEmailShell({
+            accentColor: urgencyColor,
+            accentGlow: glowColor,
+            icon: params.stage === 'final' ? '💀' : '⏳',
+            headline: params.stage === 'final' ? 'Protocol Trigger Imminent' : 'Heartbeat Overdue',
+            subline: `Stage ${params.missCount} of ${params.maxBuffer} — ${params.stage === 'final' ? 'Final Warning' : 'Action Required'}`,
+            body,
+            footerNote: 'Automated heartbeat monitoring from AlwaysThere Vault Protocol.',
+          }),
+          text: `Hi ${params.name}, your heartbeat is overdue. Submit your heartbeat now: ${params.verificationUrl}`,
+        };
+      },
+
+      protocolActivated: (params: { ownerName: string; walletAddress: string }) => {
+        const escapedName = escapeHtml(params.ownerName);
+        const escapedWallet = escapeHtml(params.walletAddress);
+        const body = `
+          <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Commander <strong>${escapedName}</strong>,</p>
+          <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+            All heartbeat time buffers for your vault have been exhausted. The AlwaysThere Protocol has executed its smart contract instructions. Your designated digital assets are now being distributed to your nominated beneficiaries.
+          </p>
+          ${infoBox(`
+            ${statRow('Wallet', escapedWallet.slice(0, 10) + '...' + escapedWallet.slice(-8), '#38bdf8')}
+            ${statRow('Protocol Status', 'TRIGGERED', '#ef4444')}
+            ${statRow('Asset Distribution', 'In Progress', '#f59e0b', true)}
+          `)}
+          ${alertStrip('#ef4444', 'Your inheritance plan is now being executed. This action is irreversible. Your digital legacy has been secured.')}
+        `;
+        return {
+          subject: '🚨 AlwaysThere Vault Protocol Activated — Assets Being Distributed',
+          html: buildEmailShell({
+            accentColor: '#ef4444',
+            accentGlow: 'rgba(239,68,68,0.3)',
+            icon: '🚨',
+            headline: 'Protocol Activated',
+            subline: 'Your Digital Legacy Is Being Distributed',
+            body,
+            footerNote: 'This is an automated protocol execution notification.',
+          }),
+          text: `Hi ${params.ownerName}, all heartbeat time buffers have been exhausted. AlwaysThere Protocol has activated.`,
+        };
+      },
+
+      nomineeAssetRelease: (params: {
+        nomineeName: string;
+        ownerName: string;
+        ownerAddress: string;
+        assetCount: number;
+        claimUrl: string;
+        fileList?: string[];
+      }) => {
+        const escapedName = escapeHtml(params.nomineeName);
+        const escapedOwner = escapeHtml(params.ownerName);
+        const escapedAddress = escapeHtml(params.ownerAddress);
+
+        let filesContent = '';
+        if (params.fileList && params.fileList.length > 0) {
+          filesContent = `
+            <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+              <p style="margin: 0 0 8px; font-size: 12px; color: #64748b; text-transform: uppercase;">Assets Released to You:</p>
+              <ul style="margin: 0; padding-left: 20px; color: #94a3b8; font-size: 13px;">
+                ${params.fileList.map(file => `<li>${escapeHtml(file)}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        const body = `
+          <p style="font-size:16px;color:#e2e8f0;margin:0 0 16px;">Greetings, <strong>${escapedName}</strong>.</p>
+          <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin:0 0 24px;">
+            The AlwaysThere Vault belonging to <strong style="color:#ffffff;">${escapedOwner}</strong> has
+            triggered the inheritance protocol. All heartbeat buffers were exhausted and smart contract
+            instructions have been executed. Assets designated to you are now available.
+          </p>
+          ${infoBox(`
+            ${statRow('Vault Owner', escapedOwner, '#e2e8f0')}
+            ${statRow('Wallet', escapedAddress.slice(0, 10) + '...' + escapedAddress.slice(-8), '#38bdf8')}
+            ${statRow('Assets Assigned to You', `${params.assetCount} Digital Asset${params.assetCount !== 1 ? 's' : ''}`, '#22c55e')}
+            ${statRow('Claim Window', '7 Days from this email', '#f59e0b', true)}
+          `)}
+          ${filesContent}
+          ${alertStrip('#38bdf8', '<strong>Important:</strong> Your unique claim link below expires in 7 days. Click it to access your secure vault portal and download the assets designated to you.')}
+          ${ctaButton(params.claimUrl, 'Claim Your Inheritance →', '#0ea5e9')}
+          <p style="font-size:11px;color:#334155;text-align:center;margin:16px 0 0;word-break:break-all;">
+            Secure link: <a href="${params.claimUrl}" style="color:#475569;">${params.claimUrl}</a>
+          </p>
+        `;
+        return {
+          subject: `🔓 Vault Unlocked — ${params.assetCount} Asset${params.assetCount !== 1 ? 's' : ''} Assigned to You`,
+          html: buildEmailShell({
+            accentColor: '#38bdf8',
+            accentGlow: 'rgba(56,189,248,0.25)',
+            icon: '💎',
+            headline: 'Vault Protocol Triggered',
+            subline: `${params.assetCount} Digital Asset${params.assetCount !== 1 ? 's' : ''} Released to You`,
+            body,
+            footerNote: 'This is a one-time inheritance notification. Your claim link is unique and expires in 7 days.',
+          }),
+          text: `Hi ${params.nomineeName}, assets from ${params.ownerName} have been released to you. Claim here: ${params.claimUrl}`,
+        };
+      }
+    };
+  }
+
   async sendEmail(options: EmailOptions): Promise<boolean> {
     // 1. DMARC / SPF Check & Alignment Protection
     // Instead of sending directly from the user's personal domain (e.g. Gmail), which will get blocked by SPF/DMARC,
@@ -113,12 +280,17 @@ export class EmailService {
       }
     }
 
-    // 3. Try Brevo API if key looks like a Brevo key
+    // 3. Try Brevo API if key is configured or looks like a Brevo key
+    const brevoApiKey = (this.configService.get<string>('BREVO_API_KEY') || this.configService.get<string>('SENDINBLUE_API_KEY') || '').trim();
+    const isBrevoApiEnabled = brevoApiKey && !brevoApiKey.includes('placeholder');
     const user = (this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER') || '').trim();
     const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
     const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || '').trim();
 
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host.includes('brevo') && !pass.startsWith('xsmtpsib')))) {
+    const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host.includes('brevo') && !pass.startsWith('xsmtpsib')));
+    const finalBrevoKey = isBrevoApiEnabled ? brevoApiKey : (isPassBrevoKey ? pass : null);
+
+    if (finalBrevoKey) {
       this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
       try {
         let senderEmailParsed = 'support@alwaystherevault.com';
@@ -135,7 +307,7 @@ export class EmailService {
           method: 'POST',
           headers: {
             'accept': 'application/json',
-            'api-key': pass,
+            'api-key': finalBrevoKey,
             'content-type': 'application/json'
           },
           body: JSON.stringify({
@@ -519,6 +691,7 @@ export class EmailService {
     const user = this.configService.get<string>('SMTP_USER') || this.configService.get<string>('EMAIL_USER');
     const pass = this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD');
     const resendKey = this.configService.get<string>('RESEND_API_KEY');
+    const brevoApiKey = this.configService.get<string>('BREVO_API_KEY') || this.configService.get<string>('SENDINBLUE_API_KEY');
 
     const diagnostics: any = {
       timestamp: new Date().toISOString(),
@@ -531,59 +704,14 @@ export class EmailService {
         passLength: pass ? pass.length : 0,
         hasResendKey: !!resendKey,
         resendKeyLength: resendKey ? resendKey.length : 0,
+        hasBrevoApiKey: !!brevoApiKey,
+        brevoApiKeyLength: brevoApiKey ? brevoApiKey.length : 0,
         fromEmail: this.fromEmail,
       },
       smtpVerify: null,
       emailSent: null,
       error: null
     };
-
-    if (pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host?.includes('brevo') && !pass.startsWith('xsmtpsib')))) {
-      diagnostics.emailMode = 'Brevo API';
-      try {
-        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'support@alwaystherevault.com';
-        let senderEmail = fromEmail;
-        let senderName = 'AlwaysThere Vault';
-        if (fromEmail.includes('<')) {
-          const match = fromEmail.match(/(.*)<(.*)>/);
-          if (match) {
-            senderName = match[1].replace(/"/g, '').trim();
-            senderEmail = match[2].trim();
-          }
-        }
-
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': pass,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: { name: senderName, email: senderEmail },
-            to: [{ email: toEmail }],
-            subject: 'AlwaysThere Vault SMTP Diagnostic Test (Brevo API)',
-            htmlContent: '<b>Diagnostic Test from Brevo HTTP API</b>'
-          })
-        });
-
-        diagnostics.brevoStatus = res.status;
-        diagnostics.brevoStatusText = res.statusText;
-        if (res.ok) {
-          diagnostics.emailSent = 'Success';
-          diagnostics.response = await res.json();
-          return { success: true, diagnostics };
-        } else {
-          diagnostics.emailSent = 'Failed';
-          diagnostics.error = await res.text();
-          return { success: false, diagnostics };
-        }
-      } catch (err: any) {
-        diagnostics.emailSent = 'Failed';
-        diagnostics.error = err.message || err;
-        return { success: false, diagnostics };
-      }
-    }
 
     if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
       diagnostics.emailMode = 'Resend API';
@@ -612,6 +740,57 @@ export class EmailService {
           return { success: false, diagnostics };
         }
       } catch (err: any) {
+        diagnostics.error = err.message || err;
+        return { success: false, diagnostics };
+      }
+    }
+
+    const isBrevoApiEnabled = brevoApiKey && !brevoApiKey.includes('placeholder');
+    const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host?.includes('brevo') && !pass.startsWith('xsmtpsib')));
+    const finalBrevoKey = isBrevoApiEnabled ? brevoApiKey : (isPassBrevoKey ? pass : null);
+
+    if (finalBrevoKey) {
+      diagnostics.emailMode = 'Brevo API';
+      try {
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || (user && user.includes('brevo') ? 'subodhram3350@gmail.com' : user) || 'support@alwaystherevault.com';
+        let senderEmail = fromEmail;
+        let senderName = 'AlwaysThere Vault';
+        if (fromEmail.includes('<')) {
+          const match = fromEmail.match(/(.*)<(.*)>/);
+          if (match) {
+            senderName = match[1].replace(/"/g, '').trim();
+            senderEmail = match[2].trim();
+          }
+        }
+
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': finalBrevoKey,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: toEmail }],
+            subject: 'AlwaysThere Vault SMTP Diagnostic Test (Brevo API)',
+            htmlContent: '<b>Diagnostic Test from Brevo HTTP API</b>'
+          })
+        });
+
+        diagnostics.brevoStatus = res.status;
+        diagnostics.brevoStatusText = res.statusText;
+        if (res.ok) {
+          diagnostics.emailSent = 'Success';
+          diagnostics.response = await res.json();
+          return { success: true, diagnostics };
+        } else {
+          diagnostics.emailSent = 'Failed';
+          diagnostics.error = await res.text();
+          return { success: false, diagnostics };
+        }
+      } catch (err: any) {
+        diagnostics.emailSent = 'Failed';
         diagnostics.error = err.message || err;
         return { success: false, diagnostics };
       }
