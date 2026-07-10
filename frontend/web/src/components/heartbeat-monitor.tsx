@@ -194,15 +194,22 @@ export function HeartbeatMonitor() {
         if (diff > 0 && diff < 15000) {
           const remaining = Math.ceil((15000 - diff) / 1000)
           if (remaining > 0) {
-            setResendCooldown(remaining)
-            setShowOtpField(true)
+            if (pendingEmail) {
+              setResendCooldown(remaining)
+              setShowOtpField(true)
+            }
+            if (pendingAlternativeEmail) {
+              setAlternativeResendCooldown(remaining)
+              setShowAlternativeOtpField(true)
+            }
             return
           }
         }
         setResendCooldown(0)
+        setAlternativeResendCooldown(0)
       }
     }
-  }, [showSettings, updatedAt])
+  }, [showSettings, updatedAt, pendingEmail, pendingAlternativeEmail])
 
   const handleSendOtp = async () => {
     if (!inputEmail) {
