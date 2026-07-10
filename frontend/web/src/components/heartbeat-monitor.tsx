@@ -676,6 +676,7 @@ export function HeartbeatMonitor() {
   useEffect(() => {
     if (walletAddress) {
       fetchLiveStatus()
+      fetchProfileInfo()
     }
   }, [walletAddress])
 
@@ -737,6 +738,19 @@ export function HeartbeatMonitor() {
 
   const handleHeartbeat = async () => {
     if (!walletAddress) return
+
+    // Ensure user has configured and verified an alert notification email
+    if (!profileEmail || !emailVerified) {
+      toast.error('Alert Email Required', {
+        description: 'You must configure and verify an Alert Notification Email in the Protocol Config (Settings) first to receive heartbeat warning emails.',
+        action: {
+          label: 'Configure',
+          onClick: () => setShowSettings(true)
+        }
+      })
+      return
+    }
+
     setIsRecording(true)
 
     try {
