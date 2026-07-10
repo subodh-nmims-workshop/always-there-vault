@@ -24,13 +24,6 @@ async function main() {
   const coreAddress = await digitalWillCore.getAddress();
   console.log("✅ DigitalWillCore deployed to:", coreAddress);
 
-  // Verify deployment
-  console.log("\n🔍 Verifying deployment...");
-  const owner = await digitalWillCore.owner();
-  console.log("Contract owner:", owner);
-  console.log("Deployer address:", deployer.address);
-  console.log("Owner matches deployer:", owner === deployer.address);
-
   // Save deployment info
   const deploymentInfo = {
     network: (await ethers.provider.getNetwork()).name,
