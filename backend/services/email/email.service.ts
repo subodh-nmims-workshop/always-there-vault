@@ -287,7 +287,7 @@ export class EmailService {
     const pass = (this.configService.get<string>('SMTP_PASS') || this.configService.get<string>('EMAIL_PASSWORD') || '').trim();
     const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || '').trim();
 
-    const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host.includes('brevo') && !pass.startsWith('xsmtpsib')));
+    const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'));
     const finalBrevoKey = isBrevoApiEnabled ? brevoApiKey : (isPassBrevoKey ? pass : null);
 
     if (finalBrevoKey) {
@@ -746,7 +746,7 @@ export class EmailService {
     }
 
     const isBrevoApiEnabled = brevoApiKey && !brevoApiKey.includes('placeholder');
-    const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || (host?.includes('brevo') && !pass.startsWith('xsmtpsib')));
+    const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host?.includes('brevo'));
     const finalBrevoKey = isBrevoApiEnabled ? brevoApiKey : (isPassBrevoKey ? pass : null);
 
     if (finalBrevoKey) {
