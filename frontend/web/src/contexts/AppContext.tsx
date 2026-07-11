@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import WebStorageService, { AppState } from '@/lib/storage'
+import { useSyncData } from '@/hooks/useSyncData'
 
 interface AppContextType {
     state: AppState | null
@@ -14,6 +15,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 export function AppProvider({ children }: { children: ReactNode }) {
     const [state, setState] = useState<AppState | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+
+    // Call the synchronization hook to auto-sync backend data
+    useSyncData()
 
     const refreshState = async () => {
         try {
@@ -37,8 +41,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        // Listen for backend data sync complete events
+        const handleSyncEvent = () => {
+            refreshState()
+        }
+
         window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
+        window.addEventListener('dwp-state-synced', handleSyncEvent)
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange)
+            window.removeEventListener('dwp-state-synced', handleSyncEvent)
+        }
     }, [])
 
     return (

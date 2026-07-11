@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { EmailService } from '../email/email.service';
+import { CacheService } from '../cache/cache.service';
 
 describe('UsersService - Alternative Email Redundancy', () => {
   let service: UsersService;
   let mockDb: any;
   let mockEmailService: any;
+  let mockCacheService: any;
 
   beforeEach(async () => {
     mockDb = {
@@ -37,6 +39,12 @@ describe('UsersService - Alternative Email Redundancy', () => {
       sendVerificationEmail: jest.fn().mockResolvedValue(true),
     };
 
+    mockCacheService = {
+      get: jest.fn().mockReturnValue(0),
+      set: jest.fn(),
+      delete: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -47,6 +55,10 @@ describe('UsersService - Alternative Email Redundancy', () => {
         {
           provide: EmailService,
           useValue: mockEmailService,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();
@@ -90,7 +102,7 @@ describe('UsersService - Alternative Email Redundancy', () => {
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(false);
-      expect(result.message).toBe('Invalid verification code');
+      expect(result.message).toBe('Invalid verification code. Attempt 1/5');
     });
 
     it('should succeed and update user profile on correct code', async () => {

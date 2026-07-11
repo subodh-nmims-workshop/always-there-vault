@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { AuthModule } from '../auth/auth.module';
 import { BeneficiariesController } from './beneficiaries.controller';
 import { BeneficiariesService } from './beneficiaries.service';
 import { Beneficiary, BeneficiarySchema } from './schemas/beneficiary.schema';
@@ -9,6 +10,7 @@ import { Beneficiary, BeneficiarySchema } from './schemas/beneficiary.schema';
   imports: [
     UsersModule,
     EmailModule,
+    AuthModule,
   ],
   controllers: [BeneficiariesController],
   providers: [BeneficiariesService],

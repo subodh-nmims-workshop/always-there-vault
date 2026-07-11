@@ -32,6 +32,7 @@ import { TokenService } from '../auth/token.service';
 import { eq } from 'drizzle-orm';
 import { users } from '../../src/db/schema/users';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import * as jwt from 'jsonwebtoken';
 
 @ApiTags('assets')
 @ApiBearerAuth()
@@ -233,6 +234,21 @@ export class ClaimAssetsController {
     @Inject('DRIZZLE_DB') private db: any,
   ) {}
 
+  private verifyClaimSessionToken(claimToken: string): { userId: string; targetAddress: string } {
+    try {
+      const decoded: any = jwt.verify(claimToken, process.env.JWT_SECRET || 'secret');
+      if (decoded.type !== 'CLAIM_SESSION') {
+        throw new BadRequestException('Invalid claim token type.');
+      }
+      return {
+        userId: decoded.userId,
+        targetAddress: decoded.targetAddress,
+      };
+    } catch (e) {
+      throw new BadRequestException('Invalid or expired claim token.');
+    }
+  }
+
   @Get('contents')
   @ApiOperation({ summary: 'Get owner assets using a CLAIM_ACCESS token (public, no JWT)' })
   async getClaimContents(
@@ -241,33 +257,16 @@ export class ClaimAssetsController {
   ) {
     if (!claimToken) throw new BadRequestException('claimToken is required');
 
-    // Verify the claim token WITHOUT marking it as used (peek)
-    const records = await this.db.query.verificationTokens?.findMany
-      ? await this.db.query.verificationTokens.findMany({
-          where: (vt: any, { and, eq: deq, gt }: any) => and(
-            deq(vt.token, claimToken),
-            deq(vt.type, 'CLAIM_ACCESS'),
-            deq(vt.isUsed, false),
-            gt(vt.expiresAt, new Date())
-          ),
-          limit: 1
-        })
-      : [];
-
-    if (!records || records.length === 0) {
-      throw new BadRequestException('Invalid or expired claim token.');
-    }
-
-    const record = records[0];
+    const decoded = this.verifyClaimSessionToken(claimToken);
 
     // Get owner wallet address from userId
     const owner = await this.db.query.users.findFirst({
-      where: eq(users.id, record.userId)
+      where: eq(users.id, decoded.userId)
     });
 
     if (!owner) throw new BadRequestException('Owner account not found.');
 
-    const nomineeWallet = record.targetAddress;
+    const nomineeWallet = decoded.targetAddress;
 
     // getFolderContents with nominee check (already verifies heartbeat status)
     return this.assetsService.getFolderContents(nomineeWallet, folderId, owner.walletAddress);
@@ -281,24 +280,8 @@ export class ClaimAssetsController {
   ) {
     if (!claimToken) throw new BadRequestException('claimToken is required');
 
-    const records = await this.db.query.verificationTokens?.findMany
-      ? await this.db.query.verificationTokens.findMany({
-          where: (vt: any, { and, eq: deq, gt }: any) => and(
-            deq(vt.token, claimToken),
-            deq(vt.type, 'CLAIM_ACCESS'),
-            deq(vt.isUsed, false),
-            gt(vt.expiresAt, new Date())
-          ),
-          limit: 1
-        })
-      : [];
-
-    if (!records || records.length === 0) {
-      throw new BadRequestException('Invalid or expired claim token.');
-    }
-
-    const record = records[0];
-    const nomineeWallet = record.targetAddress;
+    const decoded = this.verifyClaimSessionToken(claimToken);
+    const nomineeWallet = decoded.targetAddress;
 
     return this.assetsService.getDownloadUrl(assetId, nomineeWallet);
   }
@@ -311,24 +294,8 @@ export class ClaimAssetsController {
   ) {
     if (!claimToken) throw new BadRequestException('claimToken is required');
 
-    const records = await this.db.query.verificationTokens?.findMany
-      ? await this.db.query.verificationTokens.findMany({
-          where: (vt: any, { and, eq: deq, gt }: any) => and(
-            deq(vt.token, claimToken),
-            deq(vt.type, 'CLAIM_ACCESS'),
-            deq(vt.isUsed, false),
-            gt(vt.expiresAt, new Date())
-          ),
-          limit: 1
-        })
-      : [];
-
-    if (!records || records.length === 0) {
-      throw new BadRequestException('Invalid or expired claim token.');
-    }
-
-    const record = records[0];
-    const nomineeWallet = record.targetAddress;
+    const decoded = this.verifyClaimSessionToken(claimToken);
+    const nomineeWallet = decoded.targetAddress;
 
     return this.assetsService.getKeyDistribution(keyId, nomineeWallet);
   }

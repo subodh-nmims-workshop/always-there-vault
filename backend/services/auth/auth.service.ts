@@ -159,13 +159,24 @@ export class AuthService {
             throw new UnauthorizedException('Invalid or expired MFA session.');
         }
 
+        const attemptsKey = `mfa_attempts:${mfaToken}`;
+        const attempts = this.cacheService.get<number>(attemptsKey) || 0;
+        if (attempts >= 5) {
+            this.cacheService.delete(`mfa_pending:${mfaToken}`);
+            this.cacheService.delete(attemptsKey);
+            throw new UnauthorizedException('Too many invalid MFA attempts. MFA session invalidated.');
+        }
+
         const isValid = await this.mfaService.verify2FA(pending.userId, code);
         if (!isValid) {
-            throw new UnauthorizedException('Invalid 2FA code.');
+            const nextAttempts = attempts + 1;
+            this.cacheService.set(attemptsKey, nextAttempts, 10 * 60 * 1000);
+            throw new UnauthorizedException(`Invalid 2FA code. Attempt ${nextAttempts}/5`);
         }
 
         // MFA Verified
         this.cacheService.delete(`mfa_pending:${mfaToken}`);
+        this.cacheService.delete(attemptsKey);
         await this.usersService.createOrUpdateUser(pending.walletAddress);
 
         // Generate JWT

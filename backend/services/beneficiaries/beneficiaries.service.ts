@@ -171,6 +171,107 @@ export class BeneficiariesService {
     return updated;
   }
 
+  async getBeneficiaryForUser(id: string, userId: string): Promise<Beneficiary> {
+    const beneficiary = await this.db.query.beneficiaries.findFirst({
+      where: and(eq(beneficiaries.id, id), eq(beneficiaries.userId, userId)),
+    });
+    if (!beneficiary) {
+      throw new NotFoundException(`Beneficiary with ID ${id} not found or access denied`);
+    }
+    return beneficiary;
+  }
+
+  async updateBeneficiaryForUser(id: string, updateData: any, userId: string): Promise<Beneficiary> {
+    // Verify ownership first
+    await this.getBeneficiaryForUser(id, userId);
+
+    const data = { ...updateData };
+    if (data.walletAddress) {
+      data.walletAddress = data.walletAddress.toLowerCase();
+    }
+    const [updated] = await this.db.update(beneficiaries)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(beneficiaries.id, id))
+      .returning();
+    if (!updated) throw new NotFoundException('Beneficiary not found');
+    return updated;
+  }
+
+  async deleteBeneficiaryForUser(id: string, userId: string): Promise<void> {
+    // Verify ownership first
+    await this.getBeneficiaryForUser(id, userId);
+
+    // Clean up associated inheritance mappings in files table
+    await this.db.update(files)
+      .set({ assignedBeneficiaryId: null })
+      .where(eq(files.assignedBeneficiaryId, id));
+
+    // Delete beneficiary
+    await this.db.delete(beneficiaries).where(eq(beneficiaries.id, id));
+    this.verificationCodes.delete(id);
+  }
+
+  async sendVerificationCodeForUser(id: string, userId: string): Promise<{ success: boolean }> {
+    // Verify ownership first
+    const beneficiary = await this.getBeneficiaryForUser(id, userId);
+    if (!beneficiary.email) {
+      throw new BadRequestException('Beneficiary email is required for verification.');
+    }
+
+    if (beneficiary.email.startsWith('pgp-') || beneficiary.email.includes('+pgp@')) {
+      return { success: true };
+    }
+
+    const user = await this.usersService.findUserById(userId);
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    this.verificationCodes.set(id, code);
+
+    // Send email asynchronously
+    const verifiedSenderEmail = user?.emailVerified ? user.email : (user?.alternativeEmailVerified ? user.alternativeEmail : null);
+    const fromEmailHeader = verifiedSenderEmail 
+      ? `"${user?.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
+      : undefined;
+
+    this.emailService.sendBeneficiaryVerificationEmail(
+      beneficiary.email,
+      beneficiary.name || 'Nominee',
+      code,
+      user?.name || 'A user',
+      fromEmailHeader
+    ).catch(err => console.error('Failed to send beneficiary verification email:', err));
+
+    return { success: true };
+  }
+
+  async verifyBeneficiaryForUser(id: string, code: string, userId: string): Promise<Beneficiary> {
+    // Verify ownership first
+    const beneficiary = await this.getBeneficiaryForUser(id, userId);
+    const isPgp = beneficiary.email && (beneficiary.email.startsWith('pgp-') || beneficiary.email.includes('+pgp@'));
+
+    if (!isPgp) {
+      const storedCode = this.verificationCodes.get(id);
+      if (!storedCode || storedCode !== code.trim()) {
+        throw new BadRequestException('Invalid or expired verification code.');
+      }
+    }
+
+    const [updated] = await this.db.update(beneficiaries)
+      .set({
+        isVerified: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(beneficiaries.id, id))
+      .returning();
+
+    if (!updated) throw new NotFoundException('Beneficiary not found');
+    this.verificationCodes.delete(id);
+    return updated;
+  }
+
   async findOwnersForBeneficiary(beneficiaryWallet: string): Promise<any[]> {
     const lowerWalletAddress = beneficiaryWallet ? beneficiaryWallet.toLowerCase() : '';
     const results = await this.db.query.beneficiaries.findMany({

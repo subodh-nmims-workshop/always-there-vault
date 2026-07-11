@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, integer, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 
@@ -18,6 +18,10 @@ export const beneficiaries = pgTable('beneficiaries', {
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    walletIdx: index('idx_beneficiaries_wallet').on(sql`LOWER(${table.walletAddress})`),
+  };
 });
 
 export type Beneficiary = typeof beneficiaries.$inferSelect;

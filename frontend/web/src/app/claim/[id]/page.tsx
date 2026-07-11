@@ -43,7 +43,7 @@ function ClaimPortalContent({ token }: { token: string }) {
         
         <div className="bg-amber-950/30 border border-amber-900/50 rounded-lg p-4 mb-8">
           <p className="text-xs text-amber-400/80 flex items-center gap-2">
-            <span>⚠️</span> This secure link will expire in 7 days. Do not share it.
+            <span>⚠️</span> This secure claim session will expire in 1 hour. Do not share it.
           </p>
         </div>
         

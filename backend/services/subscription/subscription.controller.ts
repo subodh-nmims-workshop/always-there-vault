@@ -33,7 +33,7 @@ export class SubscriptionController {
     let userId = body.userId;
     let user;
     if (!isUuid) {
-        user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, body.userId) });
+        user = await this.db.query.users.findFirst({ where: eq(users.walletAddress, body.userId.toLowerCase()) });
         if (!user) throw new BadRequestException('User not found');
         userId = user.id;
     } else {

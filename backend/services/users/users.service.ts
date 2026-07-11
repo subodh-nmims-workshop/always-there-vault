@@ -4,12 +4,14 @@ import { userStorageQuotas } from '../../src/db/schema/quotas';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 import { eq, sql, and, or } from 'drizzle-orm';
 import { EmailService } from '../email/email.service';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class UsersService {
     constructor(
         @Inject('DRIZZLE_DB') private db: any,
         private readonly emailService: EmailService,
+        private readonly cacheService: CacheService,
     ) { }
 
     async findUserById(id: string): Promise<User | null> {
@@ -272,13 +274,21 @@ export class UsersService {
             return { success: false, message: 'No verification request pending' };
         }
 
+        const attemptsKey = `email_otp_attempts:${userId}`;
+        const attempts = this.cacheService.get<number>(attemptsKey) || 0;
+        if (attempts >= 5) {
+            return { success: false, message: 'Too many invalid attempts. Please request a new verification code.' };
+        }
+
         // Check if OTP has expired (5 minutes validity)
         if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
             return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
         if (user.emailVerificationToken !== code) {
-            return { success: false, message: 'Invalid verification code' };
+            const nextAttempts = attempts + 1;
+            this.cacheService.set(attemptsKey, nextAttempts, 5 * 60 * 1000); // 5 min block
+            return { success: false, message: `Invalid verification code. Attempt ${nextAttempts}/5` };
         }
 
         // Verification successful: promote pendingEmail to primary email
@@ -292,6 +302,7 @@ export class UsersService {
             })
             .where(eq(users.id, userId));
 
+        this.cacheService.delete(attemptsKey);
         return { success: true, message: 'Email verified successfully', email: user.pendingEmail };
     }
 
@@ -305,13 +316,21 @@ export class UsersService {
             return { success: false, message: 'No alternative verification request pending' };
         }
 
+        const attemptsKey = `alt_email_otp_attempts:${userId}`;
+        const attempts = this.cacheService.get<number>(attemptsKey) || 0;
+        if (attempts >= 5) {
+            return { success: false, message: 'Too many invalid attempts. Please request a new verification code.' };
+        }
+
         // Check if OTP has expired (5 minutes validity)
         if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
             return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
         if (user.alternativeEmailVerificationToken !== code) {
-            return { success: false, message: 'Invalid verification code' };
+            const nextAttempts = attempts + 1;
+            this.cacheService.set(attemptsKey, nextAttempts, 5 * 60 * 1000); // 5 min block
+            return { success: false, message: `Invalid verification code. Attempt ${nextAttempts}/5` };
         }
 
         // Verification successful: promote alternativePendingEmail to alternative email
@@ -325,6 +344,7 @@ export class UsersService {
             })
             .where(eq(users.id, userId));
 
+        this.cacheService.delete(attemptsKey);
         return { success: true, message: 'Alternative email verified successfully', alternativeEmail: user.alternativePendingEmail };
     }
 

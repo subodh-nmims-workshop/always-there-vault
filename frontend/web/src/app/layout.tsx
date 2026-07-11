@@ -3,6 +3,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { Toaster } from 'sonner'
 import Script from 'next/script'
+import { GoogleTagManager } from '../components/GoogleTagManager'
 
 
 export const metadata: Metadata = {
@@ -110,6 +111,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="font-outfit antialiased bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
+        <GoogleTagManager />
         <Providers>
           <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             {children}
