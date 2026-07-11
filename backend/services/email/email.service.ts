@@ -20,6 +20,14 @@ export class EmailService {
   private fromEmail: string;
   private frontendUrl: string;
 
+  // Circuit Breaker state
+  private resendFailures = 0;
+  private brevoFailures = 0;
+  private lastResendFailureTime = 0;
+  private lastBrevoFailureTime = 0;
+  private readonly FAILURE_THRESHOLD = 3;
+  private readonly COOLDOWN_PERIOD = 15 * 60 * 1000; // 15 minutes
+
   constructor(private configService: ConfigService) {
     const host = (this.configService.get<string>('SMTP_HOST') || this.configService.get<string>('EMAIL_HOST') || 'smtp.ethereal.email').trim();
     const port = parseInt(this.configService.get<string>('SMTP_PORT') || this.configService.get<string>('EMAIL_PORT') || '587');
@@ -247,36 +255,49 @@ export class EmailService {
 
     // 2. Try Resend API first if configured
     const resendKey = (this.configService.get<string>('RESEND_API_KEY') || '').trim();
+    const isResendSuspended = this.resendFailures >= this.FAILURE_THRESHOLD &&
+      (Date.now() - this.lastResendFailureTime) < this.COOLDOWN_PERIOD;
+
     if (resendKey && !resendKey.includes('your-resend') && !resendKey.includes('placeholder')) {
-      this.logger.log(`Attempting email dispatch via Resend API to: ${options.to}`);
-      try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            from: fromHeader,
-            to: options.to,
-            subject: options.subject,
-            html: options.html,
-            reply_to: replyToHeader
-          })
-        });
-        if (res.ok) {
-          this.logger.log(`✅ Email successfully sent via Resend API to: ${options.to}`);
-          return true;
-        } else {
-          const errText = await res.text();
-          const errMsg = `❌ Resend API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
-          this.logger.error(errMsg);
-          Sentry.captureMessage(errMsg, 'error');
+      if (isResendSuspended) {
+        this.logger.warn(`⚠️ Resend API is temporarily suspended due to consecutive failures. Falling back.`);
+      } else {
+        this.logger.log(`Attempting email dispatch via Resend API to: ${options.to}`);
+        try {
+          const res = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: fromHeader,
+              to: options.to,
+              subject: options.subject,
+              html: options.html,
+              reply_to: replyToHeader
+            }),
+            signal: AbortSignal.timeout(5000)
+          });
+          if (res.ok) {
+            this.logger.log(`✅ Email successfully sent via Resend API to: ${options.to}`);
+            this.resendFailures = 0; // Reset consecutive failures
+            return true;
+          } else {
+            const errText = await res.text();
+            const errMsg = `❌ Resend API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
+            this.logger.error(errMsg);
+            Sentry.captureMessage(errMsg, 'error');
+            this.resendFailures++;
+            this.lastResendFailureTime = Date.now();
+          }
+        } catch (err: any) {
+          const errMsg = `❌ Resend API dispatch failed to ${options.to}: ${err.message || err}`;
+          this.logger.error(errMsg, err.stack);
+          Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
+          this.resendFailures++;
+          this.lastResendFailureTime = Date.now();
         }
-      } catch (err: any) {
-        const errMsg = `❌ Resend API dispatch failed to ${options.to}: ${err.message || err}`;
-        this.logger.error(errMsg, err.stack);
-        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
       }
     }
 
@@ -290,48 +311,61 @@ export class EmailService {
     const isPassBrevoKey = pass && (pass.startsWith('xsmtpkey') || pass.startsWith('xkeysib') || host.includes('brevo'));
     const finalBrevoKey = isBrevoApiEnabled ? brevoApiKey : (isPassBrevoKey ? pass : null);
 
-    if (finalBrevoKey) {
-      this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
-      try {
-        let senderEmailParsed = 'support@alwaystherevault.com';
-        let senderName = 'AlwaysThere Vault';
-        if (fromHeader.includes('<')) {
-          const match = fromHeader.match(/(.*)<(.*)>/);
-          if (match) {
-            senderName = match[1].replace(/"/g, '').trim();
-            senderEmailParsed = match[2].trim();
-          }
-        }
-        
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': finalBrevoKey,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: { name: senderName, email: senderEmailParsed },
-            to: [{ email: options.to }],
-            replyTo: replyToHeader ? { email: replyToHeader } : undefined,
-            subject: options.subject,
-            htmlContent: options.html
-          })
-        });
+    const isBrevoSuspended = this.brevoFailures >= this.FAILURE_THRESHOLD &&
+      (Date.now() - this.lastBrevoFailureTime) < this.COOLDOWN_PERIOD;
 
-        if (res.ok) {
-          this.logger.log(`✅ Email successfully sent via Brevo HTTP API to: ${options.to}`);
-          return true;
-        } else {
-          const errText = await res.text();
-          const errMsg = `❌ Brevo HTTP API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
-          this.logger.error(errMsg);
-          Sentry.captureMessage(errMsg, 'error');
+    if (finalBrevoKey) {
+      if (isBrevoSuspended) {
+        this.logger.warn(`⚠️ Brevo HTTP API is temporarily suspended due to consecutive failures. Falling back.`);
+      } else {
+        this.logger.log(`Attempting email dispatch via Brevo HTTP API to: ${options.to}`);
+        try {
+          let senderEmailParsed = 'support@alwaystherevault.com';
+          let senderName = 'AlwaysThere Vault';
+          if (fromHeader.includes('<')) {
+            const match = fromHeader.match(/(.*)<(.*)>/);
+            if (match) {
+              senderName = match[1].replace(/"/g, '').trim();
+              senderEmailParsed = match[2].trim();
+            }
+          }
+          
+          const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': finalBrevoKey,
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+              sender: { name: senderName, email: senderEmailParsed },
+              to: [{ email: options.to }],
+              replyTo: replyToHeader ? { email: replyToHeader } : undefined,
+              subject: options.subject,
+              htmlContent: options.html
+            }),
+            signal: AbortSignal.timeout(5000)
+          });
+
+          if (res.ok) {
+            this.logger.log(`✅ Email successfully sent via Brevo HTTP API to: ${options.to}`);
+            this.brevoFailures = 0; // Reset consecutive failures
+            return true;
+          } else {
+            const errText = await res.text();
+            const errMsg = `❌ Brevo HTTP API error sending to ${options.to}. Status: ${res.status} ${res.statusText}. Response: ${errText}`;
+            this.logger.error(errMsg);
+            Sentry.captureMessage(errMsg, 'error');
+            this.brevoFailures++;
+            this.lastBrevoFailureTime = Date.now();
+          }
+        } catch (err: any) {
+          const errMsg = `❌ Brevo HTTP API dispatch failed to ${options.to}: ${err.message || err}`;
+          this.logger.error(errMsg, err.stack);
+          Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
+          this.brevoFailures++;
+          this.lastBrevoFailureTime = Date.now();
         }
-      } catch (err: any) {
-        const errMsg = `❌ Brevo HTTP API dispatch failed to ${options.to}: ${err.message || err}`;
-        this.logger.error(errMsg, err.stack);
-        Sentry.captureException(err, { extra: { to: options.to, subject: options.subject } });
       }
     }
 
