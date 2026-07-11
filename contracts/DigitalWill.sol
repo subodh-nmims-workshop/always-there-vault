@@ -72,10 +72,7 @@ contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
         emit WillRegistered(msg.sender, interval, gracePeriod);
     }
 
-    /**
-     * @dev Submit a heartbeat to prevent the alwaysthere switch from triggering
-     */
-    function ping() external whenNotPaused {
+    function ping() external {
         WillCondition storage userWill = wills[msg.sender];
         require(userWill.isActive, "No active will found");
         require(!userWill.isTriggered, "Will already triggered");

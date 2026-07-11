@@ -138,6 +138,8 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
         require(sub.user == msg.sender, "No subscription found");
         
         Plan memory plan = plans[sub.plan];
+        require(plan.active, "Plan not active");
+        
         uint256 price = yearly ? plan.pricePerYear : plan.pricePerMonth;
         uint256 duration = yearly ? 365 days : 30 days;
         

@@ -76,8 +76,8 @@
       ]
     },
     "/home/nothing/Desktop/Nmims/DeadMan Protocol/backend-full-decentralised/contracts/GuardianRecovery.sol": {
-      "lastModificationDate": 1777823251887,
-      "contentHash": "0751dd3cb3ce4e988240f7f64722f6cc",
+      "lastModificationDate": 1783794267425,
+      "contentHash": "7e8ad880e67908106e202e1ad42fa587",
       "sourceName": "contracts/GuardianRecovery.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -375,8 +375,8 @@
       ]
     },
     "/home/nothing/Desktop/Nmims/DeadMan Protocol/backend-full-decentralised/contracts/SubscriptionManager.sol": {
-      "lastModificationDate": 1777823251887,
-      "contentHash": "c32984e7730c84fbb1ea9ceb87b9b276",
+      "lastModificationDate": 1783794293125,
+      "contentHash": "e377246485c2019e3af384cea4fbd26f",
       "sourceName": "contracts/SubscriptionManager.sol",
       "solcConfig": {
         "version": "0.8.20",

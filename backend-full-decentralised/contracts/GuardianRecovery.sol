@@ -21,6 +21,10 @@ contract GuardianRecovery {
     // key is keccak256(wallet, nonce, guardian)
     mapping(bytes32 => bool) public hasApprovedRequest;
 
+    // Track ownership transfers (recovered wallets)
+    mapping(address => address) public walletNewOwner;
+    mapping(address => address) public walletOriginalOwner;
+
     uint256 public constant REQUIRED_APPROVALS = 3;
     uint256 public constant RECOVERY_DELAY = 7 days;
 
@@ -37,6 +41,22 @@ contract GuardianRecovery {
         }
         
         guardians[msg.sender].push(_guardian);
+    }
+
+    function removeGuardian(address _guardian) external {
+        address[] storage userGuardians = guardians[msg.sender];
+        uint256 length = userGuardians.length;
+        bool found = false;
+        
+        for (uint256 i = 0; i < length; i++) {
+            if (userGuardians[i] == _guardian) {
+                userGuardians[i] = userGuardians[length - 1];
+                userGuardians.pop();
+                found = true;
+                break;
+            }
+        }
+        require(found, "Guardian not found");
     }
 
     function initiateRecovery(address _wallet, address _newOwner) external {
@@ -80,21 +100,15 @@ contract GuardianRecovery {
     }
 
     function cancelRecovery(address _wallet) external {
-        // Can be cancelled by the wallet owner or by any guardian
+        // Can be cancelled ONLY by the wallet owner
+        require(msg.sender == _wallet, "Only wallet owner can cancel");
+        
         RecoveryRequest storage req = recoveryRequests[_wallet];
         require(req.requestTime > 0, "No request pending");
         require(!req.executed, "Recovery already executed");
         
-        if (msg.sender == _wallet) {
-            // Owner cancels it immediately
-            req.executed = true; // Mark as done to prevent any further execution
-            emit RecoveryCancelled(_wallet, req.nonce);
-        } else {
-            // Guardian cancels (requires caller to be a guardian)
-            require(_isGuardian(_wallet, msg.sender), "Not authorized to cancel");
-            req.executed = true; // Mark as done to prevent execution
-            emit RecoveryCancelled(_wallet, req.nonce);
-        }
+        req.executed = true; // Mark as done to prevent any further execution
+        emit RecoveryCancelled(_wallet, req.nonce);
     }
 
     function executeRecovery(address _wallet) external {
@@ -109,9 +123,11 @@ contract GuardianRecovery {
 
         req.executed = true;
         
-        emit RecoveryExecuted(_wallet, req.newOwner, req.nonce);
+        // Record ownership transfer mappings
+        walletNewOwner[_wallet] = req.newOwner;
+        walletOriginalOwner[req.newOwner] = _wallet;
         
-        // Ownership transfer logic to the central contract could be implemented here
+        emit RecoveryExecuted(_wallet, req.newOwner, req.nonce);
     }
 
     function _isGuardian(address _wallet, address _guardian) internal view returns(bool) {
@@ -123,5 +139,10 @@ contract GuardianRecovery {
 
     function getGuardians(address _wallet) external view returns (address[] memory) {
         return guardians[_wallet];
+    }
+
+    function getOriginalWallet(address _newOwner) external view returns (address) {
+        address orig = walletOriginalOwner[_newOwner];
+        return orig != address(0) ? orig : _newOwner;
     }
 }

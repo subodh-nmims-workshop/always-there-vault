@@ -55,7 +55,7 @@ contract SecureWill is AccessControl, ReentrancyGuard, Pausable {
     }
     
     // Rate-limited heartbeat update
-    function updateHeartbeat() external whenNotPaused {
+    function updateHeartbeat() external {
         require(!pausedUsers[msg.sender], "User is paused");
         WillCondition storage userWill = wills[msg.sender];
         require(userWill.isActive, "No active will found");

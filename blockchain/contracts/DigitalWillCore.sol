@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title DigitalWillCore
  * @dev Core smart contract for Decentralized AlwaysThere Vault
- * 
- * Key Principles:
- * - Blockchain = logic, not storage
- * - Only stores metadata and rules
- * - Never stores encrypted data or keys
- * - Fully automated execution
  */
-contract DigitalWillCore is ReentrancyGuard, Ownable {
+contract DigitalWillCore is ReentrancyGuard, AccessControl, Pausable {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
     
     // Events
     event UserRegistered(address indexed user, uint256 heartbeatInterval, uint256 gracePeriod);
@@ -33,7 +30,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
         uint256 gracePeriod;            // additional time before trigger
         uint256 lastHeartbeat;          // timestamp of last heartbeat
         uint256 triggerTime;            // when system was triggered (0 = not triggered)
-        bool emergencyOverride;         // emergency stop flag
+        bool isEmergencyOverride;       // emergency stop flag
         bool exists;                    // user exists flag
     }
     
@@ -64,6 +61,35 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
     uint256 public constant MAX_GRACE_PERIOD = 180 days;
     uint256 public constant MAX_RELEASE_DELAY = 365 days;
     
+    // Roles
+    bytes32 public constant EMERGENCY_ROLE = keccak256("EMERGENCY_ROLE");
+    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+
+    function pause() external onlyRole(EMERGENCY_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(EMERGENCY_ROLE) {
+        _unpause();
+    }
+    
+    /**
+     * @dev Record a heartbeat for a user via an authorized oracle
+     */
+    function recordHeartbeatByOracle(address user, string memory method) external onlyRole(ORACLE_ROLE) whenNotPaused {
+        require(users[user].exists, "User not registered");
+        require(!users[user].isEmergencyOverride, "Emergency override active");
+        
+        users[user].lastHeartbeat = block.timestamp;
+        
+        // Reset trigger if it was activated
+        if (users[user].triggerTime > 0) {
+            users[user].triggerTime = 0;
+        }
+        
+        emit HeartbeatRecorded(user, block.timestamp, method);
+    }
+    
     // Modifiers
     modifier onlyRegisteredUser() {
         require(users[msg.sender].exists, "User not registered");
@@ -72,7 +98,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
     
     modifier onlyActiveUser() {
         require(users[msg.sender].exists, "User not registered");
-        require(!users[msg.sender].emergencyOverride, "Emergency override active");
+        require(!users[msg.sender].isEmergencyOverride, "Emergency override active");
         _;
     }
     
@@ -80,28 +106,33 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
         require(assets[msg.sender][assetId].exists, "Asset does not exist");
         _;
     }
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(EMERGENCY_ROLE, msg.sender);
+    }
     
     /**
      * @dev Register a new user with heartbeat configuration
      */
     function registerUser(
-        uint256 _heartbeatInterval,
-        uint256 _gracePeriod
+        uint256 heartbeatInterval,
+        uint256 gracePeriod
     ) external {
         require(!users[msg.sender].exists, "User already registered");
-        require(_heartbeatInterval >= MIN_HEARTBEAT_INTERVAL && _heartbeatInterval <= MAX_HEARTBEAT_INTERVAL, "Invalid heartbeat interval");
-        require(_gracePeriod >= MIN_GRACE_PERIOD && _gracePeriod <= MAX_GRACE_PERIOD, "Invalid grace period");
+        require(heartbeatInterval >= MIN_HEARTBEAT_INTERVAL && heartbeatInterval <= MAX_HEARTBEAT_INTERVAL, "Invalid heartbeat interval");
+        require(gracePeriod >= MIN_GRACE_PERIOD && gracePeriod <= MAX_GRACE_PERIOD, "Invalid grace period");
         
         users[msg.sender] = UserConfig({
-            heartbeatInterval: _heartbeatInterval,
-            gracePeriod: _gracePeriod,
+            heartbeatInterval: heartbeatInterval,
+            gracePeriod: gracePeriod,
             lastHeartbeat: block.timestamp,
             triggerTime: 0,
-            emergencyOverride: false,
+            isEmergencyOverride: false,
             exists: true
         });
         
-        emit UserRegistered(msg.sender, _heartbeatInterval, _gracePeriod);
+        emit UserRegistered(msg.sender, heartbeatInterval, gracePeriod);
     }
     
     /**
@@ -184,7 +215,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
             return (false, "User not registered");
         }
         
-        if (config.emergencyOverride) {
+        if (config.isEmergencyOverride) {
             return (false, "Emergency override active");
         }
         
@@ -205,7 +236,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
     /**
      * @dev Trigger the system for a user (can be called by anyone)
      */
-    function triggerSystem(address user) external nonReentrant {
+    function triggerSystem(address user) external nonReentrant whenNotPaused {
         (bool shouldTrigger, string memory reason) = this.checkTriggerCondition(user);
         require(shouldTrigger, reason);
         
@@ -252,7 +283,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
         address user,
         string memory assetId,
         uint256 ruleIndex
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         (bool eligible,) = this.isAssetEligibleForRelease(user, assetId, ruleIndex);
         require(eligible, "Asset not eligible for release");
         
@@ -268,8 +299,8 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
     /**
      * @dev Emergency override (stops all releases)
      */
-    function emergencyOverride(string memory reason) external onlyRegisteredUser {
-        users[msg.sender].emergencyOverride = true;
+    function enableEmergencyOverride(string calldata reason) external onlyRegisteredUser {
+        users[msg.sender].isEmergencyOverride = true;
         users[msg.sender].triggerTime = 0; // Reset trigger
         
         emit EmergencyOverride(msg.sender, msg.sender, reason);
@@ -279,14 +310,14 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
      * @dev Update heartbeat configuration
      */
     function updateHeartbeatConfig(
-        uint256 _heartbeatInterval,
-        uint256 _gracePeriod
+        uint256 heartbeatInterval,
+        uint256 gracePeriod
     ) external onlyActiveUser {
-        require(_heartbeatInterval >= MIN_HEARTBEAT_INTERVAL && _heartbeatInterval <= MAX_HEARTBEAT_INTERVAL, "Invalid heartbeat interval");
-        require(_gracePeriod >= MIN_GRACE_PERIOD && _gracePeriod <= MAX_GRACE_PERIOD, "Invalid grace period");
+        require(heartbeatInterval >= MIN_HEARTBEAT_INTERVAL && heartbeatInterval <= MAX_HEARTBEAT_INTERVAL, "Invalid heartbeat interval");
+        require(gracePeriod >= MIN_GRACE_PERIOD && gracePeriod <= MAX_GRACE_PERIOD, "Invalid grace period");
         
-        users[msg.sender].heartbeatInterval = _heartbeatInterval;
-        users[msg.sender].gracePeriod = _gracePeriod;
+        users[msg.sender].heartbeatInterval = heartbeatInterval;
+        users[msg.sender].gracePeriod = gracePeriod;
     }
     
     /**
@@ -328,7 +359,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
         uint256 gracePeriod,
         uint256 lastHeartbeat,
         uint256 triggerTime,
-        bool emergencyOverride,
+        bool isEmergencyOverride,
         bool exists
     ) {
         UserConfig memory config = users[user];
@@ -337,7 +368,7 @@ contract DigitalWillCore is ReentrancyGuard, Ownable {
             config.gracePeriod,
             config.lastHeartbeat,
             config.triggerTime,
-            config.emergencyOverride,
+            config.isEmergencyOverride,
             config.exists
         );
     }

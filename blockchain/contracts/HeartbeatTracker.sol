@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.27;
 
 /**
  * @title HeartbeatTracker
@@ -33,15 +33,15 @@ contract HeartbeatTracker {
     /**
      * @dev Configure heartbeat parameters for a user
      */
-    function configureHeartbeat(uint256 _interval, uint256 _gracePeriod) external {
-        require(_interval >= 7 days, "Interval must be at least 7 days");
-        require(_interval <= 365 days, "Interval cannot exceed 365 days");
-        require(_gracePeriod >= 30 days, "Grace period must be at least 30 days");
-        require(_gracePeriod <= 180 days, "Grace period cannot exceed 180 days");
+    function configureHeartbeat(uint256 interval, uint256 gracePeriod) external {
+        require(interval >= 7 days, "Interval must be at least 7 days");
+        require(interval <= 365 days, "Interval cannot exceed 365 days");
+        require(gracePeriod >= 30 days, "Grace period must be at least 30 days");
+        require(gracePeriod <= 180 days, "Grace period cannot exceed 180 days");
         
         UserHeartbeat storage heartbeat = userHeartbeats[msg.sender];
-        heartbeat.heartbeatInterval = _interval;
-        heartbeat.gracePeriod = _gracePeriod;
+        heartbeat.heartbeatInterval = interval;
+        heartbeat.gracePeriod = gracePeriod;
         heartbeat.lastHeartbeat = block.timestamp;
         heartbeat.isActive = true;
     }
