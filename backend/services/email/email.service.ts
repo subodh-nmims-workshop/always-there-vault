@@ -244,7 +244,9 @@ export class EmailService {
         systemEmail = this.fromEmail.trim();
       }
 
-      fromHeader = `"${displayName} via AlwaysThere" <${systemEmail}>`;
+      // Strict SMTP servers like GoDaddy (smtpout.secureserver.net) often reject custom display names or custom From headers.
+      // To guarantee delivery, we use the verified system From header directly, and route replies via Reply-To.
+      fromHeader = this.fromEmail;
       replyToHeader = userEmail;
     }
 
