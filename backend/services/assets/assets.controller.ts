@@ -13,6 +13,7 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
+  FileTypeValidator,
   Patch,
   BadRequestException,
   Inject,
@@ -67,6 +68,7 @@ export class AssetsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(octet-stream|plain|pdf|png|jpe?g|gif|json|zip|msword|document)/ }),
         ],
       }),
     )
@@ -74,6 +76,12 @@ export class AssetsController {
     @Req() req: any,
     @Query('folderId') folderId?: string,
   ): Promise<any> {
+    if (hasDoubleExtension(file.originalname)) {
+      throw new BadRequestException('Double file extensions are not allowed for security reasons.');
+    }
+    if (scanForExecutableMagicBytes(file.buffer)) {
+      throw new BadRequestException('Uploaded file failed the malware/executable signature scan.');
+    }
     const walletAddress = req.user.walletAddress;
     return this.assetsService.uploadFile(file, walletAddress, folderId);
   }
@@ -82,9 +90,22 @@ export class AssetsController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload a file to IPFS via Pinata' })
   async uploadToIpfs(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(octet-stream|plain|pdf|png|jpe?g|gif|json|zip|msword|document)/ }),
+        ],
+      }),
+    ) file: Express.Multer.File,
     @Req() req: any,
   ): Promise<any> {
+    if (hasDoubleExtension(file.originalname)) {
+      throw new BadRequestException('Double file extensions are not allowed for security reasons.');
+    }
+    if (scanForExecutableMagicBytes(file.buffer)) {
+      throw new BadRequestException('Uploaded file failed the malware/executable signature scan.');
+    }
     const walletAddress = req.user.walletAddress;
     
     // Check and increment Web3 storage quota
@@ -317,3 +338,40 @@ export class ClaimAssetsController {
     }
   }
 }
+
+function scanForExecutableMagicBytes(buffer: Buffer): boolean {
+  if (!buffer || buffer.length < 4) return false;
+  
+  // MZ (PE Executable)
+  if (buffer[0] === 0x4D && buffer[1] === 0x5A) {
+    return true;
+  }
+  
+  // ELF Executable
+  if (buffer[0] === 0x7F && buffer[1] === 0x45 && buffer[2] === 0x4c && buffer[3] === 0x46) {
+    return true;
+  }
+  
+  // Mach-O Executable
+  try {
+    const magic = buffer.readUInt32BE(0);
+    if (magic === 0xFEEDFACE || magic === 0xFEEDFACF || magic === 0xCEFAEDFE || magic === 0xCFFAEDFE) {
+      return true;
+    }
+  } catch (e) {
+    // Ignore read errors for very small files
+  }
+  
+  return false;
+}
+
+function hasDoubleExtension(filename: string): boolean {
+  if (!filename) return false;
+  const parts = filename.split('.');
+  if (parts.length < 3) return false;
+  const blockedExtensions = ['exe', 'bat', 'cmd', 'sh', 'bash', 'scr', 'dll', 'msi', 'com', 'vbs', 'js', 'jar'];
+  const lastExt = parts[parts.length - 1].toLowerCase();
+  const secondLastExt = parts[parts.length - 2].toLowerCase();
+  return blockedExtensions.includes(lastExt) || blockedExtensions.includes(secondLastExt);
+}
+

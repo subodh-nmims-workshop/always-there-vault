@@ -10,12 +10,12 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { eq, sql } from 'drizzle-orm';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
 import { files } from '../../src/db/schema/files';
-
-
+import { users } from '../../src/db/schema/users';
 
 @Injectable()
 export class HeartbeatCronService {
     private readonly logger = new Logger(HeartbeatCronService.name);
+    private isRunning = false;
 
     constructor(
         @Inject('DRIZZLE_DB') private db: any,
@@ -30,38 +30,78 @@ export class HeartbeatCronService {
 
     @Cron(CronExpression.EVERY_MINUTE)
     async handleCron() {
-        this.logger.log('🚀 Starting daily Heartbeat Monitor check...');
+        if (this.isRunning) {
+            this.logger.warn('⚠️ Heartbeat Cron is already running. Skipping execution to prevent overlap.');
+            return;
+        }
+        this.isRunning = true;
+        this.logger.log('🚀 Starting Heartbeat Monitor check...');
 
         try {
-            const users = await this.usersService.getAllUsers();
-            this.logger.log(`Scanning ${users.length} users...`);
+            // Join users and heartbeatConfigs to fetch all details in 1 single database call
+            const usersWithConfigs = await this.db.select({
+                user: users,
+                config: heartbeatConfigs
+            })
+            .from(users)
+            .innerJoin(heartbeatConfigs, eq(users.id, heartbeatConfigs.userId));
 
-            for (const user of users) {
-                const status = await this.heartbeatService.getHeartbeatStatus(user.walletAddress);
-                
-                // Get config
-                const config = await this.db.query.heartbeatConfigs.findFirst({
-                    where: eq(heartbeatConfigs.userId, user.id),
-                });
+            this.logger.log(`Scanning ${usersWithConfigs.length} users...`);
 
+            for (const { user, config } of usersWithConfigs) {
                 if (!config) continue;
 
-                this.logger.debug(`User ${user.walletAddress} | email: ${user.email || 'MISSING'} | status: ${status.status} | misses: ${config.missedCount}/${config.bufferMisses}`);
+                // Calculate heartbeat status inline to avoid N*2 redundant database lookups
+                const lastCheck = config.lastHeartbeat || config.createdAt;
+                const now = new Date();
+                const isDemo = config.intervalDays < 7;
+                const timeUnit = isDemo ? (1000 * 60) : (1000 * 60 * 60 * 24);
+                
+                const diff = Math.floor((now.getTime() - lastCheck.getTime()) / timeUnit);
+                const interval = config.intervalDays;
+                const grace = config.gracePeriodDays;
 
-                if (status.status === 'overdue' || status.status === 'grace_period') {
+                let status: string;
+                let daysUntilDue = 0;
+                let minutesUntilDue = 0;
+
+                if (diff >= interval + grace) {
+                    status = 'overdue';
+                    if (isDemo) {
+                        minutesUntilDue = interval + grace - diff;
+                    } else {
+                        daysUntilDue = interval + grace - diff;
+                    }
+                } else if (diff >= interval) {
+                    status = 'grace_period';
+                    if (isDemo) {
+                        minutesUntilDue = interval + grace - diff;
+                    } else {
+                        daysUntilDue = interval + grace - diff;
+                    }
+                } else {
+                    status = 'active';
+                    if (isDemo) {
+                        minutesUntilDue = interval - diff;
+                    } else {
+                        daysUntilDue = interval - diff;
+                    }
+                }
+
+                this.logger.debug(`User ${user.walletAddress} | email: ${user.email || 'MISSING'} | status: ${status} | misses: ${config.missedCount}/${config.bufferMisses}`);
+
+                if (status === 'overdue' || status === 'grace_period') {
                     const currentMisses = config.missedCount || 0;
                     const maxBuffer = config.bufferMisses || 3;
                     const isDemo = config.intervalDays < 7;
 
                     // Throttle: in demo mode (1 min interval), only send one alert per "interval unit" since last heartbeat
-                    // Use lastHeartbeat as anchor, not updatedAt (updatedAt changes on every miss increment)
                     const lastHeartbeatTime = config.lastHeartbeat || config.createdAt;
                     const timeUnit = isDemo ? (1000 * 60) : (1000 * 60 * 60 * 24);
                     const now = new Date();
                     const unitsSinceLastHeartbeat = Math.floor((now.getTime() - lastHeartbeatTime.getTime()) / timeUnit);
 
-                    // How many alerts should have been sent so far = units since last heartbeat - interval + 1
-                    // If currentMisses already covers the expected count, throttle (only applies to warnings, not the final trigger)
+                    // How many alerts should have been sent so far
                     const expectedMisses = Math.max(0, unitsSinceLastHeartbeat - config.intervalDays + 1);
                     if (currentMisses < maxBuffer && currentMisses >= expectedMisses && currentMisses > 0) {
                         this.logger.debug(`Throttling alert for ${user.walletAddress}: misses(${currentMisses}) already covers expected(${expectedMisses}) for this time period.`);
@@ -109,7 +149,7 @@ export class HeartbeatCronService {
                                 gracePeriodDays: config.gracePeriodDays,
                                 maxBuffer,
                                 missCount: newMissCount,
-                            });
+                             });
 
                             for (const emailAddress of emailsToSend) {
                                 const sent = await this.emailService.send({
@@ -124,7 +164,7 @@ export class HeartbeatCronService {
 
                         // Send Push Notification if token exists
                         if (user.expoPushToken) {
-                            await this.notificationsService.sendHeartbeatReminder(user.expoPushToken, status.daysUntilDue);
+                            await this.notificationsService.sendHeartbeatReminder(user.expoPushToken, isDemo ? minutesUntilDue : daysUntilDue);
                         }
                     } else {
                         // All buffers exhausted — protocol trigger
@@ -236,10 +276,11 @@ export class HeartbeatCronService {
                         }
                     }
                 }
-
             }
         } catch (e) {
             this.logger.error(`Cron Error: ${e.message}`);
+        } finally {
+            this.isRunning = false;
         }
     }
 

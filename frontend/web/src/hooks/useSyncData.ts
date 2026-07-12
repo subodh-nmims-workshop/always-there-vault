@@ -1,11 +1,12 @@
 import { useAccount } from 'wagmi';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import WebStorageService from '@/lib/storage';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
 
 export function useSyncData() {
   const { address, isConnected, status } = useAccount();
+  const isSyncingRef = useRef(false);
   const [data, setData] = useState<any>({
     nominees: [],
     assets: [],
@@ -20,6 +21,11 @@ export function useSyncData() {
       setData((prev: any) => ({ ...prev, isLoading: false, nominees: [], assets: [] }));
       return;
     }
+
+    if (isSyncingRef.current) {
+      return;
+    }
+    isSyncingRef.current = true;
 
     try {
       const normalizedAddress = address.toLowerCase();
@@ -45,27 +51,46 @@ export function useSyncData() {
       
       // 1. Sync Beneficiaries
       if (Array.isArray(nomineesRes)) {
-        const backendBenIds = new Set(nomineesRes.map((b: any) => b.id));
         const localBens = await storage.getAllBeneficiaries();
-        
-        // Save/update backend beneficiaries locally
-        for (const b of nomineesRes) {
-          await storage.saveBeneficiary({
-            id: b.id,
-            name: b.name,
-            email: b.email || '',
-            walletAddress: b.walletAddress || '',
-            createdAt: b.createdAt ? new Date(b.createdAt).getTime() : Date.now(),
-            enabled: b.enabled ?? true,
-            isVerified: b.isVerified ?? false,
-            verificationMethod: b.verificationMethod || 'email'
-          });
+        let beneficiariesChanged = false;
+
+        if (nomineesRes.length !== localBens.length) {
+          beneficiariesChanged = true;
+        } else {
+          const localBenMap = new Map(localBens.map(b => [b.id, b]));
+          for (const b of nomineesRes) {
+            const local = localBenMap.get(b.id);
+            if (!local || 
+                local.name !== b.name || 
+                (local.email || '') !== (b.email || '') || 
+                (local.walletAddress || '') !== (b.walletAddress || '') || 
+                (local.enabled ?? true) !== (b.enabled ?? true) || 
+                (local.isVerified ?? false) !== (b.isVerified ?? false) || 
+                (local.verificationMethod || 'email') !== (b.verificationMethod || 'email')) {
+              beneficiariesChanged = true;
+              break;
+            }
+          }
         }
-        
-        // Delete local beneficiaries that are not present in backend
-        for (const lb of localBens) {
-          if (!backendBenIds.has(lb.id)) {
-            await storage.deleteBeneficiary(lb.id);
+
+        if (beneficiariesChanged) {
+          const backendBenIds = new Set(nomineesRes.map((b: any) => b.id));
+          for (const b of nomineesRes) {
+            await storage.saveBeneficiary({
+              id: b.id,
+              name: b.name,
+              email: b.email || '',
+              walletAddress: b.walletAddress || '',
+              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : Date.now(),
+              enabled: b.enabled ?? true,
+              isVerified: b.isVerified ?? false,
+              verificationMethod: b.verificationMethod || 'email'
+            });
+          }
+          for (const lb of localBens) {
+            if (!backendBenIds.has(lb.id)) {
+              await storage.deleteBeneficiary(lb.id);
+            }
           }
         }
       }
@@ -73,32 +98,64 @@ export function useSyncData() {
       // 2. Sync Assets
       if (Array.isArray(assetsRes)) {
         const localAssets = await storage.getAllAssets();
-        const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
-        const backendAssetIds = new Set(assetsRes.map((a: any) => a.id));
+        let assetsChanged = false;
 
-        for (const b of assetsRes) {
-          const local = localAssetMap.get(b.id);
-          await storage.saveAsset({
-            id: b.id,
-            name: b.name,
-            type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
-            folderId: b.folderId || null,
-            encryptedData: local?.encryptedData || b.encryptedData || '',
-            keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
-            iv: local?.iv || b.iv || b.fileIv || '',
-            ipfsHash: b.ipfsHash || b.cid || local?.ipfsHash || '',
-            beneficiaries: b.beneficiaries || local?.beneficiaries || [],
-            assignedBeneficiaryId: b.assignedBeneficiaryId || local?.assignedBeneficiaryId || null,
-            createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
-            size: b.size || local?.size || 0,
-            mimeType: b.mimeType || local?.mimeType || ''
-          });
+        if (assetsRes.length !== localAssets.length) {
+          assetsChanged = true;
+        } else {
+          const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
+          for (const b of assetsRes) {
+            const local = localAssetMap.get(b.id);
+            const computedType = local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document');
+            const computedKeyId = local?.keyId || b.keyId || b.encryptionKeyId || '';
+            const computedIv = local?.iv || b.iv || b.fileIv || '';
+            const computedIpfsHash = b.ipfsHash || b.cid || local?.ipfsHash || '';
+
+            if (!local || 
+                local.name !== b.name || 
+                local.type !== computedType || 
+                (local.folderId || null) !== (b.folderId || null) || 
+                (local.encryptedData || '') !== (b.encryptedData || '') || 
+                local.keyId !== computedKeyId || 
+                local.iv !== computedIv || 
+                local.ipfsHash !== computedIpfsHash || 
+                JSON.stringify(local.beneficiaries || []) !== JSON.stringify(b.beneficiaries || []) || 
+                (local.assignedBeneficiaryId || null) !== (b.assignedBeneficiaryId || null) || 
+                (local.size || 0) !== (b.size || 0) || 
+                (local.mimeType || '') !== (b.mimeType || '')) {
+              assetsChanged = true;
+              break;
+            }
+          }
         }
-        
-        // Delete local-only assets that are not in the backend and were previously synced
-        for (const la of localAssets) {
-          if (!backendAssetIds.has(la.id)) {
-            await storage.deleteAsset(la.id);
+
+        if (assetsChanged) {
+          const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
+          const backendAssetIds = new Set(assetsRes.map((a: any) => a.id));
+
+          for (const b of assetsRes) {
+            const local = localAssetMap.get(b.id);
+            await storage.saveAsset({
+              id: b.id,
+              name: b.name,
+              type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
+              folderId: b.folderId || null,
+              encryptedData: local?.encryptedData || b.encryptedData || '',
+              keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
+              iv: local?.iv || b.iv || b.fileIv || '',
+              ipfsHash: b.ipfsHash || b.cid || local?.ipfsHash || '',
+              beneficiaries: b.beneficiaries || local?.beneficiaries || [],
+              assignedBeneficiaryId: b.assignedBeneficiaryId || local?.assignedBeneficiaryId || null,
+              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
+              size: b.size || local?.size || 0,
+              mimeType: b.mimeType || local?.mimeType || ''
+            });
+          }
+          
+          for (const la of localAssets) {
+            if (!backendAssetIds.has(la.id)) {
+              await storage.deleteAsset(la.id);
+            }
           }
         }
       }
@@ -121,13 +178,16 @@ export function useSyncData() {
       // 4. Sync User / Heartbeat Settings
       if (userRes || heartbeatRes) {
         const currentSettings = storage.getSettings();
-        storage.saveSettings({
+        const nextSettings = {
           ...currentSettings,
           heartbeatInterval: heartbeatRes?.interval || userRes?.heartbeatInterval || currentSettings.heartbeatInterval,
           gracePeriod: heartbeatRes?.gracePeriod || userRes?.gracePeriod || currentSettings.gracePeriod,
           bufferMisses: heartbeatRes?.bufferMisses || userRes?.bufferMisses || currentSettings.bufferMisses,
           emailNotification: userRes?.email || userRes?.pendingEmail || currentSettings.emailNotification
-        });
+        };
+        if (JSON.stringify(currentSettings) !== JSON.stringify(nextSettings)) {
+          storage.saveSettings(nextSettings);
+        }
       }
 
       // Dispatch custom event to refresh app state provider
@@ -156,6 +216,8 @@ export function useSyncData() {
     } catch (error: any) {
       console.error('Sync error:', error);
       setData((prev: any) => ({ ...prev, isLoading: false, error: error.message }));
+    } finally {
+      isSyncingRef.current = false;
     }
   }, [address, isConnected]);
 

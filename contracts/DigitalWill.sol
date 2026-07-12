@@ -2,7 +2,7 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
@@ -10,7 +10,9 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * @dev Secure smart contract for the Always There Switch Protocol
  * Manages user heartbeats and triggers securely with protection against re-entrancy.
  */
-contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
+contract DigitalWill is ReentrancyGuard, AccessControl, Pausable {
+    bytes32 public constant EMERGENCY_ROLE = keccak256("EMERGENCY_ROLE");
+
     struct WillCondition {
         uint256 lastHeartbeat;
         uint256 heartbeatInterval; 
@@ -37,19 +39,22 @@ contract DigitalWill is ReentrancyGuard, Ownable, Pausable {
     event WillPaused(address indexed owner);
     event WillResumed(address indexed owner);
 
-    constructor() Ownable(msg.sender) {}
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(EMERGENCY_ROLE, msg.sender);
+    }
 
     /**
-     * @dev Emergency pause by contract owner
+     * @dev Emergency pause by emergency role
      */
-    function pauseProtocol() external onlyOwner {
+    function pauseProtocol() external onlyRole(EMERGENCY_ROLE) {
         _pause();
     }
 
     /**
-     * @dev Resume protocol by contract owner
+     * @dev Resume protocol by emergency role
      */
-    function unpauseProtocol() external onlyOwner {
+    function unpauseProtocol() external onlyRole(EMERGENCY_ROLE) {
         _unpause();
     }
 

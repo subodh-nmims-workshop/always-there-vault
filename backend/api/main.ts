@@ -139,24 +139,26 @@ async function bootstrap() {
   app.use('/api/auth', authLimiter);
   app.use(generalLimiter);
 
-  // Swagger API Documentation
-  const config = new DocumentBuilder()
-    .setTitle('AlwaysThere Vault API')
-    .setDescription('Decentralized AlwaysThere Vault - Backend API Documentation')
-    .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('users', 'User management')
-    .addTag('assets', 'Digital asset management')
-    .addTag('beneficiaries', 'Beneficiary management')
-    .addTag('heartbeat', 'Heartbeat tracking')
-    .addTag('subscription', 'Subscription management')
-    .addTag('stripe', 'Payment processing')
-    .addTag('email', 'Email notifications')
-    .addBearerAuth()
-    .build();
+  // Swagger API Documentation - Disable in Production
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('AlwaysThere Vault API')
+      .setDescription('Decentralized AlwaysThere Vault - Backend API Documentation')
+      .setVersion('1.0')
+      .addTag('auth', 'Authentication endpoints')
+      .addTag('users', 'User management')
+      .addTag('assets', 'Digital asset management')
+      .addTag('beneficiaries', 'Beneficiary management')
+      .addTag('heartbeat', 'Heartbeat tracking')
+      .addTag('subscription', 'Subscription management')
+      .addTag('stripe', 'Payment processing')
+      .addTag('email', 'Email notifications')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 7001;
   await app.listen(port);

@@ -390,6 +390,12 @@ export class AssetsService {
     });
 
     if (isNominee) {
+        // IDOR Prevention: Ensure that this key/asset is explicitly assigned to this nominee
+        if (asset.assignedBeneficiaryId !== isNominee.id) {
+            await this.auditService.trackAction(owner.id, 'UNAUTHORIZED_KEY_ACCESS', 'SECURITY', keyId, { requester: requesterWalletOrId, reason: 'Asset not assigned to this nominee' });
+            throw new NotFoundException('Key not found or access denied');
+        }
+
         // CHECK PROTOCOL STATUS
         const status: any = await this.heartbeatService.getHeartbeatStatus(owner.walletAddress);
         if (status.status === 'overdue' || status.status === 'grace_period') {
