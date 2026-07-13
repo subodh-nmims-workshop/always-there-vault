@@ -82,6 +82,17 @@ function CryptoPaymentContent() {
   const [selectedOption, setSelectedOption] = useState<'paypal_wallet' | 'card' | 'crypto'>('paypal_wallet')
   const [orderId, setOrderId] = useState<string>('')
   const [billingCountry, setBillingCountry] = useState<string>('US')
+  const [nonce, setNonce] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const nonceMeta = document.querySelector('meta[name="csp-nonce"]')
+      if (nonceMeta) {
+        const val = nonceMeta.getAttribute('content')
+        if (val) setNonce(val)
+      }
+    }
+  }, [])
 
   const amount = PRICING[plan as keyof typeof PRICING]?.[billing as 'monthly' | 'quarterly' | 'yearly'] || '0.00'
   const planId = PLAN_IDS[plan] || 0
@@ -384,7 +395,8 @@ function CryptoPaymentContent() {
                   currency: "USD",
                   intent: "capture",
                   locale: "en_US",
-                  "buyer-country": billingCountry
+                  "buyer-country": billingCountry,
+                  ...(nonce ? { "data-csp-nonce": nonce } : {})
               }}>
                 <div className="space-y-3">
                 {/* Option 1: PayPal */}

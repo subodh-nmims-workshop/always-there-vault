@@ -4,13 +4,18 @@ import Script from 'next/script';
 
 const GTM_ID = 'GTM-TW3VZ2X6';
 
-export function GoogleTagManager() {
+interface GoogleTagManagerProps {
+  nonce?: string;
+}
+
+export function GoogleTagManager({ nonce }: GoogleTagManagerProps) {
   return (
     <>
       {/* GTM Script in head */}
       <Script
         id="gtm-script"
         strategy="afterInteractive"
+        nonce={nonce}
         dangerouslySetInnerHTML={{
           __html: `
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -34,3 +39,4 @@ export function GoogleTagManager() {
     </>
   );
 }
+

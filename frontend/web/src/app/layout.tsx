@@ -4,6 +4,7 @@ import { Providers } from './providers'
 import { Toaster } from 'sonner'
 import Script from 'next/script'
 import { GoogleTagManager } from '../components/GoogleTagManager'
+import { headers } from 'next/headers'
 
 
 export const metadata: Metadata = {
@@ -64,10 +65,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const nonce = headers().get('x-nonce') || undefined
+
   return (
     <html lang="en" className="font-outfit font-plus-jakarta" suppressHydrationWarning>
       <head>
-        <Script id="json-ld" type="application/ld+json" strategy="afterInteractive">
+        <meta name="csp-nonce" content={nonce} />
+        <Script id="json-ld" type="application/ld+json" strategy="afterInteractive" nonce={nonce}>
           {`
             {
               "@context": "https://schema.org",
@@ -89,7 +93,7 @@ export default function RootLayout({
             }
           `}
         </Script>
-        <Script id="extension-error-handler" strategy="beforeInteractive">
+        <Script id="extension-error-handler" strategy="beforeInteractive" nonce={nonce}>
           {`
             // Suppress browser extension errors
             if (typeof chrome !== 'undefined' && chrome.runtime) {
@@ -111,7 +115,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="font-outfit antialiased bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
-        <GoogleTagManager />
+        <GoogleTagManager nonce={nonce} />
         <Providers>
           <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             {children}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Crown, Shield, Zap, CheckCircle2, ArrowRight, Wallet, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,17 @@ export function UpgradeModal({
   description = "Web3 storage and advanced vault features are reserved for our premium guardians."
 }: UpgradeModalProps) {
   const [method, setMethod] = useState<'PAYPAL' | 'CRYPTO' | 'STRIPE' | null>(null)
+  const [nonce, setNonce] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const nonceMeta = document.querySelector('meta[name="csp-nonce"]')
+      if (nonceMeta) {
+        const val = nonceMeta.getAttribute('content')
+        if (val) setNonce(val)
+      }
+    }
+  }, [])
 
   const handlePayment = () => {
     if (!method) {
@@ -131,7 +142,8 @@ export function UpgradeModal({
                   <PayPalScriptProvider options={{ 
                       clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test",
                       currency: "USD",
-                      intent: "capture"
+                      intent: "capture",
+                      ...(nonce ? { "data-csp-nonce": nonce } : {})
                   }}>
                       <PayPalButtons
                           style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
