@@ -71,8 +71,7 @@ export default function RootLayout({
     <html lang="en" className="font-outfit font-plus-jakarta" suppressHydrationWarning>
       <head>
         <meta name="csp-nonce" content={nonce} />
-        <Script id="json-ld" type="application/ld+json" strategy="afterInteractive" nonce={nonce}>
-          {`
+        <script id="json-ld" type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: `
             {
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
@@ -91,10 +90,8 @@ export default function RootLayout({
                 "ratingCount": "1250"
               }
             }
-          `}
-        </Script>
-        <Script id="extension-error-handler" strategy="beforeInteractive" nonce={nonce}>
-          {`
+          ` }} />
+        <script id="extension-error-handler" nonce={nonce} dangerouslySetInnerHTML={{ __html: `
             // Suppress browser extension errors
             if (typeof chrome !== 'undefined' && chrome.runtime) {
               const originalSendMessage = chrome.runtime.sendMessage;
@@ -111,8 +108,7 @@ export default function RootLayout({
                 }
               };
             }
-          `}
-        </Script>
+          ` }} />
       </head>
       <body className="font-outfit antialiased bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
         <GoogleTagManager nonce={nonce} />
