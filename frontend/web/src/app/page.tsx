@@ -74,25 +74,11 @@ export default function HomePage() {
   const [address, setAddress] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [isConnecting, setIsConnecting] = useState(false)
-  const [isDevOverride, setIsDevOverride] = useState(false)
-  const [showDevModal, setShowDevModal] = useState(false)
-  const [devPasscode, setDevPasscode] = useState('')
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [pendingMfaData, setPendingMfaData] = useState<{ mfaToken: string; walletAddress: string } | null>(null)
   const [mfaVerifyCode, setMfaVerifyCode] = useState('')
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false)
   const [mfaError, setMfaError] = useState<string | null>(null)
-  const [waitlistEmail, setWaitlistEmail] = useState('')
-
-  const handleJoinWaitlist = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!waitlistEmail.trim() || !waitlistEmail.includes('@')) {
-      toast.error('Please enter a valid email address.');
-      return;
-    }
-    toast.success('Success! You have been added to our private beta waitlist.');
-    setWaitlistEmail('');
-  }
 
   const closeMfaModal = () => {
     setPendingMfaData(null)
@@ -111,140 +97,14 @@ export default function HomePage() {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
 
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
     const storedConnection = localStorage.getItem('dwp_wallet_connected')
-    if (isDemo) {
-      setIsConnected(true)
-      setIsDevOverride(true)
-      setAddress('0xDemoSandbox77777777777777777777777777')
-    } else if (storedConnection === 'true') {
+    if (storedConnection === 'true') {
       setIsConnected(true)
       setAddress(localStorage.getItem('dwp_wallet_address') || '')
     }
-    
-    // Check if dev override is active and not expired (5 hours)
-    const devExpiry = localStorage.getItem('dwp_dev_override_expiry')
-    if (devExpiry && parseInt(devExpiry) > Date.now()) {
-      setIsDevOverride(true)
-    } else {
-      localStorage.removeItem('dwp_dev_override_expiry')
-    }
   }, [])
 
-  // Auto-show dev modal when in restricted mode (Disabled to avoid intrusive UI popups)
-  useEffect(() => {
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-    if (isConnected && !isDevOverride && !isDemo) {
-      // Don't auto-show dev modal to avoid intrusive UI popups
-    }
-  }, [isConnected, isDevOverride])
-
   const handleConnect = () => setShowWalletModal(true)
-
-  const handleStartDemo = async () => {
-    setIsConnecting(true)
-    try {
-      let privateKey = localStorage.getItem('dwp_demo_private_key')
-      if (!privateKey) {
-        const wallet = ethers.Wallet.createRandom()
-        privateKey = wallet.privateKey
-        localStorage.setItem('dwp_demo_private_key', privateKey)
-      }
-      const wallet = new ethers.Wallet(privateKey)
-      const walletAddress = wallet.address
-
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-      const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
-      
-      if (!nonceRes.ok) {
-        throw new Error('Failed to fetch authentication nonce')
-      }
-
-      const nonceData = await nonceRes.json()
-      const message = nonceData?.nonce
-      if (!message) {
-        throw new Error('Empty authentication message')
-      }
-
-      const signature = await wallet.signMessage(message)
-
-      const verifyRes = await fetch(`${apiEndpoint}/api/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress, message, signature })
-      })
-
-      if (!verifyRes.ok) {
-        throw new Error('Verification failed')
-      }
-
-      const authData = await verifyRes.json()
-      
-      if (authData?.token) {
-        localStorage.setItem('dwp_is_demo', 'true')
-        localStorage.setItem('dwp_wallet_address', authData.walletAddress || walletAddress)
-        localStorage.setItem('dwp_wallet_connected', 'true')
-        localStorage.setItem('dwp_token', authData.token)
-        
-        if (!localStorage.getItem('dwp_user_email')) {
-          localStorage.setItem('dwp_user_email', 'nothingsubodh@gmail.com')
-        }
-
-        // Set a mock Professional subscription so all features are unlocked right away
-        localStorage.setItem('dwp_subscription', JSON.stringify({
-          id: 'demo-sub',
-          userId: 'demo-user-id',
-          planId: 'sovereign_pro',
-          plan: 'sovereign_pro',
-          planName: 'Web3 Pro (Demo Sandbox)',
-          status: 'active',
-          mode: 'decentralized',
-          storageUsed: 0,
-          storageLimit: 100 * 1024 * 1024 * 1024,
-          trialEndsAt: null,
-          subscriptionEndsAt: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }))
-
-        setIsConnected(true)
-        setIsDevOverride(true)
-        setAddress(authData.walletAddress || walletAddress)
-        toast.success('Sandbox Demo Mode Activated with Backend Sync!')
-      } else {
-        throw new Error('No authentication token received')
-      }
-    } catch (error: any) {
-      console.warn('Demo backend sync failed:', error)
-      // Fallback for offline demo
-      localStorage.setItem('dwp_is_demo', 'true')
-      localStorage.setItem('dwp_wallet_address', '0xDemoSandbox77777777777777777777777777')
-      localStorage.setItem('dwp_wallet_connected', 'true')
-      
-      localStorage.setItem('dwp_subscription', JSON.stringify({
-        id: 'demo-sub',
-        userId: 'demo-user-id',
-        planId: 'sovereign_pro',
-        plan: 'sovereign_pro',
-        planName: 'Web3 Pro (Demo Sandbox)',
-        status: 'active',
-        mode: 'decentralized',
-        storageUsed: 0,
-        storageLimit: 100 * 1024 * 1024 * 1024,
-        trialEndsAt: null,
-        subscriptionEndsAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }))
-
-      setIsConnected(true)
-      setIsDevOverride(true)
-      setAddress('0xDemoSandbox77777777777777777777777777')
-      toast.success('Sandbox Demo Mode Activated (Offline Fallback)')
-    } finally {
-      setIsConnecting(false)
-    }
-  }
 
   const handleWalletConnect = async (walletAddress: string, customPrivateKey?: string) => {
     setIsConnecting(true)
@@ -291,18 +151,12 @@ export default function HomePage() {
       const authData = await verifyRes.json()
       
       if (authData?.status === 'PENDING_MFA') {
-        localStorage.removeItem('dwp_is_demo')
-        localStorage.removeItem('dwp_demo_otp')
-        localStorage.removeItem('dwp_alt_demo_otp')
         setPendingMfaData({ mfaToken: authData.mfaToken, walletAddress })
         setMfaVerifyCode('')
         setShowWalletModal(false)
         toast.info('Two-Factor Authentication required.')
       } else if (authData?.token) {
         setIsConnected(true)
-        localStorage.removeItem('dwp_is_demo')
-        localStorage.removeItem('dwp_demo_otp')
-        localStorage.removeItem('dwp_alt_demo_otp')
         localStorage.setItem('dwp_wallet_connected', 'true')
         localStorage.setItem('dwp_wallet_address', authData.walletAddress || walletAddress)
         localStorage.setItem('dwp_token', authData.token)
@@ -315,16 +169,6 @@ export default function HomePage() {
     } catch (error: any) {
       console.warn('Login error:', error)
       toast.error(error.message || 'Login failed')
-      
-      if (process.env.NODE_ENV === 'development') {
-        // Fallback for local dev if backend is down
-        setIsConnected(true)
-        setAddress(walletAddress)
-        localStorage.setItem('dwp_wallet_connected', 'true')
-        localStorage.setItem('dwp_wallet_address', walletAddress)
-        setShowWalletModal(false)
-        toast.info('Development mode: Bypass authentication')
-      }
     } finally {
       setIsConnecting(false)
     }
@@ -384,158 +228,7 @@ export default function HomePage() {
 
   if (!hasMounted) return <div className="min-h-screen bg-slate-50 dark:bg-[#030712]" />
 
-  const isDemoMode = hasMounted && (localStorage.getItem('dwp_is_demo') === 'true')
-
-  if (isConnected && !isDevOverride && !isDemoMode) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 font-sans flex flex-col overflow-x-hidden relative transition-colors duration-300">
-        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between transition-colors duration-300">
-          <Link href="/" className="flex items-center gap-2 group">
-            <Image src="/logo-simple.png" alt="AlwaysThere Logo" width={40} height={40} className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
-            <div className="flex flex-col text-left">
-              <span className="text-xl font-black tracking-wider text-slate-900 dark:text-white leading-none">ALWAYS THERE</span>
-              <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-1.5">SECURE YOUR DIGITAL LEGACY</span>
-            </div>
-          </Link>
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 transition-all">Logout</button>
-          </div>
-        </nav>
-        <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-16 mb-24">
-          
-          <div className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-[#2b52ff]/20 via-purple-500/10 to-transparent overflow-hidden">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 animate-pulse animate-duration-1000" />
-            <div className="bg-white/95 dark:bg-[#0a0c12]/95 backdrop-blur-2xl rounded-[2.4rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 relative z-10 space-y-8 shadow-2xl">
-              
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-[#2b52ff]/10 rounded-2xl flex items-center justify-center mx-auto border border-[#2b52ff]/25 relative shadow-[0_0_30px_rgba(43,82,255,0.1)]">
-                  <Lock className="w-8 h-8 text-[#2b52ff]" />
-                </div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-[#2b52ff] text-[10px] font-black uppercase tracking-widest">
-                  Closed Private Beta
-                </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">
-                  Join the Waitlist
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-base font-medium leading-relaxed">
-                  We are conducting phased private trials to ensure absolute cryptographic soundness, zero-knowledge security, and smart contract safety. Enter your email to receive priority access to our mainnet launch.
-                </p>
-                <p className="text-xs text-slate-500 mt-2 font-mono">
-                  Wallet Connected: <span className="text-slate-900 dark:text-white font-mono">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>
-                </p>
-              </div>
-
-              {/* Waitlist Subscription Section */}
-              <div className="max-w-md mx-auto p-6 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
-                <form onSubmit={handleJoinWaitlist} className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input 
-                      type="email" 
-                      placeholder="Enter your email address" 
-                      value={waitlistEmail} 
-                      onChange={(e) => setWaitlistEmail(e.target.value)} 
-                      className="flex-grow bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-[#2b52ff]/50 transition-colors text-sm" 
-                    />
-                    <button 
-                      type="submit" 
-                      className="px-6 py-3 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)] shrink-0"
-                    >
-                      Subscribe
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Sandbox Demo Launch Section */}
-              <div className="p-8 rounded-2xl bg-gradient-to-br from-purple-500/[0.03] to-[#2b52ff]/[0.03] border border-purple-500/10 dark:border-white/5 text-center space-y-6">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-widest flex items-center justify-center gap-2">
-                    <Cpu className="w-5 h-5 text-purple-500" /> Start Sandbox Demo
-                  </h2>
-                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm max-w-lg mx-auto">
-                    Want to see how it works today? Launch a fully simulated local sandbox environment instantly to experience the digital inheritance and heartbeat features.
-                  </p>
-                </div>
-                <div className="pt-2">
-                  <button 
-                    onClick={handleStartDemo}
-                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#2b52ff] to-purple-600 hover:from-[#1a3ecd] hover:to-purple-700 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2 mx-auto"
-                  >
-                    Launch Interactive Demo <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Admin/Developer Bypass Link */}
-              <div className="text-center pt-4">
-                <button 
-                  onClick={() => setShowDevModal(true)}
-                  className="text-xs text-slate-400 dark:text-slate-500 hover:text-[#2b52ff] hover:dark:text-white transition-colors underline underline-offset-4 uppercase tracking-widest font-black"
-                >
-                  Developer Override
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {showDevModal && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-[#030712]/80 backdrop-blur-md overflow-y-auto">
-                <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#2b52ff]/30 rounded-3xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(43,82,255,0.1)] relative overflow-hidden my-8 md:my-16">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2b52ff] to-purple-500" />
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#2b52ff]/10 flex items-center justify-center border border-[#2b52ff]/20">
-                      <Cpu className="w-6 h-6 text-[#2b52ff]" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Dev Override</h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Authentication Required</p>
-                    </div>
-                  </div>
-                  <input 
-                    type="password" 
-                    placeholder="Enter Passcode..." 
-                    value={devPasscode} 
-                    onChange={(e) => setDevPasscode(e.target.value)} 
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                         if (devPasscode === 'alwaysthere' || devPasscode === 'subodh123') { 
-                           setIsDevOverride(true); 
-                           localStorage.setItem('dwp_dev_override_expiry', (Date.now() + 5 * 60 * 60 * 1000).toString());
-                           setShowDevModal(false); 
-                           setDevPasscode(''); 
-                           toast.success('Admin Bypass Enabled'); 
-                         } else { toast.error('Invalid passcode'); }
-                       }
-                    }} 
-                    className="w-full bg-slate-50 dark:bg-[#030712] border border-slate-200 dark:border-white/10 rounded-xl px-5 py-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-[#2b52ff]/50 mb-6 font-mono transition-colors tracking-widest" 
-                    autoFocus 
-                  />
-                  <div className="flex justify-end gap-3">
-                    <button onClick={() => { setShowDevModal(false); setDevPasscode(''); }} className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-black text-xs uppercase tracking-widest transition-all">Cancel</button>
-                    <button onClick={() => {
-                       if (devPasscode === 'alwaysthere' || devPasscode === 'subodh123') { 
-                         setIsDevOverride(true); 
-                         localStorage.setItem('dwp_dev_override_expiry', (Date.now() + 5 * 60 * 60 * 1000).toString());
-                         setShowDevModal(false); 
-                         setDevPasscode(''); 
-                         toast.success('Admin Bypass Enabled'); 
-                       } else { toast.error('Invalid passcode'); }
-                    }} className="px-5 py-3 rounded-xl bg-[#2b52ff] hover:bg-[#1a3ecd] text-white font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(43,82,255,0.4)]">Verify</button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
-        <SharedFooter />
-      </div>
-    )
-  }
-
-  if (isConnected && (isDevOverride || isDemoMode)) {
+  if (isConnected) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 font-sans flex flex-col overflow-x-hidden relative transition-colors duration-300">
         {/* Premium Dashboard Background Glow */}

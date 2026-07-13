@@ -111,36 +111,9 @@ function CryptoPaymentContent() {
   }, [])
 
   useEffect(() => {
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-    if (isDemo) {
-      toast.success("Sandbox Demo: Payment bypassed!")
-      setIsPaid(true)
-      const stored = localStorage.getItem('dwp_subscription')
-      if (stored) {
-        try {
-          const sub = JSON.parse(stored)
-          sub.plan = plan
-          sub.planId = plan
-          sub.planName = `Sovereign ${plan.replace('freedom_', '').toUpperCase()} (Demo)`
-          sub.storageLimit = 100 * 1024 * 1024 * 1024
-          localStorage.setItem('dwp_subscription', JSON.stringify(sub))
-        } catch {}
-      }
-      setTimeout(() => {
-        window.location.href = '/dashboard'
-      }, 1500)
-    }
-  }, [plan])
-
-  useEffect(() => {
     const address = localStorage.getItem('dwp_wallet_address')
     if (address) {
       setWalletAddress(address)
-    } else {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        setWalletAddress('0xDemoSandbox77777777777777777777777777')
-      }
     }
   }, [])
 

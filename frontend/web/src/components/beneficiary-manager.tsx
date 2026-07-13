@@ -43,8 +43,6 @@ export function BeneficiaryManager() {
   const storage = WebStorageService.getInstance()
 
   const fetchAndSyncBeneficiaries = async () => {
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-    if (isDemo) return
     try {
       const walletAddress = localStorage.getItem('dwp_wallet_address')
       const token = localStorage.getItem('dwp_token')
@@ -211,11 +209,9 @@ export function BeneficiaryManager() {
     setIsSubmitting(true)
 
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-
       // Step 1: Engage Decentralized Backend Wallet Config (if web3 presence exists)
       const isZeroAddress = formData.walletAddress === '0x0000000000000000000000000000000000000000'
-      if (formData.walletAddress && !isZeroAddress && !isDemo) {
+      if (formData.walletAddress && !isZeroAddress) {
         const txResult = await addBeneficiary(formData.walletAddress)
         if (!txResult.success) {
           // If contract is not configured or wallet is not available, show warning instead of blocking
@@ -257,56 +253,54 @@ export function BeneficiaryManager() {
 
       // Sync to Backend Postgres
       let backendId = beneficiary.id;
-      if (!isDemo) {
-        const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
-        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-        const url = editingId
-          ? `${apiEndpoint}/api/beneficiaries/${editingId}`
-          : `${apiEndpoint}/api/beneficiaries`
+      const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const url = editingId
+        ? `${apiEndpoint}/api/beneficiaries/${editingId}`
+        : `${apiEndpoint}/api/beneficiaries`
 
-        const requestBody: any = {
-          name: beneficiary.name,
-          email: beneficiary.email,
-          walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
-          relationship: 'nominee'
-        }
-        if (!editingId) {
-          requestBody.ownerAddress = walletAddress
-        }
+      const requestBody: any = {
+        name: beneficiary.name,
+        email: beneficiary.email,
+        walletAddress: beneficiary.walletAddress || "0x0000000000000000000000000000000000000000",
+        relationship: 'nominee'
+      }
+      if (!editingId) {
+        requestBody.ownerAddress = walletAddress
+      }
 
-        const syncRes = await fetch(url, {
-          method: editingId ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
+      const syncRes = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!syncRes.ok) {
+        const errData = await syncRes.json().catch(() => null)
+        throw new Error(errData?.message || 'Failed to sync beneficiary with server.')
+      }
+
+      if (!editingId) {
+        const createdBen = await syncRes.json()
+        backendId = createdBen.id;
+        await storage.deleteBeneficiary(beneficiary.id)
+        await storage.saveBeneficiary({
+          ...beneficiary,
+          id: createdBen.id,
+          isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
         })
+      }
 
-        if (!syncRes.ok) {
-          const errData = await syncRes.json().catch(() => null)
-          throw new Error(errData?.message || 'Failed to sync beneficiary with server.')
-        }
-
-        if (!editingId) {
-          const createdBen = await syncRes.json()
-          backendId = createdBen.id;
-          await storage.deleteBeneficiary(beneficiary.id)
-          await storage.saveBeneficiary({
-            ...beneficiary,
-            id: createdBen.id,
-            isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
-          })
-        }
-
-        // If public key mode, immediately verify on backend too
-        if (formData.verificationMethod === 'public_key') {
-          const verifyRes = await fetch(`${apiEndpoint}/api/beneficiaries/${backendId}/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: 'BYPASS_PGP_VERIFICATION' })
-          })
-          if (!verifyRes.ok) {
-            const errData = await verifyRes.json().catch(() => null)
-            console.error('Failed to verify PGP beneficiary on backend:', errData)
-          }
+      // If public key mode, immediately verify on backend too
+      if (formData.verificationMethod === 'public_key') {
+        const verifyRes = await fetch(`${apiEndpoint}/api/beneficiaries/${backendId}/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: 'BYPASS_PGP_VERIFICATION' })
+        })
+        if (!verifyRes.ok) {
+          const errData = await verifyRes.json().catch(() => null)
+          console.error('Failed to verify PGP beneficiary on backend:', errData)
         }
       }
 
@@ -314,7 +308,7 @@ export function BeneficiaryManager() {
       await fetchAndSyncBeneficiaries()
 
       // Skip sending email bridge if PGP Mode
-      if (!isDemo && formData.verificationMethod !== 'public_key') {
+      if (formData.verificationMethod !== 'public_key') {
         try {
           const emailReq = await fetch('/api/send-email', {
             method: 'POST',
@@ -340,7 +334,7 @@ export function BeneficiaryManager() {
       setEditingId(null)
 
       toast.success('Beneficiary Saved', {
-        description: isDemo ? 'Saved locally in sandbox demo mode.' : 'Global database synced successfully.'
+        description: 'Global database synced successfully.'
       })
 
     } catch (error: any) {
@@ -381,17 +375,14 @@ export function BeneficiaryManager() {
     try {
       await storage.deleteBeneficiary(deleteConfirmation.beneficiaryId)
 
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (!isDemo) {
-        // Delete from Backend Postgres
-        try {
-          const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-          await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
-            method: 'DELETE'
-          })
-        } catch (err) {
-          console.error('Failed to delete beneficiary from backend', err)
-        }
+      // Delete from Backend Postgres
+      try {
+        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+        await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
+          method: 'DELETE'
+        })
+      } catch (err) {
+        console.error('Failed to delete beneficiary from backend', err)
       }
 
       await refreshState()
@@ -942,16 +933,13 @@ export function BeneficiaryManager() {
                           setVerifyingBeneficiary(null)
                           setVerificationOtp('')
                           await storage.deleteBeneficiary(verifyingBeneficiary.id)
-                          const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-                          if (!isDemo) {
-                            try {
-                              const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-                              await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}`, {
-                                method: 'DELETE'
-                              })
-                            } catch (err) {
-                              console.error('Failed to delete beneficiary from backend', err)
-                            }
+                          try {
+                            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                            await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}`, {
+                              method: 'DELETE'
+                            })
+                          } catch (err) {
+                            console.error('Failed to delete beneficiary from backend', err)
                           }
                           await refreshState()
                           await fetchAndSyncBeneficiaries()

@@ -54,8 +54,7 @@ export class HeartbeatCronService {
                 // Calculate heartbeat status inline to avoid N*2 redundant database lookups
                 const lastCheck = config.lastHeartbeat || config.createdAt;
                 const now = new Date();
-                const isDemo = config.intervalDays < 7;
-                const timeUnit = isDemo ? (1000 * 60) : (1000 * 60 * 60 * 24);
+                const timeUnit = 1000 * 60 * 60 * 24;
                 
                 const diff = Math.floor((now.getTime() - lastCheck.getTime()) / timeUnit);
                 const interval = config.intervalDays;
@@ -63,29 +62,16 @@ export class HeartbeatCronService {
 
                 let status: string;
                 let daysUntilDue = 0;
-                let minutesUntilDue = 0;
 
                 if (diff >= interval + grace) {
                     status = 'overdue';
-                    if (isDemo) {
-                        minutesUntilDue = interval + grace - diff;
-                    } else {
-                        daysUntilDue = interval + grace - diff;
-                    }
+                    daysUntilDue = interval + grace - diff;
                 } else if (diff >= interval) {
                     status = 'grace_period';
-                    if (isDemo) {
-                        minutesUntilDue = interval + grace - diff;
-                    } else {
-                        daysUntilDue = interval + grace - diff;
-                    }
+                    daysUntilDue = interval + grace - diff;
                 } else {
                     status = 'active';
-                    if (isDemo) {
-                        minutesUntilDue = interval - diff;
-                    } else {
-                        daysUntilDue = interval - diff;
-                    }
+                    daysUntilDue = interval - diff;
                 }
 
                 this.logger.debug(`User ${user.walletAddress} | email: ${user.email || 'MISSING'} | status: ${status} | misses: ${config.missedCount}/${config.bufferMisses}`);
@@ -93,11 +79,10 @@ export class HeartbeatCronService {
                 if (status === 'overdue' || status === 'grace_period') {
                     const currentMisses = config.missedCount || 0;
                     const maxBuffer = config.bufferMisses || 3;
-                    const isDemo = config.intervalDays < 7;
 
-                    // Throttle: in demo mode (1 min interval), only send one alert per "interval unit" since last heartbeat
+                    // Throttle: only send one alert per day since last heartbeat
                     const lastHeartbeatTime = config.lastHeartbeat || config.createdAt;
-                    const timeUnit = isDemo ? (1000 * 60) : (1000 * 60 * 60 * 24);
+                    const timeUnit = 1000 * 60 * 60 * 24;
                     const now = new Date();
                     const unitsSinceLastHeartbeat = Math.floor((now.getTime() - lastHeartbeatTime.getTime()) / timeUnit);
 
@@ -120,10 +105,10 @@ export class HeartbeatCronService {
                         this.logger.warn(`User ${user.walletAddress} missed heartbeat. Stage: Missed${newMissCount} (${newMissCount}/${maxBuffer})`);
 
                         const emailsToSend: string[] = [];
-                        if (user.email && (user.emailVerified || isDemo)) {
+                        if (user.email && user.emailVerified) {
                             emailsToSend.push(user.email);
                         }
-                        if (user.alternativeEmail && (user.alternativeEmailVerified || isDemo)) {
+                        if (user.alternativeEmail && user.alternativeEmailVerified) {
                             emailsToSend.push(user.alternativeEmail);
                         }
 
@@ -164,7 +149,7 @@ export class HeartbeatCronService {
 
                         // Send Push Notification if token exists
                         if (user.expoPushToken) {
-                            await this.notificationsService.sendHeartbeatReminder(user.expoPushToken, isDemo ? minutesUntilDue : daysUntilDue);
+                            await this.notificationsService.sendHeartbeatReminder(user.expoPushToken, daysUntilDue);
                         }
                     } else {
                         // All buffers exhausted — protocol trigger
@@ -189,10 +174,10 @@ export class HeartbeatCronService {
                             
                             // Notify user
                             const activationEmails: string[] = [];
-                            if (user.email && (user.emailVerified || isDemo)) {
+                            if (user.email && user.emailVerified) {
                                 activationEmails.push(user.email);
                             }
-                            if (user.alternativeEmail && (user.alternativeEmailVerified || isDemo)) {
+                            if (user.alternativeEmail && user.alternativeEmailVerified) {
                                 activationEmails.push(user.alternativeEmail);
                             }
                             if (activationEmails.length > 0) {
@@ -247,7 +232,7 @@ export class HeartbeatCronService {
                                     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
                                     const claimUrl = `${frontendUrl}/claim/${token}?owner=${user.walletAddress}`;
 
-                                    const verifiedSenderEmail = (user.emailVerified || isDemo) ? user.email : ((user.alternativeEmailVerified || isDemo) ? user.alternativeEmail : null);
+                                    const verifiedSenderEmail = user.emailVerified ? user.email : (user.alternativeEmailVerified ? user.alternativeEmail : null);
                                     const fromEmailHeader = verifiedSenderEmail 
                                       ? `"${user.name || 'AlwaysThere Vault Owner'}" <${verifiedSenderEmail}>` 
                                       : undefined;

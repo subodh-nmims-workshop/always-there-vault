@@ -148,12 +148,9 @@ export function AssetCreationForm() {
       // Use modeService to load assets from local IndexedDB
       const allAssets = await modeService.loadAssets();
 
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
-
       // Sync folders from backend first so asset-folder mappings align
-      if (!isDemo) {
-        try {
-          const token = localStorage.getItem('dwp_token');
+      try {
+        const token = localStorage.getItem('dwp_token');
           if (token) {
             const folderRes = await fetch(`${API_URL}/api/assets/folders`, {
               headers: { 'Authorization': `Bearer ${token}` }
@@ -188,53 +185,50 @@ export function AssetCreationForm() {
         } catch (folderSyncErr) {
           console.warn('⚠️ Backend folder sync failed:', folderSyncErr);
         }
-      }
 
       // ═══ BUG 5 FIX: Merge with backend assets for cross-device sync ═══
       let mergedAssets = [...allAssets];
-      if (!isDemo) {
-        try {
-          const token = localStorage.getItem('dwp_token');
-          if (token) {
-            const folderParam = currentFolderId ? `?folderId=${currentFolderId}` : '';
-            const backendRes = await fetch(`${API_URL}/api/assets${folderParam}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (backendRes.ok) {
-              const backendData = await backendRes.json();
-              // Backend returns a flat array of file models. Handle both array & object formats.
-              const filesArray = Array.isArray(backendData) ? backendData : (backendData.assets || []);
-              const backendFiles: any[] = filesArray.map((f: any) => ({
-                id: f.id,
-                name: f.name,
-                type: f.metadata?.type || f.type || (f.mimeType?.startsWith('image/') ? 'photo' : 'document'),
-                folderId: f.folderId || null,
-                encryptedData: f.encryptedData || null,
-                keyId: f.encryptionKeyId || null,
-                iv: f.fileIv || null,
-                ipfsHash: f.location || null,
-                beneficiaries: f.assignedBeneficiaryId ? [f.assignedBeneficiaryId] : [],
-                assignedBeneficiaryId: f.assignedBeneficiaryId || null,
-                createdAt: f.createdAt ? new Date(f.createdAt).getTime() : Date.now(),
-                size: f.size || 0,
-                mimeType: f.mimeType || 'application/octet-stream',
-              }));
-              // Merge: local takes priority (same ID), backend fills in missing ones
-              const localIds = new Set(allAssets.map((a: any) => a.id));
-              const onlyBackend = backendFiles.filter((bf: any) => !localIds.has(bf.id));
-              if (onlyBackend.length > 0) {
-                // Persist backend-only assets to local IndexedDB for offline access
-                for (const ba of onlyBackend) {
-                  try { await storage.saveAsset(ba); } catch (_) {}
-                }
-                mergedAssets = [...allAssets, ...onlyBackend];
-                console.log(`✅ Synced ${onlyBackend.length} asset(s) from backend`);
+      try {
+        const token = localStorage.getItem('dwp_token');
+        if (token) {
+          const folderParam = currentFolderId ? `?folderId=${currentFolderId}` : '';
+          const backendRes = await fetch(`${API_URL}/api/assets${folderParam}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (backendRes.ok) {
+            const backendData = await backendRes.json();
+            // Backend returns a flat array of file models. Handle both array & object formats.
+            const filesArray = Array.isArray(backendData) ? backendData : (backendData.assets || []);
+            const backendFiles: any[] = filesArray.map((f: any) => ({
+              id: f.id,
+              name: f.name,
+              type: f.metadata?.type || f.type || (f.mimeType?.startsWith('image/') ? 'photo' : 'document'),
+              folderId: f.folderId || null,
+              encryptedData: f.encryptedData || null,
+              keyId: f.encryptionKeyId || null,
+              iv: f.fileIv || null,
+              ipfsHash: f.location || null,
+              beneficiaries: f.assignedBeneficiaryId ? [f.assignedBeneficiaryId] : [],
+              assignedBeneficiaryId: f.assignedBeneficiaryId || null,
+              createdAt: f.createdAt ? new Date(f.createdAt).getTime() : Date.now(),
+              size: f.size || 0,
+              mimeType: f.mimeType || 'application/octet-stream',
+            }));
+            // Merge: local takes priority (same ID), backend fills in missing ones
+            const localIds = new Set(allAssets.map((a: any) => a.id));
+            const onlyBackend = backendFiles.filter((bf: any) => !localIds.has(bf.id));
+            if (onlyBackend.length > 0) {
+              // Persist backend-only assets to local IndexedDB for offline access
+              for (const ba of onlyBackend) {
+                try { await storage.saveAsset(ba); } catch (_) {}
               }
+              mergedAssets = [...allAssets, ...onlyBackend];
+              console.log(`✅ Synced ${onlyBackend.length} asset(s) from backend`);
             }
           }
-        } catch (backendErr) {
-          console.warn('⚠️ Backend asset sync failed, showing local only:', backendErr);
         }
+      } catch (backendErr) {
+        console.warn('⚠️ Backend asset sync failed, showing local only:', backendErr);
       }
 
       setTotalAssetsCount(mergedAssets.length);
@@ -260,28 +254,26 @@ export function AssetCreationForm() {
         console.warn('Failed to load local time capsules:', err);
       }
 
-      if (!isDemo) {
-        try {
-          const token = localStorage.getItem('dwp_token');
-          if (token) {
-            const response = await fetch(`${API_URL}/api/time-capsules`, {
-              headers: { 'Authorization': `Bearer ${token}` }
+      try {
+        const token = localStorage.getItem('dwp_token');
+        if (token) {
+          const response = await fetch(`${API_URL}/api/time-capsules`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const backendMap = new Map(data.map((tc: any) => [tc.id || `${tc.assetId}-${tc.beneficiaryId}`, tc]));
+            const merged = [...data];
+            localCapsules.forEach((lc: any) => {
+              const key = lc.id || `${lc.assetId}-${lc.beneficiaryId}`;
+              if (!backendMap.has(key)) merged.push(lc);
             });
-            if (response.ok) {
-              const data = await response.json();
-              const backendMap = new Map(data.map((tc: any) => [tc.id || `${tc.assetId}-${tc.beneficiaryId}`, tc]));
-              const merged = [...data];
-              localCapsules.forEach((lc: any) => {
-                const key = lc.id || `${lc.assetId}-${lc.beneficiaryId}`;
-                if (!backendMap.has(key)) merged.push(lc);
-              });
-              setTimeCapsules(merged);
-              return;
-            }
+            setTimeCapsules(merged);
+            return;
           }
-        } catch (tcErr) {
-          console.warn('⚠️ Could not load time capsules from backend, using local:', tcErr);
         }
+      } catch (tcErr) {
+        console.warn('⚠️ Could not load time capsules from backend, using local:', tcErr);
       }
       setTimeCapsules(localCapsules);
     } catch (error) {
@@ -428,13 +420,10 @@ export function AssetCreationForm() {
       const saveResult = await modeService.saveAsset(asset)
       await storage.saveKeyDistribution(keyDistribution)
 
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
-
       // ═══ BUG 1 FIX: Save asset metadata to backend DB ═══
       // Must happen BEFORE key sync (key save requires asset to exist in DB)
-      if (!isDemo) {
-        try {
-          const token = localStorage.getItem('dwp_token')
+      try {
+        const token = localStorage.getItem('dwp_token')
           const backendAssetRes = await fetch(`${API_URL}/api/assets`, {
             method: 'POST',
             headers: {
@@ -464,24 +453,21 @@ export function AssetCreationForm() {
         } catch (assetSyncErr) {
           console.warn('⚠️ Asset backend sync failed:', assetSyncErr)
         }
-      }
 
       // ═══ BUG 2 FIX: Key sync now succeeds because asset is in DB ═══
-      if (!isDemo) {
-        try {
-          const token = localStorage.getItem('dwp_token')
-          await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ shares: keyDistribution.shares })
-          })
-          console.log('✅ Decryption key shares synced to backend')
-        } catch (syncErr) {
-          console.warn('⚠️ Key sync failed', syncErr)
-        }
+      try {
+        const token = localStorage.getItem('dwp_token')
+        await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ shares: keyDistribution.shares })
+        })
+        console.log('✅ Decryption key shares synced to backend')
+      } catch (syncErr) {
+        console.warn('⚠️ Key sync failed', syncErr)
       }
 
       // 🕰️ Save Time Capsule locally and to Backend if scheduled
@@ -503,28 +489,26 @@ export function AssetCreationForm() {
           console.warn('Failed to save time capsule locally:', localErr);
         }
 
-        if (!isDemo) {
-          try {
-            const token = localStorage.getItem('dwp_token')
-            for (const benId of selectedBeneficiaries) {
-              await fetch(`${API_URL}/api/time-capsules`, {
-                method: 'POST',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify({ 
-                  beneficiaryId: benId,
-                  assetId: asset.id,
-                  scheduledDate: scheduledDate,
-                  customMessage: customMessage
-                })
+        try {
+          const token = localStorage.getItem('dwp_token')
+          for (const benId of selectedBeneficiaries) {
+            await fetch(`${API_URL}/api/time-capsules`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+              },
+              body: JSON.stringify({ 
+                beneficiaryId: benId,
+                assetId: asset.id,
+                scheduledDate: scheduledDate,
+                customMessage: customMessage
               })
-            }
-            console.log('✅ Time Capsule scheduled on backend')
-          } catch (tcError) {
-            console.warn('⚠️ Failed to schedule time capsule:', tcError)
+            })
           }
+          console.log('✅ Time Capsule scheduled on backend')
+        } catch (tcError) {
+          console.warn('⚠️ Failed to schedule time capsule:', tcError)
         }
       }
 
@@ -615,8 +599,7 @@ export function AssetCreationForm() {
       let keyDist = allKeyDists.find(kd => kd.keyId === asset.keyId)
 
       // Self-Healing: If key not found locally, try to fetch from backend
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
-      if (!keyDist && !isDemo) {
+      if (!keyDist) {
         console.warn('⚠️ Key not found locally, attempting backend fetch...')
         try {
           const token = localStorage.getItem('dwp_token')
@@ -648,7 +631,7 @@ export function AssetCreationForm() {
 
       // Self-Healing: If encryptedData is empty, fetch remote content
       let encryptedDataToDecrypt = asset.encryptedData
-      if (!encryptedDataToDecrypt && !isDemo) {
+      if (!encryptedDataToDecrypt) {
         console.log('📥 Asset encryptedData is empty. Fetching remote payload...')
         try {
           const token = localStorage.getItem('dwp_token')
@@ -789,7 +772,6 @@ export function AssetCreationForm() {
       }
 
       // 🕰️ Sync Time Capsule Schedule
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
 
       // Update local storage/IndexedDB first
       try {
@@ -811,7 +793,7 @@ export function AssetCreationForm() {
         console.warn('⚠️ Failed to save time capsule locally:', localErr);
       }
 
-      if (!isDemo && token) {
+      if (token) {
         try {
           // Delete existing schedules for this asset
           await fetch(`${API_URL}/api/time-capsules/asset/${viewingAsset.id}`, {
@@ -1021,7 +1003,6 @@ export function AssetCreationForm() {
       }
 
       // 🕰️ Sync Time Capsule Schedule
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
 
       // Update local storage/IndexedDB first (always, so it works locally!)
       try {
@@ -1043,7 +1024,7 @@ export function AssetCreationForm() {
         console.warn('⚠️ Failed to save time capsule locally:', localErr);
       }
 
-      if (!isDemo && token) {
+      if (token) {
         try {
           // Delete existing schedules for this asset
           await fetch(`${API_URL}/api/time-capsules/asset/${shareAssetTarget.id}`, {
@@ -1297,12 +1278,9 @@ export function AssetCreationForm() {
       console.log('💾 Saving key distribution...', keyDistribution.keyId)
       await storage.saveKeyDistribution(keyDistribution)
 
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
-
       // Sync Key to Backend for cloud backup (CRITICAL for multi-device support)
-      if (!isDemo) {
-        try {
-          const token = localStorage.getItem('dwp_token')
+      try {
+        const token = localStorage.getItem('dwp_token')
           await fetch(`${API_URL}/api/assets/keys/${keyDistribution.keyId}`, {
             method: 'POST',
             headers: {
@@ -1315,7 +1293,6 @@ export function AssetCreationForm() {
         } catch (syncErr) {
           console.warn('⚠️ Key sync to cloud failed (Offline mode?)', syncErr)
         }
-      }
 
       // 🕰️ Save Time Capsule locally and to Backend if scheduled
       if (data.timeCapsule) {
@@ -1336,29 +1313,27 @@ export function AssetCreationForm() {
           console.warn('Failed to save category time capsule locally:', localErr);
         }
 
-        if (!isDemo) {
-          try {
-            const token = localStorage.getItem('dwp_token')
-            for (const benId of beneficiaryIds) {
-              await fetch(`${API_URL}/api/time-capsules`, {
-                method: 'POST',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify({ 
-                  beneficiaryId: benId,
-                  assetId: asset.id,
-                  scheduledDate: data.timeCapsule.scheduledDate,
-                  customMessage: data.timeCapsule.customMessage
-                })
+        try {
+          const token = localStorage.getItem('dwp_token')
+          for (const benId of beneficiaryIds) {
+            await fetch(`${API_URL}/api/time-capsules`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+              },
+              body: JSON.stringify({ 
+                beneficiaryId: benId,
+                assetId: asset.id,
+                scheduledDate: data.timeCapsule.scheduledDate,
+                customMessage: data.timeCapsule.customMessage
               })
-            }
-            console.log('✅ Time Capsule scheduled on backend')
-          } catch (tcError) {
-            console.warn('⚠️ Failed to schedule time capsule:', tcError)
-            toast.warning('Asset saved, but failed to schedule time capsule delivery.')
+            })
           }
+          console.log('✅ Time Capsule scheduled on backend')
+        } catch (tcError) {
+          console.warn('⚠️ Failed to schedule time capsule:', tcError)
+          toast.warning('Asset saved, but failed to schedule time capsule delivery.')
         }
       }
 

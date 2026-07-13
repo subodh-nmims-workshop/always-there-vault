@@ -115,15 +115,9 @@ export async function getHeartbeatStatus(walletAddress: string) {
 
         const intervalDays = settings.heartbeatInterval || 30
         const gracePeriodDays = settings.gracePeriod || 14
-        const isDemo = intervalDays < 7;
 
-        // Demo mode: treat interval as minutes, production: days
-        const intervalMs = isDemo
-            ? intervalDays * 60 * 1000
-            : intervalDays * 24 * 60 * 60 * 1000;
-        const graceMs = isDemo
-            ? gracePeriodDays * 60 * 1000
-            : gracePeriodDays * 24 * 60 * 60 * 1000;
+        const intervalMs = intervalDays * 24 * 60 * 60 * 1000;
+        const graceMs = gracePeriodDays * 24 * 60 * 60 * 1000;
 
         if (heartbeats.length === 0) {
             let initialTime = Date.now()
@@ -150,9 +144,7 @@ export async function getHeartbeatStatus(walletAddress: string) {
                 isOverdue = true
             }
 
-            const daysUntilDue = isDemo
-                ? Math.ceil((nextDue - Date.now()) / (1000 * 60))
-                : Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
+            const daysUntilDue = Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
 
             return {
                 success: true,
@@ -181,9 +173,7 @@ export async function getHeartbeatStatus(walletAddress: string) {
             isOverdue = true
         }
 
-        const daysUntilDue = isDemo
-            ? Math.ceil((nextDue - Date.now()) / (1000 * 60))
-            : Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
+        const daysUntilDue = Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24))
 
         return {
             success: true,
@@ -257,24 +247,6 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
 
         // SYNC TO BACKEND
         try {
-            const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
-            if (isDemo) {
-                const email = typeof window !== 'undefined' ? localStorage.getItem('dwp_user_email') || '' : ''
-                const prevDemoEmail = typeof window !== 'undefined' ? localStorage.getItem('demo_user_email') || '' : ''
-                if (email && email !== prevDemoEmail) {
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem('demo_user_email_pending', email)
-                        localStorage.setItem('demo_user_email_verified', 'false')
-                    }
-                    return {
-                        success: true,
-                        verificationRequired: true,
-                        pendingEmail: email
-                    }
-                }
-                return { success: true }
-            }
-
             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
             const email = localStorage.getItem('dwp_user_email') || ''
             const token = localStorage.getItem('dwp_token')

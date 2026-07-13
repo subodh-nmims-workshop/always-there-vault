@@ -201,26 +201,6 @@ export function SettingsDashboard() {
     }
     setIsLinking(true)
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        if (saveLocally) {
-          // Encrypt private key using CryptoJS
-          const encrypted = CryptoJS.AES.encrypt(generatedWallet.privateKey, localPin.trim()).toString()
-          localStorage.setItem('always_there_recovery_vault', JSON.stringify({
-            address: generatedWallet.address,
-            encrypted
-          }))
-        }
-        localStorage.setItem('demo_recovery_address', generatedWallet.address)
-        toast.success("Recovery key linked to your account successfully (Sandbox Demo)!")
-        setGeneratedWallet(null)
-        setShowRecoveryWizard(false)
-        setSaveLocally(false)
-        setLocalPin('')
-        fetchProfile()
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
@@ -262,14 +242,6 @@ export function SettingsDashboard() {
     if (!confirm("Are you sure you want to unlink your recovery key? You will lose offline recovery access until you link a new key.")) return
     setIsLinking(true)
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        localStorage.removeItem('demo_recovery_address')
-        toast.success("Recovery key unlinked successfully (Sandbox Demo).")
-        fetchProfile()
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
@@ -296,15 +268,6 @@ export function SettingsDashboard() {
   const handleEnableMFASetup = async () => {
     setIsMfaLoading(true)
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        setMfaSecret('JBSWY3DPEHPK3PXP')
-        setMfaQrCode('https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=otpauth://totp/AlwaysThere:DemoUser%3Fsecret%3DJBSWY3DPEHPK3PXP%26issuer%3DAlwaysThere')
-        setShowMfaModal(true)
-        setMfaCode('')
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/enable`, {
@@ -337,15 +300,6 @@ export function SettingsDashboard() {
     }
     setIsMfaLoading(true)
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        localStorage.setItem('demo_2fa_enabled', 'true')
-        toast.success("Two-Factor Authentication enabled successfully (Sandbox Demo)!")
-        setShowMfaModal(false)
-        fetchProfile()
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/verify-setup`, {
@@ -375,14 +329,6 @@ export function SettingsDashboard() {
     if (!confirm("Are you sure you want to disable Two-Factor Authentication? Your account will be less secure.")) return
     setIsMfaLoading(true)
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        localStorage.removeItem('demo_2fa_enabled')
-        toast.success("Two-Factor Authentication disabled (Sandbox Demo).")
-        fetchProfile()
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/disable`, {
@@ -469,22 +415,6 @@ export function SettingsDashboard() {
 
   const handleDeleteEmail = async () => {
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        localStorage.removeItem('demo_user_email_pending')
-        localStorage.removeItem('demo_user_email_verified')
-        localStorage.removeItem('dwp_user_email')
-        
-        storage.saveSettings({ emailNotification: '' })
-        const newState = await storage.getAppState()
-        setAppState(newState)
-        
-        setEmailInput('')
-        setProfile((prev: any) => prev ? { ...prev, email: null, pendingEmail: null, emailVerified: false } : null)
-        toast.success('Email removed successfully')
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
 
@@ -584,18 +514,6 @@ export function SettingsDashboard() {
       return;
     }
     try {
-      const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-      if (isDemo) {
-        localStorage.removeItem('demo_alt_user_email_pending')
-        localStorage.removeItem('demo_alt_user_email_verified')
-        localStorage.removeItem('dwp_alt_user_email')
-        
-        setAlternativeEmailInput('')
-        setProfile((prev: any) => prev ? { ...prev, alternativeEmail: null, alternativePendingEmail: null, alternativeEmailVerified: false } : null)
-        toast.success('Alternative email removed successfully')
-        return
-      }
-
       const token = localStorage.getItem('dwp_token')
       if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
 
@@ -808,7 +726,6 @@ export function SettingsDashboard() {
     toast.info(`Processing ${method} payment...`)
     
     try {
-        const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
         const targetPlanId = subscription?.mode === 'decentralized' ? 'sovereign_pro' : 'professional';
 
         if (method === 'STRIPE') {
@@ -834,26 +751,6 @@ export function SettingsDashboard() {
                 return;
             }
             throw new Error('No checkout URL returned from server');
-        }
-
-        if (isDemo) {
-          toast.success("Sandbox Demo: Payment bypassed and premium plan unlocked!")
-          const stored = localStorage.getItem('dwp_subscription')
-          if (stored) {
-            try {
-              const sub = JSON.parse(stored)
-              sub.plan = 'sovereign_pro'
-              sub.planId = 'sovereign_pro'
-              sub.planName = 'Web3 Pro (Demo Sandbox)'
-              sub.storageLimit = 100 * 1024 * 1024 * 1024
-              localStorage.setItem('dwp_subscription', JSON.stringify(sub))
-            } catch {}
-          }
-          setShowUpgradeModal(false)
-          setTimeout(() => {
-            window.location.reload()
-          }, 1000)
-          return
         }
 
         let referenceStr = '';

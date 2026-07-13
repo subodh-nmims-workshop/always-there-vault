@@ -56,13 +56,8 @@ export function HeartbeatMonitor() {
         bufferMisses: state.settings?.bufferMisses || 3
       }
       
-      const isDemo = currentSettings.heartbeatInterval < 7
-      const intervalMs = isDemo
-        ? currentSettings.heartbeatInterval * 60 * 1000
-        : currentSettings.heartbeatInterval * 24 * 60 * 60 * 1000
-      const graceMs = isDemo
-        ? currentSettings.gracePeriod * 60 * 1000
-        : currentSettings.gracePeriod * 24 * 60 * 60 * 1000
+      const intervalMs = currentSettings.heartbeatInterval * 24 * 60 * 60 * 1000
+      const graceMs = currentSettings.gracePeriod * 24 * 60 * 60 * 1000
 
       // Find or initialize a persistent start time for this wallet
       let initialTime = Date.now()
@@ -92,9 +87,7 @@ export function HeartbeatMonitor() {
         isOverdue = true
       }
 
-      const daysUntilDue = isDemo
-        ? Math.max(0, Math.ceil((nextDue - Date.now()) / (1000 * 60)))
-        : Math.max(0, Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24)))
+      const daysUntilDue = Math.max(0, Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24)))
 
       return { status, daysUntilDue, isOverdue }
     }
@@ -231,22 +224,7 @@ export function HeartbeatMonitor() {
 
     setIsSendingOtp(true)
     try {
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-
-      if (isDemo && !token) {
-        setPendingEmail(inputEmail)
-        setEmailVerified(false)
-        setShowOtpField(true)
-        setResendCooldown(15)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('dwp_user_email', inputEmail)
-          localStorage.setItem('dwp_demo_otp', '123456')
-        }
-        toast.success("Demo Mode: Verification code is '123456'!")
-        setIsSendingOtp(false)
-        return
-      }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
@@ -271,19 +249,7 @@ export function HeartbeatMonitor() {
         toast.success("Verification code sent to your email address!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        if (isDemo) {
-          setPendingEmail(inputEmail)
-          setEmailVerified(false)
-          setShowOtpField(true)
-          setResendCooldown(15)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('dwp_user_email', inputEmail)
-            localStorage.setItem('dwp_demo_otp', '123456')
-          }
-          toast.success("Demo Mode Fallback: Verification code is '123456'!")
-        } else {
-          throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
-        }
+        throw new Error(errData.message || "Failed to update profile email and trigger OTP.")
       }
     } catch (err: any) {
       console.error(err)
@@ -300,22 +266,7 @@ export function HeartbeatMonitor() {
     }
     setIsVerifyingOtp(true)
     try {
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-
-      if (isDemo && (!token || otpCode.trim() === localStorage.getItem('dwp_demo_otp') || otpCode.trim() === '123456')) {
-        toast.success("Email verified successfully (Demo Mode)!")
-        setProfileEmail(pendingEmail || inputEmail)
-        setEmailVerified(true)
-        setShowOtpField(false)
-        setOtpCode('')
-        setResendCooldown(0)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('dwp_user_email', pendingEmail || inputEmail)
-        }
-        setIsVerifyingOtp(false)
-        return
-      }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/verify-email`, {
@@ -338,29 +289,11 @@ export function HeartbeatMonitor() {
           setResendCooldown(0)
           await fetchProfileInfo()
         } else {
-          if (isDemo && (otpCode.trim() === '123456' || otpCode.trim() === localStorage.getItem('dwp_demo_otp'))) {
-            toast.success("Email verified successfully (Demo Fallback)!")
-            setProfileEmail(pendingEmail || inputEmail)
-            setEmailVerified(true)
-            setShowOtpField(false)
-            setOtpCode('')
-            setResendCooldown(0)
-          } else {
-            toast.error(data.message || "Invalid verification code.")
-          }
+          toast.error(data.message || "Invalid verification code.")
         }
       } else {
         const errData = await res.json().catch(() => ({}))
-        if (isDemo && (otpCode.trim() === '123456' || otpCode.trim() === localStorage.getItem('dwp_demo_otp'))) {
-          toast.success("Email verified successfully (Demo Fallback)!")
-          setProfileEmail(pendingEmail || inputEmail)
-          setEmailVerified(true)
-          setShowOtpField(false)
-          setOtpCode('')
-          setResendCooldown(0)
-        } else {
-          throw new Error(errData.message || "Failed to verify email code.")
-        }
+        throw new Error(errData.message || "Failed to verify email code.")
       }
     } catch (err: any) {
       console.error(err)
@@ -375,23 +308,7 @@ export function HeartbeatMonitor() {
       return;
     }
     try {
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-
-      if (isDemo && !token) {
-        setProfileEmail('')
-        setPendingEmail('')
-        setEmailVerified(false)
-        setInputEmail('')
-        setShowOtpField(false)
-        setOtpCode('')
-        setResendCooldown(0)
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('dwp_user_email')
-        }
-        toast.success("Alert email removed successfully (Demo Mode)!")
-        return
-      }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
@@ -417,21 +334,7 @@ export function HeartbeatMonitor() {
         toast.success("Alert email removed successfully!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        if (isDemo) {
-          setProfileEmail('')
-          setPendingEmail('')
-          setEmailVerified(false)
-          setInputEmail('')
-          setShowOtpField(false)
-          setOtpCode('')
-          setResendCooldown(0)
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('dwp_user_email')
-          }
-          toast.success("Alert email removed successfully (Demo Fallback)!")
-        } else {
-          throw new Error(errData.message || "Failed to remove email.")
-        }
+        throw new Error(errData.message || "Failed to remove email.")
       }
     } catch (err: any) {
       console.error(err)
@@ -460,22 +363,7 @@ export function HeartbeatMonitor() {
 
     setIsSendingAlternativeOtp(true)
     try {
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-
-      if (isDemo && !token) {
-        setPendingAlternativeEmail(inputAlternativeEmail)
-        setAlternativeEmailVerified(false)
-        setShowAlternativeOtpField(true)
-        setAlternativeResendCooldown(15)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('dwp_alt_user_email', inputAlternativeEmail)
-          localStorage.setItem('dwp_alt_demo_otp', '123456')
-        }
-        toast.success("Demo Mode: Alternative email verification code is '123456'!")
-        setIsSendingAlternativeOtp(false)
-        return
-      }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
@@ -499,19 +387,7 @@ export function HeartbeatMonitor() {
         toast.success("Verification code sent to your alternative email address!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        if (isDemo) {
-          setPendingAlternativeEmail(inputAlternativeEmail)
-          setAlternativeEmailVerified(false)
-          setShowAlternativeOtpField(true)
-          setAlternativeResendCooldown(15)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('dwp_alt_user_email', inputAlternativeEmail)
-            localStorage.setItem('dwp_alt_demo_otp', '123456')
-          }
-          toast.success("Demo Mode Fallback: Alternative verification code is '123456'!")
-        } else {
-          throw new Error(errData.message || "Failed to update alternative email and trigger OTP.")
-        }
+        throw new Error(errData.message || "Failed to update alternative email and trigger OTP.")
       }
     } catch (err: any) {
       console.error(err)
@@ -528,22 +404,7 @@ export function HeartbeatMonitor() {
     }
     setIsVerifyingAlternativeOtp(true)
     try {
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-
-      if (isDemo && (!token || alternativeOtpCode.trim() === localStorage.getItem('dwp_alt_demo_otp') || alternativeOtpCode.trim() === '123456')) {
-        toast.success("Alternative email verified successfully (Demo Mode)!")
-        setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
-        setAlternativeEmailVerified(true)
-        setShowAlternativeOtpField(false)
-        setAlternativeOtpCode('')
-        setAlternativeResendCooldown(0)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('dwp_alt_user_email', pendingAlternativeEmail || inputAlternativeEmail)
-        }
-        setIsVerifyingAlternativeOtp(false)
-        return
-      }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/verify-alternative-email`, {
@@ -565,30 +426,11 @@ export function HeartbeatMonitor() {
           setAlternativeOtpCode('')
           setAlternativeResendCooldown(0)
           await fetchProfileInfo()
-        } else {
-          if (isDemo && (alternativeOtpCode.trim() === '123456' || alternativeOtpCode.trim() === localStorage.getItem('dwp_alt_demo_otp'))) {
-            toast.success("Alternative email verified successfully (Demo Fallback)!")
-            setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
-            setAlternativeEmailVerified(true)
-            setShowAlternativeOtpField(false)
-            setAlternativeOtpCode('')
-            setAlternativeResendCooldown(0)
-          } else {
-            toast.error(data.message || "Invalid verification code.")
-          }
+          toast.error(data.message || "Invalid verification code.")
         }
       } else {
         const errData = await res.json().catch(() => ({}))
-        if (isDemo && (alternativeOtpCode.trim() === '123456' || alternativeOtpCode.trim() === localStorage.getItem('dwp_alt_demo_otp'))) {
-          toast.success("Alternative email verified successfully (Demo Fallback)!")
-          setProfileAlternativeEmail(pendingAlternativeEmail || inputAlternativeEmail)
-          setAlternativeEmailVerified(true)
-          setShowAlternativeOtpField(false)
-          setAlternativeOtpCode('')
-          setAlternativeResendCooldown(0)
-        } else {
-          throw new Error(errData.message || "Failed to verify alternative email code.")
-        }
+        throw new Error(errData.message || "Failed to verify alternative email code.")
       }
     } catch (err: any) {
       console.error(err)
@@ -603,23 +445,7 @@ export function HeartbeatMonitor() {
       return;
     }
     try {
-      const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true'
       const token = localStorage.getItem('dwp_token')
-
-      if (isDemo && !token) {
-        setProfileAlternativeEmail('')
-        setPendingAlternativeEmail('')
-        setAlternativeEmailVerified(false)
-        setInputAlternativeEmail('')
-        setShowAlternativeOtpField(false)
-        setAlternativeOtpCode('')
-        setAlternativeResendCooldown(0)
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('dwp_alt_user_email')
-        }
-        toast.success("Alternative email removed successfully (Demo Mode)!")
-        return
-      }
 
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/users/delete-alternative-email`, {
@@ -644,21 +470,7 @@ export function HeartbeatMonitor() {
         toast.success("Alternative email removed successfully!")
       } else {
         const errData = await res.json().catch(() => ({}))
-        if (isDemo) {
-          setProfileAlternativeEmail('')
-          setPendingAlternativeEmail('')
-          setAlternativeEmailVerified(false)
-          setInputAlternativeEmail('')
-          setShowAlternativeOtpField(false)
-          setAlternativeOtpCode('')
-          setAlternativeResendCooldown(0)
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('dwp_alt_user_email')
-          }
-          toast.success("Alternative email removed successfully (Demo Fallback)!")
-        } else {
-          throw new Error(errData.message || "Failed to remove alternative email.")
-        }
+        throw new Error(errData.message || "Failed to remove alternative email.")
       }
     } catch (err: any) {
       console.error(err)
@@ -890,10 +702,7 @@ export function HeartbeatMonitor() {
   }
 
   const getNextHeartbeatDue = (): Date => {
-    const isDemo = settings.heartbeatInterval < 7;
-    const ms = isDemo
-      ? settings.heartbeatInterval * 60 * 1000
-      : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
+    const ms = settings.heartbeatInterval * 24 * 60 * 60 * 1000;
     if (!lastHeartbeat) return new Date(Date.now() + ms);
     return new Date(lastHeartbeat.getTime() + ms);
   }
@@ -901,13 +710,6 @@ export function HeartbeatMonitor() {
   const getDaysUntilDueDisplay = (): { value: number; unit: string } => {
     const nextDue = getNextHeartbeatDue()
     const diffMs = nextDue.getTime() - currentTime
-    const isDemo = settings.heartbeatInterval < 7
-
-    if (isDemo) {
-      const seconds = Math.max(0, Math.ceil(diffMs / 1000))
-      const maxSeconds = settings.heartbeatInterval * 60
-      return { value: Math.min(seconds, maxSeconds), unit: 'Seconds' }
-    }
 
     const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
     return { value: Math.min(days, settings.heartbeatInterval), unit: 'Days' }
@@ -915,26 +717,16 @@ export function HeartbeatMonitor() {
 
   const getGracePeriodLeft = (): { value: number; unit: string } => {
     const nextDue = getNextHeartbeatDue()
-    const isDemo = settings.heartbeatInterval < 7
-    const graceMs = (isDemo ? settings.gracePeriod * 60 : settings.gracePeriod * 24 * 60 * 60) * 1000
+    const graceMs = settings.gracePeriod * 24 * 60 * 60 * 1000
     const graceDue = nextDue.getTime() + graceMs
     const diffMs = graceDue - currentTime
-
-    if (isDemo) {
-      const seconds = Math.max(0, Math.ceil(diffMs / 1000))
-      const maxSeconds = settings.gracePeriod * 60
-      return { value: Math.min(seconds, maxSeconds), unit: 'Seconds' }
-    }
 
     const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
     return { value: Math.min(days, settings.gracePeriod), unit: 'Days' }
   }
 
   const calculateProgress = () => {
-    const isDemo = settings.heartbeatInterval < 7;
-    const intervalMs = isDemo
-      ? settings.heartbeatInterval * 60 * 1000
-      : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
+    const intervalMs = settings.heartbeatInterval * 24 * 60 * 60 * 1000;
 
     const nextDue = getNextHeartbeatDue()
     const msLeft = nextDue.getTime() - currentTime
@@ -960,7 +752,6 @@ export function HeartbeatMonitor() {
   const daysUntilDue = dueInfo.value
   const gracePeriodLeft = graceInfo.value
   const progress = calculateProgress()
-  const isDemo = settings.heartbeatInterval < 7
 
   return (
     <div className="space-y-6 w-full max-w-4xl mx-auto font-sans">
@@ -1187,7 +978,7 @@ export function HeartbeatMonitor() {
             </motion.div>
           )}
 
-          {daysUntilDue <= (isDemo ? 60 : 7) && daysUntilDue > 0 && (
+          {daysUntilDue <= 7 && daysUntilDue > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden">
               <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center gap-4 relative z-10">
                 <div className="p-2 bg-amber-500/20 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse">
@@ -1606,18 +1397,11 @@ export function HeartbeatMonitor() {
                     value={settings.heartbeatInterval}
                     onChange={(e) => setSettings(prev => ({ ...prev, heartbeatInterval: parseInt(e.target.value) }))}
                   >
-                    <optgroup label="── Demo / Testing ──" className="text-slate-900 dark:text-slate-100 font-bold">
-                      <option value={1}>⚡ 1 Minute (Demo)</option>
-                      <option value={2}>⚡ 2 Minutes (Demo)</option>
-                      <option value={5}>⚡ 5 Minutes (Demo) </option>
-                    </optgroup>
-                    <optgroup label="── Production ──" className="text-slate-900 dark:text-slate-100 font-bold">
-                      <option value={7}>7 days (Weekly)</option>
-                      <option value={14}>14 days (Bi-weekly)</option>
-                      <option value={30}>30 days (Monthly)</option>
-                      <option value={60}>60 days (Bi-monthly)</option>
-                      <option value={90}>90 days (Quarterly)</option>
-                    </optgroup>
+                    <option value={7}>7 days (Weekly)</option>
+                    <option value={14}>14 days (Bi-weekly)</option>
+                    <option value={30}>30 days (Monthly)</option>
+                    <option value={60}>60 days (Bi-monthly)</option>
+                    <option value={90}>90 days (Quarterly)</option>
                   </select>
                 </div>
 
@@ -1629,17 +1413,10 @@ export function HeartbeatMonitor() {
                     value={settings.gracePeriod}
                     onChange={(e) => setSettings(prev => ({ ...prev, gracePeriod: parseInt(e.target.value) }))}
                   >
-                    <optgroup label="── Demo / Testing ──" className="text-slate-900 dark:text-slate-100 font-bold">
-                      <option value={1}>1 Minute Rescue Window (Demo)</option>
-                      <option value={2}>2 Minute Rescue Window (Demo)</option>
-                      <option value={3}>3 Minute Rescue Window (Demo)</option>
-                    </optgroup>
-                    <optgroup label="── Production ──" className="text-slate-900 dark:text-slate-100 font-bold">
-                      <option value={7}>7 days Rescue Window</option>
-                      <option value={14}>14 days Rescue Window</option>
-                      <option value={30}>30 days Rescue Window</option>
-                      <option value={60}>60 days Rescue Window</option>
-                    </optgroup>
+                    <option value={7}>7 days Rescue Window</option>
+                    <option value={14}>14 days Rescue Window</option>
+                    <option value={30}>30 days Rescue Window</option>
+                    <option value={60}>60 days Rescue Window</option>
                   </select>
                 </div>
 

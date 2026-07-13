@@ -61,8 +61,7 @@ export class HeartbeatService {
 
     const lastCheck = config.lastHeartbeat || config.createdAt;
     const now = new Date();
-    const isDemo = config.intervalDays < 7;
-    const timeUnit = isDemo ? (1000 * 60) : (1000 * 60 * 60 * 24);
+    const timeUnit = 1000 * 60 * 60 * 24;
     
     const diff = Math.floor((now.getTime() - lastCheck.getTime()) / timeUnit);
     
@@ -79,22 +78,22 @@ export class HeartbeatService {
     if (diff >= interval + grace) {
       return { 
         status: 'overdue', 
-        daysUntilDue: isDemo ? 0 : interval + grace - diff,
-        minutesUntilDue: isDemo ? interval + grace - diff : 0,
+        daysUntilDue: interval + grace - diff,
+        minutesUntilDue: 0,
         ...common
       };
     } else if (diff >= interval) {
       return { 
         status: 'grace_period', 
-        daysUntilDue: isDemo ? 0 : interval + grace - diff,
-        minutesUntilDue: isDemo ? interval + grace - diff : 0,
+        daysUntilDue: interval + grace - diff,
+        minutesUntilDue: 0,
         ...common
       };
     } else {
       return { 
         status: 'active', 
-        daysUntilDue: isDemo ? 0 : interval - diff,
-        minutesUntilDue: isDemo ? interval - diff : 0,
+        daysUntilDue: interval - diff,
+        minutesUntilDue: 0,
         ...common
       };
     }

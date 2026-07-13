@@ -64,25 +64,20 @@ class ModeService {
       // 2. Sync engine preference with backend
       if (onProgress) onProgress(`Syncing ${newMode} protocol with backend...`)
       try {
-        const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-        if (!isDemo) {
-          const response = await fetch(`${this.config.apiEndpoint}/api/users/storage-engine`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
-            },
-            body: JSON.stringify({ engine: newMode === 'centralized' ? 'cloud' : 'web3' })
-          })
+      const response = await fetch(`${this.config.apiEndpoint}/api/users/storage-engine`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+        },
+        body: JSON.stringify({ engine: newMode === 'centralized' ? 'cloud' : 'web3' })
+      })
 
-          const result = await response.json()
-          if (!response.ok || !result.success) {
-            throw new Error(result.message || `Failed to sync ${newMode} status with backend`)
-          }
-          console.log('✅ Backend storage engine updated')
-        } else {
-          console.log('Sandbox mode: bypassing backend storage-engine sync')
-        }
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || `Failed to sync ${newMode} status with backend`)
+      }
+      console.log('✅ Backend storage engine updated')
       } catch (apiError: any) {
         console.warn('⚠️ Backend sync failed:', apiError.message)
         // If it's a "locked" message from backend, we MUST abort the migration
@@ -135,14 +130,6 @@ class ModeService {
    * Save asset based on current mode
    */
   async saveAsset(asset: StoredAsset): Promise<{ success: boolean; id: string; syncPending?: boolean }> {
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-    if (isDemo) {
-      console.log('Sandbox mode: saving asset purely to local storage')
-      const storage = WebStorageService.getInstance()
-      await storage.saveAsset(asset)
-      return { success: true, id: asset.id, syncPending: false }
-    }
-
     if (this.currentMode === 'centralized') {
       return this.saveAssetCentralized(asset)
     } else {
@@ -320,13 +307,6 @@ class ModeService {
    * Load assets based on current mode
    */
   async loadAssets(): Promise<StoredAsset[]> {
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-    if (isDemo) {
-      console.log('Sandbox mode: loading assets purely from local storage')
-      const storage = WebStorageService.getInstance()
-      return storage.getAllAssets()
-    }
-
     if (this.currentMode === 'centralized') {
       return this.loadAssetsCentralized()
     } else {
@@ -434,14 +414,6 @@ class ModeService {
    * Delete asset based on current mode
    */
   async deleteAsset(assetId: string): Promise<void> {
-    const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
-    if (isDemo) {
-      console.log('Sandbox mode: deleting asset purely from local storage')
-      const storage = WebStorageService.getInstance()
-      await storage.deleteAsset(assetId)
-      return
-    }
-
     if (this.currentMode === 'centralized') {
       await this.deleteAssetCentralized(assetId)
     } else {

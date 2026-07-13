@@ -8,7 +8,7 @@ interface ReferralProgramProps {
   userAddress?: string;
 }
 
-export function ReferralProgram({ userAddress = '0xDemoSandbox77777777777777777777777777' }: ReferralProgramProps) {
+export function ReferralProgram({ userAddress = '0x0000000000000000000000000000000000000000' }: ReferralProgramProps) {
   const [copied, setCopied] = useState(false);
   
   const referralLink = typeof window !== 'undefined'
