@@ -134,6 +134,14 @@ export class AssetsController {
     return this.assetsService.getAllAssets(walletAddress);
   }
 
+  @Get('folders')
+  @ApiOperation({ summary: 'Get all folders for a user' })
+  @ApiResponse({ status: 200, description: 'Folders retrieved successfully' })
+  async getAllFolders(@Req() req: any): Promise<any[]> {
+    const walletAddress = req.user.walletAddress;
+    return this.assetsService.getAllFolders(walletAddress);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get specific asset metadata' })
   @ApiResponse({ status: 200, description: 'Asset metadata retrieved successfully' })

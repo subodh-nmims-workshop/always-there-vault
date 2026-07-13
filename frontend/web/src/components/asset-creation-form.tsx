@@ -150,6 +150,46 @@ export function AssetCreationForm() {
 
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('dwp_is_demo') === 'true';
 
+      // Sync folders from backend first so asset-folder mappings align
+      if (!isDemo) {
+        try {
+          const token = localStorage.getItem('dwp_token');
+          if (token) {
+            const folderRes = await fetch(`${API_URL}/api/assets/folders`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (folderRes.ok) {
+              const backendFolders: any[] = await folderRes.json();
+              const localFolders = await storage.getAllFolders();
+              const localFolderIds = new Set(localFolders.map(f => f.id));
+              const onlyBackendFolders = backendFolders.filter(bf => !localFolderIds.has(bf.id));
+              if (onlyBackendFolders.length > 0) {
+                for (const bf of onlyBackendFolders) {
+                  try {
+                    await storage.saveFolder({
+                      id: bf.id,
+                      name: bf.name,
+                      parentId: bf.parentId || null,
+                      type: bf.type || WebStorageService.getFolderType(bf.name),
+                      beneficiaries: bf.beneficiaries || [],
+                      createdAt: bf.createdAt ? new Date(bf.createdAt).getTime() : Date.now(),
+                      updatedAt: bf.updatedAt ? new Date(bf.updatedAt).getTime() : Date.now(),
+                      color: bf.color || 'blue',
+                      icon: bf.icon || 'folder'
+                    });
+                  } catch (err) {
+                    console.warn('⚠️ Syncing folder failed:', err);
+                  }
+                }
+                console.log(`✅ Synced ${onlyBackendFolders.length} folder(s) from backend`);
+              }
+            }
+          }
+        } catch (folderSyncErr) {
+          console.warn('⚠️ Backend folder sync failed:', folderSyncErr);
+        }
+      }
+
       // ═══ BUG 5 FIX: Merge with backend assets for cross-device sync ═══
       let mergedAssets = [...allAssets];
       if (!isDemo) {
@@ -162,7 +202,9 @@ export function AssetCreationForm() {
             });
             if (backendRes.ok) {
               const backendData = await backendRes.json();
-              const backendFiles: any[] = (backendData.assets || []).map((f: any) => ({
+              // Backend returns a flat array of file models. Handle both array & object formats.
+              const filesArray = Array.isArray(backendData) ? backendData : (backendData.assets || []);
+              const backendFiles: any[] = filesArray.map((f: any) => ({
                 id: f.id,
                 name: f.name,
                 type: f.metadata?.type || f.type || (f.mimeType?.startsWith('image/') ? 'photo' : 'document'),
@@ -173,7 +215,7 @@ export function AssetCreationForm() {
                 ipfsHash: f.location || null,
                 beneficiaries: f.assignedBeneficiaryId ? [f.assignedBeneficiaryId] : [],
                 assignedBeneficiaryId: f.assignedBeneficiaryId || null,
-                createdAt: f.createdAt,
+                createdAt: f.createdAt ? new Date(f.createdAt).getTime() : Date.now(),
                 size: f.size || 0,
                 mimeType: f.mimeType || 'application/octet-stream',
               }));

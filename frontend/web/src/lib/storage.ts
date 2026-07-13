@@ -497,6 +497,21 @@ class WebStorageService {
    */
 
   /**
+   * Save a folder directly (for sync/creation)
+   */
+  async saveFolder(folder: StoredFolder): Promise<void> {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['folders'], 'readwrite');
+      const store = transaction.objectStore('folders');
+      const request = store.put(folder);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  /**
    * Create a new folder
    */
   async createFolder(name: string, parentId: string | null = null, beneficiaries: string[] = [], type?: string): Promise<StoredFolder> {
@@ -681,12 +696,12 @@ class WebStorageService {
   /**
    * Share folder with beneficiaries
    */
-  async shareFolderWithBeneficiaries(folderId: string, beneficiaryAddresses: string[]): Promise<void> {
+  async shareFolderWithBeneficiaries(folderId: string, beneficiaryIds: string[]): Promise<void> {
     const folder = await this.getFolder(folderId);
     if (!folder) throw new Error('Folder not found');
 
     // Replace folder-level mapping with the explicit selection
-    const updatedBeneficiaries = Array.from(new Set(beneficiaryAddresses));
+    const updatedBeneficiaries = Array.from(new Set(beneficiaryIds));
     await this.updateFolder(folderId, { beneficiaries: updatedBeneficiaries });
 
     const assets = await this.getAssetsByFolder(folderId);
@@ -699,19 +714,24 @@ class WebStorageService {
       const mode = localStorage.getItem('dwp_mode') || 'centralized'
       if (mode === 'centralized') {
         const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
-        for (const ben of updatedBeneficiaries) {
-          // Sync with centralized node per beneficiary
-          await fetch(`${apiEndpoint}/api/assets/folders/${folderId}/share`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
-            },
-            body: JSON.stringify({
-              walletToShareWith: ben,
-              permission: 'READ'
-            })
-          })
+        const allBens = await this.getAllBeneficiaries();
+        const benMap = new Map(allBens.map(b => [b.id, b.walletAddress]));
+        for (const benId of updatedBeneficiaries) {
+          const wallet = benMap.get(benId);
+          if (wallet) {
+            // Sync with centralized node per beneficiary
+            await fetch(`${apiEndpoint}/api/assets/folders/${folderId}/share`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+              },
+              body: JSON.stringify({
+                walletToShareWith: wallet,
+                permission: 'READ'
+              })
+            });
+          }
         }
       }
     } catch (e) {

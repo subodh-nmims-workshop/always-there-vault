@@ -292,6 +292,13 @@ export class AssetsService {
     });
   }
 
+  async getAllFolders(walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    return this.db.query.folders.findMany({
+      where: eq(folders.userId, user.id),
+    });
+  }
+
   async deleteAsset(id: string, walletAddress: string) {
     const user = await this.usersService.findUserByWallet(walletAddress);
     const file = await this.db.query.files.findFirst({
