@@ -36,12 +36,27 @@ async function main() {
   const digitalWillAddress = await digitalWill.getAddress();
   console.log('✅ DigitalWill deployed to:', digitalWillAddress);
 
+  // 4. Deploy GuardianRecovery
+  console.log('\nDeploying GuardianRecovery...');
+  const GuardianRecovery = await ethers.getContractFactory('GuardianRecovery');
+  const guardianRecovery = await GuardianRecovery.deploy();
+  await guardianRecovery.waitForDeployment();
+  const guardianRecoveryAddress = await guardianRecovery.getAddress();
+  console.log('✅ GuardianRecovery deployed to:', guardianRecoveryAddress);
+
+  // Link them
+  console.log('\nLinking DigitalWill and GuardianRecovery...');
+  await guardianRecovery.setDigitalWill(digitalWillAddress);
+  await digitalWill.setGuardianRecovery(guardianRecoveryAddress);
+  console.log('✅ Linked successfully!');
+
   console.log('\n-----------------------------------------');
   console.log('🎉 ALL CONTRACTS DEPLOYED SUCCESSFULLY');
   console.log('-----------------------------------------');
   console.log(`CONTRACT_ADDRESS=${secureWillAddress}`);
   console.log(`DIGITAL_WILL_ADDRESS=${digitalWillAddress}`);
   console.log(`SUBSCRIPTION_CONTRACT_ADDRESS=${subscriptionManagerAddress}`);
+  console.log(`GUARDIAN_RECOVERY_ADDRESS=${guardianRecoveryAddress}`);
   console.log('-----------------------------------------');
   console.log('Action: Update your backend/.env and root .env with these addresses.');
 }

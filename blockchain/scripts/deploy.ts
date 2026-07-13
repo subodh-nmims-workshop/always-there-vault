@@ -24,6 +24,20 @@ async function main() {
   const coreAddress = await digitalWillCore.getAddress();
   console.log("✅ DigitalWillCore deployed to:", coreAddress);
 
+  // Deploy GuardianRecovery
+  console.log("\n📦 Deploying GuardianRecovery...");
+  const GuardianRecovery = await ethers.getContractFactory("GuardianRecovery");
+  const guardianRecovery = await GuardianRecovery.deploy();
+  await guardianRecovery.waitForDeployment();
+  const guardianRecoveryAddress = await guardianRecovery.getAddress();
+  console.log("✅ GuardianRecovery deployed to:", guardianRecoveryAddress);
+
+  // Link them
+  console.log("\n🔗 Linking DigitalWillCore and GuardianRecovery...");
+  await guardianRecovery.setDigitalWillCore(coreAddress);
+  await digitalWillCore.setGuardianRecovery(guardianRecoveryAddress);
+  console.log("✅ Linked successfully!");
+
   // Save deployment info
   const deploymentInfo = {
     network: (await ethers.provider.getNetwork()).name,
@@ -32,6 +46,7 @@ async function main() {
     contracts: {
       HeartbeatTracker: heartbeatAddress,
       DigitalWillCore: coreAddress,
+      GuardianRecovery: guardianRecoveryAddress,
     },
     timestamp: new Date().toISOString(),
   };

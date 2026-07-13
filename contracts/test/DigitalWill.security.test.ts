@@ -54,7 +54,7 @@ describe("DigitalWill Security Fixes", function () {
       await ethers.provider.send("evm_mine", []);
       
       await expect(digitalWill.checkAndTrigger(user.address))
-        .to.emit(digitalWill, "Always ThereTriggered");
+        .to.emit(digitalWill, "AlwaysThereTriggered");
       
       const will = await digitalWill.wills(user.address);
       expect(will.isTriggered).to.be.true;
@@ -65,7 +65,7 @@ describe("DigitalWill Security Fixes", function () {
     it("Should only allow owner to pause protocol", async function () {
       await expect(
         digitalWill.connect(user).pauseProtocol()
-      ).to.be.revertedWithCustomError(digitalWill, "OwnableUnauthorizedAccount");
+      ).to.be.revertedWithCustomError(digitalWill, "AccessControlUnauthorizedAccount");
       
       await digitalWill.connect(owner).pauseProtocol();
       expect(await digitalWill.paused()).to.be.true;
