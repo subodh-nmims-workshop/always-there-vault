@@ -13,6 +13,14 @@ function makeStorageClient() {
   return new Web3Storage({ token: TOKEN })
 }
 
+export function isValidCID(cid: string): boolean {
+  if (!cid) return false;
+  if (cid.startsWith('bafy_local_') || cid.startsWith('bafy_mock_') || cid.startsWith('test_')) return false;
+  if (cid.length < 10) return false;
+  const validPrefixes = ['Qm', 'bafy', 'bafk', 'bafz'];
+  return validPrefixes.some(prefix => cid.startsWith(prefix));
+}
+
 /**
  * Upload file to IPFS using Web3.Storage (5GB Free Tier)
  */
@@ -38,6 +46,10 @@ export async function uploadToIPFS(
     })
     
     console.log('✅ Web3.Storage Upload Complete. CID:', cid)
+
+    if (!isValidCID(cid)) {
+      throw new Error('Web3.Storage returned an invalid CID: ' + cid)
+    }
     
     // Store mapping in localStorage
     const userFiles = JSON.parse(localStorage.getItem(`ipfs_files_${walletAddress}`) || '[]')
@@ -68,7 +80,8 @@ async function uploadToBackendBridge(
     iv?: string
 ): Promise<string> {
     try {
-        const IPFS_API = 'https://always-there-protocol-api.onrender.com/api/assets/ipfs' /* 'http://localhost:7001/api/assets/ipfs' */
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7001'
+        const IPFS_API = `${API_URL}/api/assets/ipfs`
         const formData = new FormData()
         formData.append('file', file)
         
@@ -85,13 +98,17 @@ async function uploadToBackendBridge(
             body: formData
         })
         
-        if (!response.ok) throw new Error('Backend bridge failed')
+        if (!response.ok) throw new Error('Backend bridge returned status: ' + response.status)
         
         const data = await response.json()
-        return data.cid || data.ipfsHash || `bafy_mock_${Math.random().toString(36).substring(2, 10)}`
-    } catch (e) {
-        console.warn('All IPFS paths failed. Returning local mock CID.')
-        return `bafy_local_${Math.random().toString(36).substring(2, 10)}`
+        const cid = data.cid || data.ipfsHash;
+        if (!cid || !isValidCID(cid)) {
+            throw new Error('Backend bridge returned invalid CID')
+        }
+        return cid
+    } catch (e: any) {
+        console.error('All IPFS paths failed:', e.message)
+        throw new Error(e.message || 'Decentralized storage upload failed.')
     }
 }
 

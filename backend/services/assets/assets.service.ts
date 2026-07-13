@@ -160,6 +160,18 @@ export class AssetsService {
     const isB2 = data.ipfsHash && (data.ipfsHash.includes('/') || data.ipfsHash.startsWith('local-simulated://'));
     const isIpfs = data.ipfsHash && !isB2;
 
+    if (isIpfs && data.ipfsHash) {
+      const cid = data.ipfsHash;
+      if (cid.startsWith('bafy_local_') || cid.startsWith('bafy_mock_') || cid.startsWith('test_') || cid.length < 10) {
+        throw new BadRequestException('Invalid IPFS CID: local or mock CIDs are not allowed.');
+      }
+      const validPrefixes = ['Qm', 'bafy', 'bafk', 'bafz'];
+      const hasValidPrefix = validPrefixes.some(prefix => cid.startsWith(prefix));
+      if (!hasValidPrefix) {
+        throw new BadRequestException('Invalid IPFS CID format: must start with Qm, bafy, bafk, or bafz.');
+      }
+    }
+
     const isUuid = (val: string) => {
       if (!val) return false;
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
