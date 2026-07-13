@@ -47,4 +47,4 @@ EXPOSE 7001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:7001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["sh", "-c", "npx drizzle-kit push --force && node dist/main.js"]
+CMD ["sh", "-c", "npx drizzle-kit push --force; node dist/main.js"]

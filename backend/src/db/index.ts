@@ -5,8 +5,8 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const connectionString = process.env.DATABASE_URL!;
-const isProduction = process.env.NODE_ENV === 'production' || connectionString.includes('neon.tech');
+const connectionString = process.env.DATABASE_URL || '';
+const isProduction = process.env.NODE_ENV === 'production' || (connectionString && connectionString.includes('neon.tech'));
 
 // Extract host for logging
 let dbHost = 'unknown';
