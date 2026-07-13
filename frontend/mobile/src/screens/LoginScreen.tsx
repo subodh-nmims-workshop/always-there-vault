@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -25,9 +26,14 @@ import {
   Delete,
   CheckCircle2,
   AlertTriangle,
-  Link2
+  Link2,
+  FileText,
+  Camera,
 } from 'lucide-react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import ApiService from '../services/ApiService';
@@ -63,6 +69,10 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
   const [bioAvailable, setBioAvailable] = useState(false);
   const [generatedSeed, setGeneratedSeed] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'primary_wallet' | 'recovery_key'>('primary_wallet');
+  const [recoveryMethod, setRecoveryMethod] = useState<'file' | 'camera' | 'manual'>('file');
+  const [manualKey, setManualKey] = useState('');
+  const [showQrScanner, setShowQrScanner] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -134,6 +144,64 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
     ]).start();
   };
 
+  const handleRecoveryInput = async (rawKey: string) => {
+    let key = rawKey.trim();
+    try {
+      const parsed = JSON.parse(key);
+      if (parsed.privateKey) key = parsed.privateKey;
+    } catch (_) {}
+    if (!key.startsWith('0x') && key.length === 64) key = '0x' + key;
+    if (!key.startsWith('0x') || (key.length !== 66 && key.length !== 64)) {
+      setAlert({ visible: true, title: 'INVALID KEY', message: 'Must be a 64-char hex string (private key).', type: 'error' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await AsyncStorage.setItem(WALLET_KEY, key);
+      const api = ApiService.getInstance();
+      await api.loginWithWallet(key);
+      onSuccess(key);
+    } catch (e) {
+      setAlert({ visible: true, title: 'RECOVERY FAILED', message: 'Could not authenticate with this key.', type: 'error' });
+    } finally { setLoading(false); }
+  };
+
+  const handleJsonUpload = async () => {
+    try {
+      // Accept all files — user may have .json, .txt, or no extension
+      const res = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+      if (res.canceled || !res.assets?.length) return;
+
+      const asset = res.assets[0];
+      let uri = asset.uri;
+
+      // On Android, content:// URIs must be copied to a readable cache path first
+      if (uri.startsWith('content://')) {
+        const dest = FileSystem.cacheDirectory + 'recovery_upload_' + Date.now() + '.json';
+        await FileSystem.copyAsync({ from: uri, to: dest });
+        uri = dest;
+      }
+
+      const content = await FileSystem.readAsStringAsync(uri);
+      handleRecoveryInput(content.trim());
+    } catch (e: any) {
+      setAlert({
+        visible: true,
+        title: 'FILE ERROR',
+        message: 'Could not read file. Make sure it is a valid recovery JSON or hex text file.',
+        type: 'error',
+      });
+    }
+  };
+
+  const handleQrScanned = ({ data }: { data: string }) => {
+    setShowQrScanner(false);
+    handleRecoveryInput(data);
+  };
+
   const renderChoice = () => (
     <View style={styles.choiceContainer}>
       {/* TABS SELECTOR */}
@@ -160,8 +228,8 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
              <Wallet size={36} color="#3b82f6" />
           </View>
 
-          <Text style={styles.connectTitle}>Connect Primary Wallet</Text>
-          <Text style={styles.connectDesc}>Unlock the protocol using your primary Web3 wallet identity.</Text>
+          <Text style={styles.connectTitle}>Connect Your Wallet</Text>
+          <Text style={styles.connectDesc}>Sign in with your Web3 wallet to access your vault and manage your digital legacy.</Text>
 
           <TouchableOpacity 
             style={styles.openSelectorBtn}
@@ -200,24 +268,103 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
              <Key size={36} color="#f59e0b" />
           </View>
 
-          <Text style={styles.connectTitle}>Restore Security Key</Text>
-          <Text style={styles.connectDesc}>Reconstruct your decentralized vaults using your recovery phrase shards.</Text>
+          <Text style={styles.connectTitle}>Restore with Recovery Key</Text>
+          <Text style={styles.connectDesc}>Use your backup file, QR recovery card, or paste your raw private key.</Text>
 
-          <TouchableOpacity 
-            style={[styles.openSelectorBtn, { backgroundColor: '#f59e0b' }]}
-            onPress={() => setWalletSubMode('create')}
-          >
-            <Plus size={18} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.openSelectorBtnText}>Enter Recovery Shards</Text>
-          </TouchableOpacity>
+          {/* 3 method tabs */}
+          <View style={styles.recoveryMethodRow}>
+            {(['file', 'camera', 'manual'] as const).map((m) => (
+              <TouchableOpacity
+                key={m}
+                style={[styles.recoveryMethodBtn, recoveryMethod === m && styles.recoveryMethodBtnActive]}
+                onPress={() => { setRecoveryMethod(m); setShowQrScanner(false); }}
+              >
+                {m === 'file' && <FileText size={14} color={recoveryMethod === m ? '#fff' : COLORS.textDim} />}
+                {m === 'camera' && <Camera size={14} color={recoveryMethod === m ? '#fff' : COLORS.textDim} />}
+                {m === 'manual' && <Key size={14} color={recoveryMethod === m ? '#fff' : COLORS.textDim} />}
+                <Text style={[styles.recoveryMethodBtnText, recoveryMethod === m && { color: '#fff' }]}>
+                  {m === 'file' ? 'Backup File' : m === 'camera' ? 'Scan QR' : 'Manual Hex'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-          <TouchableOpacity 
-            style={[styles.openSelectorBtn, { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: COLORS.border, marginTop: 12 }]}
-            onPress={() => setWalletSubMode('import')}
-          >
-            <Link2 size={18} color={COLORS.primary} style={{ marginRight: 8 }} />
-            <Text style={[styles.openSelectorBtnText, { color: COLORS.text }]}>Manual Import Address</Text>
-          </TouchableOpacity>
+          {/* Method: File */}
+          {recoveryMethod === 'file' && (
+            <TouchableOpacity style={styles.uploadBox} onPress={handleJsonUpload}>
+              <FileText size={28} color={COLORS.primary} />
+              <Text style={styles.uploadBoxTitle}>Upload Backup JSON</Text>
+              <Text style={styles.uploadBoxSub}>recovery-key.json or raw hex file</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Method: Camera QR */}
+          {recoveryMethod === 'camera' && (
+            showQrScanner ? (
+              <View style={{ width: '100%', height: 220, borderRadius: 16, overflow: 'hidden', marginTop: 12 }}>
+                <CameraView
+                  onBarcodeScanned={handleQrScanned}
+                  barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                  style={{ flex: 1 }}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowQrScanner(false)}
+                  style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(239,68,68,0.9)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 11, fontFamily: FONTS.inter.bold }}>Stop</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.uploadBox, { borderColor: 'rgba(16,185,129,0.3)' }]}
+                onPress={async () => {
+                  if (!cameraPermission?.granted) {
+                    const result = await requestCameraPermission();
+                    if (!result.granted) return;
+                  }
+                  setShowQrScanner(true);
+                }}
+              >
+                <Camera size={28} color="#10b981" />
+                <Text style={[styles.uploadBoxTitle, { color: '#10b981' }]}>Enable Camera</Text>
+                <Text style={styles.uploadBoxSub}>Scan your AlwaysThere recovery QR card</Text>
+              </TouchableOpacity>
+            )
+          )}
+
+          {/* Method: Manual Hex */}
+          {recoveryMethod === 'manual' && (
+            <View style={{ width: '100%', marginTop: 12 }}>
+              <View style={styles.inputContainer}>
+                <Key size={18} color={COLORS.primary} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="0x... private key (64 hex chars)"
+                  placeholderTextColor={COLORS.textDim}
+                  value={manualKey}
+                  onChangeText={setManualKey}
+                  autoCapitalize="none"
+                  secureTextEntry
+                />
+              </View>
+              <TouchableOpacity
+                style={[styles.openSelectorBtn, { opacity: manualKey.length > 0 ? 1 : 0.5 }]}
+                onPress={() => handleRecoveryInput(manualKey)}
+                disabled={!manualKey}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.openSelectorBtnText}>AUTHENTICATE KEY</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Security disclaimer */}
+          <View style={[styles.warningBox, { marginTop: 16 }]}>
+            <Shield size={14} color="#f59e0b" style={{ marginRight: 10, marginTop: 2 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.warningTitle}>Security Note</Text>
+              <Text style={styles.warningText}>Your key is processed locally and never uploaded to any server.</Text>
+            </View>
+          </View>
         </View>
       )}
 
@@ -299,7 +446,7 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
             )}
             <View style={styles.headerTitleContainer}>
                <Shield size={24} color={COLORS.primary} />
-               <Text style={styles.headerLabel}>PROTOCOL KERNEL v2.0</Text>
+               <Text style={styles.headerLabel}>ALWAYSTHERE VAULT</Text>
             </View>
           </View>
           
@@ -398,7 +545,7 @@ const LoginScreen = ({ mode, onSuccess, onBack }: LoginScreenProps) => {
           {mode === 'app_unlock' && bioAvailable && (
             <TouchableOpacity style={styles.bioContainer} onPress={handleBiometric}>
               <Fingerprint size={48} color={COLORS.primary} />
-              <Text style={styles.bioLabel}>BIOMETRIC OVERRIDE</Text>
+              <Text style={styles.bioLabel}>USE BIOMETRICS TO UNLOCK</Text>
             </TouchableOpacity>
           )}
 
@@ -635,7 +782,57 @@ const styles = StyleSheet.create({
     color: COLORS.textDim, 
     fontSize: 10, 
     fontFamily: FONTS.inter.semibold 
-  }
+  },
+
+  recoveryMethodRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    marginBottom: 16,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  recoveryMethodBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 10,
+    borderRadius: 7,
+  },
+  recoveryMethodBtnActive: {
+    backgroundColor: COLORS.primary,
+  },
+  recoveryMethodBtnText: {
+    color: COLORS.textDim,
+    fontSize: 10,
+    fontFamily: FONTS.inter.bold,
+  },
+  uploadBox: {
+    width: '100%',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(59,130,246,0.3)',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  uploadBoxTitle: {
+    color: COLORS.text,
+    fontFamily: FONTS.inter.bold,
+    fontSize: 14,
+  },
+  uploadBoxSub: {
+    color: COLORS.textDim,
+    fontFamily: FONTS.inter.medium,
+    fontSize: 11,
+  },
 });
 
 export default LoginScreen;

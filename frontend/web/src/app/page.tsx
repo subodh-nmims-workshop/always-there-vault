@@ -58,6 +58,7 @@ import { StatusDashboard } from '@/components/status-dashboard'
 
 import { SubscriptionDashboard } from '@/components/subscription-dashboard'
 import { ModeIndicator } from '@/components/mode-indicator'
+import { ReferralProgram } from '@/components/referral-program'
 import { TrialBanner } from '@/components/trial-banner'
 import { SettingsDashboard } from '@/components/settings-dashboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -81,6 +82,17 @@ export default function HomePage() {
   const [mfaVerifyCode, setMfaVerifyCode] = useState('')
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false)
   const [mfaError, setMfaError] = useState<string | null>(null)
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+
+  const handleJoinWaitlist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waitlistEmail.trim() || !waitlistEmail.includes('@')) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    toast.success('Success! You have been added to our private beta waitlist.');
+    setWaitlistEmail('');
+  }
 
   const closeMfaModal = () => {
     setPendingMfaData(null)
@@ -119,11 +131,11 @@ export default function HomePage() {
     }
   }, [])
 
-  // Auto-show dev modal when in restricted mode
+  // Auto-show dev modal when in restricted mode (Disabled to avoid intrusive UI popups)
   useEffect(() => {
     const isDemo = localStorage.getItem('dwp_is_demo') === 'true'
     if (isConnected && !isDevOverride && !isDemo) {
-      setShowDevModal(true)
+      // Don't auto-show dev modal to avoid intrusive UI popups
     }
   }, [isConnected, isDevOverride])
 
@@ -387,65 +399,81 @@ export default function HomePage() {
           </Link>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            <Link href="/donate" className="px-5 py-2.5 rounded-xl bg-[#2b52ff]/10 text-[#2b52ff] text-xs font-black border border-[#2b52ff]/20 uppercase tracking-widest hover:bg-[#2b52ff]/20 transition-all">Support Us</Link>
             <button onClick={handleDisconnect} className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-black border border-red-500/20 uppercase tracking-widest hover:bg-red-500/20 transition-all">Logout</button>
           </div>
         </nav>
         <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 space-y-8 mt-16 mb-24">
           
-          <div className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-[#2b52ff]/30 via-purple-500/20 to-transparent overflow-hidden">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 animate-pulse" />
-            <div className="bg-white/95 dark:bg-[#0a0c12]/95 backdrop-blur-2xl rounded-[2.4rem] p-8 md:p-14 border border-slate-200 dark:border-white/5 relative z-10 text-center space-y-8 shadow-2xl">
+          <div className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-[#2b52ff]/20 via-purple-500/10 to-transparent overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 animate-pulse animate-duration-1000" />
+            <div className="bg-white/95 dark:bg-[#0a0c12]/95 backdrop-blur-2xl rounded-[2.4rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 relative z-10 space-y-8 shadow-2xl">
               
-              <div className="w-24 h-24 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto border border-red-200 dark:border-red-500/20 relative shadow-[0_0_50px_rgba(239,68,68,0.15)] dark:shadow-[0_0_50px_rgba(239,68,68,0.2)]">
-                <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full animate-pulse" />
-                <Lock className="w-12 h-12 text-red-500" />
-              </div>
-
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-black uppercase tracking-widest mb-4">
-                  <AlertTriangle className="w-4 h-4" /> System Under Development
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-[#2b52ff]/10 rounded-2xl flex items-center justify-center mx-auto border border-[#2b52ff]/25 relative shadow-[0_0_30px_rgba(43,82,255,0.1)]">
+                  <Lock className="w-8 h-8 text-[#2b52ff]" />
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-[#2b52ff] text-[10px] font-black uppercase tracking-widest">
+                  Closed Private Beta
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">
-                  MAINNET ACCESS <span className="text-red-500">RESTRICTED</span>
+                  Join the Waitlist
                 </h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-4 text-lg font-medium">
-                  Wallet Connected: <span className="text-slate-950 dark:text-white font-mono">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>
+                <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-base font-medium leading-relaxed">
+                  We are conducting phased private trials to ensure absolute cryptographic soundness, zero-knowledge security, and smart contract safety. Enter your email to receive priority access to our mainnet launch.
+                </p>
+                <p className="text-xs text-slate-500 mt-2 font-mono">
+                  Wallet Connected: <span className="text-slate-900 dark:text-white font-mono">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>
                 </p>
               </div>
 
-              <div className="p-8 rounded-2xl bg-[#2b52ff]/5 border border-[#2b52ff]/20 dark:border-[#2b52ff]/30 text-left space-y-6">
-                <h2 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-widest flex items-center gap-3">
-                  <Target className="w-6 h-6 text-[#2b52ff]" /> Why Are We In Stealth?
-                </h2>
-                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  AlwaysThere is engineering the world's most secure, unstoppable digital will protocol. We are currently finalizing our smart contract infrastructure, Zero-Knowledge encryption layer, and undergoing rigorous security audits to ensure 100% protection of user assets.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-white/10">
-                  <div>
-                     <h3 className="text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">The Market</h3>
-                     <p className="text-lg font-black text-slate-900 dark:text-white">$1.5 Trillion</p>
-                     <p className="text-xs text-slate-400 dark:text-slate-500">Projected Digital Estate Market</p>
+              {/* Waitlist Subscription Section */}
+              <div className="max-w-md mx-auto p-6 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
+                <form onSubmit={handleJoinWaitlist} className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input 
+                      type="email" 
+                      placeholder="Enter your email address" 
+                      value={waitlistEmail} 
+                      onChange={(e) => setWaitlistEmail(e.target.value)} 
+                      className="flex-grow bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-[#2b52ff]/50 transition-colors text-sm" 
+                    />
+                    <button 
+                      type="submit" 
+                      className="px-6 py-3 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)] shrink-0"
+                    >
+                      Subscribe
+                    </button>
                   </div>
-                  <div>
-                     <h3 className="text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Current Status</h3>
-                     <p className="text-lg font-black text-yellow-600 dark:text-yellow-500">Seed Round Open</p>
-                     <p className="text-xs text-slate-400 dark:text-slate-500">Seeking Strategic Partners</p>
-                  </div>
+                </form>
+              </div>
+
+              {/* Sandbox Demo Launch Section */}
+              <div className="p-8 rounded-2xl bg-gradient-to-br from-purple-500/[0.03] to-[#2b52ff]/[0.03] border border-purple-500/10 dark:border-white/5 text-center space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-widest flex items-center justify-center gap-2">
+                    <Cpu className="w-5 h-5 text-purple-500" /> Start Sandbox Demo
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm max-w-lg mx-auto">
+                    Want to see how it works today? Launch a fully simulated local sandbox environment instantly to experience the digital inheritance and heartbeat features.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <button 
+                    onClick={handleStartDemo}
+                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#2b52ff] to-purple-600 hover:from-[#1a3ecd] hover:to-purple-700 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2 mx-auto"
+                  >
+                    Launch Interactive Demo <ChevronRight className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
 
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="mailto:support@alwaystherevault.com?subject=Investor Access Request - AlwaysThere">
-                  <button className="w-full sm:w-auto px-8 py-4 bg-[#2b52ff] hover:bg-[#1a3ecd] text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(43,82,255,0.4)] flex items-center justify-center gap-2">
-                    Request Investor Access <ChevronRight className="w-5 h-5" />
-                  </button>
-                </Link>
+              {/* Admin/Developer Bypass Link */}
+              <div className="text-center pt-4">
                 <button 
                   onClick={() => setShowDevModal(true)}
-                  className="w-full sm:w-auto px-8 py-4 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-400 rounded-xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                  className="text-xs text-slate-400 dark:text-slate-500 hover:text-[#2b52ff] hover:dark:text-white transition-colors underline underline-offset-4 uppercase tracking-widest font-black"
                 >
-                  <Cpu className="w-5 h-5" /> Dev Override
+                  Developer Override
                 </button>
               </div>
 
@@ -480,7 +508,7 @@ export default function HomePage() {
                            setDevPasscode(''); 
                            toast.success('Admin Bypass Enabled'); 
                          } else { toast.error('Invalid passcode'); }
-                      }
+                       }
                     }} 
                     className="w-full bg-slate-50 dark:bg-[#030712] border border-slate-200 dark:border-white/10 rounded-xl px-5 py-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-[#2b52ff]/50 mb-6 font-mono transition-colors tracking-widest" 
                     autoFocus 
@@ -550,6 +578,7 @@ export default function HomePage() {
               <TabsTrigger value="status" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Protocol Status</TabsTrigger>
               <TabsTrigger value="heartbeat" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.2)]">Heartbeat</TabsTrigger>
               <TabsTrigger value="subscription" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Subscription</TabsTrigger>
+              <TabsTrigger value="referral" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]">Refer & Earn</TabsTrigger>
               <TabsTrigger value="settings" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Settings</TabsTrigger>
             </TabsList>
 
@@ -572,6 +601,9 @@ export default function HomePage() {
               <TabsContent value="subscription" className="m-0">
                 {activeTab === 'subscription' && <SubscriptionDashboard />}
               </TabsContent>
+              <TabsContent value="referral" className="m-0">
+                {activeTab === 'referral' && <ReferralProgram userAddress={address} />}
+              </TabsContent>
               <TabsContent value="settings" className="m-0">
                 {activeTab === 'settings' && <SettingsDashboard />}
               </TabsContent>
@@ -583,10 +615,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-200 font-professional selection:bg-blue-500/30 overflow-x-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-tr from-slate-50 via-white to-slate-100/50 dark:from-[#030712] dark:via-[#030712] dark:to-[#030712] text-slate-800 dark:text-slate-200 font-professional selection:bg-blue-500/30 overflow-x-hidden transition-colors duration-300">
       {/* Background Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-600/5 dark:bg-blue-600/5 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/[0.08] dark:bg-blue-600/[0.04] blur-[150px] rounded-full mix-blend-multiply dark:mix-blend-screen" />
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/[0.08] dark:bg-purple-500/[0.04] blur-[150px] rounded-full mix-blend-multiply dark:mix-blend-screen" />
       </div>
 
       <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between transition-colors duration-300">
@@ -598,18 +631,11 @@ export default function HomePage() {
           </div>
         </Link>
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/investors" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-blue-500/20 hover:text-slate-900 dark:hover:text-white transition-all shadow-[0_0_15px_rgba(43,82,255,0.3)]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            Partners & Investors
-          </Link>
           <Link href="/features" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">How it works</Link>
           <Link href="/security" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Security</Link>
           <Link href="/docs" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Tech Guide</Link>
           <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.15em] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Pricing</Link>
-          <Link href="/donate" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#2b52ff]/10 border border-[#2b52ff]/20 text-[10px] font-black uppercase tracking-widest text-[#2b52ff] hover:bg-[#2b52ff]/20 hover:text-slate-900 dark:hover:text-white transition-all">Support Us</Link>
+          <Link href="/support" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:text-slate-900 dark:hover:text-white transition-all">Help</Link>
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
@@ -623,22 +649,22 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative pt-28 sm:pt-40 md:pt-48 pb-20 sm:pb-32 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto text-center flex flex-col items-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 mb-6 sm:mb-8 uppercase">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 mb-6 sm:mb-8">
             <Zap className="w-3 h-3" /> Secure Your Family&apos;s Future
           </motion.div>
-          <h1 className="text-[28px] xs:text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-[1.0] sm:leading-[0.9] mb-6 sm:mb-8 uppercase">
-            YOUR DIGITAL LEGACY, <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-500 font-black">PROTECTED FOREVER.</span>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-professional font-extrabold text-slate-900 dark:text-white tracking-tighter leading-[1.1] sm:leading-[1.05] mb-6 sm:mb-8 max-w-4xl text-center">
+            Always There <br />
+            <span className="font-serif italic font-normal text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-400 pr-2">even when you&apos;re not.</span>
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-8 sm:mb-12">
-            Every year, ₹35,000 Crore lies unclaimed in banks because families lose access. 
-            Store your Crypto, Wills, and Secrets here. We deliver them to your loved ones automatically.
+          <p className="text-slate-600 dark:text-slate-455 dark:text-slate-400 text-base sm:text-lg md:text-xl max-w-3xl mx-auto font-medium leading-relaxed mb-8 sm:mb-12">
+            Every year, billions in digital assets and accounts are lost forever because families can&apos;t access them.
+            AlwaysThere Vault lets you store your crypto, seed phrases, and legacy files securely—delivering them to your loved ones automatically.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-lg sm:max-w-none mx-auto">
-            <button onClick={handleConnect} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-blue-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-xl sm:shadow-2xl shadow-blue-600/30">
+            <button onClick={handleConnect} className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/20">
               Connect Wallet <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <Link href="/features" className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white text-xs sm:text-sm font-black uppercase tracking-widest hover:dark:bg-white/10 transition-all text-center">
+            <Link href="/features" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white text-xs sm:text-sm font-black uppercase tracking-widest hover:dark:bg-white/10 transition-all text-center">
               How it works
             </Link>
           </div>
@@ -653,39 +679,33 @@ export default function HomePage() {
             <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">
               <Network className="w-4 h-4 text-blue-500" /> Polygon Network
             </div>
-            <div className="h-4 w-px bg-slate-300 dark:bg-white/10 hidden sm:block"></div>
-            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-              <Shield className="w-4.5 h-4.5 text-emerald-500" suppressHydrationWarning /> Audited by CertiK
-            </div>
-            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-              <Award className="w-4.5 h-4.5 text-emerald-500" suppressHydrationWarning /> PeckShield Verified
-            </div>
           </div>
 
         </div>
       </section>
 
       {/* 3 Step Working (Very Simple) */}
-      <section id="how-it-works" className="py-32 px-6 bg-slate-100/50 dark:bg-white/[0.01] border-y border-slate-200 dark:border-white/5 scroll-mt-24 transition-colors duration-300">
+      <section id="how-it-works" className="py-32 px-6 bg-gradient-to-b from-slate-100/40 via-slate-50/10 to-white dark:from-white/[0.01] dark:to-transparent border-y border-slate-200 dark:border-white/5 scroll-mt-24 transition-colors duration-300">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4 italic">SIMPLE. SECURE. <span className="text-blue-600">AUTOMATIC.</span></h2>
+            <h2 className="text-3xl md:text-5xl font-serif font-black text-slate-900 dark:text-white tracking-tight mb-4">Simple, secure, and fully automated.</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Protecting your legacy takes just three steps.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
             <div className="space-y-6">
               <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto text-blue-600 dark:text-blue-500 border border-blue-500/20"><Lock className="w-10 h-10" /></div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase">1. Store</h3>
-              <p className="text-slate-600 dark:text-slate-500 font-medium leading-relaxed">Upload your important files, passwords, or seed phrases to your private vault.</p>
+              <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">1. Add Your Assets</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">Upload your critical files, passwords, or crypto seed phrases to your private vault.</p>
             </div>
             <div className="space-y-6">
               <div className="w-20 h-20 bg-purple-600/10 rounded-full flex items-center justify-center mx-auto text-purple-600 dark:text-purple-500 border border-purple-500/20"><Heart className="w-10 h-10" /></div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase">2. Assign</h3>
-              <p className="text-slate-600 dark:text-slate-500 font-medium leading-relaxed">Add your family members as nominees and set a timer (e.g. 30 days).</p>
+              <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">2. Set Your Check-In</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">Assign your family members or beneficiaries as nominees and set your heartbeat frequency.</p>
             </div>
             <div className="space-y-6">
               <div className="w-20 h-20 bg-green-600/10 rounded-full flex items-center justify-center mx-auto text-green-600 dark:text-green-500 border border-green-500/20"><Zap className="w-10 h-10" /></div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase">3. Deliver</h3>
-              <p className="text-slate-600 dark:text-slate-500 font-medium leading-relaxed">If you go offline, the protocol automatically delivers the files to them.</p>
+              <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white">3. Deliver Automatically</h3>
+              <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">If you go offline for too long, the decentralized protocol automatically triggers and transfers access.</p>
             </div>
           </div>
         </div>
@@ -695,38 +715,36 @@ export default function HomePage() {
       <section id="security" className="py-32 px-6 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">TOTAL <span className="text-blue-500">PRIVACY</span></h2>
-            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Even we can&apos;t see your data</p>
+            <h2 className="text-3xl md:text-5xl font-serif font-black text-slate-900 dark:text-white tracking-tight mb-4">Complete privacy, by design.</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Even we cannot see or access your stored keys or data.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <PillarCard 
               icon={<ShieldCheck className="w-10 h-10" />}
-              title="Zero-Knowledge"
-              desc="Simple: Encryption happens on your device. We cannot see your data, only you and your nominees have the key to unlock your legacy."
+              title="Zero-Knowledge Encryption"
+              desc="Encryption happens entirely on your local device before uploading. Nobody except you and your nominees holds the key."
               tags={['100% Private', 'No Admins']}
             />
             <PillarCard 
               icon={<Network className="w-10 h-10" />}
-              title="Eternal Storage"
-              desc="Files hazaro servers par divided hain. Ye kabhi delete nahi ho sakti, 100 saal baad bhi aapka data safe rahega."
-              tags={['Arweave', 'Cloudflare R2']}
+              title="Eternal Decentralized Storage"
+              desc="Files are encrypted and split across decentralized nodes, ensuring your legacy is resilient and permanently safe."
+              tags={['IPFS / Arweave', 'Redundant']}
             />
             <PillarCard 
               icon={<Workflow className="w-10 h-10" />}
-              title="Immutable Code"
-              desc="Release hone ke liye kisi insaan ki permission nahi chahiye. Pura logic smart contract handle karta hai automatically."
-              tags={['Autonomous', 'Smart Logic']}
+              title="Immutable Blockchain Code"
+              desc="No human permission or company override is required. Smart contracts handle the transfer logic automatically."
+              tags={['Smart Contracts', 'Self-Executing']}
             />
           </div>
         </div>
-      </section>
-
-      {/* Checklist Section */}
+      </section>      {/* Checklist Section */}
       <section className="py-32 px-6 bg-slate-100/50 dark:bg-white/[0.02] border-y border-slate-200 dark:border-white/5 transition-colors duration-300">
         <div className="max-w-6xl mx-auto">
            <div className="flex flex-col md:flex-row items-center gap-16">
               <div className="flex-1">
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white uppercase mb-8 leading-tight tracking-tight italic">WHAT SHOULD YOU <br /><span className="text-blue-500">PROTECT?</span></h2>
+                <h2 className="text-3xl md:text-5xl font-serif font-black text-slate-900 dark:text-white tracking-tight mb-8">What should you protect?</h2>
                 <div className="space-y-4">
                   <ChecklistItem text="Crypto Seed Phrases & Private Keys" />
                   <ChecklistItem text="Property Papers & Digital Wills" />
@@ -735,21 +753,21 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex-1 p-12 bg-blue-600/10 rounded-[3rem] border border-blue-500/20">
-                <p className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white italic uppercase mb-6 leading-[1.1]">"Don&apos;t leave your life&apos;s work to chance. Leave it to code."</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 dark:text-white mb-6 leading-relaxed">"Don&apos;t leave your life&apos;s work to chance. Leave it to code."</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-600" />
                   <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest">Protocol Founder</span>
                 </div>
               </div>
            </div>
-        </div>
-      </section>
+         </div>
+       </section>
 
       {/* Simple FAQ */}
       <section id="faq" className="py-32 px-6 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tight">COMMON <span className="text-blue-500">QUESTIONS</span></h2>
+            <h2 className="text-3xl md:text-5xl font-serif font-black text-slate-900 dark:text-white tracking-tight">Frequently Asked Questions</h2>
           </div>
           <div className="space-y-2">
             <FaqItem 
@@ -775,7 +793,7 @@ export default function HomePage() {
 
       {/* SEO Content Section */}
       {/* SEO & Knowledge Base Section - Premium Design */}
-      <article className="py-32 px-6 border-t border-slate-200 dark:border-white/5 relative overflow-hidden bg-slate-50 dark:bg-[#030712] transition-colors duration-300">
+      <article className="py-32 px-6 border-t border-slate-200 dark:border-white/5 relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50/50 dark:from-[#030712] dark:via-[#030712] dark:to-[#030712] transition-colors duration-300">
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/5 dark:bg-[#2b52ff]/5 rounded-full blur-[120px] pointer-events-none" />
         

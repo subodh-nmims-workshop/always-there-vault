@@ -71,14 +71,14 @@ export default function AboutPage() {
 
                     <section className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         {[
-                            { label: 'Total Value Locked', value: '$400M+' },
-                            { label: 'Active Vaults', value: '12,500+' },
-                            { label: 'Relayer Nodes', value: '142' },
-                            { label: 'Security Audits', value: '3' }
+                            { label: 'Target TVL (Year 1)', value: '$400M+' },
+                            { label: 'Beta Waitlist Users', value: '12,500+' },
+                            { label: 'Planned Nodes', value: '142' },
+                            { label: 'Planned Audits', value: '3' }
                         ].map((stat, i) => (
                             <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center p-8 bg-[#1152d4]/5 rounded-2xl border border-[#1152d4]/20 shadow-[0_0_20px_rgba(17,82,212,0.1)]">
-                                <h4 className="text-4xl font-black text-slate-900 dark:text-slate-900 dark:text-slate-900 dark:text-white mb-2">{stat.value}</h4>
-                                <p className="text-sm font-semibold text-[#1152d4] uppercase tracking-widest">{stat.label}</p>
+                                <h4 className="text-4xl font-black text-slate-900 dark:text-white mb-2">{stat.value}</h4>
+                                <p className="text-xs font-semibold text-[#1152d4] uppercase tracking-widest">{stat.label}</p>
                             </motion.div>
                         ))}
                     </section>

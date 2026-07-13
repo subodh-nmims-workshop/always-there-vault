@@ -59,11 +59,11 @@ export default function CareersPage() {
                         <span>The Collective</span>
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 dark:text-slate-900 dark:text-white mb-8 leading-[1.05]">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 dark:text-white mb-8 leading-[1.05]">
                         Build the <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2b52ff] to-[#a259ff]">Immutable.</span>
                     </h1>
-                    <p className="text-lg md:text-xl text-blue-100/70 font-medium leading-relaxed max-w-3xl mx-auto">
+                    <p className="text-lg md:text-xl text-slate-650 dark:text-blue-100/70 font-medium leading-relaxed max-w-3xl mx-auto">
                         We are a distributed, pseudonymous collective of engineers building the world's first mathematically infallible inheritance protocol. We operate asynchronously, transparently, and without borders.
                     </p>
                 </motion.div>
@@ -75,29 +75,29 @@ export default function CareersPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={defaultTransition}
-                        className="p-10 lg:p-14 rounded-[2rem] bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:bg-white/[0.03] transition-colors shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden group"
+                        className="p-10 lg:p-14 rounded-[2rem] bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/[0.03] transition-colors shadow-2xl shadow-black/20 backdrop-blur-md relative overflow-hidden group"
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-[#2b52ff]/5 rounded-full blur-[60px] pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
-                        <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-10 tracking-tight">Radical Autonomy</h3>
-                        <ul className="space-y-8 text-blue-100/60 font-medium text-base relative z-10">
-                            <li className="flex items-start bg-white/[0.01] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
+                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-10 tracking-tight">Radical Autonomy</h3>
+                        <ul className="space-y-8 text-slate-600 dark:text-slate-400 font-medium text-base relative z-10">
+                            <li className="flex items-start bg-slate-100/30 dark:bg-white/[0.01] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
                                 <CheckCircle2 className="text-[#2b52ff] shrink-0 mr-4 w-6 h-6" />
                                 <div>
-                                    <strong className="text-slate-900 dark:text-slate-900 dark:text-white font-bold block mb-1">Open Documentation</strong>
+                                    <strong className="text-slate-900 dark:text-white font-bold block mb-1">Open Documentation</strong>
                                     All architectural decisions, research, and technical debt are documented publicly.
                                 </div>
                             </li>
-                            <li className="flex items-start bg-white/[0.01] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
+                            <li className="flex items-start bg-slate-100/30 dark:bg-white/[0.01] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
                                 <CheckCircle2 className="text-[#2b52ff] shrink-0 mr-4 w-6 h-6" />
                                 <div>
-                                    <strong className="text-slate-900 dark:text-slate-900 dark:text-white font-bold block mb-1">Asynchronous by Default</strong>
+                                    <strong className="text-slate-900 dark:text-white font-bold block mb-1">Asynchronous by Default</strong>
                                     No mandatory standups. No surveillance. We measure cryptographic output and code quality, not hours online.
                                 </div>
                             </li>
-                            <li className="flex items-start bg-white/[0.01] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
+                            <li className="flex items-start bg-slate-100/30 dark:bg-white/[0.01] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
                                 <CheckCircle2 className="text-[#2b52ff] shrink-0 mr-4 w-6 h-6" />
                                 <div>
-                                    <strong className="text-slate-900 dark:text-slate-900 dark:text-white font-bold block mb-1">Pseudonymity Accepted</strong>
+                                    <strong className="text-slate-900 dark:text-white font-bold block mb-1">Pseudonymity Accepted</strong>
                                     We do not require your real identity. Apply, work, and be compensated under a verified PGP pseudonym.
                                 </div>
                             </li>
@@ -115,7 +115,7 @@ export default function CareersPage() {
                         <div className="w-14 h-14 bg-[#2b52ff]/20 rounded-xl flex items-center justify-center mb-8 border border-[#2b52ff]/30 relative z-10 shadow-lg shadow-[#2b52ff]/20">
                             <Github className="w-6 h-6 text-[#2b52ff]" />
                         </div>
-                        <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 tracking-tight relative z-10">The Mandate</h3>
+                        <h3 className="text-3xl font-bold text-white mb-6 tracking-tight relative z-10">The Mandate</h3>
                         <p className="text-xl text-blue-100/90 font-medium leading-relaxed mb-8 relative z-10 italic">
                             "Human trust scales poorly. Mathematics scales infinitely. We are replacing the reliance on lawyers and centralized databases with deterministic cryptography."
                         </p>
@@ -134,32 +134,32 @@ export default function CareersPage() {
                     className="max-w-5xl mx-auto"
                 >
                     <div className="flex items-center justify-between mb-12 border-b border-slate-200 dark:border-white/10 pb-6">
-                        <h2 className="text-4xl font-bold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">Open Positions.</h2>
-                        <span className="text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-2 rounded-full hidden md:block">{openings.length} Roles Available</span>
+                        <h2 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">Open Positions.</h2>
+                        <span className="text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-2 rounded-full hidden md:block">{openings.length} Roles Available</span>
                     </div>
 
                     <div className="space-y-4">
                         {openings.map((job, idx) => (
-                            <Link href="/contact" key={idx} className="block bg-white/[0.01] border border-slate-200 dark:border-white/5 hover:border-[#2b52ff]/40 hover:bg-slate-50 dark:bg-white/[0.03] rounded-[1.5rem] p-8 lg:p-10 transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[#2b52ff]/5">
+                            <Link href="/contact" key={idx} className="block bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 hover:border-[#2b52ff]/40 hover:bg-slate-50 dark:hover:bg-white/[0.03] rounded-[1.5rem] p-8 lg:p-10 transition-all duration-300 group shadow-lg dark:shadow-black/20 hover:shadow-[#2b52ff]/5">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between">
                                     <div className="flex items-center mb-6 md:mb-0">
                                         <div className="w-16 h-16 bg-[#0a1536] rounded-2xl border border-[#2b52ff]/20 flex items-center justify-center mr-6 group-hover:scale-110 transition-transform duration-500 shadow-inner">
                                             {job.icon}
                                         </div>
                                         <div>
-                                            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white group-hover:text-[#2b52ff] transition-colors tracking-tight mb-3">
+                                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-[#2b52ff] transition-colors tracking-tight mb-3">
                                                 {job.role}
                                             </h3>
                                             <div className="flex flex-wrap items-center text-xs font-bold gap-3 uppercase tracking-widest text-slate-600 dark:text-slate-400">
-                                                <span className="bg-white/5 px-2 py-1 rounded">{job.department}</span>
+                                                <span className="bg-slate-200/50 dark:bg-white/5 px-2 py-1 rounded">{job.department}</span>
                                                 <span className="bg-[#2b52ff]/10 text-[#2b52ff] px-2 py-1 rounded">{job.type}</span>
                                                 <span className="text-slate-500">{job.location}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center">
-                                        <span className="text-slate-900 dark:text-slate-900 dark:text-white font-mono font-medium text-sm md:mb-4 bg-black/30 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/5">{job.salary}</span>
-                                        <div className="w-12 h-12 rounded-full bg-[#2b52ff] flex items-center justify-center text-slate-900 dark:text-white opacity-0 md:opacity-100 md:scale-0 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-[#2b52ff]/30">
+                                        <span className="text-slate-800 dark:text-white font-mono font-medium text-sm md:mb-4 bg-slate-200 dark:bg-black/30 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/5">{job.salary}</span>
+                                        <div className="w-12 h-12 rounded-full bg-[#2b52ff] flex items-center justify-center text-white opacity-0 md:opacity-100 md:scale-0 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-[#2b52ff]/30">
                                             <ArrowRight className="h-5 w-5" />
                                         </div>
                                     </div>
@@ -169,11 +169,11 @@ export default function CareersPage() {
                     </div>
 
                     <div className="mt-24 text-center pb-12">
-                        <h4 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 tracking-tight">Don't see a fit?</h4>
-                        <p className="text-blue-100/60 text-lg font-medium mb-8 max-w-xl mx-auto">
+                        <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Don't see a fit?</h4>
+                        <p className="text-slate-600 dark:text-slate-400 text-lg font-medium mb-8 max-w-xl mx-auto">
                             We are always looking for exceptional engineers who understand Zero-Knowledge proofs, Rust, or decentralized infrastructure.
                         </p>
-                        <a href="mailto:support@alwaystherevault.com" className="inline-block bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-900 dark:text-white font-bold text-sm px-8 py-4 rounded-full tracking-wider uppercase transition-colors">
+                        <a href="mailto:support@alwaystherevault.com" className="inline-block bg-slate-200 hover:bg-slate-350 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white font-bold text-sm px-8 py-4 rounded-full tracking-wider uppercase transition-colors">
                             Submit your PGP / GitHub
                         </a>
                     </div>

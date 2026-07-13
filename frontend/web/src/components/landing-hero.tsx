@@ -91,7 +91,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>Audited smart contracts</span>
+                <span>Verified smart contracts</span>
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ export function LandingHero({ onGetStarted }: LandingHeroProps) {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span>Audited smart contracts</span>
+                    <span>Verified smart contracts</span>
                   </li>
                 </ul>
               </CardContent>

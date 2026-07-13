@@ -130,6 +130,13 @@ describe("SubscriptionManager", function () {
       expect(sub.active).to.be.false;
       expect(await subscriptionManager.hasActiveSubscription(user1.address)).to.be.false;
     });
+
+    it("Should not allow renewing a cancelled subscription", async function () {
+      await subscriptionManager.connect(user1).cancelSubscription();
+      await expect(
+        subscriptionManager.connect(user1).renewSubscription(false, await mockToken.getAddress())
+      ).to.be.revertedWith("Subscription is cancelled/inactive");
+    });
   });
 
   describe("Admin and Withdrawal Functions", function () {

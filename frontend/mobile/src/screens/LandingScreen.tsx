@@ -154,28 +154,28 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
                 />
                 <View style={{ alignItems: 'flex-start' }}>
                     <Text style={{ color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 18, letterSpacing: 1.5, lineHeight: 22 }}>ALWAYS THERE</Text>
-                    <Text style={{ color: COLORS.textDim, fontFamily: FONTS.orbitron.bold, fontSize: 7, letterSpacing: 2, marginTop: 4 }}>SECURE YOUR DIGITAL LEGACY</Text>
+                    <Text style={{ color: COLORS.textDim, fontFamily: FONTS.orbitron.bold, fontSize: 7, letterSpacing: 2, marginTop: 4 }}>EVEN WHEN YOU'RE NOT.</Text>
                 </View>
             </View>
             <View style={styles.versionBadge}>
-                <Text style={styles.versionText}>V2.4.0 ENCRYPTED</Text>
+                <Text style={styles.versionText}>PRIVATE BETA • CLOSED ACCESS</Text>
             </View>
         </Animated.View>
 
         {/* HERO SECTION */}
         <View style={styles.hero}>
           <Animated.View entering={FadeInDown.delay(500).duration(1000)} style={styles.badge}>
-            <Disc size={12} color={COLORS.accent} style={{ marginRight: 6 }} />
-            <Text style={styles.badgeText}>MAINNET NODE ACTIVE</Text>
+            <Shield size={12} color={COLORS.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.badgeText}>SECURE YOUR FAMILY'S FUTURE</Text>
           </Animated.View>
           
           <Animated.Text entering={FadeInDown.delay(700).duration(1000)} style={styles.heroTitle}>
-            SECURE YOUR{"\n"}
-            <Text style={{ color: COLORS.primary }}>DIGITAL WILL</Text>
+            Always There{"\n"}
+            <Text style={{ color: COLORS.accent, fontStyle: 'italic', fontSize: 32 }}>even when you're not.</Text>
           </Animated.Text>
           
           <Animated.Text entering={FadeInDown.delay(900).duration(1000)} style={styles.heroSubtitle}>
-            The zero-trust protocol for decentralized asset inheritance. Locked by your life, triggered by your silence.
+            Every year, billions in digital assets are lost forever. AlwaysThere Vault stores your crypto, seed phrases, and legacy files—delivering them to your loved ones automatically.
           </Animated.Text>
           
           <Animated.View entering={FadeInDown.delay(1100).duration(1000)} style={{ width: '100%' }}>
@@ -185,13 +185,13 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
                 activeOpacity={0.8}
             >
                 <LinearGradient
-                colors={['#1e40af', '#1d4ed8']}
+                colors={['#1d4ed8', '#2b52ff']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.ctaGradient}
                 >
                 <Fingerprint size={22} color="#fff" />
-                <Text style={styles.ctaText}>INITIALIZE KERNEL</Text>
+                <Text style={styles.ctaText}>CONNECT WALLET</Text>
                 </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
@@ -226,7 +226,7 @@ const LandingScreen = ({ onConnectWallet }: LandingScreenProps) => {
 
         {/* TRUST INDICATORS */}
         <Animated.View entering={FadeInUp.delay(1800)} style={styles.trustBar}>
-           {['AES-256', 'Web3 Storage', 'Audited'].map((label, i) => (
+           {['AES-256-GCM', 'Open Source', 'Polygon Network'].map((label, i) => (
                <View key={i} style={styles.trustItem}>
                   <ShieldCheck size={12} color={COLORS.accent} />
                   <Text style={styles.trustText}>{label.toUpperCase()}</Text>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     marginBottom: GAPS.xl
   },
   badgeText: { color: COLORS.accent, fontFamily: FONTS.orbitron.bold, fontSize: 10, letterSpacing: 1.5 },
-  heroTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 40, textAlign: 'center', lineHeight: 48, letterSpacing: -1 },
+  heroTitle: { color: COLORS.text, fontFamily: FONTS.orbitron.black, fontSize: 36, textAlign: 'center', lineHeight: 46, letterSpacing: -1, marginBottom: 8 },
   heroSubtitle: { color: COLORS.textMuted, fontFamily: FONTS.inter.medium, fontSize: 15, textAlign: 'center', lineHeight: 24, paddingHorizontal: 10, marginBottom: 40, marginTop: 15 },
 
   ctaButton: { width: '100%', borderRadius: RADIUS.lg, overflow: 'hidden', ...SHADOWS.blue },

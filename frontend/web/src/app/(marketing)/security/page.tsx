@@ -105,11 +105,11 @@ export default function SecurityPage() {
                                 <FileCode2 className="w-7 h-7" />
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Immutable Smart Contracts</h2>
-                            <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                                The protocol's heartbeat mechanism runs on Polygon smart contracts. These contracts are open-source, immutable, and strictly enforce the decay timers. Not even the protocol developers can alter your configuration or trigger a payout early.
+                            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                                The protocol's heartbeat mechanism runs on Polygon smart contracts. These contracts are open-source and strictly enforce decay timers. The emergency pause capability exists only to freeze new registrations during active exploits—it can never delay or block a beneficiary's already-eligible payout.
                             </p>
                             <Link href="/docs" className="inline-flex items-center gap-2 text-[#1152d4] font-bold text-sm hover:underline hover:gap-3 transition-all">
-                                Read Audit Reports <ArrowRight className="w-4 h-4" />
+                                Read Technical Docs <ArrowRight className="w-4 h-4" />
                             </Link>
                         </motion.div>
                     </section>
@@ -120,13 +120,13 @@ export default function SecurityPage() {
                             <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-[#1152d4]/10 opacity-50 pointer-events-none"></div>
                             <h2 className="text-4xl font-black mb-6 relative z-10 tracking-tight text-slate-900 dark:text-slate-900 dark:text-white">Trust Math, Not Humans.</h2>
                             <p className="text-slate-600 dark:text-slate-600 dark:text-slate-400 text-lg mb-10 max-w-2xl mx-auto relative z-10 leading-relaxed">
-                                Verify our cryptographic claims yourself. The code is entirely open-source, heavily audited, and designed for maximum paranoia.
+                                Verify our cryptographic claims yourself. The code is entirely open-source, publicly verifiable, and designed for maximum paranoia.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                                <Link href="https://github.com/subodh-001/decentralized-digital-will-protocol" className="bg-slate-900 text-slate-900 dark:text-slate-900 dark:text-white dark:bg-white dark:text-[#0a0c10] px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all">
+                                <Link href="https://github.com/subodh-001/decentralized-digital-will-protocol" className="bg-slate-900 text-white dark:bg-white dark:text-[#0a0c10] px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all">
                                     View on GitHub
                                 </Link>
-                                <Link href="/docs" className="bg-slate-200/50 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-slate-300 dark:border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-900 dark:text-white">
+                                <Link href="/docs" className="bg-slate-200/50 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.1] px-10 py-4 rounded-full font-bold text-lg transition-all border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white">
                                     Technical Whitepaper
                                 </Link>
                             </div>

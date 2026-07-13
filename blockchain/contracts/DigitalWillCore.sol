@@ -54,6 +54,12 @@ contract DigitalWillCore is ReentrancyGuard, AccessControl, Pausable {
     mapping(address => mapping(string => AssetRule[])) public assetRules;
     mapping(address => string[]) public userAssets;
     
+    address public guardianRecovery;
+    
+    function setGuardianRecovery(address _guardianRecovery) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        guardianRecovery = _guardianRecovery;
+    }
+    
     // Constants
     uint256 public constant MIN_HEARTBEAT_INTERVAL = 7 days;
     uint256 public constant MAX_HEARTBEAT_INTERVAL = 365 days;
@@ -371,5 +377,37 @@ contract DigitalWillCore is ReentrancyGuard, AccessControl, Pausable {
             config.isEmergencyOverride,
             config.exists
         );
+    }
+
+    /**
+     * @dev Transfer vault ownership during social recovery
+     */
+    function transferVaultOwnership(address oldOwner, address newOwner) external {
+        require(msg.sender == guardianRecovery || hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not authorized");
+        require(users[oldOwner].exists, "Old owner not registered");
+        require(!users[newOwner].exists, "New owner already registered");
+        
+        // Copy user config
+        users[newOwner] = users[oldOwner];
+        delete users[oldOwner];
+        
+        // Copy assets list
+        string[] memory assetsList = userAssets[oldOwner];
+        userAssets[newOwner] = assetsList;
+        delete userAssets[oldOwner];
+        
+        // Copy each asset and its rules
+        for (uint256 i = 0; i < assetsList.length; i++) {
+            string memory assetId = assetsList[i];
+            
+            assets[newOwner][assetId] = assets[oldOwner][assetId];
+            delete assets[oldOwner][assetId];
+            
+            AssetRule[] storage rules = assetRules[oldOwner][assetId];
+            for (uint256 j = 0; j < rules.length; j++) {
+                assetRules[newOwner][assetId].push(rules[j]);
+            }
+            delete assetRules[oldOwner][assetId];
+        }
     }
 }

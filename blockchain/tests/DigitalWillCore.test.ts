@@ -1,41 +1,49 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { DigitalWillCore, HeartbeatTracker } from "../typechain-types";
+import { DigitalWillCore, GuardianRecovery } from "../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
-describe("DigitalWillCore", function () {
+describe("DigitalWillCore & GuardianRecovery", function () {
   let digitalWillCore: DigitalWillCore;
-  let heartbeatTracker: HeartbeatTracker;
+  let recovery: GuardianRecovery;
   let owner: SignerWithAddress;
   let user1: SignerWithAddress;
   let beneficiary1: SignerWithAddress;
   let beneficiary2: SignerWithAddress;
+  let guardian1: SignerWithAddress;
+  let guardian2: SignerWithAddress;
+  let guardian3: SignerWithAddress;
+  let newOwner: SignerWithAddress;
 
-  const HEARTBEAT_INTERVAL = 30 * 24 * 60 * 60; // 30 days
-  const GRACE_PERIOD = 14 * 24 * 60 * 60; // 14 days
+  const HEARTBEAT_INTERVAL = 7 * 24 * 60 * 60; // 7 days (min interval)
+  const GRACE_PERIOD = 7 * 24 * 60 * 60; // 7 days (min grace period)
 
   beforeEach(async function () {
-    [owner, user1, beneficiary1, beneficiary2] = await ethers.getSigners();
-
-    // Deploy HeartbeatTracker
-    const HeartbeatTrackerFactory = await ethers.getContractFactory("HeartbeatTracker");
-    heartbeatTracker = await HeartbeatTrackerFactory.deploy();
-    await heartbeatTracker.waitForDeployment();
+    [owner, user1, beneficiary1, beneficiary2, guardian1, guardian2, guardian3, newOwner] = await ethers.getSigners();
 
     // Deploy DigitalWillCore
     const DigitalWillCoreFactory = await ethers.getContractFactory("DigitalWillCore");
-    digitalWillCore = await DigitalWillCoreFactory.deploy(await heartbeatTracker.getAddress());
+    digitalWillCore = await DigitalWillCoreFactory.deploy();
     await digitalWillCore.waitForDeployment();
+
+    // Deploy GuardianRecovery
+    const GuardianRecoveryFactory = await ethers.getContractFactory("GuardianRecovery");
+    recovery = await GuardianRecoveryFactory.deploy();
+    await recovery.waitForDeployment();
+
+    // Link them
+    await recovery.setDigitalWillCore(await digitalWillCore.getAddress());
+    await digitalWillCore.setGuardianRecovery(await recovery.getAddress());
   });
 
   describe("User Registration", function () {
     it("Should register a new user", async function () {
       await digitalWillCore.connect(user1).registerUser(HEARTBEAT_INTERVAL, GRACE_PERIOD);
       
-      const userConfig = await digitalWillCore.getUserConfig(user1.address);
-      expect(userConfig.isRegistered).to.be.true;
-      expect(userConfig.heartbeatInterval).to.equal(HEARTBEAT_INTERVAL);
-      expect(userConfig.gracePeriod).to.equal(GRACE_PERIOD);
+      const status = await digitalWillCore.getUserStatus(user1.address);
+      expect(status.exists).to.be.true;
+      expect(status.heartbeatInterval).to.equal(HEARTBEAT_INTERVAL);
+      expect(status.gracePeriod).to.equal(GRACE_PERIOD);
     });
 
     it("Should not allow duplicate registration", async function () {
@@ -59,22 +67,22 @@ describe("DigitalWillCore", function () {
     });
 
     it("Should record a heartbeat", async function () {
-      await digitalWillCore.connect(user1).recordHeartbeat();
+      await digitalWillCore.connect(user1).recordHeartbeat("manual", "0x");
       
-      const userConfig = await digitalWillCore.getUserConfig(user1.address);
-      expect(userConfig.lastHeartbeat).to.be.gt(0);
+      const status = await digitalWillCore.getUserStatus(user1.address);
+      expect(status.lastHeartbeat).to.be.gt(0);
     });
 
     it("Should update last heartbeat timestamp", async function () {
-      await digitalWillCore.connect(user1).recordHeartbeat();
-      const firstHeartbeat = (await digitalWillCore.getUserConfig(user1.address)).lastHeartbeat;
+      await digitalWillCore.connect(user1).recordHeartbeat("manual", "0x");
+      const firstHeartbeat = (await digitalWillCore.getUserStatus(user1.address)).lastHeartbeat;
       
       // Wait a bit
       await ethers.provider.send("evm_increaseTime", [60]);
       await ethers.provider.send("evm_mine", []);
       
-      await digitalWillCore.connect(user1).recordHeartbeat();
-      const secondHeartbeat = (await digitalWillCore.getUserConfig(user1.address)).lastHeartbeat;
+      await digitalWillCore.connect(user1).recordHeartbeat("manual", "0x");
+      const secondHeartbeat = (await digitalWillCore.getUserStatus(user1.address)).lastHeartbeat;
       
       expect(secondHeartbeat).to.be.gt(firstHeartbeat);
     });
@@ -95,19 +103,18 @@ describe("DigitalWillCore", function () {
     });
 
     it("Should register an asset", async function () {
-      await digitalWillCore.connect(user1).registerAsset(ipfsHash, keyShares);
+      await digitalWillCore.connect(user1).registerAsset("asset1", ipfsHash, keyShares);
       
-      const assetCount = await digitalWillCore.getAssetCount(user1.address);
+      const assetCount = await digitalWillCore.getUserAssetCount(user1.address);
       expect(assetCount).to.equal(1);
     });
 
     it("Should store asset metadata correctly", async function () {
-      await digitalWillCore.connect(user1).registerAsset(ipfsHash, keyShares);
+      await digitalWillCore.connect(user1).registerAsset("asset1", ipfsHash, keyShares);
       
-      const asset = await digitalWillCore.getAsset(user1.address, 0);
+      const asset = await digitalWillCore.assets(user1.address, "asset1");
       expect(asset.ipfsHash).to.equal(ipfsHash);
-      expect(asset.owner).to.equal(user1.address);
-      expect(asset.isReleased).to.be.false;
+      expect(asset.exists).to.be.true;
     });
 
     it("Should require exactly 5 key shares", async function () {
@@ -117,51 +124,12 @@ describe("DigitalWillCore", function () {
       ];
       
       await expect(
-        digitalWillCore.connect(user1).registerAsset(ipfsHash, invalidShares)
-      ).to.be.revertedWith("Must provide exactly 5 key shares");
+        digitalWillCore.connect(user1).registerAsset("asset1", ipfsHash, invalidShares)
+      ).to.be.revertedWith("Must have exactly 5 key shares");
     });
   });
 
-  describe("Beneficiary Management", function () {
-    beforeEach(async function () {
-      await digitalWillCore.connect(user1).registerUser(HEARTBEAT_INTERVAL, GRACE_PERIOD);
-    });
-
-    it("Should add a beneficiary", async function () {
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address);
-      
-      const beneficiaries = await digitalWillCore.getBeneficiaries(user1.address);
-      expect(beneficiaries).to.include(beneficiary1.address);
-    });
-
-    it("Should add multiple beneficiaries", async function () {
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address);
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary2.address);
-      
-      const beneficiaries = await digitalWillCore.getBeneficiaries(user1.address);
-      expect(beneficiaries).to.have.lengthOf(2);
-      expect(beneficiaries).to.include(beneficiary1.address);
-      expect(beneficiaries).to.include(beneficiary2.address);
-    });
-
-    it("Should not allow duplicate beneficiaries", async function () {
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address);
-      
-      await expect(
-        digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address)
-      ).to.be.revertedWith("Beneficiary already exists");
-    });
-
-    it("Should remove a beneficiary", async function () {
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address);
-      await digitalWillCore.connect(user1).removeBeneficiary(beneficiary1.address);
-      
-      const beneficiaries = await digitalWillCore.getBeneficiaries(user1.address);
-      expect(beneficiaries).to.not.include(beneficiary1.address);
-    });
-  });
-
-  describe("Asset Release", function () {
+  describe("Beneficiary Management & Release", function () {
     const ipfsHash = "QmExampleHash123456789";
     const keyShares = [
       ethers.keccak256(ethers.toUtf8Bytes("share1")),
@@ -173,38 +141,71 @@ describe("DigitalWillCore", function () {
 
     beforeEach(async function () {
       await digitalWillCore.connect(user1).registerUser(HEARTBEAT_INTERVAL, GRACE_PERIOD);
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address);
-      await digitalWillCore.connect(user1).registerAsset(ipfsHash, keyShares);
+      await digitalWillCore.connect(user1).registerAsset("asset1", ipfsHash, keyShares);
     });
 
-    it("Should not release asset before deadline", async function () {
-      await expect(
-        digitalWillCore.connect(beneficiary1).claimAsset(user1.address, 0)
-      ).to.be.revertedWith("Asset not yet releasable");
+    it("Should add a beneficiary rule", async function () {
+      await digitalWillCore.connect(user1).addBeneficiaryRule("asset1", beneficiary1.address, 0);
+      
+      const rulesCount = await digitalWillCore.getAssetRulesCount(user1.address, "asset1");
+      expect(rulesCount).to.equal(1);
+      
+      const rule = await digitalWillCore.getAssetRule(user1.address, "asset1", 0);
+      expect(rule.beneficiary).to.equal(beneficiary1.address);
+      expect(rule.releaseDelay).to.equal(0);
+      expect(rule.enabled).to.be.true;
     });
 
-    it("Should release asset after deadline", async function () {
-      // Fast forward time past heartbeat interval + grace period
+    it("Should release asset after trigger condition and release delay", async function () {
+      await digitalWillCore.connect(user1).addBeneficiaryRule("asset1", beneficiary1.address, 3600); // 1 hour delay
+      
+      // Initially not eligible
+      let [eligible] = await digitalWillCore.isAssetEligibleForRelease(user1.address, "asset1", 0);
+      expect(eligible).to.be.false;
+
+      // Fast forward past heartbeat + grace period
       await ethers.provider.send("evm_increaseTime", [HEARTBEAT_INTERVAL + GRACE_PERIOD + 1]);
       await ethers.provider.send("evm_mine", []);
-      
-      await digitalWillCore.connect(beneficiary1).claimAsset(user1.address, 0);
-      
-      const asset = await digitalWillCore.getAsset(user1.address, 0);
-      expect(asset.isReleased).to.be.true;
+
+      // Trigger the system
+      await digitalWillCore.triggerSystem(user1.address);
+
+      // Still not eligible because of 1 hour release delay
+      [eligible] = await digitalWillCore.isAssetEligibleForRelease(user1.address, "asset1", 0);
+      expect(eligible).to.be.false;
+
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3601]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Now eligible
+      [eligible] = await digitalWillCore.isAssetEligibleForRelease(user1.address, "asset1", 0);
+      expect(eligible).to.be.true;
+
+      // Claim asset
+      await digitalWillCore.connect(beneficiary1).releaseAsset(user1.address, "asset1", 0);
+      const rule = await digitalWillCore.getAssetRule(user1.address, "asset1", 0);
+      expect(rule.released).to.be.true;
     });
 
-    it("Should only allow beneficiaries to claim", async function () {
+    it("Should not release asset if emergency override is enabled", async function () {
+      await digitalWillCore.connect(user1).addBeneficiaryRule("asset1", beneficiary1.address, 0);
+
+      // Fast forward past heartbeat + grace period
       await ethers.provider.send("evm_increaseTime", [HEARTBEAT_INTERVAL + GRACE_PERIOD + 1]);
       await ethers.provider.send("evm_mine", []);
-      
+
+      // Enable emergency override
+      await digitalWillCore.connect(user1).enableEmergencyOverride("False alarm");
+
+      // Attempt to trigger should fail
       await expect(
-        digitalWillCore.connect(beneficiary2).claimAsset(user1.address, 0)
-      ).to.be.revertedWith("Not a beneficiary");
+        digitalWillCore.triggerSystem(user1.address)
+      ).to.be.revertedWith("Emergency override active");
     });
   });
 
-  describe("Emergency Override", function () {
+  describe("Social Recovery Ownership Migration", function () {
     const ipfsHash = "QmExampleHash123456789";
     const keyShares = [
       ethers.keccak256(ethers.toUtf8Bytes("share1")),
@@ -215,27 +216,49 @@ describe("DigitalWillCore", function () {
     ];
 
     beforeEach(async function () {
+      // Setup user1 with guardians
+      await recovery.connect(user1).addGuardian(guardian1.address);
+      await recovery.connect(user1).addGuardian(guardian2.address);
+      await recovery.connect(user1).addGuardian(guardian3.address);
+
+      // Register user1 config and asset
       await digitalWillCore.connect(user1).registerUser(HEARTBEAT_INTERVAL, GRACE_PERIOD);
-      await digitalWillCore.connect(user1).registerAsset(ipfsHash, keyShares);
+      await digitalWillCore.connect(user1).registerAsset("asset1", ipfsHash, keyShares);
+      await digitalWillCore.connect(user1).addBeneficiaryRule("asset1", beneficiary1.address, 0);
     });
 
-    it("Should allow owner to revoke asset", async function () {
-      await digitalWillCore.connect(user1).revokeAsset(0);
-      
-      const asset = await digitalWillCore.getAsset(user1.address, 0);
-      expect(asset.isRevoked).to.be.true;
-    });
+    it("Should migrate vault state to newOwner on successful recovery execution", async function () {
+      // Initiate and approve recovery
+      await recovery.connect(guardian1).initiateRecovery(user1.address, newOwner.address);
+      await recovery.connect(guardian2).approveRecovery(user1.address);
+      await recovery.connect(guardian3).approveRecovery(user1.address);
 
-    it("Should not allow claiming revoked asset", async function () {
-      await digitalWillCore.connect(user1).addBeneficiary(beneficiary1.address);
-      await digitalWillCore.connect(user1).revokeAsset(0);
-      
-      await ethers.provider.send("evm_increaseTime", [HEARTBEAT_INTERVAL + GRACE_PERIOD + 1]);
+      // Fast forward 7 days recovery delay
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
       await ethers.provider.send("evm_mine", []);
-      
-      await expect(
-        digitalWillCore.connect(beneficiary1).claimAsset(user1.address, 0)
-      ).to.be.revertedWith("Asset is revoked");
+
+      // Execute recovery
+      await recovery.executeRecovery(user1.address);
+
+      // Verify that old owner status is deleted and new owner status exists
+      const oldOwnerStatus = await digitalWillCore.getUserStatus(user1.address);
+      expect(oldOwnerStatus.exists).to.be.false;
+
+      const newOwnerStatus = await digitalWillCore.getUserStatus(newOwner.address);
+      expect(newOwnerStatus.exists).to.be.true;
+      expect(newOwnerStatus.heartbeatInterval).to.equal(HEARTBEAT_INTERVAL);
+
+      // Verify that the assets and rules are migrated to the new owner
+      const assetCount = await digitalWillCore.getUserAssetCount(newOwner.address);
+      expect(assetCount).to.equal(1);
+
+      const asset = await digitalWillCore.assets(newOwner.address, "asset1");
+      expect(asset.ipfsHash).to.equal(ipfsHash);
+      expect(asset.exists).to.be.true;
+
+      const rule = await digitalWillCore.getAssetRule(newOwner.address, "asset1", 0);
+      expect(rule.beneficiary).to.equal(beneficiary1.address);
+      expect(rule.enabled).to.be.true;
     });
   });
 });

@@ -14,6 +14,22 @@ interface IERC721 {
  * @dev Decentralized Digital Will Management - NO BACKEND NEEDED!
  */
 contract DigitalWill {
+    address public contractOwner;
+    address public guardianRecovery;
+
+    modifier onlyContractOwner() {
+        require(msg.sender == contractOwner, "Not contract owner");
+        _;
+    }
+
+    constructor() {
+        contractOwner = msg.sender;
+    }
+
+    function setGuardianRecovery(address _guardianRecovery) external onlyContractOwner {
+        guardianRecovery = _guardianRecovery;
+    }
+
     struct Will {
         uint256 createdAt;
         uint256 lastUpdated;
@@ -296,5 +312,37 @@ contract DigitalWill {
         }
         
         return count;
+    }
+
+    /**
+     * @dev Transfer will ownership during social recovery
+     */
+    function transferWillOwnership(address _oldOwner, address _newOwner) external {
+        require(msg.sender == guardianRecovery || msg.sender == contractOwner, "Not authorized");
+        require(wills[_oldOwner].isActive, "No active will found");
+        require(!wills[_newOwner].isActive, "New owner already has will");
+        
+        // Transfer Will
+        wills[_newOwner] = wills[_oldOwner];
+        delete wills[_oldOwner];
+        
+        // Transfer Beneficiaries
+        Beneficiary[] storage oldBeneficiaries = beneficiaries[_oldOwner];
+        for (uint256 i = 0; i < oldBeneficiaries.length; i++) {
+            beneficiaries[_newOwner].push(oldBeneficiaries[i]);
+            isBeneficiary[_newOwner][oldBeneficiaries[i].beneficiaryAddress] = true;
+            delete isBeneficiary[_oldOwner][oldBeneficiaries[i].beneficiaryAddress];
+        }
+        delete beneficiaries[_oldOwner];
+        
+        // Transfer Token Assets
+        TokenAsset[] storage oldAssets = tokenAssets[_oldOwner];
+        for (uint256 i = 0; i < oldAssets.length; i++) {
+            tokenAssets[_newOwner].push(oldAssets[i]);
+        }
+        delete tokenAssets[_oldOwner];
+        
+        tokenAssetsExecuted[_newOwner] = tokenAssetsExecuted[_oldOwner];
+        delete tokenAssetsExecuted[_oldOwner];
     }
 }

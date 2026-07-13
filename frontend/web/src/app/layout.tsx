@@ -9,23 +9,23 @@ import { GoogleTagManager } from '../components/GoogleTagManager'
 export const metadata: Metadata = {
   metadataBase: new URL('https://alwaystherevault.com/'),
   title: {
-    default: 'AlwaysThere Vault | The Decentralized Crypto Inheritance & Digital Will',
-    template: '%s | AlwaysThere Vault'
+    default: "AlwaysThere — Even when you're not",
+    template: "%s | AlwaysThere"
   },
-  description: 'Secure your digital legacy with AlwaysThere Vault. The ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files. Automated, trustless inheritance on the blockchain.',
+  description: "AlwaysThere — Even when you're not. Secure your digital legacy with the ultimate decentralized dead man switch and digital will for crypto, seed phrases, and private files. Automated, trustless inheritance on the blockchain.",
   keywords: ['crypto inheritance', 'digital will', 'dead man switch crypto', 'decentralized inheritance', 'secure seed phrase storage', 'blockchain will', 'AlwaysThere Vault', 'crypto estate planning', 'digital asset management', 'web3 legacy'],
   authors: [{ name: 'AlwaysThere Team' }],
   openGraph: {
-    title: 'AlwaysThere Vault | Decentralized Crypto Inheritance',
-    description: 'Ensure your crypto assets and private data are passed on securely. AlwaysThere Vault is a trustless digital will and dead man switch.',
+    title: "AlwaysThere — Even when you're not",
+    description: "Ensure your crypto assets and private data are passed on securely. AlwaysThere is a trustless digital will and dead man switch.",
     url: 'https://alwaystherevault.com/',
-    siteName: 'AlwaysThere Vault',
+    siteName: 'AlwaysThere',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AlwaysThere Vault Banner',
+        alt: 'AlwaysThere Banner',
       },
     ],
     locale: 'en_US',
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AlwaysThere Vault | Decentralized Crypto Inheritance',
-    description: 'Secure your digital legacy with the ultimate decentralized dead man switch.',
+    title: "AlwaysThere — Even when you're not",
+    description: "Secure your digital legacy with the ultimate decentralized dead man switch.",
   },
   robots: {
     index: true,

@@ -154,6 +154,7 @@ contract SubscriptionManager is Ownable, ReentrancyGuard {
         
         Subscription storage sub = subscriptions[msg.sender];
         require(sub.user == msg.sender, "No subscription found");
+        require(sub.active, "Subscription is cancelled/inactive");
         
         Plan memory plan = plans[sub.plan];
         require(plan.active, "Plan not active");

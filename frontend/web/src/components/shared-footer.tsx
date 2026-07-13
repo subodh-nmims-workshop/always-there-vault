@@ -39,9 +39,9 @@ export function SharedFooter() {
                     <div>
                         <h4 className="text-slate-900 dark:text-white font-bold mb-4">Resources</h4>
                         <ul className="space-y-3 text-sm">
-                             <li><Link href="/docs" className="hover:text-slate-900 dark:hover:text-white transition-colors">Tech Guide</Link></li>
-                            <li><Link href="/api-reference" className="hover:text-slate-900 dark:hover:text-white transition-colors">API Reference</Link></li>
-                            <li><Link href="/donate" className="hover:text-slate-900 dark:hover:text-white transition-colors">Support Us</Link></li>
+                              <li><Link href="/docs" className="hover:text-slate-900 dark:hover:text-white transition-colors">Tech Guide</Link></li>
+                              <li><Link href="https://github.com/subodh-001/decentralized-digital-will-protocol" className="hover:text-slate-900 dark:hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">GitHub</Link></li>
+                              <li><Link href="/support" className="hover:text-slate-900 dark:hover:text-white transition-colors">Help & Support</Link></li>
                         </ul>
                     </div>
 

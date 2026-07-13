@@ -31,7 +31,7 @@ export default function SupportPage() {
                         <span>System Recovery</span>
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-slate-900 dark:text-white mb-6 leading-[1.05]">
+                    <h1 className="text-5xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-white mb-6 leading-[1.05]">
                         Technical <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-[#2b52ff]">Support.</span>
                     </h1>
                 </motion.div>
@@ -48,9 +48,9 @@ export default function SupportPage() {
                     <div className="flex items-start relative z-10">
                         <AlertTriangle className="w-8 h-8 text-red-500 mr-5 shrink-0 mt-1" />
                         <div>
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 tracking-tight">Crucial: Data Recovery Limitation</h3>
-                            <p className="text-blue-100/70 font-medium leading-relaxed">
-                                Because we utilize strict end-to-end client-side AES encryption via Zero-Knowledge Architecture, <strong className="text-slate-900 dark:text-slate-900 dark:text-white font-bold">we cannot reset your password, nor can we decrypt your vault data if you lose your keys.</strong> We simply do not have them. Support is limited to protocol mechanics, integration troubleshooting, and contract queries.
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Crucial: Data Recovery Limitation</h3>
+                            <p className="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                                Because we utilize strict end-to-end client-side AES encryption via Zero-Knowledge Architecture, <strong className="text-slate-900 dark:text-white font-bold">we cannot reset your password, nor can we decrypt your vault data if you lose your keys.</strong> We simply do not have them. Support is limited to protocol mechanics, integration troubleshooting, and contract queries.
                             </p>
                         </div>
                     </div>
@@ -62,16 +62,16 @@ export default function SupportPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ ...defaultTransition, delay: 0.1 }}
-                        className="p-10 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-[2rem] flex flex-col hover:bg-white/[0.04] hover:border-white/20 transition-all shadow-xl shadow-black/20 group"
+                        className="p-10 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-[2rem] flex flex-col hover:bg-slate-100/50 dark:hover:bg-white/[0.04] hover:border-slate-350 dark:hover:border-white/20 transition-all shadow-xl dark:shadow-black/20 group"
                     >
                         <div className="w-14 h-14 bg-[#2b52ff]/10 rounded-xl border border-[#2b52ff]/20 flex items-center justify-center mb-8 shadow-inner group-hover:bg-[#2b52ff]/20 transition-colors">
                             <MessageCircle className="w-6 h-6 text-[#2b52ff]" />
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 tracking-tight">Open a Ticket</h3>
-                        <p className="text-blue-100/60 font-medium mb-8 flex-grow">
+                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Open a Ticket</h3>
+                        <p className="text-slate-600 dark:text-slate-400 font-medium mb-8 flex-grow">
                             Submit a technical inquiry to our decentralized network of engineers. Expected response time is within 12 hours.
                         </p>
-                        <button className="bg-white/5 hover:bg-[#2b52ff] text-slate-900 dark:text-slate-900 dark:text-white font-bold py-4 rounded-xl border border-slate-200 dark:border-white/10 hover:border-[#2b52ff] transition-all w-full shadow-md text-sm tracking-wide">
+                        <button className="bg-slate-200 hover:bg-[#2b52ff] text-slate-800 dark:bg-white/5 dark:text-white hover:text-white dark:hover:bg-[#2b52ff] py-4 rounded-xl border border-slate-300 dark:border-white/10 hover:border-[#2b52ff] transition-all w-full shadow-md text-sm tracking-wide font-bold">
                             Submit Inquiry
                         </button>
                     </motion.div>
@@ -81,16 +81,16 @@ export default function SupportPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ ...defaultTransition, delay: 0.2 }}
-                        className="p-10 bg-gradient-to-br from-[#101b3d] to-[#050a1a] border border-[#2b52ff]/20 rounded-[2rem] flex flex-col hover:border-[#2b52ff]/40 transition-all shadow-xl shadow-[#2b52ff]/10 group"
+                        className="p-10 bg-slate-50 dark:bg-gradient-to-br dark:from-[#101b3d] dark:to-[#050a1a] border border-slate-200 dark:border-[#2b52ff]/20 rounded-[2rem] flex flex-col hover:bg-slate-100/50 dark:hover:bg-white/[0.04] hover:border-slate-350 dark:hover:border-[#2b52ff]/40 transition-all shadow-xl dark:shadow-black/20 group"
                     >
-                        <div className="w-14 h-14 bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-center mb-8 shadow-inner shadow-black/50">
-                            <FileQuestion className="w-6 h-6 text-slate-900 dark:text-white" />
+                        <div className="w-14 h-14 bg-[#2b52ff]/10 dark:bg-white/5 rounded-xl border border-[#2b52ff]/20 dark:border-white/10 flex items-center justify-center mb-8 shadow-inner">
+                            <FileQuestion className="w-6 h-6 text-[#2b52ff] dark:text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 tracking-tight">FAQ Library</h3>
-                        <p className="text-blue-100/80 font-medium mb-8 flex-grow">
+                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">FAQ Library</h3>
+                        <p className="text-slate-650 dark:text-slate-400 font-medium mb-8 flex-grow">
                             Browse the most commonly asked questions regarding gas optimizations, heartbeat mechanisms, and Shamir setups.
                         </p>
-                        <button className="bg-[#2b52ff] hover:bg-white text-slate-900 dark:text-slate-900 dark:text-white hover:text-[#2b52ff] font-bold py-4 rounded-xl transition-all w-full shadow-lg shadow-[#2b52ff]/20 text-sm tracking-wide flex items-center justify-center gap-2">
+                        <button className="bg-[#2b52ff] hover:bg-[#1a3ecd] text-white font-bold py-4 rounded-xl transition-all w-full shadow-lg shadow-[#2b52ff]/20 text-sm tracking-wide flex items-center justify-center gap-2">
                             Browse Library <ArrowRight className="w-4 h-4" />
                         </button>
                     </motion.div>
@@ -110,7 +110,7 @@ export default function SupportPage() {
                             { title: 'IPFS Pinning Issues', desc: 'Assets taking too long to upload? Verify your payload size does not exceed your subscription tier limits.' }
                         ].map((item, i) => (
                             <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-6 rounded-2xl hover:bg-white/[0.04] transition-colors">
-                                <h4 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-2">{item.title}</h4>
+                                <h4 className="font-bold text-slate-900 dark:text-white mb-2">{item.title}</h4>
                                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                             </motion.div>
                         ))}
@@ -120,7 +120,7 @@ export default function SupportPage() {
                 {/* SLA Table */}
                 <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-3xl p-8 md:p-12 mb-20 overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-[#2b52ff]/5 rounded-full blur-[60px] pointer-events-none"></div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-8 tracking-tight">Service Level Agreements (SLA)</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 tracking-tight">Service Level Agreements (SLA)</h2>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
@@ -132,7 +132,7 @@ export default function SupportPage() {
                             </thead>
                             <tbody className="divide-y divide-white/5 text-sm">
                                 <tr>
-                                    <td className="py-4 text-slate-900 dark:text-slate-900 dark:text-white font-medium">Basic (Free)</td>
+                                    <td className="py-4 text-slate-900 dark:text-white font-medium">Basic (Free)</td>
                                     <td className="py-4 text-slate-600 dark:text-slate-400">48-72 hours (Community-driven)</td>
                                     <td className="py-4 text-slate-600 dark:text-slate-400">Best Effort</td>
                                 </tr>

@@ -32,7 +32,7 @@ export function SharedHeader() {
 
     return (
         <nav className="fixed w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all duration-300 py-3">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     <Link href="/" className="flex items-center gap-2 group">
                         <Image src="/logo-simple.png" alt="AlwaysThere Logo" width={40} height={40} className="h-10 w-auto object-contain group-hover:scale-110 transition-transform duration-300" />
