@@ -363,7 +363,7 @@ class ModeService {
           // Then merge: prefer local copy (has encryptedData) over backend copy
           const merged: StoredAsset[] = backendAssets.map((b: any) => {
             const local = localMap.get(b.id)
-            return {
+            const assetData = {
               id: b.id,
               name: b.name,
               type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
@@ -378,7 +378,14 @@ class ModeService {
               createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
               size: b.size || local?.size || 0,
               mimeType: b.mimeType || local?.mimeType || '',
-            } as StoredAsset
+            } as StoredAsset;
+
+            // Cache the loaded backend asset metadata locally
+            storage.saveAsset(assetData).catch(err => {
+              console.warn(`Failed to cache asset ${b.id} locally:`, err);
+            });
+
+            return assetData;
           })
 
           // Also include local-only assets (not yet synced to backend)

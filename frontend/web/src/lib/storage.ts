@@ -809,9 +809,25 @@ class WebStorageService {
   async updateAsset(id: string, updates: Partial<StoredAsset>): Promise<void> {
     await this.ensureDB();
     const asset = await this.getAsset(id);
-    if (!asset) throw new Error('Asset not found');
-
-    const updated = { ...asset, ...updates };
+    
+    const updated = asset 
+      ? { ...asset, ...updates }
+      : {
+          id,
+          name: updates.name || 'Synced Asset',
+          type: updates.type || 'document',
+          folderId: updates.folderId || null,
+          encryptedData: updates.encryptedData || '',
+          keyId: updates.keyId || '',
+          iv: updates.iv || '',
+          ipfsHash: updates.ipfsHash || '',
+          beneficiaries: updates.beneficiaries || [],
+          assignedBeneficiaryId: updates.assignedBeneficiaryId || null,
+          createdAt: Date.now(),
+          size: updates.size || 0,
+          mimeType: updates.mimeType || '',
+          ...updates
+        };
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['assets'], 'readwrite');
