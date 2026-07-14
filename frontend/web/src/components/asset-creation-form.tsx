@@ -7,7 +7,8 @@ import {
   FileText, Upload, Lock, Key, Trash2, Eye, Shield,
   CheckCircle, Plus, Search, Grid, List as ListIcon,
   Image as ImageIcon, Video, FolderOpen, MoreVertical, X,
-  FolderPlus, ChevronRight, CornerLeftUp, Coins, Pencil, Calendar, Clock
+  FolderPlus, ChevronRight, CornerLeftUp, Coins, Pencil, Calendar, Clock,
+  Download, RefreshCw
 } from 'lucide-react'
 import WebCryptoService from '@/lib/crypto'
 import WebStorageService, { StoredAsset, StoredFolder } from '@/lib/storage'
@@ -42,6 +43,7 @@ export function AssetCreationForm() {
   const [viewingAsset, setViewingAsset] = useState<StoredAsset | null>(null)
   const [decryptedContent, setDecryptedContent] = useState<string>('')
   const [isDecrypting, setIsDecrypting] = useState(false)
+  const [isDownloadingAttached, setIsDownloadingAttached] = useState(false)
   const [isDecryptedImage, setIsDecryptedImage] = useState<boolean>(false)
   const [previewBg, setPreviewBg] = useState<'dark' | 'light' | 'checkered'>('checkered')
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false)
@@ -559,33 +561,53 @@ export function AssetCreationForm() {
       let encryptedDataToDecrypt = asset.encryptedData
       if (!encryptedDataToDecrypt) {
         console.log('📥 Asset encryptedData is empty. Fetching remote payload...')
-        try {
-          const token = localStorage.getItem('dwp_token')
-          const downloadResponse = await fetch(`${API_URL}/api/assets/${asset.id}/download`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-          if (downloadResponse.ok) {
-            const { url } = await downloadResponse.json()
-            console.log('🔗 Fetching from URL:', url)
-            const fileResponse = await fetch(url)
-            if (fileResponse.ok) {
-              encryptedDataToDecrypt = await fileResponse.text()
-              console.log('✅ Remote payload fetched successfully, length:', encryptedDataToDecrypt.length)
-              // Update local IndexedDB so we don't have to fetch it next time
-              try {
-                await storage.updateAsset(asset.id, { encryptedData: encryptedDataToDecrypt })
-              } catch (dbErr) {
-                console.warn('Could not cache remote encrypted data locally:', dbErr)
+        
+        // 1. Try direct IPFS retrieval first if it has a CID
+        if (asset.ipfsHash && (asset.ipfsHash.startsWith('Qm') || asset.ipfsHash.startsWith('bafy'))) {
+          console.log('🛸 Attempting direct IPFS retrieval for CID:', asset.ipfsHash)
+          try {
+            const { retrieveFromIPFS } = await import('@/lib/ipfs-client')
+            const blob = await retrieveFromIPFS(asset.ipfsHash)
+            encryptedDataToDecrypt = await blob.text()
+            console.log('✅ Direct IPFS retrieval successful, length:', encryptedDataToDecrypt.length)
+          } catch (ipfsErr) {
+            console.warn('⚠️ Direct IPFS retrieval failed, falling back to backend download URL:', ipfsErr)
+          }
+        }
+
+        // 2. Fall back to backend download URL if direct IPFS failed or wasn't available
+        if (!encryptedDataToDecrypt) {
+          try {
+            const token = localStorage.getItem('dwp_token')
+            const downloadResponse = await fetch(`${API_URL}/api/assets/${asset.id}/download`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (downloadResponse.ok) {
+              const { url } = await downloadResponse.json()
+              console.log('🔗 Fetching from URL:', url)
+              const fileResponse = await fetch(url)
+              if (fileResponse.ok) {
+                encryptedDataToDecrypt = await fileResponse.text()
+                console.log('✅ Remote payload fetched successfully, length:', encryptedDataToDecrypt.length)
+              } else {
+                throw new Error(`Failed to download remote file: ${fileResponse.statusText}`)
               }
             } else {
-              throw new Error(`Failed to download remote file: ${fileResponse.statusText}`)
+              throw new Error(`Failed to get download URL: ${downloadResponse.statusText}`)
             }
-          } else {
-            throw new Error(`Failed to get download URL: ${downloadResponse.statusText}`)
+          } catch (downloadErr: any) {
+            console.error('❌ Remote download failed:', downloadErr)
+            throw new Error(`Remote asset download failed: ${downloadErr.message}`)
           }
-        } catch (downloadErr: any) {
-          console.error('❌ Remote download failed:', downloadErr)
-          throw new Error(`Remote asset download failed: ${downloadErr.message}`)
+        }
+
+        // Cache locally if we successfully got it
+        if (encryptedDataToDecrypt) {
+          try {
+            await storage.updateAsset(asset.id, { encryptedData: encryptedDataToDecrypt })
+          } catch (dbErr) {
+            console.warn('Could not cache remote encrypted data locally:', dbErr)
+          }
         }
       }
 
@@ -669,6 +691,107 @@ export function AssetCreationForm() {
       setDecryptedContent('Failed to decrypt: ' + (error as Error).message)
     } finally {
       setIsDecrypting(false)
+    }
+  }
+
+  const handleDownloadAttachedFile = async () => {
+    if (!viewingAsset || !viewingAsset.ipfsHash) return
+    setIsDownloadingAttached(true)
+    try {
+      console.log('🔓 Decrypting attached file for category asset:', viewingAsset.name)
+      // 1. Reconstruct key
+      let allKeyDists = await storage.getAllKeyDistributions()
+      let keyDist = allKeyDists.find(kd => kd.keyId === viewingAsset.keyId)
+
+      // Fetch from backend if missing locally
+      if (!keyDist) {
+        try {
+          const token = localStorage.getItem('dwp_token')
+          const response = await fetch(`${API_URL}/api/assets/keys/${viewingAsset.keyId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (response.ok) {
+            keyDist = await response.json()
+            if (keyDist) {
+              await storage.saveKeyDistribution(keyDist)
+            }
+          }
+        } catch (fetchErr) {
+          console.error(fetchErr)
+        }
+      }
+
+      if (!keyDist) {
+        throw new Error('Key distribution not found for this asset.')
+      }
+
+      const sharesToUse = keyDist.shares.slice(0, 3)
+      const reconstructedKey = await crypto.reconstructKey(sharesToUse)
+
+      // 2. Fetch the attached file payload
+      let encryptedPayload = ''
+      
+      // Try direct IPFS retrieval first
+      const ipfsCID = viewingAsset.ipfsHash
+      if (ipfsCID && (ipfsCID.startsWith('Qm') || ipfsCID.startsWith('bafy'))) {
+        try {
+          const { retrieveFromIPFS } = await import('@/lib/ipfs-client')
+          const blob = await retrieveFromIPFS(ipfsCID)
+          encryptedPayload = await blob.text()
+        } catch (ipfsErr) {
+          console.warn('Direct IPFS retrieval failed for attached file:', ipfsErr)
+        }
+      }
+
+      // Fallback to backend download URL
+      if (!encryptedPayload) {
+        const token = localStorage.getItem('dwp_token')
+        const downloadResponse = await fetch(`${API_URL}/api/assets/${viewingAsset.id}/download`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (downloadResponse.ok) {
+          const { url } = await downloadResponse.json()
+          const fileResponse = await fetch(url)
+          if (fileResponse.ok) {
+            encryptedPayload = await fileResponse.text()
+          }
+        }
+      }
+
+      if (!encryptedPayload) {
+        throw new Error('Failed to retrieve encrypted file payload.')
+      }
+
+      // Get the file IV from metadata if it exists, or fall back to viewingAsset.iv
+      const fileIv = viewingAsset.metadata?.fileIv || viewingAsset.iv
+      if (!fileIv) {
+        throw new Error('Encryption IV is missing.')
+      }
+
+      // 3. Decrypt the binary buffer
+      const decryptedBuffer = await crypto.decryptBinary(
+        encryptedPayload,
+        reconstructedKey,
+        fileIv
+      )
+
+      // 4. Trigger download
+      const blob = new Blob([decryptedBuffer], { type: viewingAsset.mimeType || 'application/octet-stream' })
+      const objectURL = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectURL
+      a.download = viewingAsset.name + '_attached_file'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(objectURL)
+      
+      toast.success('Attached file decrypted and downloaded successfully!')
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Failed to download attached file: ' + err.message)
+    } finally {
+      setIsDownloadingAttached(false)
     }
   }
 
@@ -1166,13 +1289,23 @@ export function AssetCreationForm() {
       const keyDistribution = await crypto.splitKey(encryptionKey)
       console.log('✅ Key split into shares')
 
-      // If file is provided, upload to IPFS
+      // If file is provided, upload to IPFS (encrypted using the same encryptionKey but different IV)
       let ipfsCID = ''
+      let fileIvVal = ''
       if (data.file) {
         try {
+          console.log('🔒 Encrypting attached file for category asset...')
+          const fileBuffer = await readFileAsBuffer(data.file)
+          const fileEncryptionResult = await crypto.encryptBinary(fileBuffer, encryptionKey)
+          fileIvVal = fileEncryptionResult.iv
+          console.log('✅ Attached file encrypted, IV:', fileIvVal)
+
+          const encryptedBlob = new Blob([fileEncryptionResult.encryptedData], { type: 'text/plain' })
+          const encryptedFile = new File([encryptedBlob], data.file.name + '.enc', { type: 'text/plain' })
+
           const { uploadToIPFS } = await import('@/lib/ipfs-client')
-          ipfsCID = await uploadToIPFS(data.file, walletAddress)
-          console.log('✅ File uploaded to IPFS:', ipfsCID)
+          ipfsCID = await uploadToIPFS(encryptedFile, walletAddress, fileEncryptionResult.keyId, fileEncryptionResult.iv)
+          console.log('✅ Encrypted attached file uploaded to IPFS:', ipfsCID)
         } catch (ipfsError) {
           console.warn('⚠️ IPFS upload failed, continuing without file:', ipfsError)
         }
@@ -1195,7 +1328,11 @@ export function AssetCreationForm() {
         beneficiaries: beneficiaryIds,
         createdAt: encryptionResult.timestamp,
         size: data.file?.size || data.structuredData.length,
-        mimeType: data.file?.type || 'application/json'
+        mimeType: data.file?.type || 'application/json',
+        metadata: {
+          type: data.type,
+          fileIv: fileIvVal || undefined
+        }
       }
 
       console.log('💾 Saving asset using ModeService...')
@@ -2928,6 +3065,49 @@ export function AssetCreationForm() {
                         </pre>
                       )}
                     </div>
+
+                    {/* Attached File Section for Category Assets */}
+                    {viewingAsset.ipfsHash && viewingAsset.ipfsHash !== 'local' && 
+                     !['photo', 'document', 'video', 'image'].includes(viewingAsset.type.toLowerCase()) && (
+                      <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 space-y-3">
+                        <p className="text-xs uppercase tracking-widest text-blue-400 font-bold flex items-center gap-2">
+                          <span>📎</span> Attached Secure File
+                        </p>
+                        <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl">
+                          <div className="flex items-center gap-3 truncate">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 animate-pulse">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="truncate text-left">
+                              <p className="text-xs font-bold text-white truncate max-w-[200px]">
+                                {viewingAsset.name} Attached File
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate font-mono">
+                                {viewingAsset.ipfsHash}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleDownloadAttachedFile}
+                            disabled={isDownloadingAttached}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md shadow-blue-500/10 shrink-0"
+                          >
+                            {isDownloadingAttached ? (
+                              <>
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                Decrypting...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="w-3 h-3" />
+                                Download & Decrypt
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Interactive Delivery Schedule Card */}
                     <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 space-y-4">

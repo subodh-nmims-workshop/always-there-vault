@@ -103,18 +103,37 @@ function BeneficiaryAssetsContent() {
       } else {
         // Binary file hosted on B2 or IPFS
         // Get temporary download URL
-        const downloadRes = await fetch(`${apiEndpoint}/api/claim-assets/download/${asset.id}?claimToken=${claimToken}`)
-        if (!downloadRes.ok) {
-          throw new Error('Failed to get download URL from cloud storage.')
-        }
-        const { url: fileUrl } = await downloadRes.json()
+        let encryptedHex = ''
+        try {
+          const downloadRes = await fetch(`${apiEndpoint}/api/claim-assets/download/${asset.id}?claimToken=${claimToken}`)
+          if (!downloadRes.ok) {
+            throw new Error('Failed to get download URL from cloud storage.')
+          }
+          const { url: fileUrl } = await downloadRes.json()
 
-        // Fetch encrypted file contents
-        const fileContentRes = await fetch(fileUrl)
-        if (!fileContentRes.ok) {
-          throw new Error('Failed to fetch encrypted file contents from cloud storage.')
+          // Fetch encrypted file contents
+          const fileContentRes = await fetch(fileUrl)
+          if (!fileContentRes.ok) {
+            throw new Error('Failed to fetch encrypted file contents from cloud storage.')
+          }
+          encryptedHex = await fileContentRes.text()
+        } catch (downloadErr: any) {
+          console.warn('⚠️ Cloud download failed, trying direct IPFS retrieval...', downloadErr)
+          // Try direct IPFS if CID is available
+          const ipfsCID = asset.cid || asset.ipfsHash || asset.location
+          if (ipfsCID && (ipfsCID.startsWith('Qm') || ipfsCID.startsWith('bafy'))) {
+            try {
+              const { retrieveFromIPFS } = await import('@/lib/ipfs-client')
+              const blob = await retrieveFromIPFS(ipfsCID)
+              encryptedHex = await blob.text()
+              console.log('✅ Direct IPFS retrieval successful, length:', encryptedHex.length)
+            } catch (ipfsErr: any) {
+              throw new Error(`Cloud download failed and IPFS fallback failed: ${ipfsErr.message || ipfsErr}`)
+            }
+          } else {
+            throw downloadErr
+          }
         }
-        const encryptedHex = await fileContentRes.text()
 
         // Decrypt binary content
         const decryptedBuffer = await crypto.decryptBinary(encryptedHex, reconstructedKey, fileIv)
@@ -132,8 +151,20 @@ function BeneficiaryAssetsContent() {
         toast.success('File decrypted and downloaded successfully!')
       }
     } catch (err: any) {
-      console.error(err)
-      toast.error(`Download failed: ${err.message || err}`)
+      console.error('❌ Beneficiary asset claim/decryption failed:', err)
+      
+      let description = 'Ensure your internet connection is stable and the claim token in the URL is correct.'
+      if (err.message?.includes('decrypted') || err.message?.includes('decrypt') || err.message?.includes('OperationError')) {
+        description = 'The reconstructed key from Shamir shares was invalid or mismatched the file. Verification of the cryptographic key shares or re-upload is recommended.'
+      } else if (err.message?.includes('keys') || err.message?.includes('shares')) {
+        description = 'The backend returned incomplete or missing Shamir key shares. You may need to wait for a synchronizer or ask the will creator to check sync.'
+      } else if (err.message?.includes('IPFS') || err.message?.includes('download')) {
+        description = 'Both the cloud storage backup and direct IPFS fallback gateway failed to load the encrypted payload. Check decentralized gateway status.'
+      }
+
+      toast.error(`Decryption Failed`, {
+        description: `${err.message || err}. ${description}`
+      })
     } finally {
       setDownloadingAssetId(null)
     }

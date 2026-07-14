@@ -39,15 +39,23 @@ class WebCryptoService {
     return WebCryptoService.instance;
   }
 
-  private uint8ArrayToHex(arr: Uint8Array | ArrayBuffer): string {
+  public uint8ArrayToHex(arr: Uint8Array | ArrayBuffer): string {
     const bytes = new Uint8Array(arr as any);
     return bytes.reduce((acc, byte) => acc + byte.toString(16).padStart(2, '0'), '');
   }
 
-  private hexToUint8Array(hex: string): Uint8Array {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-      bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  public hexToUint8Array(hex: string): Uint8Array {
+    const cleanHex = hex.replace(/\s+/g, '');
+    if (cleanHex.length % 2 !== 0) {
+      throw new Error('Invalid hex string length');
+    }
+    const bytes = new Uint8Array(cleanHex.length / 2);
+    for (let i = 0; i < cleanHex.length; i += 2) {
+      const val = parseInt(cleanHex.substring(i, i + 2), 16);
+      if (isNaN(val)) {
+        throw new Error('Invalid characters in hex string');
+      }
+      bytes[i / 2] = val;
     }
     return bytes;
   }

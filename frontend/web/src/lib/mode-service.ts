@@ -199,7 +199,10 @@ class ModeService {
                         size: asset.size,
                         mimeType: asset.mimeType,
                         folderId: asset.folderId,
-                        metadata: { type: asset.type }
+                        metadata: {
+                            type: asset.type,
+                            ...(asset.metadata || {})
+                        }
                     })
                 })
                 console.log('✅ Asset binary and metadata saved to Cloud Vault')
@@ -224,7 +227,10 @@ class ModeService {
                 size: asset.size,
                 mimeType: asset.mimeType,
                 folderId: asset.folderId,
-                metadata: { type: asset.type }
+                metadata: {
+                    type: asset.type,
+                    ...(asset.metadata || {})
+                }
               })
             })
 

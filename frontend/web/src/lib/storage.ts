@@ -32,6 +32,7 @@ export interface StoredAsset {
   createdAt: number;
   size: number;
   mimeType?: string;
+  metadata?: any;
 }
 
 export interface StoredBeneficiary {

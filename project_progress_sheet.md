@@ -60,8 +60,10 @@
 - **Related Files:**
   - `frontend/web/src/lib/encryption.ts`
   - `frontend/web/src/components/asset-creation-form.tsx` (upload/download logic)
-- **Status:** **[STATUS: IN PROGRESS - STABLE]**
-- **Verification:** Files encrypt locally, upload successfully to IPFS, and decrypt on download.
+  - `frontend/web/src/lib/ipfs-client.ts`
+  - `frontend/web/src/app/beneficiary/assets/page.tsx`
+- **Status:** **[STATUS: COMPLETED & LOCKED]**
+- **Verification:** Custom files are encrypted and uploaded to IPFS (via Web3.Storage/Pinata bridge fallback), and securely decrypted by will owners and claimants via direct IPFS gateway or cloud fallback. Decryption troubleshooting details are surfaced directly in the UI.
 
 ---
 

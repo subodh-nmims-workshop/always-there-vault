@@ -98,16 +98,25 @@ async function uploadToBackendBridge(
             body: formData
         })
         
-        if (!response.ok) throw new Error('Backend bridge returned status: ' + response.status)
+        if (!response.ok) {
+            let errorMsg = `Backend bridge returned status: ${response.status}`
+            try {
+                const errData = await response.json()
+                if (errData?.message) {
+                    errorMsg += ` (${errData.message})`
+                }
+            } catch {}
+            throw new Error(errorMsg)
+        }
         
         const data = await response.json()
         const cid = data.cid || data.ipfsHash;
         if (!cid || !isValidCID(cid)) {
-            throw new Error('Backend bridge returned invalid CID')
+            throw new Error('Backend bridge returned invalid CID: ' + JSON.stringify(data))
         }
         return cid
     } catch (e: any) {
-        console.error('All IPFS paths failed:', e.message)
+        console.error('❌ All IPFS upload paths failed:', e.message)
         throw new Error(e.message || 'Decentralized storage upload failed.')
     }
 }
