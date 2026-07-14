@@ -1649,6 +1649,8 @@ export function AssetCreationForm() {
             <div
               key={cat.id}
               onClick={() => {
+                // Reset current folder back to root when switching categories
+                setCurrentFolderId(null)
                 if (cat.isFilter || cat.id === 'all') {
                   setActiveCategory(cat.id)
                 } else {
@@ -1673,12 +1675,14 @@ export function AssetCreationForm() {
               <button
                 key={cat.id}
                 onClick={() => {
+                  // Reset current folder back to root when switching categories
+                  setCurrentFolderId(null)
                   // Just set active category, don't open modal
                   setActiveCategory(cat.id)
                 }}
                 className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeCategory === cat.id ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/20 shadow-inner' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.05] hover:text-slate-900 dark:hover:text-white border border-transparent'}`}
               >
-                <cat.icon className={`w-5 h-5 mr-3 ${activeCategory === cat.id ? 'text-blue-550' : 'text-slate-500'}`} />
+                <cat.icon className={`w-5 h-5 mr-3 ${activeCategory === cat.id ? 'text-blue-555' : 'text-slate-500'}`} />
                 {cat.label}
               </button>
             ))}
