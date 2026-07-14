@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import WebStorageService, { AppState } from '@/lib/storage'
 import { useSyncData } from '@/hooks/useSyncData'
 
@@ -19,7 +19,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Call the synchronization hook to auto-sync backend data
     useSyncData()
 
-    const refreshState = async () => {
+    const refreshState = useCallback(async () => {
         try {
             const storage = WebStorageService.getInstance()
             const newState = await storage.getAppState()
@@ -29,7 +29,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [])
 
     useEffect(() => {
         refreshState()
@@ -53,7 +53,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             window.removeEventListener('storage', handleStorageChange)
             window.removeEventListener('dwp-state-synced', handleSyncEvent)
         }
-    }, [])
+    }, [refreshState])
 
     return (
         <AppContext.Provider value={{ state, isLoading, refreshState }}>
