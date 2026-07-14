@@ -1189,7 +1189,10 @@ export function AssetCreationForm() {
 
         // Use name-based heuristic if type is missing (for legacy folders)
         const folderType = folder.type || WebStorageService.getFolderType(folder.name);
-        const matchesCategory = activeCategory === 'all' || folderType === activeCategory;
+        const matchesCategory =
+          activeCategory === 'all' ||
+          folderType === activeCategory ||
+          folderType === 'all';
 
         return matchesSearch && matchesCategory;
       })
