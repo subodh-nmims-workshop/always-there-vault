@@ -112,8 +112,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const loadSubscription = async () => {
-    setIsLoading(true)
+  const loadSubscription = async (isBackground = false) => {
+    if (!isBackground) {
+      setIsLoading(true)
+    }
     try {
       const address = localStorage.getItem('dwp_wallet_address')
 
@@ -215,7 +217,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     loadSubscription()
 
     const handleStorageUpdate = () => {
-      loadSubscription()
+      loadSubscription(true)
     }
 
     if (typeof window !== 'undefined') {

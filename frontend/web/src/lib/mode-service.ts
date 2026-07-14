@@ -454,6 +454,18 @@ class ModeService {
    */
   private async deleteAssetDecentralized(assetId: string): Promise<void> {
     try {
+      // Delete from backend metadata cache to prevent sync restore
+      try {
+        await fetch(`${this.config.apiEndpoint}/api/assets/${assetId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+          }
+        })
+      } catch (apiError) {
+        console.warn('⚠️ Backend delete failed in decentralized mode')
+      }
+
       // In decentralized mode, we can only delete from local storage
       // Blockchain records are immutable
       const storage = WebStorageService.getInstance()

@@ -1,5 +1,5 @@
 import { useAccount } from 'wagmi';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import WebStorageService from '@/lib/storage';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
@@ -7,18 +7,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protoco
 export function useSyncData() {
   const { address, isConnected, status } = useAccount();
   const isSyncingRef = useRef(false);
-  const [data, setData] = useState<any>({
-    nominees: [],
-    assets: [],
-    heartbeat: null,
-    user: null,
-    isLoading: true,
-    error: null
-  });
 
   const fetchData = useCallback(async () => {
     if (!isConnected || !address) {
-      setData((prev: any) => ({ ...prev, isLoading: false, nominees: [], assets: [] }));
       return;
     }
 
@@ -48,6 +39,7 @@ export function useSyncData() {
 
       // Sync to local storage / IndexedDB
       const storage = WebStorageService.getInstance();
+      let hasChanges = false;
       
       // 1. Sync Beneficiaries
       if (Array.isArray(nomineesRes)) {
@@ -60,13 +52,24 @@ export function useSyncData() {
           const localBenMap = new Map(localBens.map(b => [b.id, b]));
           for (const b of nomineesRes) {
             const local = localBenMap.get(b.id);
+            const targetBen = {
+              id: b.id,
+              name: b.name,
+              email: b.email || '',
+              walletAddress: b.walletAddress || '',
+              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
+              enabled: b.enabled ?? true,
+              isVerified: b.isVerified ?? false,
+              verificationMethod: b.verificationMethod || 'email'
+            };
+
             if (!local || 
-                local.name !== b.name || 
-                (local.email || '') !== (b.email || '') || 
-                (local.walletAddress || '') !== (b.walletAddress || '') || 
-                (local.enabled ?? true) !== (b.enabled ?? true) || 
-                (local.isVerified ?? false) !== (b.isVerified ?? false) || 
-                (local.verificationMethod || 'email') !== (b.verificationMethod || 'email')) {
+                local.name !== targetBen.name || 
+                (local.email || '') !== targetBen.email || 
+                (local.walletAddress || '') !== targetBen.walletAddress || 
+                (local.enabled ?? true) !== targetBen.enabled || 
+                (local.isVerified ?? false) !== targetBen.isVerified || 
+                (local.verificationMethod || 'email') !== targetBen.verificationMethod) {
               beneficiariesChanged = true;
               break;
             }
@@ -74,23 +77,29 @@ export function useSyncData() {
         }
 
         if (beneficiariesChanged) {
+          hasChanges = true;
           const backendBenIds = new Set(nomineesRes.map((b: any) => b.id));
           for (const b of nomineesRes) {
+            const local = localBens.find(lb => lb.id === b.id);
             await storage.saveBeneficiary({
               id: b.id,
               name: b.name,
               email: b.email || '',
               walletAddress: b.walletAddress || '',
-              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : Date.now(),
+              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
               enabled: b.enabled ?? true,
               isVerified: b.isVerified ?? false,
               verificationMethod: b.verificationMethod || 'email'
-            });
+            }, true); // Save silently
           }
           for (const lb of localBens) {
             if (!backendBenIds.has(lb.id)) {
-              await storage.deleteBeneficiary(lb.id);
+              await storage.deleteBeneficiary(lb.id, true); // Delete silently
             }
+          }
+
+          if (nomineesRes.length > 0 && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('storage-beneficiary-saved', { detail: nomineesRes[0] }));
           }
         }
       }
@@ -106,23 +115,34 @@ export function useSyncData() {
           const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
           for (const b of assetsRes) {
             const local = localAssetMap.get(b.id);
-            const computedType = local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document');
-            const computedKeyId = local?.keyId || b.keyId || b.encryptionKeyId || '';
-            const computedIv = local?.iv || b.iv || b.fileIv || '';
-            const computedIpfsHash = b.ipfsHash || b.cid || local?.ipfsHash || '';
+            const targetAsset = {
+              id: b.id,
+              name: b.name,
+              type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
+              folderId: b.folderId || null,
+              encryptedData: local?.encryptedData || b.encryptedData || '',
+              keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
+              iv: local?.iv || b.iv || b.fileIv || '',
+              ipfsHash: b.ipfsHash || b.cid || local?.ipfsHash || '',
+              beneficiaries: b.beneficiaries || local?.beneficiaries || [],
+              assignedBeneficiaryId: b.assignedBeneficiaryId || local?.assignedBeneficiaryId || null,
+              createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
+              size: b.size || local?.size || 0,
+              mimeType: b.mimeType || local?.mimeType || ''
+            };
 
             if (!local || 
-                local.name !== b.name || 
-                local.type !== computedType || 
-                (local.folderId || null) !== (b.folderId || null) || 
-                (local.encryptedData || '') !== (b.encryptedData || '') || 
-                local.keyId !== computedKeyId || 
-                local.iv !== computedIv || 
-                local.ipfsHash !== computedIpfsHash || 
-                JSON.stringify(local.beneficiaries || []) !== JSON.stringify(b.beneficiaries || []) || 
-                (local.assignedBeneficiaryId || null) !== (b.assignedBeneficiaryId || null) || 
-                (local.size || 0) !== (b.size || 0) || 
-                (local.mimeType || '') !== (b.mimeType || '')) {
+                local.name !== targetAsset.name || 
+                local.type !== targetAsset.type || 
+                (local.folderId || null) !== (targetAsset.folderId || null) || 
+                (local.encryptedData || '') !== (targetAsset.encryptedData || '') || 
+                local.keyId !== targetAsset.keyId || 
+                local.iv !== targetAsset.iv || 
+                local.ipfsHash !== targetAsset.ipfsHash || 
+                JSON.stringify(local.beneficiaries || []) !== JSON.stringify(targetAsset.beneficiaries || []) || 
+                (local.assignedBeneficiaryId || null) !== (targetAsset.assignedBeneficiaryId || null) || 
+                (local.size || 0) !== (targetAsset.size || 0) || 
+                (local.mimeType || '') !== (targetAsset.mimeType || '')) {
               assetsChanged = true;
               break;
             }
@@ -130,6 +150,7 @@ export function useSyncData() {
         }
 
         if (assetsChanged) {
+          hasChanges = true;
           const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
           const backendAssetIds = new Set(assetsRes.map((a: any) => a.id));
 
@@ -149,13 +170,17 @@ export function useSyncData() {
               createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
               size: b.size || local?.size || 0,
               mimeType: b.mimeType || local?.mimeType || ''
-            });
+            }, true); // Save silently
           }
           
           for (const la of localAssets) {
             if (!backendAssetIds.has(la.id)) {
-              await storage.deleteAsset(la.id);
+              await storage.deleteAsset(la.id, true); // Delete silently
             }
+          }
+
+          if (assetsRes.length > 0 && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('storage-asset-saved', { detail: assetsRes[0] }));
           }
         }
       }
@@ -166,6 +191,7 @@ export function useSyncData() {
         const localHeartbeats = await storage.getAllHeartbeats();
         const maxLocal = localHeartbeats.length > 0 ? Math.max(...localHeartbeats.map((h: any) => h.timestamp)) : 0;
         if (ts > maxLocal) {
+          hasChanges = true;
           await storage.saveHeartbeat({
             id: `backend_sync_${ts}`,
             timestamp: ts,
@@ -186,12 +212,13 @@ export function useSyncData() {
           emailNotification: userRes?.email || userRes?.pendingEmail || currentSettings.emailNotification
         };
         if (JSON.stringify(currentSettings) !== JSON.stringify(nextSettings)) {
+          hasChanges = true;
           storage.saveSettings(nextSettings);
         }
       }
 
-      // Dispatch custom event to refresh app state provider
-      if (typeof window !== 'undefined') {
+      // Dispatch custom event to refresh app state provider ONLY if something actually changed
+      if (hasChanges && typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('dwp-state-synced'));
       }
 
@@ -204,18 +231,8 @@ export function useSyncData() {
           assets_count: assetsRes?.length || 0
         });
       }
-
-      setData({
-        nominees: nomineesRes || [],
-        assets: assetsRes || [],
-        heartbeat: heartbeatRes || null,
-        user: userRes || null,
-        isLoading: false,
-        error: null
-      });
     } catch (error: any) {
       console.error('Sync error:', error);
-      setData((prev: any) => ({ ...prev, isLoading: false, error: error.message }));
     } finally {
       isSyncingRef.current = false;
     }
@@ -251,7 +268,5 @@ export function useSyncData() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchData]);
 
-  const refetch = fetchData;
-
-  return { ...data, refetch };
+  return { refetch: fetchData };
 }

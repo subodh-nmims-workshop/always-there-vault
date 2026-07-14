@@ -220,10 +220,15 @@ export function AssetCreationForm() {
             if (onlyBackend.length > 0) {
               // Persist backend-only assets to local IndexedDB for offline access
               for (const ba of onlyBackend) {
-                try { await storage.saveAsset(ba); } catch (_) {}
+                try { await storage.saveAsset(ba, true); } catch (_) {}
               }
               mergedAssets = [...allAssets, ...onlyBackend];
               console.log(`✅ Synced ${onlyBackend.length} asset(s) from backend`);
+              
+              // Dispatch single notification to trigger UI update once
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('storage-asset-saved', { detail: onlyBackend[0] }));
+              }
             }
           }
         }

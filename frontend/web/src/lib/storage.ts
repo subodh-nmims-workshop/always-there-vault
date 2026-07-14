@@ -195,7 +195,7 @@ class WebStorageService {
   /**
    * Asset Management
    */
-  async saveAsset(asset: StoredAsset): Promise<void> {
+  async saveAsset(asset: StoredAsset, silent = false): Promise<void> {
     await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['assets'], 'readwrite');
@@ -204,7 +204,7 @@ class WebStorageService {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        if (typeof window !== 'undefined') {
+        if (!silent && typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('storage-asset-saved', { detail: asset }));
         }
         resolve();
@@ -224,7 +224,7 @@ class WebStorageService {
     });
   }
 
-  async deleteAsset(id: string): Promise<void> {
+  async deleteAsset(id: string, silent = false): Promise<void> {
     await this.ensureDB();
     
     try {
@@ -240,7 +240,7 @@ class WebStorageService {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        if (typeof window !== 'undefined') {
+        if (!silent && typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('storage-asset-deleted', { detail: { id } }));
         }
         resolve();
@@ -251,7 +251,7 @@ class WebStorageService {
   /**
    * Beneficiary Management
    */
-  async saveBeneficiary(beneficiary: StoredBeneficiary): Promise<void> {
+  async saveBeneficiary(beneficiary: StoredBeneficiary, silent = false): Promise<void> {
     await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['beneficiaries'], 'readwrite');
@@ -259,7 +259,7 @@ class WebStorageService {
       store.put(beneficiary);
 
       transaction.oncomplete = () => {
-        if (typeof window !== 'undefined') {
+        if (!silent && typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('storage-beneficiary-saved', { detail: beneficiary }));
         }
         resolve();
@@ -280,7 +280,7 @@ class WebStorageService {
     });
   }
 
-  async deleteBeneficiary(id: string): Promise<void> {
+  async deleteBeneficiary(id: string, silent = false): Promise<void> {
     await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['beneficiaries'], 'readwrite');
@@ -288,7 +288,7 @@ class WebStorageService {
       store.delete(id);
 
       transaction.oncomplete = () => {
-        if (typeof window !== 'undefined') {
+        if (!silent && typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('storage-beneficiary-deleted', { detail: { id } }));
         }
         resolve();
