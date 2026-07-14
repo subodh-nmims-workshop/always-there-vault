@@ -148,97 +148,9 @@ export function AssetCreationForm() {
       // Use modeService to load assets from local IndexedDB
       const allAssets = await modeService.loadAssets();
 
-      // Sync folders from backend first so asset-folder mappings align
-      try {
-        const token = localStorage.getItem('dwp_token');
-          if (token) {
-            const folderRes = await fetch(`${API_URL}/api/assets/folders`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (folderRes.ok) {
-              const backendFolders: any[] = await folderRes.json();
-              const localFolders = await storage.getAllFolders();
-              const localFolderIds = new Set(localFolders.map(f => f.id));
-              const onlyBackendFolders = backendFolders.filter(bf => !localFolderIds.has(bf.id));
-              if (onlyBackendFolders.length > 0) {
-                for (const bf of onlyBackendFolders) {
-                  try {
-                    await storage.saveFolder({
-                      id: bf.id,
-                      name: bf.name,
-                      parentId: bf.parentId || null,
-                      type: bf.type || WebStorageService.getFolderType(bf.name),
-                      beneficiaries: bf.beneficiaries || [],
-                      createdAt: bf.createdAt ? new Date(bf.createdAt).getTime() : Date.now(),
-                      updatedAt: bf.updatedAt ? new Date(bf.updatedAt).getTime() : Date.now(),
-                      color: bf.color || 'blue',
-                      icon: bf.icon || 'folder'
-                    });
-                  } catch (err) {
-                    console.warn('⚠️ Syncing folder failed:', err);
-                  }
-                }
-                console.log(`✅ Synced ${onlyBackendFolders.length} folder(s) from backend`);
-              }
-            }
-          }
-        } catch (folderSyncErr) {
-          console.warn('⚠️ Backend folder sync failed:', folderSyncErr);
-        }
-
-      // ═══ BUG 5 FIX: Merge with backend assets for cross-device sync ═══
-      let mergedAssets = [...allAssets];
-      try {
-        const token = localStorage.getItem('dwp_token');
-        if (token) {
-          const folderParam = currentFolderId ? `?folderId=${currentFolderId}` : '';
-          const backendRes = await fetch(`${API_URL}/api/assets${folderParam}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (backendRes.ok) {
-            const backendData = await backendRes.json();
-            // Backend returns a flat array of file models. Handle both array & object formats.
-            const filesArray = Array.isArray(backendData) ? backendData : (backendData.assets || []);
-            const backendFiles: any[] = filesArray.map((f: any) => ({
-              id: f.id,
-              name: f.name,
-              type: f.metadata?.type || f.type || (f.mimeType?.startsWith('image/') ? 'photo' : 'document'),
-              folderId: f.folderId || null,
-              encryptedData: f.encryptedData || null,
-              keyId: f.encryptionKeyId || null,
-              iv: f.fileIv || null,
-              ipfsHash: f.location || null,
-              beneficiaries: f.assignedBeneficiaryId ? [f.assignedBeneficiaryId] : [],
-              assignedBeneficiaryId: f.assignedBeneficiaryId || null,
-              createdAt: f.createdAt ? new Date(f.createdAt).getTime() : Date.now(),
-              size: f.size || 0,
-              mimeType: f.mimeType || 'application/octet-stream',
-            }));
-            // Merge: local takes priority (same ID), backend fills in missing ones
-            const localIds = new Set(allAssets.map((a: any) => a.id));
-            const onlyBackend = backendFiles.filter((bf: any) => !localIds.has(bf.id));
-            if (onlyBackend.length > 0) {
-              // Persist backend-only assets to local IndexedDB for offline access
-              for (const ba of onlyBackend) {
-                try { await storage.saveAsset(ba, true); } catch (_) {}
-              }
-              mergedAssets = [...allAssets, ...onlyBackend];
-              console.log(`✅ Synced ${onlyBackend.length} asset(s) from backend`);
-              
-              // Dispatch single notification to trigger UI update once
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('storage-asset-saved', { detail: onlyBackend[0] }));
-              }
-            }
-          }
-        }
-      } catch (backendErr) {
-        console.warn('⚠️ Backend asset sync failed, showing local only:', backendErr);
-      }
-
-      setTotalAssetsCount(mergedAssets.length);
+      setTotalAssetsCount(allAssets.length);
       // Filter for current folder view
-      const folderAssets = mergedAssets.filter((asset: any) => asset.folderId === currentFolderId);
+      const folderAssets = allAssets.filter((asset: any) => asset.folderId === currentFolderId);
       setAssets(folderAssets);
 
       const storedFolders = await storage.getFoldersByParent(currentFolderId);
@@ -286,9 +198,18 @@ export function AssetCreationForm() {
     }
   }
 
-  // Load immediately on mount and folder navigation
+  // Load immediately on mount and folder navigation, and listen to sync updates
   useEffect(() => {
     loadAssets()
+
+    const handleSync = () => {
+      loadAssets()
+    }
+
+    window.addEventListener('dwp-state-synced', handleSync)
+    return () => {
+      window.removeEventListener('dwp-state-synced', handleSync)
+    }
   }, [currentFolderId])
 
   const loadBeneficiaries = async () => {

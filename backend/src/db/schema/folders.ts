@@ -6,6 +6,7 @@ export const folders = pgTable('folders', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   name: varchar('name', { length: 255 }).notNull(),
   parentId: uuid('parent_id'),
+  type: varchar('type', { length: 50 }).default('all'),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

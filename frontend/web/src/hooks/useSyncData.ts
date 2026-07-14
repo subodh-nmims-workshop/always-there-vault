@@ -30,11 +30,12 @@ export function useSyncData() {
       }
 
       // Fetch from backend API
-      const [nomineesRes, assetsRes, heartbeatRes, userRes] = await Promise.all([
+      const [nomineesRes, assetsRes, heartbeatRes, userRes, foldersRes] = await Promise.all([
         fetch(`${API_URL}/api/beneficiaries?ownerAddress=${normalizedAddress}`, { headers }).then(r => r.ok ? r.json() : []),
         fetch(`${API_URL}/api/assets`, { headers }).then(r => r.ok ? r.json() : []),
         fetch(`${API_URL}/api/heartbeat/status`, { headers }).then(r => r.ok ? r.json() : null),
-        fetch(`${API_URL}/api/users/profile`, { headers }).then(r => r.ok ? r.json() : null)
+        fetch(`${API_URL}/api/users/profile`, { headers }).then(r => r.ok ? r.json() : null),
+        fetch(`${API_URL}/api/assets/folders`, { headers }).then(r => r.ok ? r.json() : [])
       ]);
 
       // Sync to local storage / IndexedDB
@@ -100,6 +101,71 @@ export function useSyncData() {
 
           if (nomineesRes.length > 0 && typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('storage-beneficiary-saved', { detail: nomineesRes[0] }));
+          }
+        }
+      }
+
+      // 1.5. Sync Folders
+      if (Array.isArray(foldersRes)) {
+        const localFolders = await storage.getAllFolders();
+        let foldersChanged = false;
+
+        if (foldersRes.length !== localFolders.length) {
+          foldersChanged = true;
+        } else {
+          const localFolderMap = new Map(localFolders.map(f => [f.id, f]));
+          for (const bf of foldersRes) {
+            const local = localFolderMap.get(bf.id);
+            const targetFolder = {
+              id: bf.id,
+              name: bf.name,
+              parentId: bf.parentId || null,
+              type: bf.type || WebStorageService.getFolderType(bf.name),
+              beneficiaries: bf.beneficiaries || [],
+              createdAt: bf.createdAt ? new Date(bf.createdAt).getTime() : (local?.createdAt || Date.now()),
+              updatedAt: bf.updatedAt ? new Date(bf.updatedAt).getTime() : (local?.updatedAt || Date.now()),
+              color: bf.color || 'blue',
+              icon: bf.icon || 'folder'
+            };
+
+            if (!local ||
+                local.name !== targetFolder.name ||
+                (local.parentId || null) !== (targetFolder.parentId || null) ||
+                local.type !== targetFolder.type) {
+              foldersChanged = true;
+              break;
+            }
+          }
+        }
+
+        if (foldersChanged) {
+          hasChanges = true;
+          const localFolderMap = new Map(localFolders.map(f => [f.id, f]));
+          const backendFolderIds = new Set(foldersRes.map((f: any) => f.id));
+
+          for (const bf of foldersRes) {
+            const local = localFolderMap.get(bf.id);
+            await storage.saveFolder({
+              id: bf.id,
+              name: bf.name,
+              parentId: bf.parentId || null,
+              type: bf.type || WebStorageService.getFolderType(bf.name),
+              beneficiaries: bf.beneficiaries || [],
+              createdAt: bf.createdAt ? new Date(bf.createdAt).getTime() : (local?.createdAt || Date.now()),
+              updatedAt: bf.updatedAt ? new Date(bf.updatedAt).getTime() : (local?.updatedAt || Date.now()),
+              color: bf.color || 'blue',
+              icon: bf.icon || 'folder'
+            });
+          }
+
+          for (const lf of localFolders) {
+            if (!backendFolderIds.has(lf.id)) {
+              await storage.deleteFolder(lf.id);
+            }
+          }
+
+          if (foldersRes.length > 0 && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('storage-folder-saved', { detail: foldersRes[0] }));
           }
         }
       }

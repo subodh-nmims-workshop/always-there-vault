@@ -29,7 +29,7 @@ export class AssetsService {
     private configService: ConfigService,
   ) { }
 
-  async createFolder(name: string, walletAddress: string, parentId?: string, id?: string, beneficiaries?: string[]) {
+  async createFolder(name: string, walletAddress: string, parentId?: string, id?: string, beneficiaries?: string[], type?: string) {
     const user = await this.usersService.findUserByWallet(walletAddress);
     
     // Check if the UUID was generated from the frontend
@@ -40,6 +40,7 @@ export class AssetsService {
       name,
       userId: user.id,
       parentId: parentId || null,
+      type: type || 'all',
     } as NewFolder).returning();
 
     await this.auditService.trackAction(user.id, 'CREATE_FOLDER', 'FOLDER', folder.id, { name });
@@ -329,7 +330,7 @@ export class AssetsService {
     return { success: true };
   }
 
-  async updateFolder(id: string, walletAddress: string, updates: { name?: string, parentId?: string, beneficiaries?: string[] }) {
+  async updateFolder(id: string, walletAddress: string, updates: { name?: string, parentId?: string, type?: string, beneficiaries?: string[] }) {
     const user = await this.usersService.findUserByWallet(walletAddress);
     const folder = await this.db.query.folders.findFirst({
       where: and(eq(folders.id, id), eq(folders.userId, user.id)),
@@ -339,6 +340,7 @@ export class AssetsService {
     const updateData: any = { updatedAt: new Date() };
     if (updates.name) updateData.name = updates.name;
     if (updates.parentId !== undefined) updateData.parentId = updates.parentId;
+    if (updates.type !== undefined) updateData.type = updates.type;
     
     await this.db.update(folders).set(updateData).where(eq(folders.id, id));
     return { success: true };
@@ -465,5 +467,16 @@ export class AssetsService {
     });
 
     return { success: true, fileId, assignedBeneficiaryId };
+  }
+
+  async deleteFolder(id: string, walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    const folder = await this.db.query.folders.findFirst({
+      where: and(eq(folders.id, id), eq(folders.userId, user.id)),
+    });
+    if (!folder) throw new NotFoundException('Folder not found or access denied');
+
+    await this.db.delete(folders).where(eq(folders.id, id));
+    return { success: true };
   }
 }

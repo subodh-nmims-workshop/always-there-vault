@@ -171,10 +171,11 @@ export class AssetsController {
     @Req() req: any,
     @Body('parentId') parentId?: string,
     @Body('id') id?: string,
-    @Body('beneficiaries') beneficiaries?: string[]
+    @Body('beneficiaries') beneficiaries?: string[],
+    @Body('type') type?: string,
   ) {
     const wallet = req.user.walletAddress;
-    return this.assetsService.createFolder(name, wallet, parentId, id, beneficiaries);
+    return this.assetsService.createFolder(name, wallet, parentId, id, beneficiaries, type);
   }
 
   @Get('contents')
@@ -232,9 +233,10 @@ export class AssetsController {
     @Req() req: any,
     @Body('name') name?: string,
     @Body('parentId') parentId?: string,
+    @Body('type') type?: string,
     @Body('beneficiaries') beneficiaries?: string[]
   ) {
-    return this.assetsService.updateFolder(id, req.user.walletAddress, { name, parentId, beneficiaries });
+    return this.assetsService.updateFolder(id, req.user.walletAddress, { name, parentId, type, beneficiaries });
   }
 
   @Patch(':id/assign-nominee')
@@ -246,6 +248,15 @@ export class AssetsController {
   ) {
     const walletAddress = req.user.walletAddress;
     return this.assetsService.assignNomineeToFile(id, walletAddress, assignedBeneficiaryId ?? null);
+  }
+
+  @Delete('folders/:id')
+  @ApiOperation({ summary: 'Delete folder and all its contents' })
+  @ApiResponse({ status: 200, description: 'Folder deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Folder not found' })
+  async deleteFolder(@Param('id') id: string, @Req() req: any) {
+    const walletAddress = req.user.walletAddress;
+    return this.assetsService.deleteFolder(id, walletAddress);
   }
 }
 

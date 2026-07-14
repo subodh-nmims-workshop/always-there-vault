@@ -552,7 +552,8 @@ class WebStorageService {
                 walletAddress,
                 parentId: folder.parentId,
                 id: folder.id,
-                beneficiaries: folder.beneficiaries
+                beneficiaries: folder.beneficiaries,
+                type: folder.type
               })
             })
           }
@@ -634,7 +635,8 @@ class WebStorageService {
               body: JSON.stringify({
                 name: updated.name,
                 parentId: updated.parentId,
-                beneficiaries: updated.beneficiaries
+                beneficiaries: updated.beneficiaries,
+                type: updated.type
               })
             })
           }
@@ -673,7 +675,25 @@ class WebStorageService {
       const store = transaction.objectStore('folders');
       const request = store.delete(id);
 
-      request.onsuccess = () => resolve();
+      request.onsuccess = async () => {
+        // Also sync to backend API if centralized mode
+        try {
+          const mode = localStorage.getItem('dwp_mode') || 'centralized'
+          const walletAddress = localStorage.getItem('dwp_wallet_address')
+          if (mode === 'centralized' && walletAddress) {
+            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+            await fetch(`${apiEndpoint}/api/assets/folders/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('dwp_token')}`
+              }
+            })
+          }
+        } catch (e) {
+          console.warn('⚠️ Could not sync folder deletion to backend', e)
+        }
+        resolve();
+      };
       request.onerror = () => reject(request.error);
     });
   }
