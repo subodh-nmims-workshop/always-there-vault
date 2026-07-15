@@ -695,6 +695,9 @@ export function HeartbeatMonitor() {
   }
 
   const getHeartbeatDisplayState = () => {
+    if (!profileEmail || !emailVerified) {
+      return { status: 'incomplete', color: 'amber', message: 'Setup Incomplete (Email Required)', glow: 'shadow-[0_0_15px_rgba(245,158,11,0.3)]' }
+    }
     if (!statusInfo) return { status: 'unknown', color: 'slate', message: 'No Data' }
     if (statusInfo.status === 'active') return { status: 'active', color: 'emerald', message: 'Active & Verified', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.3)]' }
     if (statusInfo.status === 'grace_period') return { status: 'grace', color: 'amber', message: 'Grace Period', glow: 'shadow-[0_0_15px_rgba(245,158,11,0.3)]' }
@@ -707,7 +710,10 @@ export function HeartbeatMonitor() {
     return new Date(lastHeartbeat.getTime() + ms);
   }
 
-  const getDaysUntilDueDisplay = (): { value: number; unit: string } => {
+  const getDaysUntilDueDisplay = (): { value: number | string; unit: string } => {
+    if (!profileEmail || !emailVerified) {
+      return { value: '--', unit: 'Setup Required' }
+    }
     const nextDue = getNextHeartbeatDue()
     const diffMs = nextDue.getTime() - currentTime
 
@@ -716,6 +722,9 @@ export function HeartbeatMonitor() {
   }
 
   const getGracePeriodLeft = (): { value: number; unit: string } => {
+    if (!profileEmail || !emailVerified) {
+      return { value: 0, unit: 'Days' }
+    }
     const nextDue = getNextHeartbeatDue()
     const graceMs = settings.gracePeriod * 24 * 60 * 60 * 1000
     const graceDue = nextDue.getTime() + graceMs
@@ -726,6 +735,9 @@ export function HeartbeatMonitor() {
   }
 
   const calculateProgress = () => {
+    if (!profileEmail || !emailVerified) {
+      return 0
+    }
     const intervalMs = settings.heartbeatInterval * 24 * 60 * 60 * 1000;
 
     const nextDue = getNextHeartbeatDue()
@@ -749,7 +761,7 @@ export function HeartbeatMonitor() {
   const heartbeatDisplay = getHeartbeatDisplayState()
   const dueInfo = getDaysUntilDueDisplay()
   const graceInfo = getGracePeriodLeft()
-  const daysUntilDue = dueInfo.value
+  const daysUntilDue = (!profileEmail || !emailVerified) ? 999 : (typeof dueInfo.value === 'number' ? dueInfo.value : 999)
   const gracePeriodLeft = graceInfo.value
   const progress = calculateProgress()
 
@@ -877,8 +889,10 @@ export function HeartbeatMonitor() {
               </div>
               <div className="flex-1">
                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Last Pulse</p>
-                <p className="text-slate-900 dark:text-white font-bold text-lg">{lastHeartbeat ? lastHeartbeat.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}</p>
-                {lastHeartbeat && (
+                <p className="text-slate-900 dark:text-white font-bold text-lg">
+                  {(!profileEmail || !emailVerified) ? 'Not Configured' : (lastHeartbeat ? lastHeartbeat.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never')}
+                </p>
+                {lastHeartbeat && profileEmail && emailVerified && (
                   <p className="text-slate-500 text-xs mt-1">
                     Next due: {settings.heartbeatInterval < 7
                       ? new Date(lastHeartbeat.getTime() + settings.heartbeatInterval * 60 * 1000).toLocaleTimeString()
