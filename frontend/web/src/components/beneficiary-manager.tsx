@@ -102,9 +102,14 @@ export function BeneficiaryManager() {
   const handleSendVerificationCode = async (beneficiary: StoredBeneficiary) => {
     setIsSendingCode(true)
     try {
+      const token = localStorage.getItem('dwp_token')
+      const headers: any = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/beneficiaries/${beneficiary.id}/send-verification`, {
-        method: 'POST'
+        method: 'POST',
+        headers
       })
       if (res.ok) {
         toast.success('Verification Code Sent', {
@@ -128,10 +133,14 @@ export function BeneficiaryManager() {
     if (!verifyingBeneficiary || !verificationOtp) return
     setIsVerifyingCode(true)
     try {
+      const token = localStorage.getItem('dwp_token')
+      const headers: any = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
       const res = await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}/verify`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ code: verificationOtp })
       })
       if (res.ok) {
@@ -269,33 +278,59 @@ export function BeneficiaryManager() {
         requestBody.ownerAddress = walletAddress
       }
 
-      const syncRes = await fetch(url, {
+      const token = localStorage.getItem('dwp_token')
+      const headers: any = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      let wasCreatedOnBackend = !editingId;
+      let syncRes = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(requestBody)
       })
+
+      // ⚡ CRITICAL FIX (VERIFIED & WORKING): If we are editing an existing local beneficiary but it is
+      // missing on the server (404, e.g. after database resets/redeployments), gracefully fall back
+      // to creating it (POST) to prevent sync crashes and unify databases. DO NOT REMOVE THIS FALLBACK.
+      if (editingId && syncRes.status === 404) {
+        const createUrl = `${apiEndpoint}/api/beneficiaries`
+        const createBody = { ...requestBody, ownerAddress: walletAddress }
+        syncRes = await fetch(createUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(createBody)
+        })
+        if (syncRes.ok) {
+          wasCreatedOnBackend = true;
+        }
+      }
 
       if (!syncRes.ok) {
         const errData = await syncRes.json().catch(() => null)
         throw new Error(errData?.message || 'Failed to sync beneficiary with server.')
       }
 
-      if (!editingId) {
+      if (wasCreatedOnBackend) {
         const createdBen = await syncRes.json()
         backendId = createdBen.id;
-        await storage.deleteBeneficiary(beneficiary.id)
-        await storage.saveBeneficiary({
-          ...beneficiary,
-          id: createdBen.id,
-          isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
-        })
+        if (beneficiary.id !== createdBen.id) {
+          await storage.deleteBeneficiary(beneficiary.id)
+          await storage.saveBeneficiary({
+            ...beneficiary,
+            id: createdBen.id,
+            isVerified: formData.verificationMethod === 'public_key' ? true : (createdBen.isVerified || false)
+          })
+        }
       }
 
       // If public key mode, immediately verify on backend too
       if (formData.verificationMethod === 'public_key') {
+        const verifyHeaders: any = { 'Content-Type': 'application/json' }
+        if (token) verifyHeaders['Authorization'] = `Bearer ${token}`
+
         const verifyRes = await fetch(`${apiEndpoint}/api/beneficiaries/${backendId}/verify`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: verifyHeaders,
           body: JSON.stringify({ code: 'BYPASS_PGP_VERIFICATION' })
         })
         if (!verifyRes.ok) {
@@ -377,9 +412,14 @@ export function BeneficiaryManager() {
 
       // Delete from Backend Postgres
       try {
+        const token = localStorage.getItem('dwp_token')
+        const headers: any = {}
+        if (token) headers['Authorization'] = `Bearer ${token}`
+
         const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
         await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers
         })
       } catch (err) {
         console.error('Failed to delete beneficiary from backend', err)
@@ -607,7 +647,7 @@ export function BeneficiaryManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-200">Verification Protocol *</label>
+              <label className="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-200">Verification Method *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Option 1: Email Mode */}
                 <div
@@ -623,7 +663,7 @@ export function BeneficiaryManager() {
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Standard Email Mode</h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Best for family members and friends. We send an OTP code to verify this address. Prevents access loss through confirmation checks.</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Send a code to verify their email. When the protocol triggers, they will receive the files in their inbox.</p>
                     </div>
                   </div>
                   {formData.verificationMethod === 'email' && (
@@ -636,16 +676,16 @@ export function BeneficiaryManager() {
                   onClick={() => setFormData(prev => ({ ...prev, verificationMethod: 'public_key' }))}
                   className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-300 relative flex flex-col justify-between ${formData.verificationMethod === 'public_key'
                       ? 'border-amber-500 bg-amber-500/5 shadow-[0_4px_20px_rgba(245,158,11,0.15)] dark:border-amber-500/75'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:hover:border-slate-700 bg-transparent'
                     }`}
                 >
                   <div className="flex items-start space-x-3">
-                    <div className={`p-2 rounded-lg ${formData.verificationMethod === 'public_key' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                    <div className={`p-2 rounded-lg ${formData.verificationMethod === 'public_key' ? 'bg-amber-50 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                       <Shield className="h-4 w-4" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">PGP Key Mode (Stealth)</h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Best for high confidentiality, whistleblowers, or political targets. Bypasses emails to eliminate digital trails. Files are encrypted locally with the nominee's public key.</p>
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Secret Key Mode</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Best for total secrets. No emails are sent to your nominee now. Files are locked with their key so only they can open them.</p>
                     </div>
                   </div>
                   {formData.verificationMethod === 'public_key' && (
@@ -658,14 +698,14 @@ export function BeneficiaryManager() {
             {formData.verificationMethod === 'public_key' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">PGP Public Key *</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">Nominee's Public Key *</label>
                   <button
                     type="button"
                     onClick={() => setShowPgpHelp(!showPgpHelp)}
                     className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
                   >
                     <HelpCircle className="h-3.5 w-3.5" />
-                    {showPgpHelp ? "Hide Guide" : "What is PGP? / Easy Guide"}
+                    {showPgpHelp ? "Hide Guide" : "What is this? (Easy Guide)"}
                   </button>
                 </div>
 
@@ -674,73 +714,52 @@ export function BeneficiaryManager() {
                     <div className="bg-amber-500/10 dark:bg-amber-500/20 p-3 rounded-lg border border-amber-500/20 mb-2">
                       <p className="font-bold text-amber-850 dark:text-amber-300 flex items-center gap-1">
                         <HelpCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                        💡 Short & Simple Explanation:
+                        💡 Secret Setup:
                       </p>
                       <p className="text-[11.5px] mt-1 text-slate-700 dark:text-slate-200">
-                        Use this mode if you want to keep the setup a <strong>secret or surprise</strong> from your nominee. No verification email will be sent to their inbox right now. You just need to paste their Encryption Key (Public Key) below to lock your files securely.
+                        Use this if you want to keep the setup a **secret or surprise** from your nominee. No verification email will be sent to their inbox right now. Simply paste their public key to lock your files.
                       </p>
                     </div>
 
                     <div>
-                      <p className="font-bold text-amber-700 dark:text-amber-400 mb-1">🔑 How PGP Works (Lock & Key Analogy)</p>
-                      <p>
-                        PGP works exactly like a physical **Lock** and **Key**:
-                      </p>
+                      <p className="font-bold text-amber-700 dark:text-amber-400 mb-1">🔑 Lock & Key Analogy:</p>
                       <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-500 dark:text-slate-400">
                         <li>
-                          <strong>Public Key (The Lock):</strong> This is a digital lock that you get from your nominee and paste here. We use this lock to encrypt your files. It is 100% safe to share.
+                          <strong>Public Key (The Lock):</strong> You paste their lock here. We use it to lock your files. It is safe to share with anyone.
                         </li>
                         <li>
-                          <strong>Private Key (The Key):</strong> This is the key that only your nominee has. When the protocol triggers, they will use their secret key to unlock and open your files.
+                          <strong>Private Key (The Key):</strong> Only your nominee has the key. When the protocol triggers, they will use their key to open and unlock the files.
                         </li>
                       </ul>
                     </div>
 
                     <div className="border-t border-amber-200/50 dark:border-amber-500/20 pt-2">
-                      <p className="font-bold text-amber-700 dark:text-amber-400 mb-1">🛠️ How to get your Nominee's PGP Key? (Quick Steps)</p>
-                      <div className="space-y-2 mt-1 pl-1">
-                        <div>
-                          <strong className="text-[11px] text-slate-700 dark:text-slate-300">Option A: Ask your nominee for their Public Key</strong>
-                          <p className="text-[10.5px] text-slate-500 mt-0.5">
-                            If your nominee already knows PGP, ask them to copy and send their **PGP Public Key** to you, then paste it in the box below.
-                          </p>
-                        </div>
-                        <div>
-                          <strong className="text-[11px] text-slate-700 dark:text-slate-300">Option B: Generate a new key pair</strong>
-                          <p className="text-[10.5px] text-slate-500 mt-0.5">
-                            Install a free tool on your nominee's device to generate a key pair:<br />
-                            - <strong>Windows:</strong> Download <a href="https://gpg4win.org/" target="_blank" rel="noreferrer" className="underline text-amber-600 hover:text-amber-750 dark:text-amber-400 font-semibold">Gpg4win (Kleopatra)</a> → Open it and click <strong>New certificate / Key Pair</strong> → Enter Name/Email and set a strong passphrase.<br />
-                            - <strong>Mac:</strong> Download <a href="https://gpgtools.org/" target="_blank" rel="noreferrer" className="underline text-amber-600 hover:text-amber-750 dark:text-amber-400 font-semibold">GPG Suite</a>.<br />
-                            - <strong>Linux:</strong> Open terminal and run: <code>gpg --full-generate-key</code>.
-                          </p>
-                        </div>
-                        <div>
-                          <strong className="text-[11px] text-slate-700 dark:text-slate-300">Step 3: Copy and paste the Public Key</strong>
-                          <p className="text-[10.5px] text-slate-500 mt-0.5">
-                            Once generated, click **Export** or copy the key. Copy the entire text block starting with <code>-----BEGIN PGP PUBLIC KEY BLOCK-----</code> and paste it in the box below!
-                          </p>
-                        </div>
-                      </div>
+                      <p className="font-bold text-amber-700 dark:text-amber-400 mb-1">🛠️ How to get your Nominee's Key:</p>
+                      <p className="text-[11px] text-slate-500">
+                        1. Ask your nominee to send you their **Public Key**.<br />
+                        2. If they don't have one, they can create one using free apps like **Gpg4win** (Windows) or **GPG Suite** (Mac).<br />
+                        3. Copy the entire text block starting with <code>-----BEGIN PGP PUBLIC KEY BLOCK-----</code> and paste it below.
+                      </p>
                     </div>
                   </div>
                 )}
 
                 <textarea
-                  className="input-premium w-full h-56 font-mono text-xs py-3 px-4 resize-y focus:ring-1 focus:ring-amber-500"
-                  placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#10;...&#10;-----END PGP PUBLIC KEY BLOCK-----"
+                  className="input-premium w-full h-40 font-mono text-xs py-3 px-4 resize-y focus:ring-1 focus:ring-amber-500"
+                  placeholder="Paste the public key here (starts with -----BEGIN PGP PUBLIC KEY BLOCK-----)"
                   value={formData.pgpPublicKey}
                   onChange={(e) => setFormData(prev => ({ ...prev, pgpPublicKey: e.target.value }))}
                   required
                 />
-                <p className="text-[11px] text-slate-500 dark:text-slate-450 mt-1">
-                  Paste the nominee's PGP Public Key. We use this key to locally encrypt files so only the nominee can read them.
+                <p className="text-[11px] text-slate-500 dark:text-slate-455 mt-1">
+                  Paste the nominee's public key. We use it to lock files so only they can open them.
                 </p>
               </div>
             )}
 
             <div>
               <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">
-                Wallet Address <span className="text-slate-500 dark:text-slate-450 font-normal text-xs ml-1">(Optional - Can be added later)</span>
+                Wallet Address <span className="text-slate-500 dark:text-slate-455 font-normal text-xs ml-1">(Optional - Can be added later)</span>
               </label>
               <input
                 type="text"
@@ -770,7 +789,7 @@ export function BeneficiaryManager() {
                   <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-slate-700 dark:text-slate-300">
                     <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">Standard Email Verification</p>
-                    <p className="text-xs">The nominee will get an email with a 6-digit code to verify their access. When the switch triggers, the files are released to their email.</p>
+                    <p className="text-xs">Your nominee gets an email code to verify access. Files are sent to their inbox when the protocol triggers.</p>
                   </div>
                 </div>
               </div>
@@ -779,8 +798,8 @@ export function BeneficiaryManager() {
                 <div className="flex items-start space-x-3">
                   <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-slate-700 dark:text-slate-300">
-                    <p className="font-medium text-amber-700 dark:text-amber-300 mb-1">PGP Stealth Mode (No Immediate Email)</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Perfect for high confidentiality. No verification email is sent to the nominee's inbox right now, leaving zero digital trail. When the switch triggers, files are encrypted with this PGP key before being sent.</p>
+                    <p className="font-medium text-amber-700 dark:text-amber-300 mb-1">Secret Key Mode</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Zero email notifications are sent to the nominee right now. Files are securely locked using their public key before being sent.</p>
                   </div>
                 </div>
               </div>
@@ -934,9 +953,14 @@ export function BeneficiaryManager() {
                           setVerificationOtp('')
                           await storage.deleteBeneficiary(verifyingBeneficiary.id)
                           try {
+                            const token = localStorage.getItem('dwp_token')
+                            const headers: any = {}
+                            if (token) headers['Authorization'] = `Bearer ${token}`
+
                             const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
                             await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}`, {
-                              method: 'DELETE'
+                              method: 'DELETE',
+                              headers
                             })
                           } catch (err) {
                             console.error('Failed to delete beneficiary from backend', err)
