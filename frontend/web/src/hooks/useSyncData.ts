@@ -20,6 +20,17 @@ export function useSyncData() {
 
     try {
       const normalizedAddress = address.toLowerCase();
+      const lastSyncedAddress = typeof window !== 'undefined' ? localStorage.getItem('dwp_last_synced_address') : null;
+      
+      const storage = WebStorageService.getInstance();
+      if (lastSyncedAddress && lastSyncedAddress !== normalizedAddress) {
+        console.log('🔄 Wallet changed from', lastSyncedAddress, 'to', normalizedAddress, '. Clearing IndexedDB for fresh sync...');
+        await storage.clearAllData();
+      }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('dwp_last_synced_address', normalizedAddress);
+      }
+
       const token = typeof window !== 'undefined' ? localStorage.getItem('dwp_token') : null;
       
       const headers: Record<string, string> = {
@@ -39,7 +50,6 @@ export function useSyncData() {
       ]);
 
       // Sync to local storage / IndexedDB
-      const storage = WebStorageService.getInstance();
       let hasChanges = false;
       
       // 1. Sync Beneficiaries
@@ -174,6 +184,7 @@ export function useSyncData() {
       if (Array.isArray(assetsRes)) {
         const localAssets = await storage.getAllAssets();
         let assetsChanged = false;
+        const backendFolderIds = new Set(Array.isArray(foldersRes) ? foldersRes.map((f: any) => f.id) : []);
 
         if (assetsRes.length !== localAssets.length) {
           assetsChanged = true;
@@ -181,11 +192,12 @@ export function useSyncData() {
           const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
           for (const b of assetsRes) {
             const local = localAssetMap.get(b.id);
+            const targetFolderId = b.folderId && backendFolderIds.has(b.folderId) ? b.folderId : null;
             const targetAsset = {
               id: b.id,
               name: b.name,
               type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
-              folderId: b.folderId || null,
+              folderId: targetFolderId,
               encryptedData: local?.encryptedData || b.encryptedData || '',
               keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
               iv: local?.iv || b.iv || b.fileIv || '',
@@ -222,11 +234,12 @@ export function useSyncData() {
 
           for (const b of assetsRes) {
             const local = localAssetMap.get(b.id);
+            const targetFolderId = b.folderId && backendFolderIds.has(b.folderId) ? b.folderId : null;
             await storage.saveAsset({
               id: b.id,
               name: b.name,
               type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
-              folderId: b.folderId || null,
+              folderId: targetFolderId,
               encryptedData: local?.encryptedData || b.encryptedData || '',
               keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
               iv: local?.iv || b.iv || b.fileIv || '',

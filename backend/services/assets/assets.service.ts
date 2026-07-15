@@ -181,6 +181,23 @@ export class AssetsService {
 
     const fileId = (data.id && isUuid(data.id)) ? data.id : (data.assetId && isUuid(data.assetId)) ? data.assetId : undefined;
 
+    if (!data.keyId) {
+      throw new BadRequestException('Encryption key ID is required.');
+    }
+    if (!data.iv) {
+      throw new BadRequestException('Encryption Initialization Vector (IV) is required.');
+    }
+
+    let validFolderId = null;
+    if (data.folderId && isUuid(data.folderId)) {
+      const folderExists = await this.db.query.folders.findFirst({
+        where: and(eq(folders.id, data.folderId), eq(folders.userId, user.id))
+      });
+      if (folderExists) {
+        validFolderId = data.folderId;
+      }
+    }
+
     const [fileRecord] = await this.db.insert(files).values({
       id: fileId,
       name: data.name,
@@ -188,8 +205,8 @@ export class AssetsService {
       mimeType: data.mimeType || 'application/json',
       cid: isIpfs ? data.ipfsHash : null,
       location: data.ipfsHash || 'local',
-      encryptionKeyId: data.keyId || null,
-      fileIv: data.iv || null,
+      encryptionKeyId: data.keyId,
+      fileIv: data.iv,
       encryptedData: data.encryptedData || null,
       encryptionKey: data.encryptionKey || null,
       isIpfs: !!isIpfs,
@@ -198,7 +215,7 @@ export class AssetsService {
         ...(isB2 ? { storageProvider: 'backblaze-b2', bucket: this.configService.get('B2_BUCKET_NAME') } : {})
       },
       userId: user.id,
-      folderId: data.folderId || null,
+      folderId: validFolderId,
       assignedBeneficiaryId: data.assignedBeneficiaryId || null,
     } as NewFile).returning();
 
@@ -476,7 +493,54 @@ export class AssetsService {
     });
     if (!folder) throw new NotFoundException('Folder not found or access denied');
 
+    // Move all files in this folder to parent folder
+    await this.db.update(files)
+      .set({ folderId: folder.parentId })
+      .where(and(eq(files.folderId, id), eq(files.userId, user.id)));
+
+    // Move all subfolders in this folder to parent folder
+    await this.db.update(folders)
+      .set({ parentId: folder.parentId })
+      .where(and(eq(folders.parentId, id), eq(folders.userId, user.id)));
+
     await this.db.delete(folders).where(eq(folders.id, id));
     return { success: true };
+  }
+
+  async updateAsset(id: string, data: any, walletAddress: string) {
+    const user = await this.usersService.findUserByWallet(walletAddress);
+    const file = await this.db.query.files.findFirst({
+      where: and(eq(files.id, id), eq(files.userId, user.id)),
+    });
+    if (!file) throw new NotFoundException('Asset not found or access denied');
+
+    const updateFields: any = {};
+    if (data.name !== undefined) updateFields.name = data.name;
+    if (data.folderId !== undefined) {
+      let validFolderId = null;
+      if (data.folderId) {
+        const folderExists = await this.db.query.folders.findFirst({
+          where: and(eq(folders.id, data.folderId), eq(folders.userId, user.id))
+        });
+        if (folderExists) {
+          validFolderId = data.folderId;
+        }
+      }
+      updateFields.folderId = validFolderId;
+    }
+    if (data.assignedBeneficiaryId !== undefined) {
+      updateFields.assignedBeneficiaryId = data.assignedBeneficiaryId || null;
+    }
+    if (data.iv !== undefined) updateFields.fileIv = data.iv;
+    if (data.keyId !== undefined) updateFields.encryptionKeyId = data.keyId;
+
+    updateFields.updatedAt = new Date();
+
+    const [updatedFile] = await this.db.update(files)
+      .set(updateFields)
+      .where(eq(files.id, id))
+      .returning();
+
+    return updatedFile;
   }
 }

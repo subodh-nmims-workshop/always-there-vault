@@ -15,9 +15,33 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
     const [emailInput, setEmailInput] = useState('')
     const [showEmailBanner, setShowEmailBanner] = useState(true)
     const [isSavingEmail, setIsSavingEmail] = useState(false)
+    const [profileEmail, setProfileEmail] = useState<string>('')
+    const [emailVerified, setEmailVerified] = useState<boolean>(false)
 
     useEffect(() => {
         refreshState()
+        
+        const fetchProfileInfo = async () => {
+            try {
+                const token = localStorage.getItem('dwp_token')
+                if (!token) return
+                const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                if (res.ok) {
+                    const data = await res.json()
+                    setProfileEmail(data.email || '')
+                    setEmailVerified(data.emailVerified || false)
+                }
+            } catch (err) {
+                console.error("Error fetching profile in overview dashboard:", err)
+            }
+        }
+        
+        fetchProfileInfo()
     }, [refreshState])
 
     const beneficiaries = state?.beneficiaries || []
@@ -38,6 +62,9 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
         nextDeadline: nextDeadlineStr
     } : null
 
+    const isEmailConfigured = !!profileEmail && emailVerified
+    const isHeartbeatActive = isActive && isEmailConfigured
+
     const assets = state?.assets || []
     const loading = false
 
@@ -46,7 +73,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
         let health = 100
 
         // Reduce health if no heartbeat
-        if (!heartbeat?.isActive) health -= 30
+        if (!isHeartbeatActive) health -= 30
 
         // Reduce health if no assets
         if (assets.length === 0) health -= 20
@@ -210,10 +237,10 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                 <span className={`text-xs sm:text-sm ${totalBeneficiaries > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Add a trusted beneficiary</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className={`size-6 rounded-full flex items-center justify-center shrink-0 ${heartbeat?.isActive ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
-                                    {heartbeat?.isActive ? '✓' : '3'}
+                                <div className={`size-6 rounded-full flex items-center justify-center shrink-0 ${isHeartbeatActive ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
+                                    {isHeartbeatActive ? '✓' : '3'}
                                 </div>
-                                <span className={`text-xs sm:text-sm ${heartbeat?.isActive ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Initialize the Dead Man's Switch</span>
+                                <span className={`text-xs sm:text-sm ${isHeartbeatActive ? 'text-slate-600 dark:text-slate-300' : 'text-slate-900 dark:text-white font-medium'}`}>Initialize the Dead Man's Switch</span>
                             </div>
                         </div>
                     </div>
@@ -384,19 +411,37 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                     </div>
                                 ) : (
                                     <>
-                                        {heartbeat?.isActive && (
+                                        {heartbeat && (
                                             <div className="bg-white dark:bg-slate-900/40 p-4 rounded-2xl flex items-center justify-between border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="size-12 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 border border-green-500/20">
-                                                        <BoltIcon className="h-6 w-6" />
+                                                    <div className={`size-12 rounded-xl flex items-center justify-center border ${
+                                                        isHeartbeatActive 
+                                                            ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                                                            : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                    }`}>
+                                                        <BoltIcon className={`h-6 w-6 ${!isHeartbeatActive ? 'animate-pulse' : ''}`} />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">Heartbeat Active</p>
-                                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Last verified: {new Date(heartbeat.lastHeartbeat).toLocaleDateString()}</p>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white font-outfit">
+                                                            {isHeartbeatActive ? 'Heartbeat Active' : !isEmailConfigured ? 'Setup Incomplete' : 'Heartbeat Inactive'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-650 dark:text-slate-450 mt-0.5 font-outfit">
+                                                            {isHeartbeatActive 
+                                                                ? `Last verified: ${new Date(heartbeat.lastHeartbeat).toLocaleDateString()}` 
+                                                                : !isEmailConfigured 
+                                                                ? 'Alert email configuration missing or unverified' 
+                                                                : 'Protocol initialized but inactive'}
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs font-medium text-green-500 uppercase">Active</p>
+                                                    <p className={`text-xs font-bold uppercase font-outfit ${
+                                                        isHeartbeatActive 
+                                                            ? 'text-green-500' 
+                                                            : 'text-amber-500'
+                                                    }`}>
+                                                        {isHeartbeatActive ? 'Active' : !isEmailConfigured ? 'Email Missing' : 'Inactive'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         )}
@@ -409,7 +454,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-bold text-slate-900 dark:text-white">Asset Encrypted</p>
-                                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{asset.name}</p>
+                                                        <p className="text-xs text-slate-650 dark:text-slate-400 mt-0.5">{asset.name}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
@@ -452,17 +497,29 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                             <div className="absolute inset-0 bg-blue-500/5 blur-xl rounded-3xl opacity-50"></div>
                             <div className="relative bg-white/80 dark:bg-slate-900/80 rounded-[22px] p-4 sm:p-8 border border-slate-200 dark:border-slate-800/50 h-full backdrop-blur-xl shadow-sm">
                                 <div className="flex items-center justify-between mb-8">
-                                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">Dead Man's Switch</h2>
-                                    <span className={`${heartbeat?.isActive ? 'bg-green-50/50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20 shadow-sm' : 'bg-red-50/50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20'} border px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center`}>
-                                        <span className={`w-1.5 h-1.5 rounded-full ${heartbeat?.isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'} mr-2`}></span>
-                                        {heartbeat?.isActive ? 'Active' : 'Inactive'}
+                                    <h2 className="text-lg font-bold text-slate-900 dark:text-white font-outfit">Dead Man's Switch</h2>
+                                    <span className={`${
+                                        isHeartbeatActive
+                                            ? 'bg-green-50/50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20 shadow-sm'
+                                            : !isEmailConfigured
+                                            ? 'bg-amber-50/50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20 shadow-sm'
+                                            : 'bg-red-50/50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20'
+                                    } border px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center font-outfit`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${
+                                            isHeartbeatActive
+                                                ? 'bg-green-500 animate-pulse'
+                                                : !isEmailConfigured
+                                                ? 'bg-amber-500 animate-pulse'
+                                                : 'bg-red-500'
+                                        } mr-2`}></span>
+                                        {isHeartbeatActive ? 'Active' : !isEmailConfigured ? 'Email Missing' : 'Inactive'}
                                     </span>
                                 </div>
 
                                 <div className="flex flex-col items-center py-6">
-                                    {heartbeat?.nextDeadline ? (
+                                    {isHeartbeatActive && heartbeat?.nextDeadline ? (
                                         <>
-                                            <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-tighter mb-2">
+                                            <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-tighter mb-2 font-outfit">
                                                 {(() => {
                                                     const now = new Date().getTime()
                                                     const deadline = new Date(heartbeat.nextDeadline).getTime()
@@ -473,12 +530,17 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                                     return `${days}d ${hours}h ${minutes}m`
                                                 })()}
                                             </div>
-                                            <p className="text-slate-650 dark:text-slate-400 text-xs sm:text-sm font-medium">Until next required heartbeat</p>
+                                            <p className="text-slate-655 dark:text-slate-400 text-xs sm:text-sm font-medium font-outfit">Until next required heartbeat</p>
+                                        </>
+                                    ) : !isEmailConfigured ? (
+                                        <>
+                                            <div className="text-2xl sm:text-3xl font-bold text-amber-500 dark:text-amber-400 tracking-tighter mb-2 font-outfit font-bold">Setup Required</div>
+                                            <p className="text-slate-655 dark:text-slate-400 text-xs sm:text-sm font-medium font-outfit">Configure Email in Settings</p>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="text-2xl sm:text-3xl font-bold text-slate-400 dark:text-slate-500 tracking-tighter mb-2">No Heartbeat</div>
-                                            <p className="text-slate-650 dark:text-slate-400 text-xs sm:text-sm font-medium">Sign your first heartbeat</p>
+                                            <div className="text-2xl sm:text-3xl font-bold text-slate-400 dark:text-slate-500 tracking-tighter mb-2 font-outfit">No Heartbeat</div>
+                                            <p className="text-slate-655 dark:text-slate-400 text-xs sm:text-sm font-medium font-outfit">Sign your first heartbeat</p>
                                         </>
                                     )}
                                 </div>

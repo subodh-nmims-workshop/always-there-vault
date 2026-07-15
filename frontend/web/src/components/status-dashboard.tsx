@@ -42,6 +42,8 @@ export function StatusDashboard() {
     const [activeTranslation, setActiveTranslation] = useState<string>('Booting up secure vaults and protocol components...')
     const logsContainerRef = useRef<HTMLDivElement>(null)
     const [showConsole, setShowConsole] = useState(false)
+    const [profileEmail, setProfileEmail] = useState<string>('')
+    const [emailVerified, setEmailVerified] = useState<boolean>(false)
     const apiEndpoint = useMemo(() => {
         try {
             return (ModeService.getInstance() as any).config.apiEndpoint || 'http://localhost:7001'
@@ -78,16 +80,19 @@ export function StatusDashboard() {
         if (appState.beneficiaries.length > 0) score += 15;
         
         // Heartbeat Status (40 points)
-        const lastHb = appState.stats.lastHeartbeat;
-        const daysSince = (Date.now() - lastHb) / (1000 * 60 * 60 * 24);
-        if (daysSince < 7) score += 40;
-        else if (daysSince < 30) score += 20;
+        const isEmailConfigured = !!profileEmail && emailVerified;
+        if (isEmailConfigured) {
+            const lastHb = appState.stats.lastHeartbeat;
+            const daysSince = (Date.now() - lastHb) / (1000 * 60 * 60 * 24);
+            if (daysSince < 7) score += 40;
+            else if (daysSince < 30) score += 20;
+        }
         
         // Node Connectivity (30 points)
         if (backendStatus === 'online') score += 30;
         
         return score;
-    }, [appState, backendStatus]);
+    }, [appState, backendStatus, profileEmail, emailVerified]);
 
     // Asset Breakdown
     const assetStats = useMemo(() => {
@@ -108,6 +113,28 @@ export function StatusDashboard() {
                 const storage = WebStorageService.getInstance()
                 const state = await storage.getAppState()
                 setAppState(state)
+
+                // Fetch email verification status from profile
+                let isEmailOk = false;
+                const token = localStorage.getItem('dwp_token')
+                if (token) {
+                    const endpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                    try {
+                        const res = await fetch(`${endpoint}/api/users/profile`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        })
+                        if (res.ok) {
+                            const data = await res.json()
+                            setProfileEmail(data.email || '')
+                            setEmailVerified(data.emailVerified || false)
+                            isEmailOk = !!data.email && data.emailVerified
+                        }
+                    } catch (err) {
+                        console.error('Failed to fetch profile in status dashboard:', err)
+                    }
+                }
 
                 // Generate recent activity from state
                 const recentActivities: ActivityItem[] = [];
@@ -152,6 +179,13 @@ export function StatusDashboard() {
                         await storage.saveDiagnosticLog(log)
                     }
                     setActiveTranslation('Secure Vault Initialization: Loading database, identity keypairs, and configurations.');
+                }
+
+                // Add watchdog surveillance status log dynamically
+                if (!isEmailOk) {
+                    addLog('WARN', 'Watchdog Surveillance: Alert email configuration missing or unverified.', 'text-amber-600 dark:text-amber-400')
+                } else {
+                    addLog('SECURE', 'Watchdog Surveillance: Alert email configured & active.', 'text-emerald-600 dark:text-emerald-400')
                 }
 
                 // Connection check logs staggered
@@ -331,7 +365,8 @@ export function StatusDashboard() {
     }, [])
 
 
-    const systemStatus = appState?.stats.systemStatus || 'secure'
+    const isEmailConfigured = !!profileEmail && emailVerified
+    const systemStatus = !isEmailConfigured ? 'warning' : (appState?.stats.systemStatus || 'secure')
     const statusColor = systemStatus === 'secure' ? 'text-green-400' : systemStatus === 'warning' ? 'text-amber-400' : 'text-rose-400'
     const statusBg = systemStatus === 'secure' ? 'bg-green-500/10' : systemStatus === 'warning' ? 'bg-amber-500/10' : 'bg-rose-500/10'
     const statusBorder = systemStatus === 'secure' ? 'border-green-500/20' : systemStatus === 'warning' ? 'border-amber-500/20' : 'border-rose-500/20'
@@ -349,7 +384,11 @@ export function StatusDashboard() {
                                 <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${systemStatus === 'secure' ? 'bg-green-500' : 'bg-amber-500'}`}></span>
                             </span>
                             <p className={`${statusColor} font-mono text-xs uppercase tracking-widest font-bold`}>
-                                {systemStatus === 'secure' ? 'All Systems Safe & Operational' : systemStatus === 'warning' ? 'System Attention Required' : 'Critical Vault Error'}
+                                {systemStatus === 'secure' 
+                                    ? 'All Systems Safe & Operational' 
+                                    : !isEmailConfigured 
+                                    ? 'Setup Incomplete: Email Configuration Missing' 
+                                    : 'System Attention Required'}
                             </p>
                         </div>
                     </div>
@@ -604,9 +643,17 @@ export function StatusDashboard() {
                                         <td className="py-4">Cron & Surveillance</td>
                                         <td className="py-4 text-[10px]"><span className="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono font-bold">HMAC Signed Pulse</span></td>
                                         <td className="py-4 pr-2 text-right">
-                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400">
-                                                <span className="size-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                                                MONITORING
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                isEmailConfigured 
+                                                    ? 'bg-green-500/10 text-green-400' 
+                                                    : 'bg-amber-500/10 text-amber-400'
+                                            }`}>
+                                                <span className={`size-1.5 rounded-full ${
+                                                    isEmailConfigured 
+                                                        ? 'bg-green-400 animate-pulse' 
+                                                        : 'bg-amber-400'
+                                                }`}></span>
+                                                {isEmailConfigured ? 'MONITORING' : 'EMAIL MISSING'}
                                             </span>
                                         </td>
                                     </tr>
@@ -616,9 +663,17 @@ export function StatusDashboard() {
                                         <td className="py-4">Notification SMTP</td>
                                         <td className="py-4 text-[10px]"><span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono font-bold">SSL / TLS Enabled</span></td>
                                         <td className="py-4 pr-2 text-right">
-                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400">
-                                                <span className="size-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                                                CONFIGURED
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                isEmailConfigured 
+                                                    ? 'bg-green-500/10 text-green-400' 
+                                                    : 'bg-amber-500/10 text-amber-400'
+                                            }`}>
+                                                <span className={`size-1.5 rounded-full ${
+                                                    isEmailConfigured 
+                                                        ? 'bg-green-400 animate-pulse' 
+                                                        : 'bg-amber-400'
+                                                }`}></span>
+                                                {isEmailConfigured ? 'CONFIGURED' : 'SETUP INCOMPLETE'}
                                             </span>
                                         </td>
                                     </tr>
@@ -755,7 +810,11 @@ export function StatusDashboard() {
                         <div>
                             <p className="text-slate-500 text-[10px] uppercase font-bold mb-1">Vault State</p>
                             <p className={`text-slate-800 dark:text-white text-xl font-bold font-mono ${statusColor}`}>
-                                {systemStatus === 'secure' ? 'SECURE & ACTIVE' : 'ACTION REQUIRED'}
+                                {systemStatus === 'secure' 
+                                    ? 'SECURE & ACTIVE' 
+                                    : !isEmailConfigured 
+                                    ? 'SETUP INCOMPLETE' 
+                                    : 'ACTION REQUIRED'}
                             </p>
                         </div>
                         <ShieldCheckIcon className="w-8 h-8 text-slate-400 dark:text-slate-700 group-hover:text-blue-500/50 transition-colors" />

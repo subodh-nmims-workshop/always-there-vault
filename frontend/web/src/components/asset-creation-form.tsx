@@ -8,7 +8,7 @@ import {
   CheckCircle, Plus, Search, Grid, List as ListIcon,
   Image as ImageIcon, Video, FolderOpen, MoreVertical, X,
   FolderPlus, ChevronRight, CornerLeftUp, Coins, Pencil, Calendar, Clock,
-  Download, RefreshCw
+  Download, RefreshCw, AlertTriangle, ShieldAlert
 } from 'lucide-react'
 import WebCryptoService from '@/lib/crypto'
 import WebStorageService, { StoredAsset, StoredFolder } from '@/lib/storage'
@@ -93,6 +93,8 @@ export function AssetCreationForm() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
+  const [isHealthDashboardOpen, setIsHealthDashboardOpen] = useState(false)
+  const [rawAssets, setRawAssets] = useState<StoredAsset[]>([])
 
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [breadcrumbs, setBreadcrumbs] = useState<StoredFolder[]>([])
@@ -108,6 +110,12 @@ export function AssetCreationForm() {
   const storage = WebStorageService.getInstance()
   const modeService = ModeService.getInstance()
   const { subscription } = useSubscription()
+
+  const damagedAssets = useMemo(() => {
+    return rawAssets.filter(
+      (asset: any) => !asset.iv || asset.iv === '000000000000000000000000' || !asset.keyId || asset.keyId === 'key-uuid-for-testing-12345'
+    )
+  }, [rawAssets])
 
   useEffect(() => {
     loadAssets()
@@ -149,8 +157,23 @@ export function AssetCreationForm() {
     try {
       // Use modeService to load assets from local IndexedDB
       const allAssets = await modeService.loadAssets();
+      setRawAssets(allAssets);
+
+      // Fetch all folders to check for orphan assets
+      const allFolders = await storage.getAllFolders();
+      const folderIds = new Set(allFolders.map(f => f.id));
 
       setTotalAssetsCount(allAssets.length);
+      
+      // Self-heal: If an asset has a folderId that doesn't exist in IndexedDB, update it to null
+      for (const asset of allAssets) {
+        if (asset.folderId && !folderIds.has(asset.folderId)) {
+          console.warn(`Self-healing: Asset "${asset.name}" points to non-existent folder ${asset.folderId}. Resetting folderId to null.`);
+          asset.folderId = null;
+          await storage.updateAsset(asset.id, { folderId: null }).catch(console.error);
+        }
+      }
+
       // Filter for current folder view
       const folderAssets = allAssets.filter((asset: any) => asset.folderId === currentFolderId);
       setAssets(folderAssets);
@@ -1495,10 +1518,17 @@ export function AssetCreationForm() {
 
         <div className="flex items-center justify-between mt-4">
           <span className="text-[10px] text-slate-500">{formatFileSize(asset.size)}</span>
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-            <Shield className="w-3 h-3 text-emerald-500" />
-            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">Secure</span>
-          </div>
+          {(!asset.iv || asset.iv === '000000000000000000000000' || !asset.keyId || asset.keyId === 'key-uuid-for-testing-12345') ? (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]" title="This asset is missing encryption payload on the backend.">
+              <AlertTriangle className="w-3 h-3 text-amber-500" />
+              <span className="text-[9px] font-bold text-amber-500 uppercase tracking-tighter">Ghost Asset</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <Shield className="w-3 h-3 text-emerald-500" />
+              <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">Secure</span>
+            </div>
+          )}
         </div>
       </motion.div>
     )
@@ -1524,8 +1554,17 @@ export function AssetCreationForm() {
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate" title={asset.name}>{asset.name}</h3>
           <p className="text-[10px] text-slate-500 flex items-center mt-0.5">
-            <Shield className="h-3 w-3 text-emerald-500/70 mr-1 shadow-[0_0_5px_rgba(16,185,129,0.2)]" />
-            Encrypted • {new Date(asset.createdAt).toLocaleDateString()}
+            {(!asset.iv || asset.iv === '000000000000000000000000' || !asset.keyId || asset.keyId === 'key-uuid-for-testing-12345') ? (
+              <>
+                <AlertTriangle className="h-3 w-3 text-amber-500 mr-1 shadow-[0_0_5px_rgba(245,158,11,0.2)]" />
+                <span className="text-amber-500 font-semibold">Ghost Asset • Legacy/Incomplete Sync</span>
+              </>
+            ) : (
+              <>
+                <Shield className="h-3 w-3 text-emerald-500/70 mr-1 shadow-[0_0_5px_rgba(16,185,129,0.2)]" />
+                Encrypted • {new Date(asset.createdAt).toLocaleDateString()}
+              </>
+            )}
           </p>
         </div>
         <div className="hidden md:block w-24 text-right text-sm text-slate-700 dark:text-slate-400 pr-4">{formatFileSize(asset.size)}</div>
@@ -1678,6 +1717,23 @@ export function AssetCreationForm() {
               className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-full text-sm text-slate-800 dark:text-white focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 transition-all w-48 outline-none placeholder-slate-500 shadow-inner"
             />
           </div>
+
+          {/* Health status indicator/dashboard button */}
+          <button
+            onClick={() => setIsHealthDashboardOpen(true)}
+            className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.03] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/10 rounded-xl transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 relative group"
+            title="Vault Sync Health Monitor"
+          >
+            {damagedAssets.length > 0 ? (
+              <>
+                <ShieldAlert className="w-5 h-5 text-amber-500" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping"></span>
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-500 rounded-full"></span>
+              </>
+            ) : (
+              <Shield className="w-5 h-5 text-emerald-500" />
+            )}
+          </button>
 
           <div className="relative">
             <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="bg-gradient-to-br from-[#1152d4] to-purple-600 rounded-xl shadow-[0_0_20px_rgba(17,82,212,0.4)] hover:scale-105 transition-all group flex items-center px-4 py-2">
@@ -3285,6 +3341,91 @@ export function AssetCreationForm() {
                 </button>
                 <button onClick={handleRenameFolder} disabled={!renameInput.trim() || renameInput === renameFolderState.currentName} className="flex-[2] py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50">
                   Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Vault Sync Health Monitor Modal */}
+      <AnimatePresence>
+        {isHealthDashboardOpen && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 overflow-y-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsHealthDashboardOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden my-8 md:my-16">
+              <div className={`absolute top-0 left-0 w-full h-1 ${damagedAssets.length > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
+
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <ShieldAlert className={`w-5 h-5 ${damagedAssets.length > 0 ? 'text-amber-500' : 'text-emerald-500'}`} />
+                  Vault Sync Health Monitor
+                </h3>
+                <button onClick={() => setIsHealthDashboardOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-white/5 p-1.5 rounded-full">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-2xl">
+                  <div className="text-left">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Vault Health Status</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {damagedAssets.length > 0
+                        ? `${damagedAssets.length} assets require attention`
+                        : 'All assets synchronized and secured'}
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${damagedAssets.length > 0 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
+                    {damagedAssets.length > 0 ? 'Attention Required' : 'Excellent'}
+                  </span>
+                </div>
+
+                {damagedAssets.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold text-left">
+                      Assets Requiring Attention
+                    </label>
+                    <div className="space-y-2">
+                      {damagedAssets.map((asset) => (
+                        <div key={asset.id} className="p-3 bg-slate-50 dark:bg-amber-500/5 border border-slate-100 dark:border-amber-500/10 rounded-xl flex items-start gap-3">
+                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{asset.name}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              {(!asset.iv || asset.iv === '000000000000000000000000') 
+                                ? 'Decryption Payload Missing on Cloud' 
+                                : 'Encryption Key ID Missing or Mismatched'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 text-left">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">What is a Ghost Asset?</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Ghost assets are ledger entries that lack valid encryption payloads, key IDs, or files on the backend. This can happen during temporary network disruptions or legacy sandbox uploads. They remain listed locally for visibility, but cannot be decrypted.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex gap-3">
+                <button onClick={() => setIsHealthDashboardOpen(false)} className="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl transition-all">
+                  Close
+                </button>
+                <button
+                  onClick={async () => {
+                    await loadAssets();
+                    toast.success('Vault sync refreshed');
+                  }}
+                  className="flex-[2] py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Trigger Diagnostics
                 </button>
               </div>
             </motion.div>

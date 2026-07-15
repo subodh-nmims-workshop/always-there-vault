@@ -239,6 +239,17 @@ export class AssetsController {
     return this.assetsService.updateFolder(id, req.user.walletAddress, { name, parentId, type, beneficiaries });
   }
 
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update asset details (rename, move, etc)' })
+  async updateAsset(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body() body: any
+  ) {
+    const walletAddress = req.user.walletAddress;
+    return this.assetsService.updateAsset(id, body, walletAddress);
+  }
+
   @Patch(':id/assign-nominee')
   @ApiOperation({ summary: 'Assign a specific nominee to receive this file on heartbeat timeout' })
   async assignNominee(
