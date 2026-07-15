@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-//  AlwaysThere Vault — Premium Email Template System v2.0
-//  Inbox-safe, enterprise-grade HTML email builder
+//  AlwaysThere Vault — Professional Email Template System v3.0
+//  Minimal dark design. Enterprise-grade. Inbox-safe HTML.
 // ─────────────────────────────────────────────────────────────
 
 export function escapeHtml(str: any): string {
@@ -14,14 +14,10 @@ export function escapeHtml(str: any): string {
     .replace(/'/g, '&#039;');
 }
 
-
-// Hosted logo — served from public GitHub repositories for robust, inbox-safe loading
 const LOGO_URL = 'https://raw.githubusercontent.com/subodh-001/decentralized-digital-will-protocol/main/frontend/web/public/logo-simple.png';
-
-// Backup CDN
 const LOGO_FALLBACK = 'https://raw.githubusercontent.com/subodh-nmims-workshop/always-there-vault/main/frontend/web/public/logo-simple.png';
 
-/** Wraps any email body in the AlwaysThere brand shell */
+/** Core email shell — minimal, professional dark layout */
 export function buildEmailShell(opts: {
   accentColor: string;
   accentGlow: string;
@@ -32,7 +28,7 @@ export function buildEmailShell(opts: {
   footerNote?: string;
   logoUrl?: string;
 }): string {
-  const { accentColor, accentGlow, icon, headline, subline, body, footerNote, logoUrl } = opts;
+  const { accentColor, icon, headline, subline, body, footerNote, logoUrl } = opts;
   const finalLogoUrl = logoUrl || LOGO_URL;
 
   return `<!DOCTYPE html>
@@ -44,57 +40,50 @@ export function buildEmailShell(opts: {
   <title>${headline} — AlwaysThere Vault</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#04080f;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 
-<!-- Preheader (hidden preview text) -->
-<div style="display:none;font-size:1px;color:#04080f;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-  ${headline} — AlwaysThere Vault Notification ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ 
+<!-- Preheader -->
+<div style="display:none;font-size:1px;color:#0a0a0a;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+  ${headline} — AlwaysThere Vault &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
 </div>
 
-<!-- Outer Wrapper -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#04080f;min-height:100vh;">
+<!-- Wrapper -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0a0a0a;min-height:100vh;">
   <tr>
-    <td align="center" style="padding:32px 16px 48px;">
+    <td align="center" style="padding:40px 16px 56px;">
 
-      <!-- ═══════════════════════════════════════ -->
-      <!-- MAIN CARD                               -->
-      <!-- ═══════════════════════════════════════ -->
+      <!-- MAIN CARD -->
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
-        style="max-width:600px;width:100%;background-color:#0b1220;border-radius:20px;
-               border:1px solid rgba(255,255,255,0.07);
-               box-shadow:0 40px 80px rgba(0,0,0,0.7), 0 0 80px ${accentGlow};
-               overflow:hidden;">
+        style="max-width:600px;width:100%;background-color:#111111;border-radius:16px;
+               border:1px solid #222222;overflow:hidden;">
 
-        <!-- ─── TOP ACCENT LINE ─── -->
+        <!-- TOP ACCENT LINE — thin, single color, no gradient -->
         <tr>
-          <td style="background:linear-gradient(90deg, transparent 0%, ${accentColor} 40%, ${accentColor} 60%, transparent 100%);height:2px;font-size:0;line-height:0;">&nbsp;</td>
+          <td style="background-color:${accentColor};height:3px;font-size:0;line-height:0;">&nbsp;</td>
         </tr>
 
-        <!-- ─── HEADER / BRAND ─── -->
+        <!-- HEADER / BRAND -->
         <tr>
-          <td style="background:linear-gradient(135deg,#0d1527 0%,#0b1220 100%);padding:24px 32px 22px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <td style="padding:24px 32px;border-bottom:1px solid #1a1a1a;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <!-- Logo -->
-                <td width="48" valign="middle">
+                <td width="44" valign="middle">
                   <!--[if !mso]><!-->
                   <img src="${finalLogoUrl}"
-                    width="42" height="42"
+                    width="38" height="38"
                     alt="AlwaysThere"
-                    style="display:block;border-radius:10px;border:0;outline:none;text-decoration:none;"
+                    style="display:block;border-radius:8px;border:0;outline:none;text-decoration:none;"
                     onerror="this.onerror=null;this.src='${LOGO_FALLBACK}';this.onerror=function(){this.style.display='none';};"
                   />
                   <!--<![endif]-->
                 </td>
-                <!-- Brand Name -->
-                <td valign="middle" style="padding-left:14px;">
-                  <div style="font-size:19px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:1.1;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">AlwaysThere</div>
-                  <div style="font-size:10px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">Vault Protocol</div>
+                <td valign="middle" style="padding-left:12px;">
+                  <div style="font-size:16px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;line-height:1.2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">AlwaysThere</div>
+                  <div style="font-size:10px;color:#444444;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">Vault Protocol</div>
                 </td>
-                <!-- Badge -->
                 <td align="right" valign="middle">
-                  <span style="display:inline-block;background:${accentColor}15;border:1px solid ${accentColor}35;color:${accentColor};font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:100px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                    Secure Delivery
+                  <span style="display:inline-block;border:1px solid #2a2a2a;color:#555555;font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:4px 10px;border-radius:4px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                    Secure Mail
                   </span>
                 </td>
               </tr>
@@ -102,48 +91,46 @@ export function buildEmailShell(opts: {
           </td>
         </tr>
 
-        <!-- ─── HERO BANNER ─── -->
+        <!-- HERO SECTION -->
         <tr>
-          <td style="background:linear-gradient(180deg,#0d1527 0%,#08101e 100%);padding:44px 32px 40px;text-align:center;border-bottom:2px solid ${accentColor};">
-            <!-- Icon Circle -->
-            <div style="display:inline-block;width:80px;height:80px;background:${accentColor}12;border:2px solid ${accentColor}45;border-radius:50%;text-align:center;line-height:78px;font-size:36px;margin-bottom:22px;box-shadow:0 0 40px ${accentGlow},0 0 80px ${accentGlow};">
+          <td style="padding:44px 36px 36px;text-align:center;border-bottom:1px solid #1a1a1a;">
+            <!-- Icon -->
+            <div style="display:inline-block;width:64px;height:64px;background-color:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;text-align:center;line-height:64px;font-size:28px;margin-bottom:24px;">
               ${icon}
             </div>
             <!-- Headline -->
-            <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.8px;line-height:1.15;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+            <h1 style="margin:0 0 12px;font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;line-height:1.2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
               ${headline}
             </h1>
             <!-- Subline -->
-            <p style="margin:0;font-size:11.5px;color:${accentColor};font-weight:600;letter-spacing:2px;text-transform:uppercase;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+            <p style="margin:0;font-size:12px;color:#555555;font-weight:500;letter-spacing:1px;text-transform:uppercase;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
               ${subline}
             </p>
           </td>
         </tr>
 
-        <!-- ─── BODY CONTENT ─── -->
+        <!-- BODY CONTENT -->
         <tr>
-          <td style="padding:38px 36px 32px;">
+          <td style="padding:36px 36px 28px;">
             ${body}
           </td>
         </tr>
 
-        <!-- ─── FOOTER ─── -->
+        <!-- FOOTER -->
         <tr>
-          <td style="background:#060d1a;border-top:1px solid rgba(255,255,255,0.05);padding:22px 36px;">
+          <td style="background-color:#0d0d0d;border-top:1px solid #1a1a1a;padding:20px 36px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <!-- Footer Text -->
                 <td valign="top">
-                  <p style="margin:0 0 4px;font-size:11px;color:#2d4060;line-height:1.7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                    This is an automated message from <strong style="color:#3d5070;">AlwaysThere Vault</strong>.
+                  <p style="margin:0 0 3px;font-size:11px;color:#333333;line-height:1.6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                    Automated notification from <strong style="color:#3a3a3a;">AlwaysThere Vault</strong>.
                   </p>
-                  <p style="margin:0;font-size:11px;color:#2d4060;line-height:1.7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                  <p style="margin:0;font-size:11px;color:#2e2e2e;line-height:1.6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
                     ${footerNote || 'End-to-End Encrypted &nbsp;·&nbsp; Decentralized Digital Will Protocol'}
                   </p>
                 </td>
-                <!-- Copyright -->
                 <td align="right" valign="top" style="padding-left:24px;white-space:nowrap;">
-                  <p style="margin:0;font-size:10px;color:#1e3554;text-transform:uppercase;letter-spacing:1.2px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                  <p style="margin:0;font-size:10px;color:#2a2a2a;text-transform:uppercase;letter-spacing:1px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
                     © 2026 AlwaysThere
                   </p>
                 </td>
@@ -152,21 +139,16 @@ export function buildEmailShell(opts: {
           </td>
         </tr>
 
-        <!-- ─── BOTTOM ACCENT LINE ─── -->
-        <tr>
-          <td style="background:linear-gradient(90deg, transparent 0%, ${accentColor}60 50%, transparent 100%);height:1px;font-size:0;line-height:0;">&nbsp;</td>
-        </tr>
-
       </table>
       <!-- END MAIN CARD -->
 
-      <!-- Sub-footer link -->
-      <p style="margin:20px 0 0;font-size:11px;color:#1e3554;text-align:center;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-        <a href="https://alwaystherevault.com" style="color:#2a4a70;text-decoration:none;">alwaystherevault.com</a>
+      <!-- Sub-footer -->
+      <p style="margin:20px 0 0;font-size:11px;color:#2a2a2a;text-align:center;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+        <a href="https://alwaystherevault.com" style="color:#333333;text-decoration:none;">alwaystherevault.com</a>
         &nbsp;·&nbsp;
-        <a href="https://alwaystherevault.com/privacy" style="color:#2a4a70;text-decoration:none;">Privacy</a>
+        <a href="https://alwaystherevault.com/privacy" style="color:#333333;text-decoration:none;">Privacy</a>
         &nbsp;·&nbsp;
-        <a href="https://alwaystherevault.com/terms" style="color:#2a4a70;text-decoration:none;">Terms</a>
+        <a href="https://alwaystherevault.com/terms" style="color:#333333;text-decoration:none;">Terms</a>
       </p>
 
     </td>
@@ -177,50 +159,49 @@ export function buildEmailShell(opts: {
 </html>`;
 }
 
-/** Reusable stat row inside a dark info box */
-export function statRow(label: string, value: string, valueColor = '#e2e8f0', last = false): string {
+/** Clean stat row inside info box */
+export function statRow(label: string, value: string, valueColor = '#cccccc', last = false): string {
   return `<tr>
-    <td style="padding:11px 0;color:#4a6080;font-size:12.5px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;${last ? '' : 'border-bottom:1px solid rgba(255,255,255,0.04);'}">
+    <td style="padding:12px 0;color:#555555;font-size:12px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;${last ? '' : 'border-bottom:1px solid #1e1e1e;'}">
       ${label}
     </td>
-    <td style="padding:11px 0;font-size:12.5px;color:${valueColor};font-weight:700;text-align:right;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;${last ? '' : 'border-bottom:1px solid rgba(255,255,255,0.04);'}">
+    <td style="padding:12px 0;font-size:12px;color:${valueColor};font-weight:600;text-align:right;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;${last ? '' : 'border-bottom:1px solid #1e1e1e;'}">
       ${value}
     </td>
   </tr>`;
 }
 
-/** Info box wrapper — dark card with subtle border */
+/** Dark info box with subtle border */
 export function infoBox(content: string): string {
-  return `<div style="background:#060d1a;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:6px 22px 4px;margin:24px 0;">
+  return `<div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:4px 20px 2px;margin:24px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       ${content}
     </table>
   </div>`;
 }
 
-/** Left-border alert strip */
+/** Left-border alert strip — minimal */
 export function alertStrip(color: string, text: string): string {
-  return `<div style="background:${color}0d;border-left:3px solid ${color};border-radius:0 10px 10px 0;padding:14px 18px;margin:24px 0;">
-    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">${text}</p>
+  return `<div style="border-left:3px solid ${color};padding:14px 16px;margin:24px 0;background:#111111;border-radius:0 8px 8px 0;">
+    <p style="margin:0;font-size:13px;color:#888888;line-height:1.7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">${text}</p>
   </div>`;
 }
 
-/** Premium CTA button */
+/** Clean CTA button — solid, no glow */
 export function ctaButton(url: string, label: string, color: string): string {
-  return `<div style="text-align:center;margin:34px 0 10px;">
+  return `<div style="text-align:center;margin:32px 0 8px;">
     <a href="${url}"
       style="display:inline-block;
-             background:linear-gradient(135deg,${color} 0%,${color}bb 100%);
+             background-color:${color};
              color:#ffffff;
-             padding:16px 44px;
+             padding:14px 40px;
              text-decoration:none;
-             border-radius:12px;
-             font-size:15px;
-             font-weight:700;
-             letter-spacing:0.4px;
+             border-radius:8px;
+             font-size:14px;
+             font-weight:600;
+             letter-spacing:0.3px;
              font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
-             box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 24px ${color}50;
-             mso-padding-alt:16px 44px;">
+             mso-padding-alt:14px 40px;">
       ${label}
     </a>
   </div>`;
