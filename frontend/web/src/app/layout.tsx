@@ -122,13 +122,28 @@ export default function RootLayout({
             theme="dark"
             toastOptions={{
               style: {
-                background: 'rgba(15, 23, 42, 0.8)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(30, 58, 95, 0.3)',
-                color: '#f1f5f9',
-                borderRadius: '16px',
+                background: 'rgba(8, 10, 20, 0.85)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: '#f8fafc',
+                borderRadius: '20px',
                 fontSize: '14px',
-                fontWeight: '600'
+                fontWeight: '500',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+                padding: '16px 20px',
+                fontFamily: 'var(--font-outfit), sans-serif',
+              },
+              classNames: {
+                toast: 'group !bg-slate-950/85 !border-white/10 !backdrop-blur-xl !rounded-2xl !p-5 !shadow-2xl',
+                title: '!text-slate-100 !font-bold !text-[15px] !tracking-tight !font-outfit',
+                description: '!text-slate-400 !text-xs !leading-relaxed !mt-1.5 !font-outfit',
+                actionButton: '!bg-gradient-to-r !from-blue-600 !to-cyan-600 hover:!from-blue-500 hover:!to-cyan-500 !text-white !font-bold !rounded-xl !px-4 !py-2 !transition-all !duration-200 !shadow-lg !shadow-blue-500/25 !border-0 !cursor-pointer !font-outfit hover:!scale-105 active:!scale-95',
+                cancelButton: '!bg-slate-800 hover:!bg-slate-700 !text-slate-300 !font-semibold !rounded-xl !px-4 !py-2 !transition-all !duration-200 !font-outfit',
+                closeButton: '!bg-slate-900/80 hover:!bg-slate-800 !text-slate-400 hover:!text-slate-200 !transition-colors',
+                success: '!border-emerald-500/30 !bg-gradient-to-r !from-emerald-950/20 !to-slate-950/20',
+                error: '!border-rose-500/30 !bg-gradient-to-r !from-rose-950/20 !to-slate-950/20',
+                warning: '!border-amber-500/30 !bg-gradient-to-r !from-amber-950/20 !to-slate-950/20',
+                info: '!border-blue-500/30 !bg-gradient-to-r !from-blue-950/20 !to-slate-950/20',
               }
             }}
           />
