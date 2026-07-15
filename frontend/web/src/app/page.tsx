@@ -264,7 +264,14 @@ export default function HomePage() {
         
         <main className="flex-1 max-w-[1400px] mx-auto w-full p-3 sm:p-4 md:p-6 lg:p-8 space-y-6 sm:space-y-8 mt-4 sm:mt-8 mb-24 relative z-10">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
-            <TabsList className="bg-slate-100/80 dark:bg-[#0f172a]/80 backdrop-blur-md border border-slate-200 dark:border-white/10 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl w-full justify-start overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-2xl">
+            {/* 
+              CRITICAL: DO NOT REMOVE 'flex h-auto overflow-y-hidden' OR MODIFY STICKY OFFSETS.
+              - 'h-auto' overrides the default h-10 from Radix UI tabs which causes vertical overflow 
+                relative to the larger custom trigger padding (py-2/py-3).
+              - 'overflow-y-hidden' prevents horizontal/vertical scroll wheel jiggle inside the tab list.
+              - 'sticky top-[73px] sm:top-[105px] z-40' keeps the tabs pinned cleanly under the custom header.
+            */}
+            <TabsList className="sticky top-[73px] sm:top-[105px] z-40 flex h-auto overflow-y-hidden bg-slate-100/80 dark:bg-[#0f172a]/80 backdrop-blur-md border border-slate-200 dark:border-white/10 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl w-full justify-start overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-2xl">
               <TabsTrigger value="overview" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(43,82,255,0.4)] transition-all">Overview</TabsTrigger>
               <TabsTrigger value="assets" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Digital Assets</TabsTrigger>
               <TabsTrigger value="beneficiaries" className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-slate-600 dark:text-slate-400 data-[state=active]:bg-[#2b52ff] data-[state=active]:text-white transition-all">Beneficiaries</TabsTrigger>
