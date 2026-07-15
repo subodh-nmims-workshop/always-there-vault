@@ -63,14 +63,13 @@ const TabsContent = React.forwardRef<
   const context = React.useContext(TabsContext)
   const isActive = context.value === value
 
-  if (!isActive) return null;
-
   return (
     <div
       ref={ref}
       data-state={isActive ? "active" : "inactive"}
       className={cn(
         "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        !isActive && "hidden",
         className
       )}
       {...props}
