@@ -155,43 +155,67 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
 
                 {/* Hero Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex items-center justify-between overflow-hidden relative group shadow-sm">
-                        <div className="absolute -right-4 -bottom-4 size-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
-                        <div>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Vault Health</p>
-                            <h3 className="text-3xl sm:text-4xl font-bold tracking-tighter text-slate-900 dark:text-white">{vaultHealth}%</h3>
-                            <p className={`text-xs mt-2 flex items-center gap-1 font-semibold uppercase ${vaultHealth >= 80 ? 'text-green-400' : vaultHealth >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
-                                <ShieldCheckIcon className="w-4 h-4" /> {vaultHealth >= 80 ? 'Optimal' : vaultHealth >= 50 ? 'Warning' : 'Critical'}
-                            </p>
-                        </div>
-                        <div className="relative size-16 sm:size-20">
-                            <svg className="size-full -rotate-90" viewBox="0 0 36 36">
-                                <circle className="stroke-slate-100 dark:stroke-slate-800" cx="18" cy="18" fill="none" r="16" strokeWidth="3"></circle>
-                                <circle className="stroke-blue-500" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset={100 - vaultHealth} strokeLinecap="round" strokeWidth="3"></circle>
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center glow-primary">
-                                <ShieldCheckIcon className="text-blue-500 w-6 h-6 sm:w-8 sm:h-8" />
+                    {/* Vault Health */}
+                    <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-3xl overflow-hidden shadow-xl shadow-blue-500/20 group">
+                        <div className="absolute -right-6 -bottom-6 size-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/15 transition-all"></div>
+                        <div className="absolute top-4 right-4">
+                            <div className="relative size-16">
+                                <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+                                    <circle className="stroke-white/20" cx="18" cy="18" fill="none" r="15" strokeWidth="3"></circle>
+                                    <circle className="stroke-white" cx="18" cy="18" fill="none" r="15" strokeDasharray="100" strokeDashoffset={100 - vaultHealth} strokeLinecap="round" strokeWidth="3"></circle>
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-white text-xs font-black">{vaultHealth}%</span>
+                                </div>
                             </div>
+                        </div>
+                        <p className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-2">Vault Health</p>
+                        <h3 className="text-4xl font-black text-white tracking-tight">{vaultHealth}%</h3>
+                        <p className={`text-xs mt-3 font-bold uppercase tracking-wider flex items-center gap-1.5 ${vaultHealth >= 80 ? 'text-green-300' : vaultHealth >= 50 ? 'text-yellow-300' : 'text-red-300'}`}>
+                            <ShieldCheckIcon className="w-4 h-4" />
+                            {vaultHealth >= 80 ? 'Optimal Protection' : vaultHealth >= 50 ? 'Needs Attention' : 'Critical – Act Now'}
+                        </p>
+                    </div>
+
+                    {/* Encrypted Assets */}
+                    <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm hover:border-blue-500/30 transition-all group">
+                        <div className="flex items-center justify-between">
+                            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Encrypted Assets</p>
+                            <div className="size-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                <ShieldCheckIcon className="w-4 h-4 text-blue-500" />
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                            <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{totalAssets}</h3>
+                            <p className="text-slate-500 text-xs mt-1 font-medium">{totalAssets === 0 ? 'No assets yet – add your first' : `${totalAssets} file${totalAssets > 1 ? 's' : ''} secured`}</p>
+                        </div>
+                        <div className="flex gap-1 h-6 items-end mt-4">
+                            {Array.from({length: 8}).map((_, i) => (
+                                <div key={i} className={`flex-1 rounded-sm transition-all ${ i < totalAssets ? 'bg-blue-500' : 'bg-slate-100 dark:bg-slate-800'}`} style={{height: `${Math.min(100, 30 + i * 10)}%`}}></div>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
-                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Encrypted Assets</p>
-                        <div className="flex items-end justify-between mt-4">
-                            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{totalAssets}</h3>
-                            <div className="flex gap-1 h-8 items-end">
-                                {[...Array(Math.min(totalAssets, 5))].map((_, i) => (
-                                    <div key={i} className={`w-1.5 bg-blue-500 rounded-full ${i === Math.min(totalAssets, 5) - 1 ? 'h-8 shadow-[0_0_10px_theme(colors.blue.500)]' : `h-${4 + i}`}`}></div>
+                    {/* Beneficiaries */}
+                    <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm hover:border-purple-500/30 transition-all group">
+                        <div className="flex items-center justify-between">
+                            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Beneficiaries</p>
+                            <div className="size-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                <ChartBarIcon className="w-4 h-4 text-purple-500" />
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                            <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{totalBeneficiaries}</h3>
+                            <p className="text-slate-500 text-xs mt-1 font-medium">{totalBeneficiaries === 0 ? 'No nominees added yet' : `${totalBeneficiaries} trusted nominee${totalBeneficiaries > 1 ? 's' : ''}`}</p>
+                        </div>
+                        <div className="flex -space-x-2 mt-4">
+                            {totalBeneficiaries === 0
+                                ? <span className="text-xs text-slate-400 dark:text-slate-500">Add nominees to secure your legacy</span>
+                                : beneficiaries.slice(0,4).map((b,i) => (
+                                    <div key={i} className="size-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-white text-[10px] font-black">
+                                        {b.name?.[0]?.toUpperCase()}
+                                    </div>
                                 ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
-                        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Beneficiaries</p>
-                        <div className="flex items-end justify-between mt-4">
-                            <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tighter">{totalBeneficiaries}</h3>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Active</p>
                         </div>
                     </div>
                 </div>
@@ -493,9 +517,10 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                     {/* Right Column */}
                     <div className="lg:w-1/3 flex flex-col gap-6">
                         {/* Dead Man's Switch Card */}
-                        <div className="relative group rounded-3xl p-1 bg-gradient-to-b from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20">
-                            <div className="absolute inset-0 bg-blue-500/5 blur-xl rounded-3xl opacity-50"></div>
-                            <div className="relative bg-white/80 dark:bg-slate-900/80 rounded-[22px] p-4 sm:p-8 border border-slate-200 dark:border-slate-800/50 h-full backdrop-blur-xl shadow-sm">
+                        <div className="relative group rounded-3xl overflow-hidden">
+                            <div className={`absolute inset-0 opacity-10 blur-2xl ${isHeartbeatActive ? 'bg-green-500' : !isEmailConfigured ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                            <div className="relative bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 border dark:border-slate-800 h-full shadow-lg
+                                border-slate-200">
                                 <div className="flex items-center justify-between mb-8">
                                     <h2 className="text-lg font-bold text-slate-900 dark:text-white font-outfit">Dead Man's Switch</h2>
                                     <span className={`${
@@ -545,19 +570,23 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
                                     )}
                                 </div>
 
-                                <div className="mt-8 space-y-3">
+                                <div className="mt-6 space-y-3">
                                     <button
                                         onClick={() => onNavigate?.('heartbeat')}
-                                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2"
+                                        className={`w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-white shadow-lg ${
+                                            isHeartbeatActive
+                                                ? 'bg-green-600 hover:bg-green-500 shadow-green-500/20'
+                                                : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/30 shadow-[0_0_20px]'
+                                        }`}
                                     >
                                         <FingerPrintIcon className="w-5 h-5" />
-                                        Sign Heartbeat Now
+                                        {isHeartbeatActive ? 'Renew Heartbeat' : 'Sign Heartbeat Now'}
                                     </button>
                                     <button
-                                        onClick={() => onNavigate?.('heartbeat')}
-                                        className="w-full py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-colors text-sm shadow-sm"
+                                        onClick={() => onNavigate?.(isEmailConfigured ? 'heartbeat' : 'settings')}
+                                        className="w-full py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-200 dark:border-slate-700/50 transition-colors text-sm"
                                     >
-                                        Edit Trigger Settings
+                                        {isEmailConfigured ? 'Edit Trigger Settings' : '⚙️ Configure Email First'}
                                     </button>
                                 </div>
                             </div>
