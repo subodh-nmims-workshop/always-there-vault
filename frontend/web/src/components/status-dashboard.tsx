@@ -416,9 +416,9 @@ export function StatusDashboard() {
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Card 1: Security Blueprint */}
-                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.05)]">
+                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex justify-between items-start">
-                            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                 <LockClosedIcon className="w-6 h-6" />
                             </div>
                             <CheckBadgeIcon className="w-6 h-6 text-green-400" />
@@ -460,9 +460,9 @@ export function StatusDashboard() {
                     </div>
 
                     {/* Card 2: Backup Locations & Sync */}
-                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 border-l-4 border-l-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.05)]">
+                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex justify-between items-start">
-                            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                 <GlobeAltIcon className="w-6 h-6" />
                             </div>
                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${backendStatus === 'online' ? 'bg-green-500/10 text-green-400' : 'bg-rose-500/10 text-rose-400'} border border-current uppercase tracking-widest`}>
@@ -497,15 +497,15 @@ export function StatusDashboard() {
                                 <span className="text-purple-500">{(appState?.assets.filter(a => a.ipfsHash).length || 0) / (appState?.assets.length || 1) * 100}%</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500 shadow-[0_0_8px_theme(colors.purple.500)] transition-all duration-1000" style={{ width: `${(appState?.assets.filter(a => a.ipfsHash).length || 0) / (appState?.assets.length || 1) * 100}%` }}></div>
+                                <div className="h-full bg-slate-500 dark:bg-slate-400 transition-all duration-1000" style={{ width: `${(appState?.assets.filter(a => a.ipfsHash).length || 0) / (appState?.assets.length || 1) * 100}%` }}></div>
                             </div>
                         </div>
                     </div>
 
                     {/* Card 3: Recent Activity */}
-                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 border-l-4 border-l-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.05)]">
+                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl p-8 flex flex-col gap-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex justify-between items-start">
-                            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                 <ClockIcon className="w-6 h-6" />
                             </div>
                             <h3 className="text-slate-900 dark:text-white text-lg font-bold">Recent Protection Actions</h3>
@@ -539,13 +539,13 @@ export function StatusDashboard() {
                         <div className="space-y-6 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
                             {/* Phase 1 */}
                             <div className="flex gap-4 relative">
-                                <div className="z-10 size-12 rounded-2xl bg-green-500/10 text-green-500 border border-green-500/30 flex items-center justify-center font-bold font-mono">
+                                <div className="z-10 size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold font-mono">
                                     01
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                         Ingestion & WebCrypto Lock
-                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase tracking-wider">Active</span>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider">Active</span>
                                     </h4>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">Assets are encrypted client-side using a locally generated symmetric key.</p>
                                 </div>
@@ -553,13 +553,13 @@ export function StatusDashboard() {
 
                             {/* Phase 2 */}
                             <div className="flex gap-4 relative">
-                                <div className="z-10 size-12 rounded-2xl bg-green-500/10 text-green-500 border border-green-500/30 flex items-center justify-center font-bold font-mono">
+                                <div className="z-10 size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold font-mono">
                                     02
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                         Shamir Key Sharding (3/5)
-                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase tracking-wider">Split Verified</span>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider">Split Verified</span>
                                     </h4>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">Encryption key is split into 5 shares and distributed across node gateways.</p>
                                 </div>
@@ -567,13 +567,13 @@ export function StatusDashboard() {
 
                             {/* Phase 3 */}
                             <div className="flex gap-4 relative">
-                                <div className="z-10 size-12 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/30 flex items-center justify-center font-bold font-mono">
+                                <div className="z-10 size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold font-mono">
                                     03
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                         Heartbeat Surveillance
-                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold uppercase tracking-wider animate-pulse">Monitoring</span>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider">Monitoring</span>
                                     </h4>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">The watchdog timer runs checks. If check-in is missed, trigger is fired.</p>
                                 </div>
@@ -581,13 +581,13 @@ export function StatusDashboard() {
 
                             {/* Phase 4 */}
                             <div className="flex gap-4 relative">
-                                <div className="z-10 size-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold font-mono">
+                                <div className="z-10 size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold font-mono">
                                     04
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                         Nominee Asset Release
-                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold uppercase tracking-wider">Armed</span>
+                                        <span className="px-2 py-0.5 rounded-full text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider">Armed</span>
                                     </h4>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">Reconstruct key from 3 available shares to decrypt files upon nominee request.</p>
                                 </div>
