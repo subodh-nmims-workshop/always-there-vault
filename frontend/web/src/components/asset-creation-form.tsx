@@ -1313,10 +1313,10 @@ export function AssetCreationForm() {
   const filteredAssets = useMemo(() => {
     return assets.filter(asset => {
       const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory = activeCategory === 'all' || asset.type === activeCategory
+      const matchesCategory = activeCategory === 'all' || asset.type === activeCategory || currentFolderId !== null
       return matchesSearch && matchesCategory;
     }).sort((a, b) => b.createdAt - a.createdAt)
-  }, [assets, searchQuery, activeCategory])
+  }, [assets, searchQuery, activeCategory, currentFolderId])
 
   const filteredFolders = useMemo(() => {
     return folders
@@ -1327,7 +1327,8 @@ export function AssetCreationForm() {
         const folderType = folder.type || WebStorageService.getFolderType(folder.name);
         const matchesCategory =
           activeCategory === 'all' ||
-          folderType === activeCategory;
+          folderType === activeCategory ||
+          currentFolderId !== null;
 
         return matchesSearch && matchesCategory;
       })
@@ -1335,7 +1336,7 @@ export function AssetCreationForm() {
         if (a.createdAt !== b.createdAt) return a.createdAt - b.createdAt
         return a.name.localeCompare(b.name)
       })
-  }, [folders, searchQuery, activeCategory])
+  }, [folders, searchQuery, activeCategory, currentFolderId])
 
   const handleRootContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
