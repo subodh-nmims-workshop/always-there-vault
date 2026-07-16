@@ -325,14 +325,10 @@ class ModeService {
    */
   private async loadAssetsCentralized(): Promise<StoredAsset[]> {
     try {
-      console.log('📥 Loading assets (Centralized mode)...')
-
-      // Always load local IndexedDB first (has encryptedData for decryption)
       const storage = WebStorageService.getInstance()
       const localAssets = await storage.getAllAssets()
       const localMap = new Map(localAssets.map(a => [a.id, a]))
 
-      // Try to merge with backend (for metadata sync across devices)
       try {
         const walletAddress = localStorage.getItem('dwp_wallet_address')
         const response = await fetch(`${this.config.apiEndpoint}/api/assets?walletAddress=${walletAddress}`, {
@@ -343,10 +339,7 @@ class ModeService {
 
         if (response.ok) {
           const backendAssets = await response.json()
-          console.log('✅ Loaded from backend:', backendAssets.length, 'assets')
 
-          // Map backend fields → frontend StoredAsset shape
-          // Then merge: prefer local copy (has encryptedData) over backend copy
           const merged: StoredAsset[] = backendAssets.map((b: any) => {
             const local = localMap.get(b.id)
             const assetData = {
@@ -354,7 +347,6 @@ class ModeService {
               name: b.name,
               type: local?.type || b.metadata?.type || b.type || (b.mimeType?.startsWith('image/') ? 'photo' : 'document'),
               folderId: b.folderId || null,
-              // Critical: use local encryptedData — backend only stores it for notes
               encryptedData: local?.encryptedData || b.encryptedData || '',
               keyId: local?.keyId || b.keyId || b.encryptionKeyId || '',
               iv: local?.iv || b.iv || b.fileIv || '',
@@ -366,7 +358,6 @@ class ModeService {
               mimeType: b.mimeType || local?.mimeType || '',
             } as StoredAsset;
 
-            // Cache the loaded backend asset metadata locally
             storage.saveAsset(assetData).catch(err => {
               console.warn(`Failed to cache asset ${b.id} locally:`, err);
             });
@@ -374,17 +365,15 @@ class ModeService {
             return assetData;
           })
 
-          // Also include local-only assets (not yet synced to backend)
           const backendIds = new Set(backendAssets.map((b: any) => b.id))
           const localOnly = localAssets.filter(a => !backendIds.has(a.id))
 
           return [...merged, ...localOnly]
         }
-      } catch (apiError) {
-        console.warn('⚠️ Backend unavailable, using local storage')
+      } catch {
+        // Backend unavailable — fall back to local
       }
 
-      console.log('✅ Loaded from local storage:', localAssets.length, 'assets')
       return localAssets
 
     } catch (error) {
@@ -398,18 +387,9 @@ class ModeService {
    */
   private async loadAssetsDecentralized(): Promise<StoredAsset[]> {
     try {
-      console.log('📥 Loading assets (Decentralized mode)...')
-
-      // Load from IndexedDB (local cache)
       const storage = WebStorageService.getInstance()
       const localAssets = await storage.getAllAssets()
-
-      // TODO: Sync with blockchain if needed
-      // For now, use local storage as source of truth
-
-      console.log('✅ Loaded from local storage:', localAssets.length, 'assets')
       return localAssets
-
     } catch (error) {
       console.error('❌ Failed to load assets:', error)
       return []
