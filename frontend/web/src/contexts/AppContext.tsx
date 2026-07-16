@@ -41,17 +41,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        // Listen for backend data sync complete events
+        // Listen for backend data sync complete events and local updates
         const handleSyncEvent = () => {
             refreshState()
         }
 
         window.addEventListener('storage', handleStorageChange)
         window.addEventListener('dwp-state-synced', handleSyncEvent)
+        window.addEventListener('storage-asset-saved', handleSyncEvent)
+        window.addEventListener('storage-asset-deleted', handleSyncEvent)
+        window.addEventListener('storage-beneficiary-saved', handleSyncEvent)
+        window.addEventListener('storage-beneficiary-deleted', handleSyncEvent)
+        window.addEventListener('storage-heartbeat-saved', handleSyncEvent)
+        window.addEventListener('storage-folder-saved', handleSyncEvent)
 
         return () => {
             window.removeEventListener('storage', handleStorageChange)
             window.removeEventListener('dwp-state-synced', handleSyncEvent)
+            window.removeEventListener('storage-asset-saved', handleSyncEvent)
+            window.removeEventListener('storage-asset-deleted', handleSyncEvent)
+            window.removeEventListener('storage-beneficiary-saved', handleSyncEvent)
+            window.removeEventListener('storage-beneficiary-deleted', handleSyncEvent)
+            window.removeEventListener('storage-heartbeat-saved', handleSyncEvent)
+            window.removeEventListener('storage-folder-saved', handleSyncEvent)
         }
     }, [refreshState])
 

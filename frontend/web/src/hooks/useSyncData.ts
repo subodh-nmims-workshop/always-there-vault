@@ -5,8 +5,12 @@ import WebStorageService from '@/lib/storage';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
 
 export function useSyncData() {
-  const { address, isConnected, status } = useAccount();
+  const { address: wagmiAddress, isConnected: isWagmiConnected, status } = useAccount();
   const isSyncingRef = useRef(false);
+
+  // Fallback to localStorage if wagmi is not connected (e.g. custom key/email login)
+  const isConnected = isWagmiConnected || (typeof window !== 'undefined' && localStorage.getItem('dwp_wallet_connected') === 'true');
+  const address = wagmiAddress || (typeof window !== 'undefined' ? localStorage.getItem('dwp_wallet_address') : null);
 
   const fetchData = useCallback(async () => {
     if (!isConnected || !address) {
@@ -41,12 +45,22 @@ export function useSyncData() {
       }
 
       // Fetch from backend API
+      const mode = typeof window !== 'undefined' ? localStorage.getItem('dwp_mode') || 'centralized' : 'centralized';
+
+      const fetchFolders = mode === 'centralized'
+        ? fetch(`${API_URL}/api/assets/folders`, { headers }).then(r => r.ok ? r.json() : [])
+        : Promise.resolve([]);
+
+      const fetchAssets = mode === 'centralized'
+        ? fetch(`${API_URL}/api/assets`, { headers }).then(r => r.ok ? r.json() : [])
+        : Promise.resolve([]);
+
       const [nomineesRes, assetsRes, heartbeatRes, userRes, foldersRes] = await Promise.all([
         fetch(`${API_URL}/api/beneficiaries?ownerAddress=${normalizedAddress}`, { headers }).then(r => r.ok ? r.json() : []),
-        fetch(`${API_URL}/api/assets`, { headers }).then(r => r.ok ? r.json() : []),
+        fetchAssets,
         fetch(`${API_URL}/api/heartbeat/status`, { headers }).then(r => r.ok ? r.json() : null),
         fetch(`${API_URL}/api/users/profile`, { headers }).then(r => r.ok ? r.json() : null),
-        fetch(`${API_URL}/api/assets/folders`, { headers }).then(r => r.ok ? r.json() : [])
+        fetchFolders
       ]);
 
       // Sync to local storage / IndexedDB
@@ -115,8 +129,8 @@ export function useSyncData() {
         }
       }
 
-      // 1.5. Sync Folders
-      if (Array.isArray(foldersRes)) {
+      // 1.5. Sync Folders (Only in Centralized Mode)
+      if (mode === 'centralized' && Array.isArray(foldersRes)) {
         const localFolders = await storage.getAllFolders();
         let foldersChanged = false;
 
@@ -180,16 +194,23 @@ export function useSyncData() {
         }
       }
 
-      // 2. Sync Assets
-      if (Array.isArray(assetsRes)) {
+      // 2. Sync Assets (Only in Centralized Mode)
+      if (mode === 'centralized' && Array.isArray(assetsRes)) {
         const localAssets = await storage.getAllAssets();
         let assetsChanged = false;
         const backendFolderIds = new Set(Array.isArray(foldersRes) ? foldersRes.map((f: any) => f.id) : []);
 
-        if (assetsRes.length !== localAssets.length) {
+        // Filter out decentralized assets from comparison and cleanup
+        const localCentralizedAssets = localAssets.filter(la => {
+          const isDecentralized = la.metadata?.mode === 'decentralized' || 
+                                  (la.ipfsHash && (la.ipfsHash.startsWith('Qm') || la.ipfsHash.startsWith('bafy') || la.ipfsHash.includes('_local_')));
+          return !isDecentralized;
+        });
+
+        if (assetsRes.length !== localCentralizedAssets.length) {
           assetsChanged = true;
         } else {
-          const localAssetMap = new Map(localAssets.map(a => [a.id, a]));
+          const localAssetMap = new Map(localCentralizedAssets.map(a => [a.id, a]));
           for (const b of assetsRes) {
             const local = localAssetMap.get(b.id);
             const targetFolderId = b.folderId && backendFolderIds.has(b.folderId) ? b.folderId : null;
@@ -248,12 +269,19 @@ export function useSyncData() {
               assignedBeneficiaryId: b.assignedBeneficiaryId || local?.assignedBeneficiaryId || null,
               createdAt: b.createdAt ? new Date(b.createdAt).getTime() : (local?.createdAt || Date.now()),
               size: b.size || local?.size || 0,
-              mimeType: b.mimeType || local?.mimeType || ''
+              mimeType: b.mimeType || local?.mimeType || '',
+              metadata: {
+                ...(local?.metadata || {}),
+                ...(b.metadata || {}),
+                mode: 'centralized'
+              }
             }, true); // Save silently
           }
           
           for (const la of localAssets) {
-            if (!backendAssetIds.has(la.id)) {
+            const isDecentralized = la.metadata?.mode === 'decentralized' || 
+                                    (la.ipfsHash && (la.ipfsHash.startsWith('Qm') || la.ipfsHash.startsWith('bafy') || la.ipfsHash.includes('_local_')));
+            if (!backendAssetIds.has(la.id) && !isDecentralized) {
               await storage.deleteAsset(la.id, true); // Delete silently
             }
           }
@@ -317,12 +345,12 @@ export function useSyncData() {
     }
   }, [address, isConnected]);
 
-  // Fetch on wallet connect
+  // Fetch on wallet connect or local storage authentication
   useEffect(() => {
-    if (status === 'connected') {
+    if (status === 'connected' || isConnected) {
       fetchData();
     }
-  }, [status, address, fetchData]);
+  }, [status, isConnected, fetchData]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {

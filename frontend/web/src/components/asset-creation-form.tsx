@@ -155,8 +155,10 @@ export function AssetCreationForm() {
 
   const loadAssets = async () => {
     try {
-      // Use modeService to load assets from local IndexedDB
-      const allAssets = await modeService.loadAssets();
+      // ── Single source of truth: always read from IndexedDB first ──
+      // This is exactly what the Dashboard (AppContext) does, so both views
+      // will always show identical counts with zero lag.
+      const allAssets = await storage.getAllAssets();
       setRawAssets(allAssets);
 
       // Fetch all folders to check for orphan assets
@@ -164,8 +166,8 @@ export function AssetCreationForm() {
       const folderIds = new Set(allFolders.map(f => f.id));
 
       setTotalAssetsCount(allAssets.length);
-      
-      // Self-heal: If an asset has a folderId that doesn't exist in IndexedDB, update it to null
+
+      // Self-heal: If an asset has a folderId that doesn't exist in IndexedDB, reset it to null
       for (const asset of allAssets) {
         if (asset.folderId && !folderIds.has(asset.folderId)) {
           console.warn(`Self-healing: Asset "${asset.name}" points to non-existent folder ${asset.folderId}. Resetting folderId to null.`);
@@ -180,6 +182,30 @@ export function AssetCreationForm() {
 
       const storedFolders = await storage.getFoldersByParent(currentFolderId);
       setFolders(storedFolders);
+
+      // ── Background: silently sync any local-only assets to backend ──
+      // This runs after the UI is already painted, so it never blocks display.
+      const token = localStorage.getItem('dwp_token');
+      if (token) {
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
+          const backendRes = await fetch(`${API_URL}/api/assets`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (backendRes.ok) {
+            const backendAssets: any[] = await backendRes.json();
+            const backendIds = new Set(backendAssets.map((b: any) => b.id));
+            // Save any local asset not yet on the backend (fire-and-forget)
+            for (const localAsset of allAssets) {
+              if (!backendIds.has(localAsset.id)) {
+                await storage.saveAsset(localAsset).catch(() => {});
+              }
+            }
+          }
+        } catch {
+          // Backend unreachable – that's fine, local data is already displayed
+        }
+      }
 
       if (currentFolderId) {
         const path = await storage.getFolderPath(currentFolderId);
@@ -347,8 +373,9 @@ export function AssetCreationForm() {
         ipfsCID = await uploadToIPFS(selectedFile, walletAddress, encryptionResult.keyId, encryptionResult.iv)
         console.log('✅ Uploaded to IPFS:', ipfsCID)
       } catch (ipfsErr) {
-        console.warn('⚠️ IPFS upload failed, continuing with local save:', ipfsErr)
-        ipfsCID = `bafybei_local_${Math.random().toString(36).substring(2, 15)}`
+        // Store empty CID — never generate a fake CID that can't be resolved later
+        console.warn('⚠️ IPFS upload skipped (not available in Centralized mode or failed). File will be saved via cloud backend.')
+        ipfsCID = ''
       }
 
       setUploadProgress(90)
@@ -364,7 +391,11 @@ export function AssetCreationForm() {
         beneficiaries: selectedBeneficiaries,
         createdAt: encryptionResult.timestamp,
         size: selectedFile.size,
-        mimeType: selectedFile.type
+        mimeType: selectedFile.type,
+        metadata: {
+          type: assetType,
+          mode: modeService.getMode()
+        }
       }
 
       // Use ModeService to save based on current mode
@@ -392,7 +423,10 @@ export function AssetCreationForm() {
               iv: asset.iv,
               folderId: asset.folderId || null,
               assignedBeneficiaryId: selectedBeneficiaries[0] || null,
-              metadata: { type: asset.type }
+              metadata: { 
+                type: asset.type,
+                mode: modeService.getMode()
+              }
             })
           })
           if (backendAssetRes.ok) {
@@ -584,8 +618,24 @@ export function AssetCreationForm() {
       let encryptedDataToDecrypt = asset.encryptedData
       if (!encryptedDataToDecrypt) {
         console.log('📥 Asset encryptedData is empty. Fetching remote payload...')
-        
-        // 1. Try direct IPFS retrieval first if it has a CID
+
+        // ── Guard: Detect stale placeholder CIDs immediately ────────────
+        // These were generated when IPFS was unavailable during upload.
+        // They are NOT real CIDs — no gateway will ever resolve them.
+        // Skip all remote fetches instantly and prompt for re-upload.
+        const isPlaceholderCID = asset.ipfsHash && (
+          asset.ipfsHash.includes('_local_') ||
+          asset.ipfsHash.startsWith('bafybei_local')
+        )
+        if (isPlaceholderCID) {
+          throw new Error(
+            'This file was uploaded while offline (IPFS was unavailable). ' +
+            'The encrypted data was not saved to the cloud. ' +
+            'Please delete this asset and re-upload the file while in Centralized mode.'
+          )
+        }
+
+        // 1. Try direct IPFS retrieval first if it has a real CID
         if (asset.ipfsHash && (asset.ipfsHash.startsWith('Qm') || asset.ipfsHash.startsWith('bafy'))) {
           console.log('🛸 Attempting direct IPFS retrieval for CID:', asset.ipfsHash)
           try {
@@ -598,7 +648,7 @@ export function AssetCreationForm() {
           }
         }
 
-        // 2. Fall back to backend download URL if direct IPFS failed or wasn't available
+        // 2. Fall back to backend cloud download URL
         if (!encryptedDataToDecrypt) {
           try {
             const token = localStorage.getItem('dwp_token')
@@ -607,7 +657,11 @@ export function AssetCreationForm() {
             })
             if (downloadResponse.ok) {
               const { url } = await downloadResponse.json()
-              console.log('🔗 Fetching from URL:', url)
+              // Guard: don't follow a URL that points to a fake local CID either
+              if (url && (url.includes('_local_') || url.includes('bafybei_local'))) {
+                throw new Error('Cloud storage location is a stale placeholder. Please re-upload the file in Centralized mode.')
+              }
+              console.log('🔗 Fetching encrypted payload from cloud...')
               const fileResponse = await fetch(url)
               if (fileResponse.ok) {
                 encryptedDataToDecrypt = await fileResponse.text()
@@ -638,12 +692,71 @@ export function AssetCreationForm() {
         throw new Error('Encrypted data payload is empty or not available.')
       }
 
-      // Decrypt the data as binary first
-      const decryptedBuffer = await crypto.decryptBinary(
-        encryptedDataToDecrypt,
-        reconstructedKey,
-        asset.iv
-      )
+      // ── Self-healing decryption with automatic retry ──────────────────
+      // Attempt 1: Decrypt with whatever we have locally.
+      // Attempt 2: If that fails (stale/mismatched cache), wipe the stale
+      //            local copy, fetch a fresh encrypted payload from IPFS or
+      //            the backend, cache it, and retry ONCE.
+      // Only surface the error UI if BOTH attempts fail.
+      let decryptedBuffer: ArrayBuffer
+      try {
+        decryptedBuffer = await crypto.decryptBinary(
+          encryptedDataToDecrypt,
+          reconstructedKey,
+          asset.iv
+        )
+        console.log('✅ Decryption succeeded on first attempt')
+      } catch (firstErr) {
+        console.warn('⚠️ First decryption attempt failed, self-healing...', firstErr)
+
+        // Clear the stale local encryptedData so it won't block future attempts
+        await storage.updateAsset(asset.id, { encryptedData: '' }).catch(() => {})
+
+        let freshPayload = ''
+
+        // Try IPFS first
+        if (asset.ipfsHash && (asset.ipfsHash.startsWith('Qm') || asset.ipfsHash.startsWith('bafy'))) {
+          try {
+            const { retrieveFromIPFS } = await import('@/lib/ipfs-client')
+            const blob = await retrieveFromIPFS(asset.ipfsHash)
+            freshPayload = await blob.text()
+            console.log('✅ Fresh payload fetched from IPFS, length:', freshPayload.length)
+          } catch (ipfsErr) {
+            console.warn('⚠️ IPFS fetch failed on retry, trying backend...', ipfsErr)
+          }
+        }
+
+        // Fallback to backend download URL
+        if (!freshPayload) {
+          try {
+            const token = localStorage.getItem('dwp_token')
+            const dlRes = await fetch(`${API_URL}/api/assets/${asset.id}/download`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (dlRes.ok) {
+              const { url } = await dlRes.json()
+              const fileRes = await fetch(url)
+              if (fileRes.ok) {
+                freshPayload = await fileRes.text()
+                console.log('✅ Fresh payload fetched from cloud, length:', freshPayload.length)
+              }
+            }
+          } catch (dlErr) {
+            console.warn('⚠️ Backend download failed on retry:', dlErr)
+          }
+        }
+
+        if (!freshPayload) {
+          throw new Error('Decryption failed: local key does not match this asset. Remote recovery also failed. Please re-upload the file.')
+        }
+
+        // Cache fresh payload permanently so next open is instant
+        await storage.updateAsset(asset.id, { encryptedData: freshPayload }).catch(() => {})
+
+        // Retry decryption with fresh payload
+        decryptedBuffer = await crypto.decryptBinary(freshPayload, reconstructedKey, asset.iv)
+        console.log('✅ Decryption succeeded after self-healing')
+      }
 
       // Helper to check if the decrypted buffer is a raw binary image by inspecting magic bytes
       const isBinaryImage = (buffer: ArrayBuffer): boolean => {
