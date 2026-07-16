@@ -1327,8 +1327,7 @@ export function AssetCreationForm() {
         const folderType = folder.type || WebStorageService.getFolderType(folder.name);
         const matchesCategory =
           activeCategory === 'all' ||
-          folderType === activeCategory ||
-          folderType === 'all';
+          folderType === activeCategory;
 
         return matchesSearch && matchesCategory;
       })
