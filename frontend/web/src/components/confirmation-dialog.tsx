@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, Trash2, Info, X } from 'lucide-react'
 import { useEffect } from 'react'
 
 interface ConfirmationDialogProps {
@@ -25,58 +25,53 @@ export function ConfirmationDialog({
   cancelText = 'Cancel',
   type = 'danger'
 }: ConfirmationDialogProps) {
-  
-  // Prevent body scroll when dialog is open
+
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset'
+    return () => { document.body.style.overflow = 'unset' }
   }, [isOpen])
 
-  // Handle ESC key
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
-    }
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && isOpen) onClose() }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose])
 
-  const typeStyles = {
+  const config = {
     danger: {
-      gradient: 'from-red-600 to-rose-600',
-      glow: 'shadow-[0_15px_30px_rgba(239,68,68,0.1)] dark:shadow-[0_0_50px_rgba(239,68,68,0.3)]',
-      iconBg: 'bg-red-500/10 dark:bg-red-500/20',
-      iconColor: 'text-red-600 dark:text-red-400',
-      buttonBg: 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500',
-      buttonGlow: 'shadow-[0_10px_20px_rgba(239,68,68,0.2)] dark:shadow-[0_0_30px_rgba(239,68,68,0.4)]'
+      accent:      'bg-red-500',
+      iconWrap:    'bg-red-500/10 border border-red-500/20',
+      iconColor:   'text-red-400',
+      Icon:        Trash2,
+      labelColor:  'text-red-400',
+      label:       'Permanent Action',
+      btnBase:     'bg-red-600 hover:bg-red-500 focus:ring-red-500/40',
+      btnBorder:   'border-red-500/30',
     },
     warning: {
-      gradient: 'from-amber-600 to-orange-600',
-      glow: 'shadow-[0_15px_30px_rgba(245,158,11,0.1)] dark:shadow-[0_0_50px_rgba(245,158,11,0.3)]',
-      iconBg: 'bg-amber-500/10 dark:bg-amber-500/20',
-      iconColor: 'text-amber-650 dark:text-amber-400',
-      buttonBg: 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500',
-      buttonGlow: 'shadow-[0_10px_20px_rgba(245,158,11,0.2)] dark:shadow-[0_0_30px_rgba(245,158,11,0.4)]'
+      accent:      'bg-amber-500',
+      iconWrap:    'bg-amber-500/10 border border-amber-500/20',
+      iconColor:   'text-amber-400',
+      Icon:        AlertTriangle,
+      labelColor:  'text-amber-400',
+      label:       'Warning',
+      btnBase:     'bg-amber-600 hover:bg-amber-500 focus:ring-amber-500/40',
+      btnBorder:   'border-amber-500/30',
     },
     info: {
-      gradient: 'from-blue-600 to-cyan-600',
-      glow: 'shadow-[0_15px_30px_rgba(59,130,246,0.1)] dark:shadow-[0_0_50px_rgba(59,130,246,0.3)]',
-      iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-      buttonBg: 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500',
-      buttonGlow: 'shadow-[0_10px_20px_rgba(59,130,246,0.2)] dark:shadow-[0_0_30px_rgba(59,130,246,0.4)]'
-    }
+      accent:      'bg-blue-500',
+      iconWrap:    'bg-blue-500/10 border border-blue-500/20',
+      iconColor:   'text-blue-400',
+      Icon:        Info,
+      labelColor:  'text-blue-400',
+      label:       'Confirmation',
+      btnBase:     'bg-blue-600 hover:bg-blue-500 focus:ring-blue-500/40',
+      btnBorder:   'border-blue-500/30',
+    },
   }
 
-  const styles = typeStyles[type]
+  const c = config[type]
+  const { Icon } = c
 
   return (
     <AnimatePresence>
@@ -87,96 +82,71 @@ export function ConfirmationDialog({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
 
           {/* Dialog */}
-          <div className="fixed inset-0 flex items-start justify-center z-[101] p-4 overflow-y-auto">
+          <div className="fixed inset-0 flex items-center justify-center z-[101] p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', duration: 0.5 }}
-              className={`relative w-full max-w-md bg-white dark:bg-[#0a0c12] border border-slate-200 dark:border-white/10 rounded-3xl ${styles.glow} overflow-hidden my-8 md:my-16`}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              className="relative w-full max-w-sm bg-[#0d0f17] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden"
             >
-              {/* Animated gradient background */}
-              <div className="absolute inset-0 opacity-5 dark:opacity-10">
-                <div className={`absolute inset-0 bg-gradient-to-br ${styles.gradient} animate-pulse`} />
+              {/* Top accent line */}
+              <div className={`absolute top-0 left-0 right-0 h-[2px] ${c.accent}`} />
+
+              {/* Header */}
+              <div className="flex items-start justify-between px-6 pt-7 pb-5">
+                <div className="flex items-center gap-3.5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${c.iconWrap}`}>
+                    <Icon className={`w-5 h-5 ${c.iconColor}`} />
+                  </div>
+                  <div>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${c.labelColor}`}>
+                      {c.label}
+                    </p>
+                    <h2 className="text-base font-bold text-white leading-tight">
+                      {title}
+                    </h2>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 flex-shrink-0 mt-0.5"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 border border-slate-300 dark:border-slate-600/50 transition-all duration-300 hover:scale-110 z-10"
-              >
-                <X className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-              </button>
+              {/* Divider */}
+              <div className="mx-6 h-px bg-white/[0.06]" />
 
-              {/* Content */}
-              <div className="relative p-8">
-                {/* Icon */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-                  className="flex justify-center mb-6"
-                >
-                  <div className={`${styles.iconBg} p-4 rounded-2xl border border-transparent`}>
-                    <AlertTriangle className={`h-12 w-12 ${styles.iconColor}`} />
-                  </div>
-                </motion.div>
-
-                {/* Title */}
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-2xl font-bold text-center mb-3 text-slate-900 dark:text-white"
-                >
-                  {title}
-                </motion.h2>
-
-                {/* Message */}
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-slate-600 dark:text-slate-300 text-center mb-8 leading-relaxed text-sm"
-                >
+              {/* Body */}
+              <div className="px-6 py-5">
+                <p className="text-slate-400 text-sm leading-relaxed">
                   {message}
-                </motion.p>
+                </p>
+              </div>
 
-                {/* Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="flex gap-3"
+              {/* Footer */}
+              <div className="px-6 pb-6 flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-2.5 px-4 text-sm font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] rounded-xl transition-all duration-200"
                 >
-                  {/* Cancel Button */}
-                  <button
-                    onClick={onClose}
-                    className="flex-1 px-6 py-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 border border-slate-300 dark:border-slate-600/50 hover:border-slate-400 dark:hover:border-slate-500/50 text-slate-800 dark:text-slate-200 font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    {cancelText}
-                  </button>
-
-                  {/* Confirm Button */}
-                  <button
-                    onClick={() => {
-                      onConfirm()
-                      onClose()
-                    }}
-                    className={`flex-1 px-6 py-4 rounded-xl ${styles.buttonBg} ${styles.buttonGlow} text-white font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border-2 border-transparent`}
-                  >
-                    {confirmText}
-                  </button>
-                </motion.div>
-
-                {/* Decorative elements */}
-                <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-blue-500/10 to-transparent rounded-full blur-3xl" />
+                  {cancelText}
+                </button>
+                <button
+                  onClick={() => { onConfirm(); onClose() }}
+                  className={`flex-1 py-2.5 px-4 text-sm font-bold text-white rounded-xl border ${c.btnBorder} ${c.btnBase} transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0d0f17] shadow-lg`}
+                >
+                  {confirmText}
+                </button>
               </div>
             </motion.div>
           </div>

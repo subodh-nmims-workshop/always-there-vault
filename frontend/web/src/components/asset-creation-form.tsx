@@ -3216,18 +3216,16 @@ export function AssetCreationForm() {
                               <p className="text-xs">Decrypting image...</p>
                             </div>
                           ) : (
-                            <Image
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
                               src={decryptedContent.startsWith('blob:') || decryptedContent.startsWith('data:') ? decryptedContent : `data:${viewingAsset?.mimeType || 'image/jpeg'};base64,${decryptedContent}`}
                               alt={viewingAsset?.name || 'Decrypted Image'}
-                              width={800}
-                              height={600}
                               className="max-h-[50vh] w-auto h-auto object-contain rounded-md shadow-2xl"
                               onError={(e) => {
-                                console.error('Image render failed, src:', (e.target as HTMLImageElement).src.substring(0, 100))
-                                  ; (e.target as HTMLImageElement).style.display = 'none'
-                                  ; (e.target as HTMLImageElement).insertAdjacentHTML('afterend', '<p class="text-red-400 text-sm">Image failed to render. Check console for details.</p>')
+                                console.error('Image render failed:', (e.target as HTMLImageElement).src.substring(0, 80))
+                                ;(e.target as HTMLImageElement).style.display = 'none'
+                                ;(e.target as HTMLImageElement).insertAdjacentHTML('afterend', '<p class="text-red-400 text-sm text-center py-4">Image preview failed. Try downloading the file instead.</p>')
                               }}
-                              unoptimized
                             />
                           )}
                         </div>
