@@ -23,6 +23,29 @@ import { toast } from 'sonner'
 import { API_URL } from '@/lib/api-config'
 
 
+const folderHasCategoryContents = (
+  folderId: string,
+  category: string,
+  foldersList: StoredFolder[],
+  assetsList: StoredAsset[],
+  visited = new Set<string>()
+): boolean => {
+  if (visited.has(folderId)) return false;
+  visited.add(folderId);
+
+  // 1. Direct assets in this folder
+  const hasDirectAsset = assetsList.some(
+    asset => asset.folderId === folderId && asset.type === category
+  );
+  if (hasDirectAsset) return true;
+
+  // 2. Subfolders in this folder
+  const subfolders = foldersList.filter(f => f.parentId === folderId);
+  return subfolders.some(sub =>
+    folderHasCategoryContents(sub.id, category, foldersList, assetsList, visited)
+  );
+};
+
 export function AssetCreationForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -95,6 +118,7 @@ export function AssetCreationForm() {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [isHealthDashboardOpen, setIsHealthDashboardOpen] = useState(false)
   const [rawAssets, setRawAssets] = useState<StoredAsset[]>([])
+  const [allFolders, setAllFolders] = useState<StoredFolder[]>([])
 
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [breadcrumbs, setBreadcrumbs] = useState<StoredFolder[]>([])
@@ -163,6 +187,7 @@ export function AssetCreationForm() {
 
       // Fetch all folders to check for orphan assets
       const allFolders = await storage.getAllFolders();
+      setAllFolders(allFolders);
       const folderIds = new Set(allFolders.map(f => f.id));
 
       setTotalAssetsCount(allAssets.length);
@@ -1313,10 +1338,10 @@ export function AssetCreationForm() {
   const filteredAssets = useMemo(() => {
     return assets.filter(asset => {
       const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory = activeCategory === 'all' || asset.type === activeCategory || currentFolderId !== null
+      const matchesCategory = activeCategory === 'all' || asset.type === activeCategory
       return matchesSearch && matchesCategory;
     }).sort((a, b) => b.createdAt - a.createdAt)
-  }, [assets, searchQuery, activeCategory, currentFolderId])
+  }, [assets, searchQuery, activeCategory])
 
   const filteredFolders = useMemo(() => {
     return folders
@@ -1328,7 +1353,7 @@ export function AssetCreationForm() {
         const matchesCategory =
           activeCategory === 'all' ||
           folderType === activeCategory ||
-          currentFolderId !== null;
+          folderHasCategoryContents(folder.id, activeCategory, allFolders, rawAssets);
 
         return matchesSearch && matchesCategory;
       })
@@ -1336,7 +1361,7 @@ export function AssetCreationForm() {
         if (a.createdAt !== b.createdAt) return a.createdAt - b.createdAt
         return a.name.localeCompare(b.name)
       })
-  }, [folders, searchQuery, activeCategory, currentFolderId])
+  }, [folders, searchQuery, activeCategory, allFolders, rawAssets])
 
   const handleRootContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
