@@ -11,37 +11,16 @@ interface OverviewDashboardProps {
 }
 
 export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
-    const { state, refreshState } = useApp()
+    const { state, refreshState, profile } = useApp()
     const [emailInput, setEmailInput] = useState('')
     const [showEmailBanner, setShowEmailBanner] = useState(true)
     const [isSavingEmail, setIsSavingEmail] = useState(false)
-    const [profileEmail, setProfileEmail] = useState<string>('')
-    const [emailVerified, setEmailVerified] = useState<boolean>(false)
+
+    const profileEmail = profile?.email || ''
+    const emailVerified = profile?.emailVerified || false
 
     useEffect(() => {
         refreshState()
-        
-        const fetchProfileInfo = async () => {
-            try {
-                const token = localStorage.getItem('dwp_token')
-                if (!token) return
-                const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-                const res = await fetch(`${apiEndpoint}/api/users/profile`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                if (res.ok) {
-                    const data = await res.json()
-                    setProfileEmail(data.email || '')
-                    setEmailVerified(data.emailVerified || false)
-                }
-            } catch (err) {
-                console.error("Error fetching profile in overview dashboard:", err)
-            }
-        }
-        
-        fetchProfileInfo()
     }, [refreshState])
 
     const beneficiaries = state?.beneficiaries || []

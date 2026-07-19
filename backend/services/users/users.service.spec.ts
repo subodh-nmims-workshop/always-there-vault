@@ -40,7 +40,12 @@ describe('UsersService - Alternative Email Redundancy', () => {
     };
 
     mockCacheService = {
-      get: jest.fn().mockReturnValue(0),
+      get: jest.fn().mockImplementation((key: string) => {
+        if (key.includes('sent_at')) {
+          return Date.now() - 20000;
+        }
+        return 0;
+      }),
       set: jest.fn(),
       delete: jest.fn(),
     };
@@ -77,6 +82,88 @@ describe('UsersService - Alternative Email Redundancy', () => {
       
       expect(mockDb.update).toHaveBeenCalled();
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('should fail if no verification token exists or email is not pending', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce({
+        id: '1',
+        emailVerificationToken: null,
+        pendingEmail: null,
+      });
+
+      const result = await service.verifyEmail('1', '123456');
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('No verification request pending');
+    });
+
+    it('should fail if OTP has expired (not in cache)', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce({
+        id: '1',
+        emailVerificationToken: '123456',
+        pendingEmail: 'test@example.com',
+      });
+      mockCacheService.get
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(undefined);
+
+      const result = await service.verifyEmail('1', '123456');
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('expired');
+    });
+
+    it('should fail if email is already in use by another user', async () => {
+      mockDb.query.users.findFirst
+        .mockResolvedValueOnce({
+          id: '1',
+          emailVerificationToken: '123456',
+          pendingEmail: 'duplicate@example.com',
+        })
+        .mockResolvedValueOnce({
+          id: '2',
+          email: 'duplicate@example.com',
+        });
+
+      const result = await service.verifyEmail('1', '123456');
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('This email is already registered to another account.');
+    });
+
+    it('should succeed and update user profile on correct code', async () => {
+      mockDb.query.users.findFirst
+        .mockResolvedValueOnce({
+          id: '1',
+          emailVerificationToken: '123456',
+          pendingEmail: 'test@example.com',
+        })
+        .mockResolvedValueOnce(null);
+
+      const result = await service.verifyEmail('1', '123456');
+      expect(result.success).toBe(true);
+      expect(result.email).toBe('test@example.com');
+      expect(mockDb.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('resendVerificationCode', () => {
+    it('should fail if user is not found', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce(null);
+      await expect(service.resendVerificationCode('1')).rejects.toThrow();
+    });
+
+    it('should send a new verification code if email setup is pending', async () => {
+      mockDb.query.users.findFirst
+        .mockResolvedValueOnce({
+          id: '1',
+          pendingEmail: 'pending@example.com',
+          emailVerified: false,
+        })
+        .mockResolvedValueOnce(null);
+
+      const result = await service.resendVerificationCode('1');
+      expect(result.success).toBe(true);
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
   });
 

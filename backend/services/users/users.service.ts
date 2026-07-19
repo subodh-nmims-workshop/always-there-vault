@@ -2,7 +2,7 @@ import { Injectable, Inject, NotFoundException, BadRequestException } from '@nes
 import { users, type User, type NewUser } from '../../src/db/schema/users';
 import { userStorageQuotas } from '../../src/db/schema/quotas';
 import { heartbeatConfigs } from '../../src/db/schema/heartbeat';
-import { eq, sql, and, or } from 'drizzle-orm';
+import { eq, sql, and, or, ne } from 'drizzle-orm';
 import { EmailService } from '../email/email.service';
 import { CacheService } from '../cache/cache.service';
 
@@ -116,9 +116,23 @@ export class UsersService {
                     .where(eq(users.walletAddress, lowerAddress));
             } else if (email && (email.toLowerCase() !== existingUser.email?.toLowerCase() || !existingUser.emailVerified)) {
                 const lowerEmail = email.toLowerCase();
+                
+                // Check if this email is already verified by another user
+                const duplicateUser = await this.db.query.users.findFirst({
+                    where: and(
+                        eq(users.email, lowerEmail),
+                        ne(users.id, existingUser.id)
+                    )
+                });
+                if (duplicateUser) {
+                    throw new BadRequestException('This email is already registered to another account.');
+                }
+
                 // Check 15-second cooldown if requesting for the same pending email
                 if (existingUser.pendingEmail?.toLowerCase() === lowerEmail) {
-                    if (existingUser.updatedAt && (new Date().getTime() - new Date(existingUser.updatedAt).getTime() < 15000)) {
+                    const otpTimeKey = `email_otp_sent_at:${existingUser.id}`;
+                    const sentAt = this.cacheService.get<number>(otpTimeKey);
+                    if (sentAt && (Date.now() - sentAt < 15000)) {
                         throw new BadRequestException('Please wait 15 seconds before requesting another code.');
                     }
                 }
@@ -132,6 +146,10 @@ export class UsersService {
                         updatedAt: new Date(),
                     })
                     .where(eq(users.walletAddress, lowerAddress));
+
+                // Save OTP sent time in cache (5 minutes limit)
+                const otpTimeKey = `email_otp_sent_at:${existingUser.id}`;
+                this.cacheService.set(otpTimeKey, Date.now(), 5 * 60 * 1000);
 
                 // Send verification email asynchronously
                 this.emailService.sendVerificationEmail(lowerEmail, verificationCode).catch(err => {
@@ -157,7 +175,9 @@ export class UsersService {
                 const lowerAltEmail = alternativeEmail.toLowerCase();
                 // Check 15-second cooldown if requesting for the same pending email
                 if (this.alternativePendingEmailCheck(existingUser.alternativePendingEmail, lowerAltEmail)) {
-                    if (existingUser.updatedAt && (new Date().getTime() - new Date(existingUser.updatedAt).getTime() < 15000)) {
+                    const altOtpTimeKey = `alt_email_otp_sent_at:${existingUser.id}`;
+                    const sentAt = this.cacheService.get<number>(altOtpTimeKey);
+                    if (sentAt && (Date.now() - sentAt < 15000)) {
                         throw new BadRequestException('Please wait 15 seconds before requesting another code for alternative email.');
                     }
                 }
@@ -171,6 +191,10 @@ export class UsersService {
                         updatedAt: new Date(),
                     })
                     .where(eq(users.walletAddress, lowerAddress));
+
+                // Save alternative OTP sent time in cache (5 minutes limit)
+                const altOtpTimeKey = `alt_email_otp_sent_at:${existingUser.id}`;
+                this.cacheService.set(altOtpTimeKey, Date.now(), 5 * 60 * 1000);
 
                 // Send verification email asynchronously
                 this.emailService.sendVerificationEmail(lowerAltEmail, verificationCode).catch(err => {
@@ -200,6 +224,14 @@ export class UsersService {
 
         // New user creation
         const lowerEmail = email ? email.toLowerCase() : null;
+        if (lowerEmail) {
+            const duplicateUser = await this.db.query.users.findFirst({
+                where: eq(users.email, lowerEmail)
+            });
+            if (duplicateUser) {
+                throw new BadRequestException('This email is already registered to another account.');
+            }
+        }
         const verificationCode = lowerEmail ? Math.floor(100000 + Math.random() * 900000).toString() : null;
 
         const lowerAltEmail = alternativeEmail ? alternativeEmail.toLowerCase() : null;
@@ -220,12 +252,18 @@ export class UsersService {
             .returning();
 
         if (lowerEmail && verificationCode) {
+            const otpTimeKey = `email_otp_sent_at:${newUser.id}`;
+            this.cacheService.set(otpTimeKey, Date.now(), 5 * 60 * 1000);
+
             this.emailService.sendVerificationEmail(lowerEmail, verificationCode).catch(err => {
                 console.error('Error sending verification email for new user:', err);
             });
         }
 
         if (lowerAltEmail && altVerificationCode) {
+            const altOtpTimeKey = `alt_email_otp_sent_at:${newUser.id}`;
+            this.cacheService.set(altOtpTimeKey, Date.now(), 5 * 60 * 1000);
+
             this.emailService.sendVerificationEmail(lowerAltEmail, altVerificationCode).catch(err => {
                 console.error('Error sending alternative verification email for new user:', err);
             });
@@ -280,8 +318,10 @@ export class UsersService {
             return { success: false, message: 'Too many invalid attempts. Please request a new verification code.' };
         }
 
-        // Check if OTP has expired (5 minutes validity)
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
+        // Check if OTP has expired (5 minutes validity) using cache
+        const otpTimeKey = `email_otp_sent_at:${userId}`;
+        const sentAt = this.cacheService.get<number>(otpTimeKey);
+        if (!sentAt) {
             return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
@@ -289,6 +329,17 @@ export class UsersService {
             const nextAttempts = attempts + 1;
             this.cacheService.set(attemptsKey, nextAttempts, 5 * 60 * 1000); // 5 min block
             return { success: false, message: `Invalid verification code. Attempt ${nextAttempts}/5` };
+        }
+
+        // Check if this email is already verified by another user
+        const duplicateUser = await this.db.query.users.findFirst({
+            where: and(
+                eq(users.email, user.pendingEmail),
+                ne(users.id, userId)
+            )
+        });
+        if (duplicateUser) {
+            return { success: false, message: 'This email is already registered to another account.' };
         }
 
         // Verification successful: promote pendingEmail to primary email
@@ -303,6 +354,7 @@ export class UsersService {
             .where(eq(users.id, userId));
 
         this.cacheService.delete(attemptsKey);
+        this.cacheService.delete(otpTimeKey);
         return { success: true, message: 'Email verified successfully', email: user.pendingEmail };
     }
 
@@ -322,8 +374,10 @@ export class UsersService {
             return { success: false, message: 'Too many invalid attempts. Please request a new verification code.' };
         }
 
-        // Check if OTP has expired (5 minutes validity)
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
+        // Check if OTP has expired (5 minutes validity) using cache
+        const altOtpTimeKey = `alt_email_otp_sent_at:${userId}`;
+        const sentAt = this.cacheService.get<number>(altOtpTimeKey);
+        if (!sentAt) {
             return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
@@ -345,6 +399,7 @@ export class UsersService {
             .where(eq(users.id, userId));
 
         this.cacheService.delete(attemptsKey);
+        this.cacheService.delete(altOtpTimeKey);
         return { success: true, message: 'Alternative email verified successfully', alternativeEmail: user.alternativePendingEmail };
     }
 
@@ -354,14 +409,27 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
-        // Check 15-second cooldown
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() < 15000)) {
+        // Check 15-second cooldown using cache
+        const otpTimeKey = `email_otp_sent_at:${userId}`;
+        const sentAt = this.cacheService.get<number>(otpTimeKey);
+        if (sentAt && (Date.now() - sentAt < 15000)) {
             throw new BadRequestException('Please wait 15 seconds before requesting another code.');
         }
 
         const emailToVerify = user.pendingEmail || (!user.emailVerified ? user.email : null);
         if (!emailToVerify) {
             return { success: false, message: 'No pending email to verify' };
+        }
+
+        // Check if this email is already verified by another user
+        const duplicateUser = await this.db.query.users.findFirst({
+            where: and(
+                eq(users.email, emailToVerify),
+                ne(users.id, userId)
+            )
+        });
+        if (duplicateUser) {
+            throw new BadRequestException('This email is already registered to another account.');
         }
 
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -374,6 +442,8 @@ export class UsersService {
             })
             .where(eq(users.id, userId));
 
+        this.cacheService.set(otpTimeKey, Date.now(), 5 * 60 * 1000);
+
         await this.emailService.sendVerificationEmail(emailToVerify, verificationCode);
 
         return { success: true, message: 'Verification code resent successfully' };
@@ -385,8 +455,10 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
-        // Check 15-second cooldown
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() < 15000)) {
+        // Check 15-second cooldown using cache
+        const altOtpTimeKey = `alt_email_otp_sent_at:${userId}`;
+        const sentAt = this.cacheService.get<number>(altOtpTimeKey);
+        if (sentAt && (Date.now() - sentAt < 15000)) {
             throw new BadRequestException('Please wait 15 seconds before requesting another code.');
         }
 
@@ -404,6 +476,8 @@ export class UsersService {
                 updatedAt: new Date()
             })
             .where(eq(users.id, userId));
+
+        this.cacheService.set(altOtpTimeKey, Date.now(), 5 * 60 * 1000);
 
         await this.emailService.sendVerificationEmail(emailToVerify, verificationCode);
 

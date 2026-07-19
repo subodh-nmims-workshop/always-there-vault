@@ -9,7 +9,7 @@ import { useApp } from '@/contexts/AppContext'
 import { toast } from 'sonner'
 
 export function HeartbeatMonitor() {
-  const { refreshState, state } = useApp()
+  const { refreshState, state, profile } = useApp()
   const [walletAddress, setWalletAddress] = useState<string>('')
   
   const [settings, setSettings] = useState(() => {
@@ -124,18 +124,39 @@ export function HeartbeatMonitor() {
   const [isVerifyingAlternativeOtp, setIsVerifyingAlternativeOtp] = useState<boolean>(false)
   const [alternativeResendCooldown, setAlternativeResendCooldown] = useState<number>(0)
 
+  // Sync state from profile context
+  useEffect(() => {
+    if (profile) {
+      setProfileEmail(profile.email || '')
+      setPendingEmail(profile.pendingEmail || '')
+      setEmailVerified(profile.emailVerified || false)
+      setProfileAlternativeEmail(profile.alternativeEmail || '')
+      setPendingAlternativeEmail(profile.alternativePendingEmail || '')
+      setAlternativeEmailVerified(profile.alternativeEmailVerified || false)
+      setUpdatedAt(profile.updatedAt || '')
+      
+      if (!inputEmail && !showOtpField) {
+        setInputEmail(profile.pendingEmail || profile.email || '')
+      }
+      if (!inputAlternativeEmail && !showAlternativeOtpField) {
+        setInputAlternativeEmail(profile.alternativePendingEmail || profile.alternativeEmail || '')
+      }
+    }
+  }, [profile])
+
   const fetchProfileInfo = async () => {
     try {
       const token = localStorage.getItem('dwp_token')
       if (!token) return
       const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
+      const res = await fetch(`${apiEndpoint}/api/users/sync`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
       if (res.ok) {
-        const data = await res.json()
+        const syncRes = await res.json()
+        const data = syncRes.profile || {}
         setProfileEmail(data.email || '')
         setPendingEmail(data.pendingEmail || '')
         setEmailVerified(data.emailVerified || false)
@@ -145,9 +166,12 @@ export function HeartbeatMonitor() {
         setAlternativeEmailVerified(data.alternativeEmailVerified || false)
         setInputAlternativeEmail(data.alternativePendingEmail || data.alternativeEmail || '')
         setUpdatedAt(data.updatedAt || '')
+
+        localStorage.setItem('dwp_user_profile', JSON.stringify(data))
+        window.dispatchEvent(new CustomEvent('dwp-state-synced'))
       }
     } catch (err) {
-      console.error("Error fetching profile in heartbeat monitor:", err)
+      console.error("Error syncing profile in heartbeat monitor:", err)
     }
   }
 
@@ -495,7 +519,6 @@ export function HeartbeatMonitor() {
   useEffect(() => {
     if (walletAddress) {
       fetchLiveStatus()
-      fetchProfileInfo()
     }
   }, [walletAddress])
 
