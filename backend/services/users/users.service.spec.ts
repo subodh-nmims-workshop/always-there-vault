@@ -40,7 +40,7 @@ describe('UsersService - Alternative Email Redundancy', () => {
     };
 
     mockCacheService = {
-      get: jest.fn().mockReturnValue(0),
+      get: jest.fn().mockReturnValue(null), // default: no cooldown active
       set: jest.fn(),
       delete: jest.fn(),
     };
@@ -48,18 +48,9 @@ describe('UsersService - Alternative Email Redundancy', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        {
-          provide: 'DRIZZLE_DB',
-          useValue: mockDb,
-        },
-        {
-          provide: EmailService,
-          useValue: mockEmailService,
-        },
-        {
-          provide: CacheService,
-          useValue: mockCacheService,
-        },
+        { provide: 'DRIZZLE_DB', useValue: mockDb },
+        { provide: EmailService, useValue: mockEmailService },
+        { provide: CacheService, useValue: mockCacheService },
       ],
     }).compile();
 
@@ -74,7 +65,6 @@ describe('UsersService - Alternative Email Redundancy', () => {
     it('should successfully nullify alternative email fields', async () => {
       const walletAddress = '0x1234';
       const result = await service.deleteAlternativeEmail(walletAddress);
-      
       expect(mockDb.update).toHaveBeenCalled();
       expect(result).toEqual({ success: true });
     });
@@ -99,6 +89,10 @@ describe('UsersService - Alternative Email Redundancy', () => {
         alternativeEmailVerificationToken: '654321',
         alternativePendingEmail: 'test@example.com',
       });
+      // First call = attempts (null = 0), second call = expiry key (true = not expired)
+      mockCacheService.get
+        .mockReturnValueOnce(null)   // attempts = 0
+        .mockReturnValueOnce(true);  // expiry key = still valid
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(false);
@@ -111,6 +105,8 @@ describe('UsersService - Alternative Email Redundancy', () => {
         alternativeEmailVerificationToken: '123456',
         alternativePendingEmail: 'test@example.com',
       });
+      // OTP not expired
+      mockCacheService.get.mockReturnValue(true);
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(true);
@@ -118,32 +114,18 @@ describe('UsersService - Alternative Email Redundancy', () => {
       expect(mockDb.update).toHaveBeenCalled();
     });
 
-    it('should fail if OTP has expired', async () => {
+    it('should fail if OTP cache key is expired (not present)', async () => {
       mockDb.query.users.findFirst.mockResolvedValueOnce({
         id: '1',
         alternativeEmailVerificationToken: '123456',
         alternativePendingEmail: 'test@example.com',
-        // 6 minutes ago (6 * 60 * 1000 = 360000 ms)
-        updatedAt: new Date(Date.now() - 360000)
       });
+      // OTP expired — cache returns null
+      mockCacheService.get.mockReturnValue(null);
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(false);
       expect(result.message).toContain('expired');
-    });
-
-    it('should succeed if OTP is within 5 minutes', async () => {
-      mockDb.query.users.findFirst.mockResolvedValueOnce({
-        id: '1',
-        alternativeEmailVerificationToken: '123456',
-        alternativePendingEmail: 'test@example.com',
-        // 2 minutes ago
-        updatedAt: new Date(Date.now() - 120000)
-      });
-
-      const result = await service.verifyAlternativeEmail('1', '123456');
-      expect(result.success).toBe(true);
-      expect(result.alternativeEmail).toBe('test@example.com');
     });
   });
 
@@ -153,26 +135,26 @@ describe('UsersService - Alternative Email Redundancy', () => {
       await expect(service.resendAlternativeVerificationCode('1')).rejects.toThrow();
     });
 
-    it('should fail if requested within 15-second cooldown', async () => {
+    it('should fail if requested within 15-second cooldown (cache key active)', async () => {
       mockDb.query.users.findFirst.mockResolvedValueOnce({
         id: '1',
         alternativePendingEmail: 'pending@example.com',
         alternativeEmailVerified: false,
-        // 5 seconds ago
-        updatedAt: new Date(Date.now() - 5000)
       });
+      // Cooldown active
+      mockCacheService.get.mockReturnValue(true);
 
       await expect(service.resendAlternativeVerificationCode('1')).rejects.toThrow('Please wait 15 seconds');
     });
 
-    it('should succeed if requested after 15-second cooldown', async () => {
+    it('should succeed if requested after 15-second cooldown (cache key gone)', async () => {
       mockDb.query.users.findFirst.mockResolvedValueOnce({
         id: '1',
         alternativePendingEmail: 'pending@example.com',
         alternativeEmailVerified: false,
-        // 20 seconds ago
-        updatedAt: new Date(Date.now() - 20000)
       });
+      // No cooldown
+      mockCacheService.get.mockReturnValue(null);
 
       const result = await service.resendAlternativeVerificationCode('1');
       expect(result.success).toBe(true);
@@ -185,6 +167,7 @@ describe('UsersService - Alternative Email Redundancy', () => {
         alternativePendingEmail: 'pending@example.com',
         alternativeEmailVerified: false,
       });
+      mockCacheService.get.mockReturnValue(null);
 
       const result = await service.resendAlternativeVerificationCode('1');
       expect(result.success).toBe(true);
