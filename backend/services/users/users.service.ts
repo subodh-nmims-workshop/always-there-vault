@@ -14,6 +14,25 @@ export class UsersService {
         private readonly cacheService: CacheService,
     ) { }
 
+    /**
+     * Normalizes a database timestamp to a UTC Date object.
+     * Postgres `timestamp without time zone` columns are returned by the pg driver
+     * as plain strings (e.g. "2026-07-19 12:00:00") which JS parses in local time.
+     * This helper forces the value into UTC so time-delta math is always correct
+     * regardless of the server's local timezone (e.g. IST, EST, UTC).
+     */
+    private dbDateToUtc(date: Date | string | null | undefined): Date {
+        if (!date) return new Date(0);
+        const d = new Date(date);
+        // If the date was parsed correctly as UTC (has 'Z' or '+' offset) it's fine.
+        // If it came back as a plain string without timezone, it was parsed in local
+        // time by the JS engine – we must treat its "local" value as if it were UTC.
+        if (typeof date === 'string' && !date.includes('Z') && !date.includes('+') && !date.includes('-', 10)) {
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+        }
+        return d;
+    }
+
     async findUserById(id: string): Promise<User | null> {
         const user = await this.db.query.users.findFirst({
             where: eq(users.id, id),
@@ -118,7 +137,7 @@ export class UsersService {
                 const lowerEmail = email.toLowerCase();
                 // Check 15-second cooldown if requesting for the same pending email
                 if (existingUser.pendingEmail?.toLowerCase() === lowerEmail) {
-                    if (existingUser.updatedAt && (new Date().getTime() - new Date(existingUser.updatedAt).getTime() < 15000)) {
+                    if (existingUser.updatedAt && (new Date().getTime() - this.dbDateToUtc(existingUser.updatedAt).getTime() < 15000)) {
                         throw new BadRequestException('Please wait 15 seconds before requesting another code.');
                     }
                 }
@@ -157,7 +176,7 @@ export class UsersService {
                 const lowerAltEmail = alternativeEmail.toLowerCase();
                 // Check 15-second cooldown if requesting for the same pending email
                 if (this.alternativePendingEmailCheck(existingUser.alternativePendingEmail, lowerAltEmail)) {
-                    if (existingUser.updatedAt && (new Date().getTime() - new Date(existingUser.updatedAt).getTime() < 15000)) {
+                    if (existingUser.updatedAt && (new Date().getTime() - this.dbDateToUtc(existingUser.updatedAt).getTime() < 15000)) {
                         throw new BadRequestException('Please wait 15 seconds before requesting another code for alternative email.');
                     }
                 }
@@ -181,16 +200,16 @@ export class UsersService {
                 alternativePendingEmailStr = lowerAltEmail;
             }
 
-            // Always update updatedAt
-            const [updatedUser] = await this.db.update(users)
-                .set({
-                    updatedAt: new Date(),
-                })
-                .where(eq(users.walletAddress, lowerAddress))
-                .returning();
+            // Only do a final DB round-trip to get the latest user state.
+            // DO NOT unconditionally update updatedAt here — that would silently
+            // reset the OTP timestamp and trigger bogus 15-second cooldowns on
+            // the very next request (e.g. when the frontend re-opens the settings panel).
+            const freshUser = await this.db.query.users.findFirst({
+                where: eq(users.walletAddress, lowerAddress),
+            });
 
             return {
-                ...updatedUser,
+                ...freshUser,
                 verificationRequired,
                 pendingEmail: pendingEmailStr || undefined,
                 alternativeVerificationRequired,
@@ -281,7 +300,7 @@ export class UsersService {
         }
 
         // Check if OTP has expired (5 minutes validity)
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
+        if (user.updatedAt && (new Date().getTime() - this.dbDateToUtc(user.updatedAt).getTime() > 300000)) {
             return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
@@ -323,7 +342,7 @@ export class UsersService {
         }
 
         // Check if OTP has expired (5 minutes validity)
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() > 300000)) {
+        if (user.updatedAt && (new Date().getTime() - this.dbDateToUtc(user.updatedAt).getTime() > 300000)) {
             return { success: false, message: 'Verification code has expired (5m limit). Please request a new code.' };
         }
 
@@ -355,7 +374,7 @@ export class UsersService {
         }
 
         // Check 15-second cooldown
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() < 15000)) {
+        if (user.updatedAt && (new Date().getTime() - this.dbDateToUtc(user.updatedAt).getTime() < 15000)) {
             throw new BadRequestException('Please wait 15 seconds before requesting another code.');
         }
 
@@ -386,7 +405,7 @@ export class UsersService {
         }
 
         // Check 15-second cooldown
-        if (user.updatedAt && (new Date().getTime() - new Date(user.updatedAt).getTime() < 15000)) {
+        if (user.updatedAt && (new Date().getTime() - this.dbDateToUtc(user.updatedAt).getTime() < 15000)) {
             throw new BadRequestException('Please wait 15 seconds before requesting another code.');
         }
 

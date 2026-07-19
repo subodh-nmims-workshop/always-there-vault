@@ -49,7 +49,7 @@ export const users = pgTable('users', {
   lastActive: timestamp('last_active').defaultNow().notNull(),
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => {
   return {
     walletIdx: index('idx_users_wallet').on(sql`LOWER(${table.walletAddress})`),

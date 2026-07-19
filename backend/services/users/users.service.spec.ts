@@ -117,12 +117,66 @@ describe('UsersService - Alternative Email Redundancy', () => {
       expect(result.alternativeEmail).toBe('test@example.com');
       expect(mockDb.update).toHaveBeenCalled();
     });
+
+    it('should fail if OTP has expired', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce({
+        id: '1',
+        alternativeEmailVerificationToken: '123456',
+        alternativePendingEmail: 'test@example.com',
+        // 6 minutes ago (6 * 60 * 1000 = 360000 ms)
+        updatedAt: new Date(Date.now() - 360000)
+      });
+
+      const result = await service.verifyAlternativeEmail('1', '123456');
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('expired');
+    });
+
+    it('should succeed if OTP is within 5 minutes', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce({
+        id: '1',
+        alternativeEmailVerificationToken: '123456',
+        alternativePendingEmail: 'test@example.com',
+        // 2 minutes ago
+        updatedAt: new Date(Date.now() - 120000)
+      });
+
+      const result = await service.verifyAlternativeEmail('1', '123456');
+      expect(result.success).toBe(true);
+      expect(result.alternativeEmail).toBe('test@example.com');
+    });
   });
 
   describe('resendAlternativeVerificationCode', () => {
     it('should fail if user is not found', async () => {
       mockDb.query.users.findFirst.mockResolvedValueOnce(null);
       await expect(service.resendAlternativeVerificationCode('1')).rejects.toThrow();
+    });
+
+    it('should fail if requested within 15-second cooldown', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce({
+        id: '1',
+        alternativePendingEmail: 'pending@example.com',
+        alternativeEmailVerified: false,
+        // 5 seconds ago
+        updatedAt: new Date(Date.now() - 5000)
+      });
+
+      await expect(service.resendAlternativeVerificationCode('1')).rejects.toThrow('Please wait 15 seconds');
+    });
+
+    it('should succeed if requested after 15-second cooldown', async () => {
+      mockDb.query.users.findFirst.mockResolvedValueOnce({
+        id: '1',
+        alternativePendingEmail: 'pending@example.com',
+        alternativeEmailVerified: false,
+        // 20 seconds ago
+        updatedAt: new Date(Date.now() - 20000)
+      });
+
+      const result = await service.resendAlternativeVerificationCode('1');
+      expect(result.success).toBe(true);
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
 
     it('should send a new verification code if alternative email setup is pending', async () => {
