@@ -47,51 +47,24 @@ export function useSyncData() {
       // Fetch from backend API
       const mode = typeof window !== 'undefined' ? localStorage.getItem('dwp_mode') || 'centralized' : 'centralized';
 
-      let nomineesRes = [];
-      let assetsRes = [];
-      let heartbeatRes = null;
-      let userRes = null;
-      let foldersRes = [];
+      const fetchFolders = mode === 'centralized'
+        ? fetch(`${API_URL}/api/assets/folders`, { headers }).then(r => r.ok ? r.json() : [])
+        : Promise.resolve([]);
 
-      if (mode === 'centralized') {
-        const syncRes = await fetch(`${API_URL}/api/users/sync`, { headers }).then(r => r.ok ? r.json() : null);
-        if (syncRes) {
-          nomineesRes = syncRes.beneficiaries || [];
-          assetsRes = syncRes.assets || [];
-          heartbeatRes = syncRes.heartbeat || null;
-          userRes = syncRes.profile || null;
-          foldersRes = syncRes.folders || [];
-        }
-      } else {
-        const [nominees, heartbeat, user] = await Promise.all([
-          fetch(`${API_URL}/api/beneficiaries?ownerAddress=${normalizedAddress}`, { headers }).then(r => r.ok ? r.json() : []),
-          fetch(`${API_URL}/api/heartbeat/status`, { headers }).then(r => r.ok ? r.json() : null),
-          fetch(`${API_URL}/api/users/profile`, { headers }).then(r => r.ok ? r.json() : null)
-        ]);
-        nomineesRes = nominees;
-        heartbeatRes = heartbeat;
-        userRes = user;
-      }
+      const fetchAssets = mode === 'centralized'
+        ? fetch(`${API_URL}/api/assets`, { headers }).then(r => r.ok ? r.json() : [])
+        : Promise.resolve([]);
+
+      const [nomineesRes, assetsRes, heartbeatRes, userRes, foldersRes] = await Promise.all([
+        fetch(`${API_URL}/api/beneficiaries?ownerAddress=${normalizedAddress}`, { headers }).then(r => r.ok ? r.json() : []),
+        fetchAssets,
+        fetch(`${API_URL}/api/heartbeat/status`, { headers }).then(r => r.ok ? r.json() : null),
+        fetch(`${API_URL}/api/users/profile`, { headers }).then(r => r.ok ? r.json() : null),
+        fetchFolders
+      ]);
 
       // Sync to local storage / IndexedDB
       let hasChanges = false;
-
-      // Sync user profile cache
-      if (userRes) {
-        const storedProfileStr = typeof window !== 'undefined' ? localStorage.getItem('dwp_user_profile') : null;
-        const nextProfileStr = JSON.stringify(userRes);
-        if (storedProfileStr !== nextProfileStr) {
-          hasChanges = true;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('dwp_user_profile', nextProfileStr);
-          }
-        }
-      } else {
-        if (typeof window !== 'undefined' && localStorage.getItem('dwp_user_profile')) {
-          hasChanges = true;
-          localStorage.removeItem('dwp_user_profile');
-        }
-      }
       
       // 1. Sync Beneficiaries
       if (Array.isArray(nomineesRes)) {

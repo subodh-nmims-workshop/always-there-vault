@@ -18,7 +18,6 @@ import {
 } from '@heroicons/react/24/outline'
 import WebStorageService, { AppState, StoredAsset } from '@/lib/storage'
 import ModeService from '@/lib/mode-service'
-import { useApp } from '@/contexts/AppContext'
 
 interface SystemLog {
     time: string
@@ -36,17 +35,15 @@ interface ActivityItem {
 }
 
 export function StatusDashboard() {
-    const { state: appState, profile } = useApp()
+    const [appState, setAppState] = useState<AppState | null>(null)
     const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking')
     const [logs, setLogs] = useState<SystemLog[]>([])
     const [activities, setActivities] = useState<ActivityItem[]>([])
     const [activeTranslation, setActiveTranslation] = useState<string>('Booting up secure vaults and protocol components...')
     const logsContainerRef = useRef<HTMLDivElement>(null)
     const [showConsole, setShowConsole] = useState(false)
-
-    const profileEmail = profile?.email || ''
-    const emailVerified = profile?.emailVerified || false
-
+    const [profileEmail, setProfileEmail] = useState<string>('')
+    const [emailVerified, setEmailVerified] = useState<boolean>(false)
     const apiEndpoint = useMemo(() => {
         try {
             return (ModeService.getInstance() as any).config.apiEndpoint || 'http://localhost:7001'
@@ -111,28 +108,50 @@ export function StatusDashboard() {
     }, [appState]);
 
     useEffect(() => {
-        if (!appState) return;
-
         const loadData = async () => {
             try {
                 const storage = WebStorageService.getInstance()
+                const state = await storage.getAppState()
+                setAppState(state)
+
+                // Fetch email verification status from profile
+                let isEmailOk = false;
+                const token = localStorage.getItem('dwp_token')
+                if (token) {
+                    const endpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                    try {
+                        const res = await fetch(`${endpoint}/api/users/profile`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        })
+                        if (res.ok) {
+                            const data = await res.json()
+                            setProfileEmail(data.email || '')
+                            setEmailVerified(data.emailVerified || false)
+                            isEmailOk = !!data.email && data.emailVerified
+                        }
+                    } catch (err) {
+                        console.error('Failed to fetch profile in status dashboard:', err)
+                    }
+                }
 
                 // Generate recent activity from state
                 const recentActivities: ActivityItem[] = [];
                 
                 // Last Heartbeat
-                if (appState.stats.lastHeartbeat > 0) {
+                if (state.stats.lastHeartbeat > 0) {
                     recentActivities.push({
                         id: 'hb-1',
                         type: 'heartbeat',
                         title: 'Pulse Signature Verified',
-                        time: new Date(appState.stats.lastHeartbeat).toLocaleDateString(),
+                        time: new Date(state.stats.lastHeartbeat).toLocaleDateString(),
                         status: 'success'
                     });
                 }
 
                 // Recent Assets
-                appState.assets.slice(-3).reverse().forEach((asset: StoredAsset, i: number) => {
+                state.assets.slice(-3).reverse().forEach((asset, i) => {
                     recentActivities.push({
                         id: `asset-${i}`,
                         type: 'asset',
@@ -152,7 +171,7 @@ export function StatusDashboard() {
                 } else {
                     const initialLogs: SystemLog[] = [
                         { time: new Date().toLocaleTimeString(), status: 'INFO', message: 'Initializing DeadMan Protocol Kernel v3.1.0...', color: 'text-blue-600 dark:text-blue-400' },
-                        { time: new Date().toLocaleTimeString(), status: 'OK', message: `Local storage state loaded. Ledger contains ${appState.assets.length} items.`, color: 'text-green-600 dark:text-green-400' },
+                        { time: new Date().toLocaleTimeString(), status: 'OK', message: `Local storage state loaded. Ledger contains ${state.assets.length} items.`, color: 'text-green-600 dark:text-green-400' },
                         { time: new Date().toLocaleTimeString(), status: 'OK', message: 'Loaded Shamir secret sharing configuration (Threshold: 3/5).', color: 'text-green-600 dark:text-green-400' }
                     ]
                     setLogs(initialLogs)
@@ -163,7 +182,6 @@ export function StatusDashboard() {
                 }
 
                 // Add watchdog surveillance status log dynamically
-                const isEmailOk = !!profileEmail && emailVerified;
                 if (!isEmailOk) {
                     addLog('WARN', 'Watchdog Surveillance: Alert email configuration missing or unverified.', 'text-amber-600 dark:text-amber-400')
                 } else {
@@ -344,7 +362,7 @@ export function StatusDashboard() {
                 window.removeEventListener('offline', handleOffline);
             }
         };
-    }, [appState])
+    }, [])
 
 
     const isEmailConfigured = !!profileEmail && emailVerified

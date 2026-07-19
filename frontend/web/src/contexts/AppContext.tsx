@@ -6,7 +6,6 @@ import { useSyncData } from '@/hooks/useSyncData'
 
 interface AppContextType {
     state: AppState | null
-    profile: any | null
     isLoading: boolean
     refreshState: () => Promise<void>
 }
@@ -15,7 +14,6 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
     const [state, setState] = useState<AppState | null>(null)
-    const [profile, setProfile] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
 
     // Call the synchronization hook to auto-sync backend data
@@ -26,15 +24,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const storage = WebStorageService.getInstance()
             const newState = await storage.getAppState()
             setState(newState)
-
-            if (typeof window !== 'undefined') {
-                const storedProfile = localStorage.getItem('dwp_user_profile')
-                if (storedProfile) {
-                    setProfile(JSON.parse(storedProfile))
-                } else {
-                    setProfile(null)
-                }
-            }
         } catch (error) {
             console.error('Failed to load app state:', error)
         } finally {
@@ -47,7 +36,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Add event listener for cross-tab sync if needed
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'digital-will-settings' || e.key === 'dwp_heartbeats' || e.key === 'dwp_user_profile') {
+            if (e.key === 'digital-will-settings' || e.key === 'dwp_heartbeats') {
                 refreshState()
             }
         }
@@ -79,7 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, [refreshState])
 
     return (
-        <AppContext.Provider value={{ state, profile, isLoading, refreshState }}>
+        <AppContext.Provider value={{ state, isLoading, refreshState }}>
             {children}
         </AppContext.Provider>
     )

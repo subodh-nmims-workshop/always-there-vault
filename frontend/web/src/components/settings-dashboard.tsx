@@ -50,7 +50,6 @@ import {
 import { translations, Language, getLanguage, setLanguage, subscribeI18n } from '@/utils/i18n'
 import WebStorageService, { AppState } from '@/lib/storage'
 import { UpgradeModal } from '@/components/upgrade-modal'
-import { useApp } from '@/contexts/AppContext'
 import { toast } from 'sonner'
 import { Portal } from '@/components/portal'
 import { updateHeartbeatSettings } from '@/app/actions/heartbeat'
@@ -59,11 +58,11 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ALL_PLANS, PlanType } from '@/types/subscription'
 
 export function SettingsDashboard() {
-  const { state: appState, profile, refreshState } = useApp()
-  const isProfileLoading = !profile
   const chainId = useChainId()
   const [lang, setLang] = useState<Language>('en')
   const [t, setT] = useState<any>(translations.en)
+  const [profile, setProfile] = useState<any>(null)
+  const [isProfileLoading, setIsProfileLoading] = useState(true)
   const [showRecoveryWizard, setShowRecoveryWizard] = useState(false)
   const [generatedWallet, setGeneratedWallet] = useState<{ address: string; privateKey: string } | null>(null)
   const [isLinking, setIsLinking] = useState(false)
@@ -96,14 +95,14 @@ export function SettingsDashboard() {
       if (profile?.updatedAt) {
         const lastUpdated = new Date(profile.updatedAt).getTime()
         const diff = Date.now() - lastUpdated
-        if (diff > -5000 && diff < 15000) {
-          const remaining = Math.ceil((15000 - Math.max(0, diff)) / 1000)
+        if (diff > 0 && diff < 15000) {
+          const remaining = Math.ceil((15000 - diff) / 1000)
           if (remaining > 0) {
             setResendCooldown(remaining)
             return
           }
         }
-        setResendCooldown(prev => prev > 0 ? prev : 0)
+        setResendCooldown(0)
       } else {
         setResendCooldown(15)
       }
@@ -115,14 +114,14 @@ export function SettingsDashboard() {
       if (profile?.updatedAt) {
         const lastUpdated = new Date(profile.updatedAt).getTime()
         const diff = Date.now() - lastUpdated
-        if (diff > -5000 && diff < 15000) {
-          const remaining = Math.ceil((15000 - Math.max(0, diff)) / 1000)
+        if (diff > 0 && diff < 15000) {
+          const remaining = Math.ceil((15000 - diff) / 1000)
           if (remaining > 0) {
             setAlternativeResendCooldown(remaining)
             return
           }
         }
-        setAlternativeResendCooldown(prev => prev > 0 ? prev : 0)
+        setAlternativeResendCooldown(0)
       } else {
         setAlternativeResendCooldown(15)
       }
@@ -151,21 +150,20 @@ export function SettingsDashboard() {
     try {
       const token = localStorage.getItem('dwp_token')
       if (!token) return
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
-      const res = await fetch(`${apiEndpoint}/api/users/sync`, {
+      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
       if (res.ok) {
         const data = await res.json()
-        if (data.profile) {
-          localStorage.setItem('dwp_user_profile', JSON.stringify(data.profile))
-          window.dispatchEvent(new CustomEvent('dwp-state-synced'))
-        }
+        setProfile(data)
       }
     } catch (err) {
       console.error("Error fetching profile:", err)
+    } finally {
+      setIsProfileLoading(false)
     }
   }
 
@@ -433,7 +431,8 @@ export function SettingsDashboard() {
       if (res.ok) {
         storage.saveSettings({ emailNotification: '' })
         localStorage.removeItem('dwp_user_email')
-        await refreshState()
+        const newState = await storage.getAppState()
+        setAppState(newState)
         
         toast.success('Email removed successfully')
         setEmailInput('')
@@ -596,6 +595,7 @@ export function SettingsDashboard() {
     }
   }
 
+  const [appState, setAppState] = useState<AppState | null>(null)
   const [emailInput, setEmailInput] = useState('')
   const [walletAddress, setWalletAddress] = useState('')
   const [copied, setCopied] = useState(false)
@@ -614,9 +614,16 @@ export function SettingsDashboard() {
     const addr = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
     setWalletAddress(addr)
 
-    if (appState?.settings?.emailNotification) {
-      setEmailInput(appState.settings.emailNotification)
+    const loadState = async () => {
+        const state = await storage.getAppState()
+        setAppState(state)
+        if (state?.settings?.emailNotification) {
+          setEmailInput(state.settings.emailNotification)
+        }
     }
+
+    loadState()
+    fetchProfile()
 
     const unsubscribe = subscribeI18n(() => {
       const newLang = getLanguage()
@@ -646,7 +653,7 @@ export function SettingsDashboard() {
     setIsUpdating(true)
     storage.saveSettings({ [key]: value })
     const newState = await storage.getAppState()
-    await refreshState()
+    setAppState(newState)
     
     // Auto-sync select options and toggle switch changes immediately to backend
     if (['timeLock', 'multiSig', 'sessionTimeout', 'storageProvider', 'testnetMode', 'gasPrice'].includes(key)) {
@@ -673,7 +680,7 @@ export function SettingsDashboard() {
       })
       
       const newState = await storage.getAppState()
-      await refreshState()
+      setAppState(newState)
 
       // If email is explicitly provided or updated, keep dwp_user_email in sync
       if (activeEmail) {
@@ -812,7 +819,8 @@ export function SettingsDashboard() {
             toast.success("Payment Successful! Premium Features Unlocked.")
             setShowUpgradeModal(false)
             // Reload state
-            await refreshState()
+            const newState = await storage.getAppState()
+            setAppState(newState)
             window.location.reload()
         } else {
             throw new Error("Payment verification failed on backend")
