@@ -1,12 +1,15 @@
 /**
  * API Fetch Interceptor
  * Wraps the native fetch to handle:
- *  - JWT 401 expiry → auto redirect to login
+ *  - JWT 401 expiry → auto redirect to login (once, no loop)
  *  - Network failures → toast error
  *  - Rate limit 429 → friendly message
  */
 
 const EXCLUDED_PATHS = ['/api/auth', '/api/login', '/api/register']
+
+// Guard flag — prevents multiple simultaneous redirects when parallel requests all 401
+let _isRedirecting = false
 
 export function setupFetchInterceptor() {
   if (typeof window === 'undefined') return
@@ -21,7 +24,7 @@ export function setupFetchInterceptor() {
       const isExcluded = EXCLUDED_PATHS.some(path => url.includes(path))
 
       // 401 — JWT expired or invalid
-      if (response.status === 401 && !isExcluded) {
+      if (response.status === 401 && !isExcluded && !_isRedirecting) {
         const cloned = response.clone()
         try {
           const data = await cloned.json()
@@ -29,17 +32,18 @@ export function setupFetchInterceptor() {
           if (data?.message?.toLowerCase().includes('unauthorized') ||
               data?.message?.toLowerCase().includes('jwt') ||
               data?.message?.toLowerCase().includes('token')) {
-            console.warn('[Auth] Session expired — redirecting to login')
-            // Clear stale auth data
-            localStorage.removeItem('dwp_token')
-            localStorage.removeItem('dwp_wallet_address')
-            localStorage.removeItem('dwp_wallet_connected')
-            localStorage.removeItem('dwp_is_demo')
-            
+
             // Redirect only if not already on login/beneficiary/claim page
             if (!window.location.pathname.includes('/login') &&
                 !window.location.pathname.includes('/beneficiary') &&
                 !window.location.pathname.includes('/claim')) {
+              _isRedirecting = true
+              console.warn('[Auth] Session expired — redirecting to login')
+              // Clear stale auth data
+              localStorage.removeItem('dwp_token')
+              localStorage.removeItem('dwp_wallet_address')
+              localStorage.removeItem('dwp_wallet_connected')
+              localStorage.removeItem('dwp_is_demo')
               window.location.href = '/?session=expired'
             }
           }
