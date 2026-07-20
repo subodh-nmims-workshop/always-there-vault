@@ -111,17 +111,18 @@ export class UsersService {
                 }
 
                 const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
                 await this.db.update(users)
                     .set({
                         pendingEmail: lowerEmail,
                         emailVerificationToken: verificationCode,
+                        emailVerificationTokenExpiresAt: otpExpiresAt,
                     })
                     .where(eq(users.walletAddress, lowerAddress));
 
-                // Set cooldown (15s) and expiry timestamp (10 min) in cache
+                // Set cooldown in cache (15s only — expiry is now in DB)
                 this.cacheService.set(cooldownKey, true, 15000);
-                this.cacheService.set(`otp_expiry:primary:${existingUser.id}`, Date.now() + 10 * 60 * 1000, 11 * 60 * 1000);
 
                 // Send OTP email (non-blocking)
                 this.emailService.sendVerificationEmail(lowerEmail, verificationCode).catch(err => {
@@ -154,17 +155,18 @@ export class UsersService {
                 }
 
                 const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                const altOtpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
                 await this.db.update(users)
                     .set({
                         alternativePendingEmail: lowerAltEmail,
                         alternativeEmailVerificationToken: verificationCode,
+                        alternativeEmailVerificationTokenExpiresAt: altOtpExpiresAt,
                     })
                     .where(eq(users.walletAddress, lowerAddress));
 
-                // Set cooldown (15s) and expiry timestamp (10 min) in cache
+                // Set cooldown in cache (15s only — expiry is now in DB)
                 this.cacheService.set(cooldownKey, true, 15000);
-                this.cacheService.set(`otp_expiry:alt:${existingUser.id}`, Date.now() + 10 * 60 * 1000, 11 * 60 * 1000);
 
                 // Send OTP email (non-blocking)
                 this.emailService.sendVerificationEmail(lowerAltEmail, verificationCode).catch(err => {
@@ -192,9 +194,11 @@ export class UsersService {
         // ── New user creation ─────────────────────────────────────────────────
         const lowerEmail = email ? email.toLowerCase() : null;
         const verificationCode = lowerEmail ? Math.floor(100000 + Math.random() * 900000).toString() : null;
+        const otpExpiresAt = verificationCode ? new Date(Date.now() + 10 * 60 * 1000) : null;
 
         const lowerAltEmail = alternativeEmail ? alternativeEmail.toLowerCase() : null;
         const altVerificationCode = lowerAltEmail ? Math.floor(100000 + Math.random() * 900000).toString() : null;
+        const altOtpExpiresAt = altVerificationCode ? new Date(Date.now() + 10 * 60 * 1000) : null;
 
         const [newUser] = await this.db.insert(users)
             .values({
@@ -202,17 +206,18 @@ export class UsersService {
                 email: null,
                 pendingEmail: lowerEmail,
                 emailVerificationToken: verificationCode,
+                emailVerificationTokenExpiresAt: otpExpiresAt,
                 emailVerified: false,
                 alternativeEmail: null,
                 alternativePendingEmail: lowerAltEmail,
                 alternativeEmailVerificationToken: altVerificationCode,
+                alternativeEmailVerificationTokenExpiresAt: altOtpExpiresAt,
                 alternativeEmailVerified: false,
             } as any)
             .returning();
 
         if (lowerEmail && verificationCode) {
             this.cacheService.set(`otp_cooldown:primary:${newUser.id}`, true, 15000);
-            this.cacheService.set(`otp_expiry:primary:${newUser.id}`, Date.now() + 10 * 60 * 1000, 11 * 60 * 1000);
             this.emailService.sendVerificationEmail(lowerEmail, verificationCode).catch(err => {
                 console.error('Error sending verification email for new user:', err);
             });
@@ -220,7 +225,6 @@ export class UsersService {
 
         if (lowerAltEmail && altVerificationCode) {
             this.cacheService.set(`otp_cooldown:alt:${newUser.id}`, true, 15000);
-            this.cacheService.set(`otp_expiry:alt:${newUser.id}`, Date.now() + 10 * 60 * 1000, 11 * 60 * 1000);
             this.emailService.sendVerificationEmail(lowerAltEmail, altVerificationCode).catch(err => {
                 console.error('Error sending alternative verification email for new user:', err);
             });
@@ -259,10 +263,8 @@ export class UsersService {
             return { success: false, message: 'No verification request pending or OTP already used.' };
         }
 
-        // Check OTP expiry (10-min window). Falls back gracefully if cache was lost (e.g. server restart).
-        const expiryKey = `otp_expiry:primary:${userId}`;
-        const expiresAt = this.cacheService.get<number>(expiryKey);
-        if (expiresAt !== undefined && expiresAt !== null && Date.now() > expiresAt) {
+        // Check OTP expiry against DB timestamp (survives server restarts)
+        if (user.emailVerificationTokenExpiresAt && new Date() > new Date(user.emailVerificationTokenExpiresAt)) {
             return { success: false, message: 'Verification code has expired. Please request a new code.' };
         }
 
@@ -288,6 +290,7 @@ export class UsersService {
                 emailVerified: true,
                 pendingEmail: null,
                 emailVerificationToken: null,
+                emailVerificationTokenExpiresAt: null,
                 updatedAt: new Date(),
             })
             .where(eq(users.id, userId));
@@ -311,10 +314,8 @@ export class UsersService {
             return { success: false, message: 'No alternative verification request pending or OTP already used.' };
         }
 
-        // Check OTP expiry (10-min window). Falls back gracefully if cache was lost (e.g. server restart).
-        const altExpiryKey = `otp_expiry:alt:${userId}`;
-        const altExpiresAt = this.cacheService.get<number>(altExpiryKey);
-        if (altExpiresAt !== undefined && altExpiresAt !== null && Date.now() > altExpiresAt) {
+        // Check OTP expiry against DB timestamp (survives server restarts)
+        if (user.alternativeEmailVerificationTokenExpiresAt && new Date() > new Date(user.alternativeEmailVerificationTokenExpiresAt)) {
             return { success: false, message: 'Verification code has expired. Please request a new code.' };
         }
 
@@ -339,6 +340,7 @@ export class UsersService {
                 alternativeEmailVerified: true,
                 alternativePendingEmail: null,
                 alternativeEmailVerificationToken: null,
+                alternativeEmailVerificationTokenExpiresAt: null,
                 updatedAt: new Date(),
             })
             .where(eq(users.id, userId));
@@ -367,13 +369,17 @@ export class UsersService {
         }
 
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
         await this.db.update(users)
-            .set({ pendingEmail: emailToVerify, emailVerificationToken: verificationCode })
+            .set({ 
+                pendingEmail: emailToVerify, 
+                emailVerificationToken: verificationCode,
+                emailVerificationTokenExpiresAt: otpExpiresAt,
+            })
             .where(eq(users.id, userId));
 
         this.cacheService.set(cooldownKey, true, 15000);
-        this.cacheService.set(`otp_expiry:primary:${userId}`, Date.now() + 10 * 60 * 1000, 11 * 60 * 1000);
 
         await this.emailService.sendVerificationEmail(emailToVerify, verificationCode);
         return { success: true, message: 'Verification code resent successfully' };
@@ -394,13 +400,17 @@ export class UsersService {
         }
 
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const altOtpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
         await this.db.update(users)
-            .set({ alternativePendingEmail: emailToVerify, alternativeEmailVerificationToken: verificationCode })
+            .set({ 
+                alternativePendingEmail: emailToVerify, 
+                alternativeEmailVerificationToken: verificationCode,
+                alternativeEmailVerificationTokenExpiresAt: altOtpExpiresAt,
+            })
             .where(eq(users.id, userId));
 
         this.cacheService.set(cooldownKey, true, 15000);
-        this.cacheService.set(`otp_expiry:alt:${userId}`, Date.now() + 10 * 60 * 1000, 11 * 60 * 1000);
 
         await this.emailService.sendVerificationEmail(emailToVerify, verificationCode);
         return { success: true, message: 'Verification code resent successfully' };
