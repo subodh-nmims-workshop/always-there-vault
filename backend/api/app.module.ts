@@ -39,14 +39,14 @@ import { NotificationsModule } from '../services/notifications/notifications.mod
       envFilePath: '.env',
     }),
     // ─── Rate Limiting (Global) ───────────────────────────────────────
-    // 100 requests per minute per IP globally
-    // Critical endpoints (claim, auth) use @Throttle() decorators for tighter limits
+    // Authenticated dashboard users fire 7-10 parallel calls on load.
+    // Keep strict limits only on sensitive endpoints via @Throttle() decorators.
     ThrottlerModule.forRoot([{
       name: 'global',
       ttl: 60000,   // 1 minute window
-      limit: 100,   // max 100 requests per IP per minute
+      limit: 500,   // 500 requests per IP per minute (dashboard makes ~10 parallel calls)
     }, {
-      name: 'strict', // used on sensitive endpoints
+      name: 'strict', // used on sensitive endpoints (claim, auth)
       ttl: 60000,
       limit: 10,
     }]),

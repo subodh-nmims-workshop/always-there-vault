@@ -122,9 +122,11 @@ async function bootstrap() {
   app.use(require('body-parser').urlencoded({ limit: '50mb', extended: true }));
 
   // Standard Rate limiting
+  // Dashboard fires 7-10 parallel API calls on load per user, so general limit is set high.
+  // Sensitive endpoints (auth, claim) have their own stricter limiters below.
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    max: 100,
+    max: 500, // 500 per IP per 15 min — accommodates normal dashboard usage
     standardHeaders: true,
     legacyHeaders: false,
     message: { statusCode: 429, message: 'Normal traffic limit exceeded.' },
