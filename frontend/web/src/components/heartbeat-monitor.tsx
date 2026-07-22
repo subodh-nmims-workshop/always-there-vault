@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ShieldCheck, Clock, Activity, AlertTriangle, Fingerprint, Settings, RefreshCw, X, ShieldAlert, CheckCircle2, Mail, Trash2 } from 'lucide-react'
 import { recordHeartbeat, getHeartbeatStatus, HeartbeatPayload, getHeartbeatSettings, updateHeartbeatSettings } from '@/app/actions/heartbeat'
 import { submitHeartbeat, configureHeartbeat as configureBlockchainHeartbeat } from '@/lib/blockchain'
-import { useApp } from '@/contexts/AppContext'
 import { toast } from 'sonner'
+import { API_URL } from '@/lib/api-config'
+import { useApp } from '@/contexts/AppContext'
 
 export function HeartbeatMonitor() {
   const { refreshState, state } = useApp()
@@ -56,8 +57,15 @@ export function HeartbeatMonitor() {
         bufferMisses: state.settings?.bufferMisses || 3
       }
       
-      const intervalMs = currentSettings.heartbeatInterval * 24 * 60 * 60 * 1000
-      const graceMs = currentSettings.gracePeriod * 24 * 60 * 60 * 1000
+      const isIntervalMins = currentSettings.heartbeatInterval <= 3
+      const isGraceMins = currentSettings.gracePeriod <= 3
+
+      const intervalMs = isIntervalMins 
+        ? currentSettings.heartbeatInterval * 60 * 1000 
+        : currentSettings.heartbeatInterval * 24 * 60 * 60 * 1000
+      const graceMs = isGraceMins 
+        ? currentSettings.gracePeriod * 60 * 1000 
+        : currentSettings.gracePeriod * 24 * 60 * 60 * 1000
 
       // Find or initialize a persistent start time for this wallet
       let initialTime = Date.now()
@@ -87,7 +95,8 @@ export function HeartbeatMonitor() {
         isOverdue = true
       }
 
-      const daysUntilDue = Math.max(0, Math.ceil((nextDue - Date.now()) / (1000 * 60 * 60 * 24)))
+      const timeUnitMs = isIntervalMins ? (60 * 1000) : (1000 * 60 * 60 * 24)
+      const daysUntilDue = Math.max(0, Math.ceil((nextDue - Date.now()) / timeUnitMs))
 
       return { status, daysUntilDue, isOverdue }
     }
@@ -128,7 +137,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
       if (!token) return
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -226,7 +235,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         method: 'POST',
         headers: {
@@ -268,7 +277,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/verify-email`, {
         method: 'POST',
         headers: {
@@ -310,7 +319,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         method: 'POST',
         headers: {
@@ -365,7 +374,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         method: 'POST',
         headers: {
@@ -406,7 +415,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/verify-alternative-email`, {
         method: 'POST',
         headers: {
@@ -426,6 +435,7 @@ export function HeartbeatMonitor() {
           setAlternativeOtpCode('')
           setAlternativeResendCooldown(0)
           await fetchProfileInfo()
+        } else {
           toast.error(data.message || "Invalid verification code.")
         }
       } else {
@@ -447,7 +457,7 @@ export function HeartbeatMonitor() {
     try {
       const token = localStorage.getItem('dwp_token')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/delete-alternative-email`, {
         method: 'POST',
         headers: {
@@ -597,11 +607,10 @@ export function HeartbeatMonitor() {
       }
 
       // ALWAYS RECORD ON CENTRALIZED DATABASE for Email/Cron monitoring 
-      // This ensures the demo still works even if the wallet has 0 ETH
       const payload: HeartbeatPayload = {
         walletAddress: walletAddress || '0x0000000000000000000000000000000000000000',
         method: 'wallet_signature',
-        signature: 'manual_override_demo',
+        signature: 'manual_override_pulse',
         ipAddress: '127.0.0.1'
       }
 
@@ -705,7 +714,10 @@ export function HeartbeatMonitor() {
   }
 
   const getNextHeartbeatDue = (): Date => {
-    const ms = settings.heartbeatInterval * 24 * 60 * 60 * 1000;
+    const isMins = settings.heartbeatInterval <= 3;
+    const ms = isMins 
+      ? settings.heartbeatInterval * 60 * 1000 
+      : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
     if (!lastHeartbeat) return new Date(Date.now() + ms);
     return new Date(lastHeartbeat.getTime() + ms);
   }
@@ -717,8 +729,12 @@ export function HeartbeatMonitor() {
     const nextDue = getNextHeartbeatDue()
     const diffMs = nextDue.getTime() - currentTime
 
-    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-    return { value: Math.min(days, settings.heartbeatInterval), unit: 'Days' }
+    const isMins = settings.heartbeatInterval <= 3;
+    const unitMs = isMins ? 60 * 1000 : 24 * 60 * 60 * 1000;
+    const unit = isMins ? 'Mins' : 'Days';
+
+    const count = Math.max(0, Math.ceil(diffMs / unitMs))
+    return { value: Math.min(count, settings.heartbeatInterval), unit }
   }
 
   const getGracePeriodLeft = (): { value: number; unit: string } => {
@@ -726,19 +742,28 @@ export function HeartbeatMonitor() {
       return { value: 0, unit: 'Days' }
     }
     const nextDue = getNextHeartbeatDue()
-    const graceMs = settings.gracePeriod * 24 * 60 * 60 * 1000
+    const isGraceMins = settings.gracePeriod <= 3;
+    const graceMs = isGraceMins 
+      ? settings.gracePeriod * 60 * 1000 
+      : settings.gracePeriod * 24 * 60 * 60 * 1000;
     const graceDue = nextDue.getTime() + graceMs
     const diffMs = graceDue - currentTime
 
-    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-    return { value: Math.min(days, settings.gracePeriod), unit: 'Days' }
+    const unitMs = isGraceMins ? 60 * 1000 : 24 * 60 * 60 * 1000;
+    const unit = isGraceMins ? 'Mins' : 'Days';
+
+    const count = Math.max(0, Math.ceil(diffMs / unitMs))
+    return { value: Math.min(count, settings.gracePeriod), unit }
   }
 
   const calculateProgress = () => {
     if (!profileEmail || !emailVerified) {
       return 0
     }
-    const intervalMs = settings.heartbeatInterval * 24 * 60 * 60 * 1000;
+    const isMins = settings.heartbeatInterval <= 3;
+    const intervalMs = isMins 
+      ? settings.heartbeatInterval * 60 * 1000 
+      : settings.heartbeatInterval * 24 * 60 * 60 * 1000;
 
     const nextDue = getNextHeartbeatDue()
     const msLeft = nextDue.getTime() - currentTime
@@ -1411,6 +1436,9 @@ export function HeartbeatMonitor() {
                     value={settings.heartbeatInterval}
                     onChange={(e) => setSettings(prev => ({ ...prev, heartbeatInterval: parseInt(e.target.value) }))}
                   >
+                    <option value={1}>1 Minute (Fast Track Test)</option>
+                    <option value={2}>2 Minutes (Fast Track Test)</option>
+                    <option value={3}>3 Minutes (Fast Track Test)</option>
                     <option value={7}>7 days (Weekly)</option>
                     <option value={14}>14 days (Bi-weekly)</option>
                     <option value={30}>30 days (Monthly)</option>
@@ -1427,6 +1455,9 @@ export function HeartbeatMonitor() {
                     value={settings.gracePeriod}
                     onChange={(e) => setSettings(prev => ({ ...prev, gracePeriod: parseInt(e.target.value) }))}
                   >
+                    <option value={1}>1 Minute Rescue Window (Test)</option>
+                    <option value={2}>2 Minutes Rescue Window (Test)</option>
+                    <option value={3}>3 Minutes Rescue Window (Test)</option>
                     <option value={7}>7 days Rescue Window</option>
                     <option value={14}>14 days Rescue Window</option>
                     <option value={30}>30 days Rescue Window</option>

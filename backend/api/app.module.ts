@@ -42,13 +42,13 @@ import { NotificationsModule } from '../services/notifications/notifications.mod
     // Authenticated dashboard users fire 7-10 parallel calls on load.
     // Keep strict limits only on sensitive endpoints via @Throttle() decorators.
     ThrottlerModule.forRoot([{
-      name: 'global',
+      name: 'default',
       ttl: 60000,   // 1 minute window
-      limit: 500,   // 500 requests per IP per minute (dashboard makes ~10 parallel calls)
+      limit: 500,   // 500 requests per IP per minute
     }, {
-      name: 'strict', // used on sensitive endpoints (claim, auth)
+      name: 'strict',
       ttl: 60000,
-      limit: 10,
+      limit: 60,    // 60 requests per minute for auth/MFA retries
     }]),
     ScheduleModule.forRoot(),
     PrometheusModule.register(),

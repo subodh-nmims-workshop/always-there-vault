@@ -36,14 +36,14 @@ export const users = pgTable('users', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   pendingEmail: varchar('pending_email', { length: 255 }),
   emailVerificationToken: varchar('email_verification_token', { length: 255 }),
-  emailVerificationTokenExpiresAt: timestamp('email_verification_token_expires_at'),
+  emailVerificationTokenExpiresAt: timestamp('email_verification_token_expires_at', { withTimezone: true }),
 
   // Alternative Email Verification
   alternativeEmail: varchar('alternative_email', { length: 255 }),
   alternativeEmailVerified: boolean('alternative_email_verified').default(false).notNull(),
   alternativePendingEmail: varchar('alternative_pending_email', { length: 255 }),
   alternativeEmailVerificationToken: varchar('alternative_email_verification_token', { length: 255 }),
-  alternativeEmailVerificationTokenExpiresAt: timestamp('alternative_email_verification_token_expires_at'),
+  alternativeEmailVerificationTokenExpiresAt: timestamp('alternative_email_verification_token_expires_at', { withTimezone: true }),
 
   // Preferences
   preferences: jsonb('preferences').default({}),

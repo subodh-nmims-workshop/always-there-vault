@@ -9,7 +9,7 @@ export const verificationTokens = pgTable('verification_tokens', {
   type: tokenTypeEnum('type').notNull(),
   userId: uuid('user_id').references(() => users.id),
   targetAddress: varchar('target_address', { length: 255 }), // Can be wallet address of the owner or beneficiary
-  expiresAt: timestamp('expires_at').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   isUsed: boolean('is_used').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

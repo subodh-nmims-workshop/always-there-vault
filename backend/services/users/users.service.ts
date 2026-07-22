@@ -247,6 +247,33 @@ export class UsersService {
         };
     }
 
+    // ─── Helper: Safe Token Expiry Check ─────────────────────────
+    // PostgreSQL timestamps can arrive as:
+    //   - Date object (Drizzle with withTimezone:true)  → .getTime() works
+    //   - ISO string with Z  "2026-07-22T17:30:00.000Z" → parsed correctly
+    //   - ISO string NO tz   "2026-07-22T17:30:00.000"  → must append Z
+    //   - PG legacy format   "2026-07-22 17:30:00"       → space → T, append Z
+    private isTokenExpired(expiresAt: Date | string | null | undefined): boolean {
+        if (!expiresAt) return false; // no expiry set means never expires
+        try {
+            let expiryMs: number;
+            if (expiresAt instanceof Date) {
+                expiryMs = expiresAt.getTime();
+            } else {
+                // Normalise: replace space separator, force UTC suffix if absent
+                let s = String(expiresAt).trim().replace(' ', 'T');
+                if (!/[Zz]$/.test(s) && !/[+\-]\d{2}:\d{2}$/.test(s)) {
+                    s += 'Z'; // treat as UTC when no TZ info present
+                }
+                expiryMs = new Date(s).getTime();
+            }
+            if (isNaN(expiryMs)) return false; // unparseable → be lenient
+            return Date.now() > expiryMs;
+        } catch {
+            return false; // on any parse error, be lenient
+        }
+    }
+
     // ─── Email Verification ───────────────────────────────────────────────────
 
     async verifyEmail(userId: string, code: string): Promise<{ success: boolean; message: string; email?: string }> {
@@ -263,8 +290,8 @@ export class UsersService {
             return { success: false, message: 'No verification request pending or OTP already used.' };
         }
 
-        // Check OTP expiry against DB timestamp (survives server restarts)
-        if (user.emailVerificationTokenExpiresAt && new Date() > new Date(user.emailVerificationTokenExpiresAt)) {
+        // Check OTP expiry against DB timestamp safely
+        if (this.isTokenExpired(user.emailVerificationTokenExpiresAt)) {
             return { success: false, message: 'Verification code has expired. Please request a new code.' };
         }
 
@@ -314,8 +341,8 @@ export class UsersService {
             return { success: false, message: 'No alternative verification request pending or OTP already used.' };
         }
 
-        // Check OTP expiry against DB timestamp (survives server restarts)
-        if (user.alternativeEmailVerificationTokenExpiresAt && new Date() > new Date(user.alternativeEmailVerificationTokenExpiresAt)) {
+        // Check OTP expiry against DB timestamp safely
+        if (this.isTokenExpired(user.alternativeEmailVerificationTokenExpiresAt)) {
             return { success: false, message: 'Verification code has expired. Please request a new code.' };
         }
 
