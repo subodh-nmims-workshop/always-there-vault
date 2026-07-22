@@ -29,7 +29,7 @@ export function Providers({ children }: ProvidersProps) {
     try {
       const EventEmitter = require('events').EventEmitter;
       if (EventEmitter) {
-        EventEmitter.defaultMaxListeners = 25;
+        EventEmitter.defaultMaxListeners = 50;
       }
     } catch (e) {
       // Ignore if events module is not polyfilled
@@ -39,7 +39,7 @@ export function Providers({ children }: ProvidersProps) {
       try {
         const provider = (window as any).ethereum;
         if (typeof provider.setMaxListeners === 'function') {
-          provider.setMaxListeners(25);
+          provider.setMaxListeners(50);
         }
       } catch (e) {
         // Ignore
