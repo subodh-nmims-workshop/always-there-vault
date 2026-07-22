@@ -259,13 +259,22 @@ export class UsersService {
             let expiryMs: number;
             if (expiresAt instanceof Date) {
                 expiryMs = expiresAt.getTime();
-            } else {
-                // Normalise: replace space separator, force UTC suffix if absent
-                let s = String(expiresAt).trim().replace(' ', 'T');
-                if (!/[Zz]$/.test(s) && !/[+\-]\d{2}:\d{2}$/.test(s)) {
-                    s += 'Z'; // treat as UTC when no TZ info present
+            } else if (typeof expiresAt === 'string') {
+                // Handle various timestamp formats from PostgreSQL
+                const s = String(expiresAt).trim();
+                // If it's already a number as string, parse it directly
+                if (/^\d+$/.test(s)) {
+                    expiryMs = parseInt(s, 10);
+                } else {
+                    // Replace space separator, force UTC suffix if absent
+                    let normalized = s.replace(' ', 'T');
+                    if (!/[Zz]$/.test(normalized) && !/[+\-]\d{2}:\d{2}$/.test(normalized)) {
+                        normalized += 'Z'; // treat as UTC when no TZ info present
+                    }
+                    expiryMs = new Date(normalized).getTime();
                 }
-                expiryMs = new Date(s).getTime();
+            } else {
+                return false;
             }
             if (isNaN(expiryMs)) return false; // unparseable → be lenient
             return Date.now() > expiryMs;
