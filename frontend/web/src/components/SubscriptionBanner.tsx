@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/api-config';
 
 interface TrialStatus {
   isExpired: boolean;
@@ -34,7 +35,7 @@ export default function SubscriptionBanner() {
     }
 
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const [trialRes, subRes] = await Promise.all([
         fetch(`${apiEndpoint}/subscription/${userId}/trial-status`),
         fetch(`${apiEndpoint}/subscription/${userId}`),

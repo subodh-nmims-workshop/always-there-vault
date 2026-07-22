@@ -287,7 +287,9 @@ export class ClaimAssetsController {
 
   private verifyClaimSessionToken(claimToken: string): { userId: string; targetAddress: string } {
     try {
-      const decoded: any = jwt.verify(claimToken, process.env.JWT_SECRET || 'secret');
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) throw new Error('JWT_SECRET not configured');
+      const decoded: any = jwt.verify(claimToken, jwtSecret);
       if (decoded.type !== 'CLAIM_SESSION') {
         throw new BadRequestException('Invalid claim token type.');
       }

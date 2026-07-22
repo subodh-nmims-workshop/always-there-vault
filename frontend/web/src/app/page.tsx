@@ -63,6 +63,7 @@ import { TrialBanner } from '@/components/trial-banner'
 import { SettingsDashboard } from '@/components/settings-dashboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { API_URL } from '@/lib/api-config'
 
 export default function HomePage() {
   const { address: wagmiAddress } = useAccount()
@@ -109,7 +110,7 @@ export default function HomePage() {
   const handleWalletConnect = async (walletAddress: string, customPrivateKey?: string) => {
     setIsConnecting(true)
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const nonceRes = await fetch(`${apiEndpoint}/api/auth/nonce`)
       
       if (!nonceRes.ok) {
@@ -186,7 +187,7 @@ export default function HomePage() {
 
     setIsVerifyingMfa(true)
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const verifyRes = await fetch(`${apiEndpoint}/api/auth/mfa/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

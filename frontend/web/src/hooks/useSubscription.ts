@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '@/lib/api-config';
 
 interface Subscription {
   mode: string;
@@ -40,7 +41,7 @@ export function useSubscription(userId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */; // Secondary backend (NestJS)
+  const API_BASE = API_URL;
 
   useEffect(() => {
     if (userId) {
@@ -53,7 +54,7 @@ export function useSubscription(userId: string | null) {
 
     try {
       setLoading(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */;
+
       const [subRes, trialRes, limitsRes] = await Promise.all([
         fetch(`${API_URL}/subscription/${userId}`),
         fetch(`${API_URL}/subscription/${userId}/trial-status`),
@@ -85,7 +86,7 @@ export function useSubscription(userId: string | null) {
     if (!userId) return;
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */;
+
       const response = await fetch(`${API_URL}/subscription/trial`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,7 +107,7 @@ export function useSubscription(userId: string | null) {
     if (!userId) return null;
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */;
+
       const response = await fetch(`${API_URL}/subscription/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

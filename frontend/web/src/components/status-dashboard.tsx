@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 import WebStorageService, { AppState, StoredAsset } from '@/lib/storage'
 import ModeService from '@/lib/mode-service'
+import { API_URL } from '@/lib/api-config'
 
 interface SystemLog {
     time: string
@@ -118,7 +119,7 @@ export function StatusDashboard() {
                 let isEmailOk = false;
                 const token = localStorage.getItem('dwp_token')
                 if (token) {
-                    const endpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                    const endpoint = API_URL
                     try {
                         const res = await fetch(`${endpoint}/api/users/profile`, {
                             headers: {

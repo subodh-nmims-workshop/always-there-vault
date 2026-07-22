@@ -1,6 +1,7 @@
 'use client'
 
 import { ThemeToggle } from '@/components/theme-toggle'
+import { API_URL } from '@/lib/api-config'
 
 import { useState, useEffect, Suspense } from 'react'
 import Image from 'next/image'
@@ -51,7 +52,7 @@ function BeneficiaryAssetsContent() {
   const downloadAndDecryptAsset = async (asset: any) => {
     setDownloadingAssetId(asset.id)
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       
       const keyId = asset.encryptionKeyId || asset.keyId
       const fileIv = asset.fileIv || asset.iv
@@ -200,7 +201,7 @@ function BeneficiaryAssetsContent() {
     setStatus('checking')
     
     try {
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       
       if (claimToken) {
         // ✅ Direct check via public claim-token endpoint — bypass heartbeat check entirely
@@ -287,7 +288,7 @@ function BeneficiaryAssetsContent() {
       // 3. Download/Decrypt assets
       
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       
       // We'll iterate through assets and claim them
       // For this UI demo, we'll mark as claimed after status update

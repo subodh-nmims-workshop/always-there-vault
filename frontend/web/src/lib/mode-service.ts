@@ -5,6 +5,7 @@
 import WebCryptoService from './crypto'
 import WebStorageService, { StoredAsset } from './storage'
 import type { UserMode } from '@/types/subscription'
+import { API_URL } from './api-config'
 
 export interface ModeConfig {
   mode: UserMode
@@ -25,7 +26,7 @@ class ModeService {
 
     this.config = {
       mode: this.currentMode,
-      apiEndpoint: process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */,
+      apiEndpoint: API_URL,
       contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
       ipfsGateway: 'https://ipfs.io/ipfs/'
     }

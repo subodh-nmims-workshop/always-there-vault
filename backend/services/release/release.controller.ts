@@ -48,9 +48,11 @@ export class ClaimController {
             const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:7000').trim();
             
             // Generate a short-lived (1 hour) claim session token to allow the beneficiary to fetch assets securely
+            const jwtSecret = process.env.JWT_SECRET;
+            if (!jwtSecret) throw new Error('JWT_SECRET not configured');
             const claimSessionToken = jwt.sign(
                 { type: 'CLAIM_SESSION', userId: record.userId, targetAddress: record.targetAddress, originalToken: token },
-                process.env.JWT_SECRET || 'secret',
+                jwtSecret,
                 { expiresIn: '1h' }
             );
 

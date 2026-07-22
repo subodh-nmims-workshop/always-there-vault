@@ -4,11 +4,14 @@ import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 
+import { CacheService } from '../cache/cache.service';
+
 describe('BeneficiariesService - IDOR Protections', () => {
   let service: BeneficiariesService;
   let mockDb: any;
   let mockUsersService: any;
   let mockEmailService: any;
+  let mockCacheService: any;
 
   beforeEach(async () => {
     mockDb = {
@@ -45,6 +48,12 @@ describe('BeneficiariesService - IDOR Protections', () => {
       sendBeneficiaryVerificationEmail: jest.fn().mockResolvedValue(true),
     };
 
+    mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      delete: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BeneficiariesService,
@@ -59,6 +68,10 @@ describe('BeneficiariesService - IDOR Protections', () => {
         {
           provide: EmailService,
           useValue: mockEmailService,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();

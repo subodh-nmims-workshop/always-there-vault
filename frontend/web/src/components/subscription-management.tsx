@@ -7,6 +7,7 @@ import {
   Check, AlertTriangle, ExternalLink, Download, Shield, Zap
 } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { API_URL } from '@/lib/api-config'
 import { ALL_PLANS } from '@/types/subscription'
 import { toast } from 'sonner'
 
@@ -61,7 +62,7 @@ export function SubscriptionManagement() {
   const openCustomerPortal = async () => {
     try {
       const userId = localStorage.getItem('dwp_wallet_address') || 'user_' + Date.now()
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/stripe/create-portal-session', {
+      const response = await fetch(`${API_URL}/stripe/create-portal-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -5,6 +5,7 @@
  */
 
 import WebCryptoService, { EncryptionResult, KeyDistribution } from './crypto';
+import { API_URL } from './api-config';
 
 export interface StoredFolder {
   id: string;
@@ -541,7 +542,7 @@ class WebStorageService {
           const mode = localStorage.getItem('dwp_mode') || 'centralized'
           const walletAddress = localStorage.getItem('dwp_wallet_address')
           if (mode === 'centralized' && walletAddress) {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+            const apiEndpoint = API_URL
             await fetch(`${apiEndpoint}/api/assets/folders`, {
               method: 'POST',
               headers: {
@@ -626,7 +627,7 @@ class WebStorageService {
           const mode = localStorage.getItem('dwp_mode') || 'centralized'
           const walletAddress = localStorage.getItem('dwp_wallet_address')
           if (mode === 'centralized' && walletAddress) {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+            const apiEndpoint = API_URL
             await fetch(`${apiEndpoint}/api/assets/folders/${id}`, {
               method: 'PATCH',
               headers: {
@@ -682,7 +683,7 @@ class WebStorageService {
           const mode = localStorage.getItem('dwp_mode') || 'centralized'
           const walletAddress = localStorage.getItem('dwp_wallet_address')
           if (mode === 'centralized' && walletAddress) {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+            const apiEndpoint = API_URL
             await fetch(`${apiEndpoint}/api/assets/folders/${id}`, {
               method: 'DELETE',
               headers: {
@@ -734,7 +735,7 @@ class WebStorageService {
     try {
       const mode = localStorage.getItem('dwp_mode') || 'centralized'
       if (mode === 'centralized') {
-        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+        const apiEndpoint = API_URL
         const allBens = await this.getAllBeneficiaries();
         const benMap = new Map(allBens.map(b => [b.id, b.walletAddress]));
         for (const benId of updatedBeneficiaries) {

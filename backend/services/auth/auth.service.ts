@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ethers } from 'ethers';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
@@ -20,17 +20,28 @@ export class AuthService {
         private readonly configService: ConfigService
     ) { }
 
+    // ─── Single source of truth for JWT secret ────────────────────────────────
+    // Throws immediately if JWT_SECRET is not set — prevents silent insecure fallback
+    private getJwtSecret(): string {
+        const secret = this.configService.get<string>('JWT_SECRET');
+        if (!secret) {
+            this.logger.error('FATAL: JWT_SECRET environment variable is not set!');
+            throw new InternalServerErrorException('Server misconfiguration: JWT_SECRET not set.');
+        }
+        return secret;
+    }
+
     generateNonce(): string {
         const nonceBase = crypto.randomBytes(16).toString('hex'); // 32 chars
         const timestamp = Date.now();
-        const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
-        
+        const secret = this.getJwtSecret();
+
         // Create HMAC signature of (nonceBase + timestamp)
         const hmac = crypto.createHmac('sha256', secret)
             .update(`${nonceBase}:${timestamp}`)
             .digest('hex')
             .substring(0, 32); // 32 chars
-            
+
         const fullNonce = nonceBase + hmac; // 64 chars total
         const message = `Welcome to AlwaysThere Vault.\n\nSign this message to prove ownership of this wallet and authorize your session.\n\nNonce: ${fullNonce}\nTimestamp: ${timestamp}`;
 
@@ -62,8 +73,8 @@ export class AuthService {
             // 2. Validate Stateless Nonce
             const nonceBase = fullNonce.substring(0, 32);
             const receivedHmac = fullNonce.substring(32);
-            const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
-            
+            const secret = this.getJwtSecret();
+
             const expectedHmac = crypto.createHmac('sha256', secret)
                 .update(`${nonceBase}:${timestampStr}`)
                 .digest('hex')
@@ -89,11 +100,9 @@ export class AuthService {
                 throw new UnauthorizedException('Signature format invalid or tampered.');
             }
 
-            let isRecoveryLogin = false;
             if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
                 const user = await this.usersService.findUserByWalletOrRecovery(walletAddress);
                 if (user && user.recoveryAddress && user.recoveryAddress.toLowerCase() === recoveredAddress.toLowerCase()) {
-                    isRecoveryLogin = true;
                     this.logger.log(`RECOVERY LOGIN SUCCESSFUL: ${walletAddress} authenticated via recovery address ${recoveredAddress}`);
                 } else {
                     this.logger.warn(`ADDRESS MISMATCH: Recovered ${recoveredAddress} vs Expected ${walletAddress}`);
@@ -111,7 +120,6 @@ export class AuthService {
 
             if (dbUser && dbUser.twoFactorEnabled) {
                 const mfaToken = crypto.randomBytes(32).toString('hex');
-                // MFA sessions still use cache for now, but they are shorter-lived
                 this.cacheService.set(`mfa_pending:${mfaToken}`, { userId: dbUser.id, walletAddress: dbUser.walletAddress }, 10 * 60 * 1000);
                 return {
                     status: 'PENDING_MFA',
@@ -121,18 +129,16 @@ export class AuthService {
 
             // 5. Regular login
             if (!dbUser) {
-                // If user doesn't exist, create a new one using this walletAddress as primary
                 dbUser = await this.usersService.createOrUpdateUser(walletAddress);
             } else {
-                // If user exists, update their profile/active timestamp using their primary wallet address
                 dbUser = await this.usersService.createOrUpdateUser(dbUser.walletAddress);
             }
-            
+
             // Generate JWT using the primary walletAddress to maintain consistent session identity
             const token = jwt.sign(
                 { walletAddress: dbUser.walletAddress, userId: dbUser.id },
-                this.configService.get<string>('JWT_SECRET') || 'secret',
-                { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h' }
+                this.getJwtSecret(),
+                { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '7d' }
             );
 
             return {
@@ -143,10 +149,9 @@ export class AuthService {
         } catch (e) {
             this.logger.error(`Authentication failed for ${walletAddress}: ${e.message}`);
             console.error('FULL DATABASE AUTH ERROR:', e);
-            if (e instanceof UnauthorizedException || e instanceof BadRequestException) {
+            if (e instanceof UnauthorizedException || e instanceof BadRequestException || e instanceof InternalServerErrorException) {
                 throw e;
             }
-            // Log full stack for non-HTTP exceptions to help debug in Render logs
             console.error(e);
             const detailMsg = [e.code, e.detail, e.hint].filter(Boolean).join(' - ');
             throw new UnauthorizedException(`Authentication failed: ${e.message}${detailMsg ? ' | ' + detailMsg : ''}`);
@@ -182,8 +187,8 @@ export class AuthService {
         // Generate JWT
         const token = jwt.sign(
             { walletAddress: pending.walletAddress, userId: pending.userId },
-            this.configService.get<string>('JWT_SECRET') || 'secret',
-            { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h' }
+            this.getJwtSecret(),
+            { expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '7d' }
         );
 
         return {

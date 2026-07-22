@@ -48,6 +48,7 @@ import {
     Mail
 } from 'lucide-react'
 import { translations, Language, getLanguage, setLanguage, subscribeI18n } from '@/utils/i18n'
+import { API_URL } from '@/lib/api-config'
 import WebStorageService, { AppState } from '@/lib/storage'
 import { UpgradeModal } from '@/components/upgrade-modal'
 import { toast } from 'sonner'
@@ -150,7 +151,7 @@ export function SettingsDashboard() {
     try {
       const token = localStorage.getItem('dwp_token')
       if (!token) return
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -202,7 +203,7 @@ export function SettingsDashboard() {
     setIsLinking(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
         method: 'POST',
         headers: {
@@ -243,7 +244,7 @@ export function SettingsDashboard() {
     setIsLinking(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/recovery-key`, {
         method: 'POST',
         headers: {
@@ -269,7 +270,7 @@ export function SettingsDashboard() {
     setIsMfaLoading(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/enable`, {
         method: 'POST',
         headers: {
@@ -301,7 +302,7 @@ export function SettingsDashboard() {
     setIsMfaLoading(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/verify-setup`, {
         method: 'POST',
         headers: {
@@ -330,7 +331,7 @@ export function SettingsDashboard() {
     setIsMfaLoading(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL /* 'http://localhost:7001' */
       const res = await fetch(`${apiEndpoint}/api/auth/mfa/disable`, {
         method: 'POST',
         headers: {
@@ -359,7 +360,7 @@ export function SettingsDashboard() {
     setIsVerifyingEmail(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/verify-email`, {
         method: 'POST',
         headers: {
@@ -393,7 +394,7 @@ export function SettingsDashboard() {
     setIsVerifyingEmail(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/resend-verification`, {
         method: 'POST',
         headers: {
@@ -418,7 +419,7 @@ export function SettingsDashboard() {
       const token = localStorage.getItem('dwp_token')
       if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       setIsUpdating(true)
       const res = await fetch(`${apiEndpoint}/api/users/delete-email`, {
         method: 'POST',
@@ -455,7 +456,7 @@ export function SettingsDashboard() {
     setIsVerifyingAlternativeEmail(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/verify-alternative-email`, {
         method: 'POST',
         headers: {
@@ -489,7 +490,7 @@ export function SettingsDashboard() {
     setIsVerifyingAlternativeEmail(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/resend-alternative-verification`, {
         method: 'POST',
         headers: {
@@ -517,7 +518,7 @@ export function SettingsDashboard() {
       const token = localStorage.getItem('dwp_token')
       if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       setIsUpdating(true)
       const res = await fetch(`${apiEndpoint}/api/users/delete-alternative-email`, {
         method: 'POST',
@@ -564,7 +565,7 @@ export function SettingsDashboard() {
     setIsUpdating(true)
     try {
       const token = localStorage.getItem('dwp_token')
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/users/profile`, {
         method: 'POST',
         headers: {
@@ -729,7 +730,7 @@ export function SettingsDashboard() {
         const targetPlanId = subscription?.mode === 'decentralized' ? 'sovereign_pro' : 'professional';
 
         if (method === 'STRIPE') {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
+            const apiEndpoint = API_URL;
             const checkoutRes = await fetch(`${apiEndpoint}/subscription/checkout`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1750,7 +1751,7 @@ export function SettingsDashboard() {
                                     <Button 
                                         onClick={async () => {
                                           try {
-                                            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                                            const apiEndpoint = API_URL
                                             const token = localStorage.getItem('dwp_token')
                                             if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
                                             

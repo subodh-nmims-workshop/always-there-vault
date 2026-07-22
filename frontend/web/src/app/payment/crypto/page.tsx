@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation'
 import { ethers } from 'ethers'
 import { toast } from 'sonner'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+import { API_URL } from '@/lib/api-config'
 
 export const dynamic = 'force-dynamic'
 
@@ -174,7 +175,7 @@ function CryptoPaymentContent() {
 
       // Notify backend to update database and send email
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */}/api/payment/process`, {
+        await fetch(`${API_URL}/api/payment/process`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -237,7 +238,7 @@ function CryptoPaymentContent() {
   const handlePayPalSuccess = async (orderId: string) => {
     setIsProcessing(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */}/api/payment/process`, {
+      const response = await fetch(`${API_URL}/api/payment/process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

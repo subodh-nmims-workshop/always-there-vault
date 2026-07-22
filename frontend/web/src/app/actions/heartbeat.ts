@@ -1,8 +1,9 @@
 'use client'
 
 import WebStorageService from '@/lib/storage'
+import { API_URL } from '@/lib/api-config'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+const BACKEND_URL = API_URL
 
 export interface HeartbeatPayload {
     walletAddress: string
@@ -41,7 +42,7 @@ export async function recordHeartbeat(payload: HeartbeatPayload): Promise<Heartb
 
         // SYNC TO BACKEND for email alerts and cron monitoring
         try {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+            const apiEndpoint = API_URL
             const token = localStorage.getItem('dwp_token')
             if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')
 
@@ -79,7 +80,7 @@ export async function getHeartbeatStatus(walletAddress: string) {
 
         // Sync latest heartbeat timestamp from backend if online
         try {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+            const apiEndpoint = API_URL
             const token = localStorage.getItem('dwp_token')
             if (token) {
                 const res = await fetch(`${apiEndpoint}/api/heartbeat/status`, {
@@ -207,7 +208,7 @@ export async function getHeartbeatSettings(walletAddress: string) {
         const storage = WebStorageService.getInstance()
         
         try {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+            const apiEndpoint = API_URL
             const token = localStorage.getItem('dwp_token')
             if (token) {
                 const res = await fetch(`${apiEndpoint}/api/heartbeat/settings`, {
@@ -247,7 +248,7 @@ export async function updateHeartbeatSettings(walletAddress: string, interval: n
 
         // SYNC TO BACKEND
         try {
-            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+            const apiEndpoint = API_URL
             const email = localStorage.getItem('dwp_user_email') || ''
             const token = localStorage.getItem('dwp_token')
             if (!token) throw new Error('No authentication token found. Please reconnect your wallet.')

@@ -10,6 +10,7 @@ import { ConfirmationDialog } from './confirmation-dialog'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { toast } from 'sonner'
 import { Portal } from '@/components/portal'
+import { API_URL } from '@/lib/api-config'
 
 export function BeneficiaryManager() {
   const { state, refreshState } = useApp()
@@ -48,7 +49,7 @@ export function BeneficiaryManager() {
       const token = localStorage.getItem('dwp_token')
       if (!walletAddress) return
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       
       // Use JWT token if available, otherwise fall back to ownerAddress query
       const headers: any = {}
@@ -106,7 +107,7 @@ export function BeneficiaryManager() {
       const headers: any = {}
       if (token) headers['Authorization'] = `Bearer ${token}`
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/beneficiaries/${beneficiary.id}/send-verification`, {
         method: 'POST',
         headers
@@ -137,7 +138,7 @@ export function BeneficiaryManager() {
       const headers: any = { 'Content-Type': 'application/json' }
       if (token) headers['Authorization'] = `Bearer ${token}`
 
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+      const apiEndpoint = API_URL
       const res = await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}/verify`, {
         method: 'POST',
         headers,
@@ -263,7 +264,7 @@ export function BeneficiaryManager() {
       // Sync to Backend Postgres
       let backendId = beneficiary.id;
       const walletAddress = localStorage.getItem('dwp_wallet_address') || '0x0000000000000000000000000000000000000000'
-      const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+      const apiEndpoint = API_URL
       const url = editingId
         ? `${apiEndpoint}/api/beneficiaries/${editingId}`
         : `${apiEndpoint}/api/beneficiaries`
@@ -416,7 +417,7 @@ export function BeneficiaryManager() {
         const headers: any = {}
         if (token) headers['Authorization'] = `Bearer ${token}`
 
-        const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com' /* 'http://localhost:7001' */
+        const apiEndpoint = API_URL
         await fetch(`${apiEndpoint}/api/beneficiaries/${deleteConfirmation.beneficiaryId}`, {
           method: 'DELETE',
           headers
@@ -957,7 +958,7 @@ export function BeneficiaryManager() {
                             const headers: any = {}
                             if (token) headers['Authorization'] = `Bearer ${token}`
 
-                            const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                            const apiEndpoint = API_URL
                             await fetch(`${apiEndpoint}/api/beneficiaries/${verifyingBeneficiary.id}`, {
                               method: 'DELETE',
                               headers

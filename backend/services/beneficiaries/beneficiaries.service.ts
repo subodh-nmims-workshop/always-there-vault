@@ -4,15 +4,15 @@ import { beneficiaries, type Beneficiary, type NewBeneficiary } from '../../src/
 import { files } from '../../src/db/schema/files';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class BeneficiariesService {
-  private verificationCodes = new Map<string, string>();
-
   constructor(
     @Inject('DRIZZLE_DB') private db: any,
     private usersService: UsersService,
     private emailService: EmailService,
+    private cacheService: CacheService,
   ) { }
 
   async createBeneficiary(createData: any): Promise<Beneficiary> {
@@ -112,7 +112,7 @@ export class BeneficiariesService {
 
     // 2. Delete beneficiary
     await this.db.delete(beneficiaries).where(eq(beneficiaries.id, id));
-    this.verificationCodes.delete(id);
+    this.cacheService.delete(`beneficiary_otp:${id}`);
   }
 
   async sendVerificationCode(id: string): Promise<{ success: boolean }> {
@@ -128,7 +128,11 @@ export class BeneficiariesService {
     const user = await this.usersService.findUserById(beneficiary.userId);
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    this.verificationCodes.set(id, code);
+    // Cache for 10 minutes (600,000ms) under both ID and email
+    this.cacheService.set(`beneficiary_otp:${id}`, code, 10 * 60 * 1000);
+    if (beneficiary.email) {
+      this.cacheService.set(`beneficiary_otp:${beneficiary.email.toLowerCase().trim()}`, code, 10 * 60 * 1000);
+    }
 
     // Send email asynchronously
     const verifiedSenderEmail = user?.emailVerified ? user.email : (user?.alternativeEmailVerified ? user.alternativeEmail : null);
@@ -152,7 +156,8 @@ export class BeneficiariesService {
     const isPgp = beneficiary.email && (beneficiary.email.startsWith('pgp-') || beneficiary.email.includes('+pgp@'));
 
     if (!isPgp) {
-      const storedCode = this.verificationCodes.get(id);
+      const storedCode = this.cacheService.get<string>(`beneficiary_otp:${id}`) ||
+        (beneficiary.email ? this.cacheService.get<string>(`beneficiary_otp:${beneficiary.email.toLowerCase().trim()}`) : null);
       if (!storedCode || storedCode !== code.trim()) {
         throw new BadRequestException('Invalid or expired verification code.');
       }
@@ -167,7 +172,10 @@ export class BeneficiariesService {
       .returning();
 
     if (!updated) throw new NotFoundException('Beneficiary not found');
-    this.verificationCodes.delete(id);
+    this.cacheService.delete(`beneficiary_otp:${id}`);
+    if (beneficiary.email) {
+      this.cacheService.delete(`beneficiary_otp:${beneficiary.email.toLowerCase().trim()}`);
+    }
     return updated;
   }
 
@@ -211,7 +219,7 @@ export class BeneficiariesService {
 
     // Delete beneficiary
     await this.db.delete(beneficiaries).where(eq(beneficiaries.id, id));
-    this.verificationCodes.delete(id);
+    this.cacheService.delete(`beneficiary_otp:${id}`);
   }
 
   async sendVerificationCodeForUser(id: string, userId: string): Promise<{ success: boolean }> {
@@ -228,7 +236,11 @@ export class BeneficiariesService {
     const user = await this.usersService.findUserById(userId);
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    this.verificationCodes.set(id, code);
+    // Cache for 10 minutes (600,000ms) under both ID and email
+    this.cacheService.set(`beneficiary_otp:${id}`, code, 10 * 60 * 1000);
+    if (beneficiary.email) {
+      this.cacheService.set(`beneficiary_otp:${beneficiary.email.toLowerCase().trim()}`, code, 10 * 60 * 1000);
+    }
 
     // Send email asynchronously
     const verifiedSenderEmail = user?.emailVerified ? user.email : (user?.alternativeEmailVerified ? user.alternativeEmail : null);
@@ -253,7 +265,8 @@ export class BeneficiariesService {
     const isPgp = beneficiary.email && (beneficiary.email.startsWith('pgp-') || beneficiary.email.includes('+pgp@'));
 
     if (!isPgp) {
-      const storedCode = this.verificationCodes.get(id);
+      const storedCode = this.cacheService.get<string>(`beneficiary_otp:${id}`) ||
+        (beneficiary.email ? this.cacheService.get<string>(`beneficiary_otp:${beneficiary.email.toLowerCase().trim()}`) : null);
       if (!storedCode || storedCode !== code.trim()) {
         throw new BadRequestException('Invalid or expired verification code.');
       }
@@ -268,7 +281,10 @@ export class BeneficiariesService {
       .returning();
 
     if (!updated) throw new NotFoundException('Beneficiary not found');
-    this.verificationCodes.delete(id);
+    this.cacheService.delete(`beneficiary_otp:${id}`);
+    if (beneficiary.email) {
+      this.cacheService.delete(`beneficiary_otp:${beneficiary.email.toLowerCase().trim()}`);
+    }
     return updated;
   }
 

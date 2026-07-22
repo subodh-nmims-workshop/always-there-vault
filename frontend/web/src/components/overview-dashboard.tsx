@@ -4,6 +4,7 @@ import { BoltIcon, ChartBarIcon, FingerPrintIcon, ShieldCheckIcon, EnvelopeIcon,
 import { useEffect, useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
 import WebStorageService from '@/lib/storage'
+import { API_URL } from '@/lib/api-config'
 import { toast } from 'sonner'
 
 interface OverviewDashboardProps {
@@ -25,7 +26,7 @@ export function OverviewDashboard({ onNavigate }: OverviewDashboardProps) {
             try {
                 const token = localStorage.getItem('dwp_token')
                 if (!token) return
-                const apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com'
+                const apiEndpoint = API_URL
                 const res = await fetch(`${apiEndpoint}/api/users/profile`, {
                     headers: {
                         'Authorization': `Bearer ${token}`

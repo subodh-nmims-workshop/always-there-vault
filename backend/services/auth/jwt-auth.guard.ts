@@ -11,7 +11,7 @@ import * as jwt from 'jsonwebtoken';
 export class JwtAuthGuard implements CanActivate {
   constructor(private configService: ConfigService) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
@@ -19,8 +19,12 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Authentication token missing');
     }
 
+    const secret = this.configService.get<string>('JWT_SECRET');
+    if (!secret) {
+      throw new UnauthorizedException('Server misconfiguration: JWT_SECRET not set.');
+    }
+
     try {
-      const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
       const payload = jwt.verify(token, secret) as any;
       
       // Attach user to request

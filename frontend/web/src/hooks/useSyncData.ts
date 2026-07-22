@@ -2,7 +2,7 @@ import { useAccount } from 'wagmi';
 import { useEffect, useCallback, useRef } from 'react';
 import WebStorageService from '@/lib/storage';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
+import { API_URL } from '@/lib/api-config';
 
 export function useSyncData() {
   const { address: wagmiAddress, isConnected: isWagmiConnected, status } = useAccount();
@@ -36,30 +36,50 @@ export function useSyncData() {
       }
 
       const token = typeof window !== 'undefined' ? localStorage.getItem('dwp_token') : null;
+      if (!token) {
+        // If there's no auth token, skip calling protected backend routes to avoid 401 Unauthorized errors
+        isSyncingRef.current = false;
+        return;
+      }
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+
+      const handleFetchRes = async (resPromise: Promise<Response>, fallback: any) => {
+        try {
+          const res = await resPromise;
+          if (res.status === 401) {
+            console.warn('⚠️ Authentication token invalid or expired. Clearing dwp_token...');
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('dwp_token');
+            }
+            return fallback;
+          }
+          if (!res.ok) return fallback;
+          return await res.json();
+        } catch {
+          return fallback;
+        }
+      };
 
       // Fetch from backend API
       const mode = typeof window !== 'undefined' ? localStorage.getItem('dwp_mode') || 'centralized' : 'centralized';
 
       const fetchFolders = mode === 'centralized'
-        ? fetch(`${API_URL}/api/assets/folders`, { headers }).then(r => r.ok ? r.json() : [])
+        ? handleFetchRes(fetch(`${API_URL}/api/assets/folders`, { headers }), [])
         : Promise.resolve([]);
 
       const fetchAssets = mode === 'centralized'
-        ? fetch(`${API_URL}/api/assets`, { headers }).then(r => r.ok ? r.json() : [])
+        ? handleFetchRes(fetch(`${API_URL}/api/assets`, { headers }), [])
         : Promise.resolve([]);
 
       const [nomineesRes, assetsRes, heartbeatRes, userRes, foldersRes] = await Promise.all([
-        fetch(`${API_URL}/api/beneficiaries?ownerAddress=${normalizedAddress}`, { headers }).then(r => r.ok ? r.json() : []),
+        handleFetchRes(fetch(`${API_URL}/api/beneficiaries?ownerAddress=${normalizedAddress}`, { headers }), []),
         fetchAssets,
-        fetch(`${API_URL}/api/heartbeat/status`, { headers }).then(r => r.ok ? r.json() : null),
-        fetch(`${API_URL}/api/users/profile`, { headers }).then(r => r.ok ? r.json() : null),
+        handleFetchRes(fetch(`${API_URL}/api/heartbeat/status`, { headers }), null),
+        handleFetchRes(fetch(`${API_URL}/api/users/profile`, { headers }), null),
         fetchFolders
       ]);
 

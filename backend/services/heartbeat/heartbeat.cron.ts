@@ -54,24 +54,29 @@ export class HeartbeatCronService {
                 // Calculate heartbeat status inline to avoid N*2 redundant database lookups
                 const lastCheck = config.lastHeartbeat || config.createdAt;
                 const now = new Date();
-                const timeUnit = 1000 * 60 * 60 * 24;
                 
-                const diff = Math.floor((now.getTime() - lastCheck.getTime()) / timeUnit);
                 const interval = config.intervalDays;
                 const grace = config.gracePeriodDays;
+
+                const isIntervalMins = interval <= 3;
+                const isGraceMins = grace <= 3;
+
+                const intervalMs = isIntervalMins ? interval * 60 * 1000 : interval * 24 * 60 * 60 * 1000;
+                const graceMs = isGraceMins ? grace * 60 * 1000 : grace * 24 * 60 * 60 * 1000;
+                const diffMs = now.getTime() - lastCheck.getTime();
 
                 let status: string;
                 let daysUntilDue = 0;
 
-                if (diff >= interval + grace) {
+                if (diffMs >= intervalMs + graceMs) {
                     status = 'overdue';
-                    daysUntilDue = interval + grace - diff;
-                } else if (diff >= interval) {
+                    daysUntilDue = Math.floor((intervalMs + graceMs - diffMs) / (isIntervalMins ? 60 * 1000 : 24 * 60 * 60 * 1000));
+                } else if (diffMs >= intervalMs) {
                     status = 'grace_period';
-                    daysUntilDue = interval + grace - diff;
+                    daysUntilDue = Math.floor((intervalMs + graceMs - diffMs) / (isIntervalMins ? 60 * 1000 : 24 * 60 * 60 * 1000));
                 } else {
                     status = 'active';
-                    daysUntilDue = interval - diff;
+                    daysUntilDue = Math.floor((intervalMs - diffMs) / (isIntervalMins ? 60 * 1000 : 24 * 60 * 60 * 1000));
                 }
 
                 this.logger.debug(`User ${user.walletAddress} | email: ${user.email || 'MISSING'} | status: ${status} | misses: ${config.missedCount}/${config.bufferMisses}`);
@@ -80,14 +85,13 @@ export class HeartbeatCronService {
                     const currentMisses = config.missedCount || 0;
                     const maxBuffer = config.bufferMisses || 3;
 
-                    // Throttle: only send one alert per day since last heartbeat
+                    // Throttle: only send one alert per unit (min or day) since last heartbeat
                     const lastHeartbeatTime = config.lastHeartbeat || config.createdAt;
-                    const timeUnit = 1000 * 60 * 60 * 24;
-                    const now = new Date();
-                    const unitsSinceLastHeartbeat = Math.floor((now.getTime() - lastHeartbeatTime.getTime()) / timeUnit);
+                    const timeUnitMs = isIntervalMins ? 60 * 1000 : 24 * 60 * 60 * 1000;
+                    const unitsSinceLastHeartbeat = Math.floor((now.getTime() - lastHeartbeatTime.getTime()) / timeUnitMs);
 
                     // How many alerts should have been sent so far
-                    const expectedMisses = Math.max(0, unitsSinceLastHeartbeat - config.intervalDays + 1);
+                    const expectedMisses = Math.max(0, unitsSinceLastHeartbeat - interval + 1);
                     if (currentMisses < maxBuffer && currentMisses >= expectedMisses && currentMisses > 0) {
                         this.logger.debug(`Throttling alert for ${user.walletAddress}: misses(${currentMisses}) already covers expected(${expectedMisses}) for this time period.`);
                         continue;

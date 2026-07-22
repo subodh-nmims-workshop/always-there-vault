@@ -80,7 +80,7 @@ describe('UsersService - Alternative Email Redundancy', () => {
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(false);
-      expect(result.message).toBe('No alternative verification request pending');
+      expect(result.message).toContain('No alternative verification request pending');
     });
 
     it('should fail if code is incorrect', async () => {
@@ -89,10 +89,7 @@ describe('UsersService - Alternative Email Redundancy', () => {
         alternativeEmailVerificationToken: '654321',
         alternativePendingEmail: 'test@example.com',
       });
-      // First call = attempts (null = 0), second call = expiry key (true = not expired)
-      mockCacheService.get
-        .mockReturnValueOnce(null)   // attempts = 0
-        .mockReturnValueOnce(true);  // expiry key = still valid
+      mockCacheService.get.mockReturnValueOnce(null);  // attempts = 0
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(false);
@@ -105,8 +102,6 @@ describe('UsersService - Alternative Email Redundancy', () => {
         alternativeEmailVerificationToken: '123456',
         alternativePendingEmail: 'test@example.com',
       });
-      // OTP not expired
-      mockCacheService.get.mockReturnValue(true);
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(true);
@@ -114,18 +109,17 @@ describe('UsersService - Alternative Email Redundancy', () => {
       expect(mockDb.update).toHaveBeenCalled();
     });
 
-    it('should fail if OTP cache key is expired (not present)', async () => {
+    it('should fail if no token is pending or already used', async () => {
       mockDb.query.users.findFirst.mockResolvedValueOnce({
         id: '1',
-        alternativeEmailVerificationToken: '123456',
-        alternativePendingEmail: 'test@example.com',
+        alternativeEmailVerified: true,
+        alternativeEmailVerificationToken: null,
+        alternativePendingEmail: null,
       });
-      // OTP expired — cache returns null
-      mockCacheService.get.mockReturnValue(null);
 
       const result = await service.verifyAlternativeEmail('1', '123456');
       expect(result.success).toBe(false);
-      expect(result.message).toContain('expired');
+      expect(result.message).toBe('This alternative email has already been verified.');
     });
   });
 

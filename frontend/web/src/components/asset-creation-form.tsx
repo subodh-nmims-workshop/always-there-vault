@@ -213,7 +213,6 @@ export function AssetCreationForm() {
       const token = localStorage.getItem('dwp_token');
       if (token) {
         try {
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://always-there-protocol-api.onrender.com';
           const backendRes = await fetch(`${API_URL}/api/assets`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
